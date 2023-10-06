@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto-broker
+    ports:
+      - "9001:9001"
+      - "1883:1883"
+    volumes:
+      - ./docker/mosquitto-config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./docker/mosquitto-config/password.txt:/mosquitto/config/password.txt
+      - ./docker/mosquitto-data:/mosquitto/data
+      - ./docker/mosquitto-log:/mosquitto/log
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com # Not a real e-mail address...
+      PGADMIN_DEFAULT_PASSWORD: password
+    depends_on:
+      - postgres
+    ports:
+      - "8081:80"

@@ -1,2 +1,7 @@
 # Ingore the IDE folder
 .idea
+
+# Ignore most of the docker directory contents
+/docker/mosquitto-data
+/docker/mosquitto-log
+/docker/postgres-data
