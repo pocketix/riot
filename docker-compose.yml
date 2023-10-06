@@ -4,7 +4,6 @@ services:
 
   mosquitto:
     image: eclipse-mosquitto:latest
-    container_name: mosquitto-broker
     ports:
       - "9001:9001"
       - "1883:1883"
@@ -17,7 +16,6 @@ services:
 
   postgres:
     image: postgres:latest
-    container_name: postgres-db
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
@@ -37,3 +35,26 @@ services:
       - postgres
     ports:
       - "8081:80"
+
+  mongo:
+    image: mongo:latest
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - ./docker/mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+  mongo-express:
+    image: mongo-express:latest
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=password
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=password
+    depends_on:
+      - mongo
+    ports:
+      - "8082:8081"

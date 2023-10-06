@@ -2,6 +2,7 @@
 .idea
 
 # Ignore most of the docker directory contents
+/docker/mongo-data
 /docker/mosquitto-data
 /docker/mosquitto-log
 /docker/postgres-data
