@@ -24,7 +24,7 @@ func checkKPIFulfillment(upstreamMessage UpstreamMessage) {
 
 	rootKPIDefinitionsForTheGivenDeviceType, err := relationalDatabaseClient.ObtainRootKPIDefinitionsForTheGivenDeviceType(deviceType)
 	if err != nil {
-		log.Printf("Could not load the numeric KPI definitions for the device type '%s' from the database: cannot proceed with evaluation.\n", deviceType)
+		log.Printf("Could not load the KPI definitions for the device type '%s' from the database: cannot proceed with the KPI fulfillment check.\n", deviceType)
 		return
 	}
 
