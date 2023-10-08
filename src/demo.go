@@ -16,43 +16,25 @@ const (
 )
 
 var relationalDatabaseClient RelationalDatabaseClient = nil
-var numericKeyPerformanceIndicatorDefinitionsPerDeviceTypeRegistry map[string][]NumericKeyPerformanceIndicatorDefinition
 
-func performNumericKpiEvaluation(upstreamMessage UpstreamMessage) {
-
-	var err error
+func checkKPIFulfillment(upstreamMessage UpstreamMessage) {
 
 	device := upstreamMessage.Data.Devices[0] // TODO: Just one device? Or multiple? And how many?
 	deviceType := device.DeviceType
-	numericKeyPerformanceIndicatorDefinitionsForTheGivenDeviceType, isDeviceTypePresent := numericKeyPerformanceIndicatorDefinitionsPerDeviceTypeRegistry[deviceType]
-	if !isDeviceTypePresent {
-		numericKeyPerformanceIndicatorDefinitionsForTheGivenDeviceType, err = relationalDatabaseClient.ObtainNumericKeyPerformanceIndicatorDefinitionsForCertainDeviceType(deviceType)
-		if err != nil {
-			log.Printf("Could not load the numeric KPI definitions for the device type '%s' from the database: cannot proceed with evaluation.\n", deviceType)
-			return
-		}
+
+	rootKPIDefinitionsForTheGivenDeviceType, err := relationalDatabaseClient.ObtainRootKPIDefinitionsForTheGivenDeviceType(deviceType)
+	if err != nil {
+		log.Printf("Could not load the numeric KPI definitions for the device type '%s' from the database: cannot proceed with evaluation.\n", deviceType)
+		return
 	}
 
-	for _, numericKeyPerformanceIndicatorDefinition := range numericKeyPerformanceIndicatorDefinitionsForTheGivenDeviceType {
+	for _, rootKPIDefinition := range rootKPIDefinitionsForTheGivenDeviceType {
 
-		deviceParameterValue := device.DeviceParameters.(map[string]interface{})[numericKeyPerformanceIndicatorDefinition.DeviceParameter].(float64)
-		var kpiOk bool
-		switch numericKeyPerformanceIndicatorDefinition.ComparisonType {
-		case "equal_to":
-			kpiOk = deviceParameterValue == numericKeyPerformanceIndicatorDefinition.FirstNumericValue
-		case "smaller_than":
-			kpiOk = deviceParameterValue < numericKeyPerformanceIndicatorDefinition.FirstNumericValue
-		case "greater_than":
-			kpiOk = deviceParameterValue > numericKeyPerformanceIndicatorDefinition.FirstNumericValue
-		case "in_range":
-			kpiOk = deviceParameterValue > numericKeyPerformanceIndicatorDefinition.FirstNumericValue && deviceParameterValue < numericKeyPerformanceIndicatorDefinition.SecondNumericValue
+		kpiFulfillmentStatusText := "Fulfilled"
+		if !rootKPIDefinition.isFulfilled(device.DeviceParameters) {
+			kpiFulfillmentStatusText = "Not fulfilled"
 		}
-
-		kpiStatusText := "OK"
-		if !kpiOk {
-			kpiStatusText = "NOT OK"
-		}
-		log.Printf("KPI: %s: %s\n", numericKeyPerformanceIndicatorDefinition.HumanReadableDescription, kpiStatusText)
+		log.Printf("KPI: %s: %s\n", rootKPIDefinition.HumanReadableDescription, kpiFulfillmentStatusText)
 	}
 }
 
@@ -68,11 +50,11 @@ func handleIncomingMessage(_ mqtt.Client, incomingMessage mqtt.Message) {
 
 	log.Printf("De-serialized payload of the incoming MQTT message: %+v\n", deserializedPayloadOfTheIncomingUpstreamMessage)
 
-	performNumericKpiEvaluation(deserializedPayloadOfTheIncomingUpstreamMessage)
+	checkKPIFulfillment(deserializedPayloadOfTheIncomingUpstreamMessage)
 }
 
 func runDemo() {
-	log.Println("Running the Golang DEMO...")
+	log.Println("Running the DEMO...")
 
 	var err error
 
