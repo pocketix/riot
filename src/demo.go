@@ -28,6 +28,7 @@ func checkKPIFulfillment(upstreamMessage UpstreamMessage) {
 		return
 	}
 
+	log.Println("----- ----- ----- ----- ----- ----- ----- -----")
 	for _, rootKPIDefinition := range rootKPIDefinitionsForTheGivenDeviceType {
 
 		kpiFulfillmentStatusText := "Fulfilled"
@@ -36,6 +37,7 @@ func checkKPIFulfillment(upstreamMessage UpstreamMessage) {
 		}
 		log.Printf("KPI: %s: %s\n", rootKPIDefinition.HumanReadableDescription, kpiFulfillmentStatusText)
 	}
+	log.Println("----- ----- ----- ----- ----- ----- ----- -----")
 }
 
 func handleIncomingMessage(_ mqtt.Client, incomingMessage mqtt.Message) {

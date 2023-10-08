@@ -108,6 +108,7 @@ func transformKPIDefinitionTree(
 			FirstNumericReferenceValue:   nil,
 			SecondNumericReferenceValue:  nil,
 			StringReferenceValue:         &typedNode.ReferenceValue,
+			BooleanReferenceValue:        nil,
 		})
 	case *NumericLessThanSubKPIDefinitionNode:
 		subKPIDefinitionNodeEntities = append(subKPIDefinitionNodeEntities, SubKPIDefinitionNodeEntity{
@@ -117,6 +118,7 @@ func transformKPIDefinitionTree(
 			FirstNumericReferenceValue:   &typedNode.ReferenceValue,
 			SecondNumericReferenceValue:  nil,
 			StringReferenceValue:         nil,
+			BooleanReferenceValue:        nil,
 		})
 	case *NumericGreaterThanSubKPIDefinitionNode:
 		subKPIDefinitionNodeEntities = append(subKPIDefinitionNodeEntities, SubKPIDefinitionNodeEntity{
@@ -126,6 +128,7 @@ func transformKPIDefinitionTree(
 			FirstNumericReferenceValue:   &typedNode.ReferenceValue,
 			SecondNumericReferenceValue:  nil,
 			StringReferenceValue:         nil,
+			BooleanReferenceValue:        nil,
 		})
 	case *NumericEqualitySubKPIDefinitionNode:
 		subKPIDefinitionNodeEntities = append(subKPIDefinitionNodeEntities, SubKPIDefinitionNodeEntity{
@@ -135,6 +138,7 @@ func transformKPIDefinitionTree(
 			FirstNumericReferenceValue:   &typedNode.ReferenceValue,
 			SecondNumericReferenceValue:  nil,
 			StringReferenceValue:         nil,
+			BooleanReferenceValue:        nil,
 		})
 	case *NumericInRangeSubKPIDefinitionNode:
 		subKPIDefinitionNodeEntities = append(subKPIDefinitionNodeEntities, SubKPIDefinitionNodeEntity{
@@ -144,6 +148,17 @@ func transformKPIDefinitionTree(
 			FirstNumericReferenceValue:   &typedNode.LowerBoundaryValue,
 			SecondNumericReferenceValue:  &typedNode.UpperBoundaryValue,
 			StringReferenceValue:         nil,
+			BooleanReferenceValue:        nil,
+		})
+	case *BooleanEqualitySubKPIDefinitionNode:
+		subKPIDefinitionNodeEntities = append(subKPIDefinitionNodeEntities, SubKPIDefinitionNodeEntity{
+			Node:                         currentNodeEntity,
+			DeviceParameterSpecification: typedNode.DeviceParameterSpecification,
+			Type:                         "boolean_equality",
+			FirstNumericReferenceValue:   nil,
+			SecondNumericReferenceValue:  nil,
+			StringReferenceValue:         nil,
+			BooleanReferenceValue:        &typedNode.ReferenceValue,
 		})
 	}
 
@@ -374,6 +389,11 @@ func reconstructNodeTree(genericKPINodeEntity GenericKPINodeEntity, nodeChildren
 					SubKPIDefinitionBaseNode: subKPIDefinitionBaseNode,
 					LowerBoundaryValue:       *subKPIDefinitionNodeEntity.FirstNumericReferenceValue,
 					UpperBoundaryValue:       *subKPIDefinitionNodeEntity.SecondNumericReferenceValue,
+				}
+			case "boolean_equality":
+				return &BooleanEqualitySubKPIDefinitionNode{
+					SubKPIDefinitionBaseNode: subKPIDefinitionBaseNode,
+					ReferenceValue:           *subKPIDefinitionNodeEntity.BooleanReferenceValue,
 				}
 			}
 		}

@@ -50,6 +50,7 @@ type SubKPIDefinitionNodeEntity struct {
 	FirstNumericReferenceValue   *float64              `gorm:"column:first_numeric_reference_value"`
 	SecondNumericReferenceValue  *float64              `gorm:"column:second_numeric_reference_value"`
 	StringReferenceValue         *string               `gorm:"column:string_reference_value"`
+	BooleanReferenceValue        *bool                 `gorm:"column:boolean_reference_value"`
 }
 
 func (SubKPIDefinitionNodeEntity) TableName() string {

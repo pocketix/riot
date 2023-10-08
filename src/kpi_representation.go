@@ -5,6 +5,7 @@ type LogicalOperatorNodeType string
 const (
 	AND LogicalOperatorNodeType = "AND"
 	OR  LogicalOperatorNodeType = "OR"
+	NOR LogicalOperatorNodeType = "NOR"
 )
 
 type RootKPIDefinition struct {
@@ -77,6 +78,16 @@ func (n *NumericInRangeSubKPIDefinitionNode) isFulfilled(deviceParameters interf
 	return deviceParameterValue > n.LowerBoundaryValue && deviceParameterValue < n.UpperBoundaryValue
 }
 
+type BooleanEqualitySubKPIDefinitionNode struct {
+	SubKPIDefinitionBaseNode
+	ReferenceValue bool
+}
+
+func (b *BooleanEqualitySubKPIDefinitionNode) isFulfilled(deviceParameters interface{}) bool {
+
+	return getDeviceParameterValue(deviceParameters, b.DeviceParameterSpecification).(bool) == b.ReferenceValue
+}
+
 type LogicalOperatorNode struct {
 	Type       LogicalOperatorNodeType
 	ChildNodes []Node
@@ -91,13 +102,20 @@ func (l *LogicalOperatorNode) isFulfilled(deviceParameters interface{}) bool {
 			}
 		}
 		return true
-	} else { // OR
+	} else if l.Type == OR {
 		for _, child := range l.ChildNodes {
 			if child.isFulfilled(deviceParameters) {
 				return true
 			}
 		}
 		return false
+	} else { // l.Type == NOR
+		for _, child := range l.ChildNodes {
+			if child.isFulfilled(deviceParameters) {
+				return false
+			}
+		}
+		return true
 	}
 }
 
@@ -143,5 +161,32 @@ func GetRootKPIDefinitions() []RootKPIDefinition {
 		},
 	}
 
-	return []RootKPIDefinition{rootKPIDefinitionObject1, rootKPIDefinitionObject2}
+	rootKPIDefinitionObject3 := RootKPIDefinition{
+		DeviceTypeSpecification:  "shelly1pro",
+		HumanReadableDescription: "All shelly1pro devices must run in the so-called ECO mode.",
+		DefinitionRoot: &BooleanEqualitySubKPIDefinitionNode{
+			SubKPIDefinitionBaseNode: SubKPIDefinitionBaseNode{
+				DeviceParameterSpecification: "eco_mode",
+			},
+			ReferenceValue: true,
+		},
+	}
+
+	rootKPIDefinitionObject4 := RootKPIDefinition{
+		DeviceTypeSpecification:  "GW10K-ET",
+		HumanReadableDescription: "The 'safety_country_label' of GW10K-ET devices cannot be 'Czechia'",
+		DefinitionRoot: &LogicalOperatorNode{
+			Type: NOR, // Works like NOT here
+			ChildNodes: []Node{
+				&StringEqualitySubKPIDefinitionNode{
+					SubKPIDefinitionBaseNode: SubKPIDefinitionBaseNode{
+						DeviceParameterSpecification: "safety_country_label",
+					},
+					ReferenceValue: "Czechia",
+				},
+			},
+		},
+	}
+
+	return []RootKPIDefinition{rootKPIDefinitionObject1, rootKPIDefinitionObject2, rootKPIDefinitionObject3, rootKPIDefinitionObject4}
 }
