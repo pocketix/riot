@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    "jsx": "react",
-    "module": "commonjs",
-    "target": "es5",
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["DOM", "ESNext", "DOM.Iterable"],
     "sourceMap": true,
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true
