@@ -32,7 +32,7 @@ func checkKPIFulfillment(upstreamMessage UpstreamMessage) {
 	for _, rootKPIDefinition := range rootKPIDefinitionsForTheGivenDeviceType {
 
 		kpiFulfillmentStatusText := "Fulfilled"
-		if !rootKPIDefinition.isFulfilled(device.DeviceParameters) {
+		if !rootKPIDefinition.isFulfilled(&device.DeviceParameters) {
 			kpiFulfillmentStatusText = "Not fulfilled"
 		}
 		log.Printf("KPI: %s: %s\n", rootKPIDefinition.HumanReadableDescription, kpiFulfillmentStatusText)

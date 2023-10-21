@@ -14,12 +14,12 @@ type RootKPIDefinition struct {
 	DefinitionRoot           Node
 }
 
-func (r *RootKPIDefinition) isFulfilled(deviceParameters interface{}) bool {
+func (r *RootKPIDefinition) isFulfilled(deviceParameters *interface{}) bool {
 	return r.DefinitionRoot.isFulfilled(deviceParameters)
 }
 
 type Node interface {
-	isFulfilled(deviceParameters interface{}) bool
+	isFulfilled(deviceParameters *interface{}) bool
 }
 
 type SubKPIDefinitionBaseNode struct {
@@ -31,7 +31,7 @@ type StringEqualitySubKPIDefinitionNode struct {
 	ReferenceValue string
 }
 
-func (s *StringEqualitySubKPIDefinitionNode) isFulfilled(deviceParameters interface{}) bool {
+func (s *StringEqualitySubKPIDefinitionNode) isFulfilled(deviceParameters *interface{}) bool {
 
 	return getDeviceParameterValue(deviceParameters, s.DeviceParameterSpecification).(string) == s.ReferenceValue
 }
@@ -41,7 +41,7 @@ type NumericLessThanSubKPIDefinitionNode struct {
 	ReferenceValue float64
 }
 
-func (n *NumericLessThanSubKPIDefinitionNode) isFulfilled(deviceParameters interface{}) bool {
+func (n *NumericLessThanSubKPIDefinitionNode) isFulfilled(deviceParameters *interface{}) bool {
 
 	return getDeviceParameterValue(deviceParameters, n.DeviceParameterSpecification).(float64) < n.ReferenceValue
 }
@@ -51,7 +51,7 @@ type NumericGreaterThanSubKPIDefinitionNode struct {
 	ReferenceValue float64
 }
 
-func (n *NumericGreaterThanSubKPIDefinitionNode) isFulfilled(deviceParameters interface{}) bool {
+func (n *NumericGreaterThanSubKPIDefinitionNode) isFulfilled(deviceParameters *interface{}) bool {
 
 	return getDeviceParameterValue(deviceParameters, n.DeviceParameterSpecification).(float64) > n.ReferenceValue
 }
@@ -61,7 +61,7 @@ type NumericEqualitySubKPIDefinitionNode struct {
 	ReferenceValue float64
 }
 
-func (n *NumericEqualitySubKPIDefinitionNode) isFulfilled(deviceParameters interface{}) bool {
+func (n *NumericEqualitySubKPIDefinitionNode) isFulfilled(deviceParameters *interface{}) bool {
 
 	return getDeviceParameterValue(deviceParameters, n.DeviceParameterSpecification).(float64) == n.ReferenceValue
 }
@@ -72,7 +72,7 @@ type NumericInRangeSubKPIDefinitionNode struct {
 	UpperBoundaryValue float64
 }
 
-func (n *NumericInRangeSubKPIDefinitionNode) isFulfilled(deviceParameters interface{}) bool {
+func (n *NumericInRangeSubKPIDefinitionNode) isFulfilled(deviceParameters *interface{}) bool {
 
 	deviceParameterValue := getDeviceParameterValue(deviceParameters, n.DeviceParameterSpecification).(float64)
 	return deviceParameterValue > n.LowerBoundaryValue && deviceParameterValue < n.UpperBoundaryValue
@@ -83,7 +83,7 @@ type BooleanEqualitySubKPIDefinitionNode struct {
 	ReferenceValue bool
 }
 
-func (b *BooleanEqualitySubKPIDefinitionNode) isFulfilled(deviceParameters interface{}) bool {
+func (b *BooleanEqualitySubKPIDefinitionNode) isFulfilled(deviceParameters *interface{}) bool {
 
 	return getDeviceParameterValue(deviceParameters, b.DeviceParameterSpecification).(bool) == b.ReferenceValue
 }
@@ -93,7 +93,7 @@ type LogicalOperatorNode struct {
 	ChildNodes []Node
 }
 
-func (l *LogicalOperatorNode) isFulfilled(deviceParameters interface{}) bool {
+func (l *LogicalOperatorNode) isFulfilled(deviceParameters *interface{}) bool {
 
 	if l.Type == AND {
 		for _, child := range l.ChildNodes {
@@ -119,9 +119,9 @@ func (l *LogicalOperatorNode) isFulfilled(deviceParameters interface{}) bool {
 	}
 }
 
-func getDeviceParameterValue(deviceParameters interface{}, deviceParameterSpecification string) interface{} {
+func getDeviceParameterValue(deviceParameters *interface{}, deviceParameterSpecification string) interface{} {
 
-	return deviceParameters.(map[string]interface{})[deviceParameterSpecification]
+	return (*deviceParameters).(map[string]interface{})[deviceParameterSpecification]
 }
 
 // GetRootKPIDefinitions is a function useful to get a data set of pre-made, artificial KPI definitions...
