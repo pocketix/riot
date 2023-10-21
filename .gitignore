@@ -6,3 +6,8 @@
 /docker/mosquitto-data
 /docker/mosquitto-log
 /docker/postgres-data
+
+# Ignore some front-end directories
+parcel-react-frontend/dist/
+parcel-react-frontend/.parcel-cache/
+parcel-react-frontend/node_modules
