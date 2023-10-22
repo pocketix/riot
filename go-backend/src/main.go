@@ -1,31 +1,82 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+
+	"github.com/graphql-go/graphql"
 )
+
+type Input struct {
+	Query         string                 `query:"query"`
+	OperationName string                 `query:"operationName"`
+	Variables     map[string]interface{} `query:"variables"`
+}
 
 func main() {
 
-	app := fiber.New()
+	fields := graphql.Fields{
+		"hello": &graphql.Field{
+			Type: graphql.String,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				return "world", nil
+			},
+		},
+	}
 
+	rootQuery := graphql.ObjectConfig{Name: "RootQuery", Fields: fields}
+	schemaConfig := graphql.SchemaConfig{Query: graphql.NewObject(rootQuery)}
+	schema, err := graphql.NewSchema(schemaConfig)
+	if err != nil {
+		log.Fatalf("failed to create new schema, error: %v", err)
+	}
+
+	app := fiber.New()
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "http://localhost:1234",
 	}))
 
-	app.Get("/run-demo", func(c *fiber.Ctx) error {
-		go runDemo()
-		return c.SendString("One should be able to run the DEMO in asynchronous manner by accessing this REST endpoint...")
-	})
+	// curl 'http://localhost:9090/?query=query%7Bhello%7D'
+	app.Get("/", func(ctx *fiber.Ctx) error {
+		var input Input
+		if err := ctx.QueryParser(&input); err != nil {
+			return ctx.
+				Status(fiber.StatusInternalServerError).
+				SendString("Cannot parse query parameters: " + err.Error())
+		}
 
-	app.Get("/fetch-data", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"message": "Hello from Go back-end!",
+		result := graphql.Do(graphql.Params{
+			Schema:         schema,
+			RequestString:  input.Query,
+			OperationName:  input.OperationName,
+			VariableValues: input.Variables,
 		})
+
+		ctx.Set("Content-Type", "application/graphql-response+json")
+		return ctx.JSON(result)
 	})
 
-	err := app.Listen("localhost:8080")
-	if err != nil {
-		return
-	}
+	// curl 'http://localhost:9090/' --header 'content-type: application/json' --data-raw '{"query":"query{hello}"}'
+	app.Post("/", func(ctx *fiber.Ctx) error {
+		var input Input
+		if err := ctx.BodyParser(&input); err != nil {
+			return ctx.
+				Status(fiber.StatusInternalServerError).
+				SendString("Cannot parse body: " + err.Error())
+		}
+
+		result := graphql.Do(graphql.Params{
+			Schema:         schema,
+			RequestString:  input.Query,
+			OperationName:  input.OperationName,
+			VariableValues: input.Variables,
+		})
+
+		ctx.Set("Content-Type", "application/graphql-response+json")
+		return ctx.JSON(result)
+	})
+
+	log.Fatal(app.Listen(":9090"))
 }

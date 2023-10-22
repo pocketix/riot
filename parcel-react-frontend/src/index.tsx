@@ -1,11 +1,13 @@
-import React from "react"
-import {createRoot, Root} from "react-dom/client"
+import * as React from "react"
+import * as ReactDOM from "react-dom/client"
+import {BrowserRouter} from "react-router-dom"
 import ApplicationEntrypoint from "./ApplicationEntrypoint"
+import "./index.css"
 
-const reactApplicationRootElement: HTMLElement = document.getElementById("reactApplicationRoot")
-if (!reactApplicationRootElement) {
-    throw new Error("Failed to find the root element")
-}
-
-const root: Root = createRoot(reactApplicationRootElement)
-root.render(<ApplicationEntrypoint />)
+ReactDOM.createRoot(document.getElementById("reactApplicationRoot")!).render(
+    <React.StrictMode>
+        <BrowserRouter>
+            <ApplicationEntrypoint/>
+        </BrowserRouter>
+    </React.StrictMode>
+)
