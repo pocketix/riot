@@ -17,26 +17,29 @@ type Input struct {
 
 func main() {
 
-	fields := graphql.Fields{
-		"hello": &graphql.Field{
-			Type: graphql.String,
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return "world", nil
-			},
-		},
-	}
-
-	rootQuery := graphql.ObjectConfig{Name: "RootQuery", Fields: fields}
-	schemaConfig := graphql.SchemaConfig{Query: graphql.NewObject(rootQuery)}
-	schema, err := graphql.NewSchema(schemaConfig)
-	if err != nil {
-		log.Fatalf("failed to create new schema, error: %v", err)
-	}
+	var err error
 
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "http://localhost:1234",
 	}))
+
+	relationalDatabaseClient = NewRelationalDatabaseClient() // FIXME: Declaration is in demo.go...
+	err = relationalDatabaseClient.ConnectToDatabase()
+	if err != nil {
+		log.Println("Cannot connect to the relational database: terminating...")
+		return
+	}
+	err = relationalDatabaseClient.InitializeDatabase()
+	if err != nil {
+		log.Println("Cannot initialize the relational database: terminating...")
+		return
+	}
+
+	schema, err := GenerateGraphQLSchema()
+	if err != nil {
+		return
+	}
 
 	// curl 'http://localhost:9090/?query=query%7Bhello%7D'
 	app.Get("/", func(ctx *fiber.Ctx) error {

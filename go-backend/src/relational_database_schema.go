@@ -5,6 +5,9 @@ const (
 	GenericKPINodeTableName       = "generic_kpi_nodes"
 	LogicalOperatorNodeTableName  = "logical_operator_nodes"
 	SubKPIDefinitionNodeTableName = "sub_kpi_definition_nodes"
+
+	UserDefinedDeviceTypesTableName = "user_defined_device_types"
+	DeviceTypeParametersTableName   = "device_type_parameters"
 )
 
 type RootKPIDefinitionEntity struct {
@@ -56,4 +59,27 @@ type SubKPIDefinitionNodeEntity struct {
 func (SubKPIDefinitionNodeEntity) TableName() string {
 
 	return SubKPIDefinitionNodeTableName
+}
+
+type UserDefinedDeviceTypesEntity struct {
+	ID         uint32                       `gorm:"column:id;primarykey;not null"`
+	Denotation string                       `gorm:"column:denotation;not null"`
+	Parameters []DeviceTypeParametersEntity `gorm:"foreignKey:UserDefinedDeviceTypeID"`
+}
+
+func (UserDefinedDeviceTypesEntity) TableName() string {
+
+	return UserDefinedDeviceTypesTableName
+}
+
+type DeviceTypeParametersEntity struct {
+	ID                      uint32 `gorm:"column:id;primarykey;not null"`
+	UserDefinedDeviceTypeID uint32 `gorm:"column:user_defined_device_type_id;not null"`
+	Name                    string `gorm:"column:name;not null"`
+	Type                    string `gorm:"column:type;not null"`
+}
+
+func (DeviceTypeParametersEntity) TableName() string {
+
+	return DeviceTypeParametersTableName
 }

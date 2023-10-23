@@ -18,6 +18,7 @@ type RelationalDatabaseClient interface {
 	ConnectToDatabase() error
 	InitializeDatabase() error
 	ObtainRootKPIDefinitionsForTheGivenDeviceType(deviceType string) ([]RootKPIDefinition, error)
+	ObtainUserDefinedDeviceTypeByID(id uint32) (UserDefinedDeviceTypesEntity, error)
 }
 
 type relationalDatabaseClientImpl struct {
@@ -44,20 +45,33 @@ func (r *relationalDatabaseClientImpl) ConnectToDatabase() error {
 	return nil
 }
 
-func (r *relationalDatabaseClientImpl) InitializeDatabase() error {
+func (r *relationalDatabaseClientImpl) setupTables() error {
 
-	var err error
+	err := r.db.AutoMigrate(
+		&RootKPIDefinitionEntity{},
+		&GenericKPINodeEntity{},
+		&LogicalOperatorNodeEntity{},
+		&SubKPIDefinitionNodeEntity{},
 
-	err = r.db.AutoMigrate(&RootKPIDefinitionEntity{}, &GenericKPINodeEntity{}, &LogicalOperatorNodeEntity{}, &SubKPIDefinitionNodeEntity{})
+		&UserDefinedDeviceTypesEntity{},
+		&DeviceTypeParametersEntity{},
+	)
+
 	if err != nil {
 		log.Println("Error on DB.AutoMigrate(): ", err)
 		return err
 	}
+	return nil
+}
+
+func (r *relationalDatabaseClientImpl) optionallyInsertKPIDefinitionData() error {
+
+	var err error
 
 	var count int64
 	r.db.Model(&RootKPIDefinitionEntity{}).Count(&count)
 	if count > 0 {
-		log.Println("The database is not empty: skipping data insertion.")
+		log.Println("The KPI definition data seem to be present: skipping insertion.")
 		return nil
 	}
 
@@ -69,7 +83,62 @@ func (r *relationalDatabaseClientImpl) InitializeDatabase() error {
 		}
 	}
 
-	log.Println("Successfully inserted the given data into the database...")
+	log.Println("Successfully inserted KPI definition data into the database...")
+	return nil
+}
+
+func (r *relationalDatabaseClientImpl) optionallyInsertUserDefinedDeviceTypesData() error {
+
+	var err error
+
+	var count int64
+	r.db.Model(&UserDefinedDeviceTypesEntity{}).Count(&count)
+	if count > 0 {
+		log.Println("The user defined device types data seem to be present: skipping insertion.")
+		return nil
+	}
+
+	err = r.db.Create(&UserDefinedDeviceTypesEntity{
+		Denotation: "shelly1pro",
+		Parameters: []DeviceTypeParametersEntity{
+			{
+				Name: "relay_0_temperature",
+				Type: "number",
+			},
+			{
+				Name: "relay_0_source",
+				Type: "string",
+			},
+		},
+	}).Error
+
+	if err != nil {
+		return err
+	}
+
+	log.Println("Successfully inserted user defined device types data into the database...")
+	return nil
+}
+
+func (r *relationalDatabaseClientImpl) InitializeDatabase() error {
+
+	var err error
+
+	err = r.setupTables()
+	if err != nil {
+		return err
+	}
+
+	err = r.optionallyInsertKPIDefinitionData()
+	if err != nil {
+		return err
+	}
+
+	err = r.optionallyInsertUserDefinedDeviceTypesData()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -456,4 +525,12 @@ func (r *relationalDatabaseClientImpl) ObtainRootKPIDefinitionsForTheGivenDevice
 	}
 
 	return rootKPIDefinitions, nil
+}
+
+func (r *relationalDatabaseClientImpl) ObtainUserDefinedDeviceTypeByID(id uint32) (UserDefinedDeviceTypesEntity, error) {
+
+	var userDefinedDeviceTypesEntity UserDefinedDeviceTypesEntity
+	err := r.db.Preload("Parameters").Where("id = ?", id).First(&userDefinedDeviceTypesEntity).Error
+
+	return userDefinedDeviceTypesEntity, err
 }
