@@ -67,7 +67,11 @@ func GenerateGraphQLSchema() (graphql.Schema, error) {
 							Type: graphql.NewNonNull(graphql.ID),
 						},
 					},
-					Resolve: SingleUserDefinedDeviceTypeQueryResolverFunction,
+					Resolve: GetSingleUserDefinedDeviceTypeQueryResolverFunction,
+				},
+				"getUserDefinedDeviceTypes": &graphql.Field{
+					Type:    graphql.NewList(userDefinedDeviceType),
+					Resolve: GetUserDefinedDeviceTypesQueryResolverFunction,
 				},
 			},
 		}),

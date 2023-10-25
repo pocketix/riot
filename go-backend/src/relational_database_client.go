@@ -19,6 +19,7 @@ type RelationalDatabaseClient interface {
 	InitializeDatabase() error
 	ObtainRootKPIDefinitionsForTheGivenDeviceType(deviceType string) ([]RootKPIDefinition, error)
 	ObtainUserDefinedDeviceTypeByID(id uint32) (UserDefinedDeviceTypesEntity, error)
+	ObtainAllUserDefinedDeviceTypes() ([]UserDefinedDeviceTypesEntity, error)
 }
 
 type relationalDatabaseClientImpl struct {
@@ -533,4 +534,12 @@ func (r *relationalDatabaseClientImpl) ObtainUserDefinedDeviceTypeByID(id uint32
 	err := r.db.Preload("Parameters").Where("id = ?", id).First(&userDefinedDeviceTypesEntity).Error
 
 	return userDefinedDeviceTypesEntity, err
+}
+
+func (r *relationalDatabaseClientImpl) ObtainAllUserDefinedDeviceTypes() ([]UserDefinedDeviceTypesEntity, error) {
+
+	var userDefinedDeviceTypesEntities []UserDefinedDeviceTypesEntity
+	err := r.db.Preload("Parameters").Find(&userDefinedDeviceTypesEntities).Error
+
+	return userDefinedDeviceTypesEntities, err
 }
