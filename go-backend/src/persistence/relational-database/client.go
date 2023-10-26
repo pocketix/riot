@@ -1,6 +1,8 @@
-package main
+package relational_database
 
 import (
+	"bp-bures-SfPDfSD/src/dto"
+	"bp-bures-SfPDfSD/src/util"
 	"errors"
 	"fmt"
 	"log"
@@ -17,18 +19,36 @@ const (
 type RelationalDatabaseClient interface {
 	ConnectToDatabase() error
 	InitializeDatabase() error
-	ObtainRootKPIDefinitionsForTheGivenDeviceType(deviceType string) ([]RootKPIDefinition, error)
-	ObtainUserDefinedDeviceTypeByID(id uint32) (UserDefinedDeviceTypesEntity, error)
-	ObtainAllUserDefinedDeviceTypes() ([]UserDefinedDeviceTypesEntity, error)
+	ObtainKPIDefinitionsForTheGivenDeviceType(deviceType string) ([]dto.KPIDefinitionDTO, error)
+	ObtainUserDefinedDeviceTypeByID(id uint32) (UserDefinedDeviceTypeEntity, error)
+	ObtainAllUserDefinedDeviceTypes() ([]UserDefinedDeviceTypeEntity, error)
 }
 
 type relationalDatabaseClientImpl struct {
 	db *gorm.DB
 }
 
-// NewRelationalDatabaseClient is a constructor-like function that returns an instance of RelationalDatabaseClient
-func NewRelationalDatabaseClient() RelationalDatabaseClient {
-	return &relationalDatabaseClientImpl{db: nil}
+var relationalDatabaseClient RelationalDatabaseClient = nil
+
+func GetRelationalDatabaseClient() (RelationalDatabaseClient, error) { // TODO: Is this a correct "Singleton" implementation in Go?
+
+	var err error
+
+	if relationalDatabaseClient == nil {
+		relationalDatabaseClient = &relationalDatabaseClientImpl{db: nil}
+		err = relationalDatabaseClient.ConnectToDatabase()
+		if err != nil {
+			log.Println("Cannot connect to the relational relational-database: terminating the DEMO...")
+			return nil, err
+		}
+		err = relationalDatabaseClient.InitializeDatabase()
+		if err != nil {
+			log.Println("Cannot initialize the relational relational-database: terminating the DEMO...")
+			return nil, err
+		}
+	}
+
+	return relationalDatabaseClient, nil
 }
 
 func (r *relationalDatabaseClientImpl) ConnectToDatabase() error {
@@ -36,26 +56,26 @@ func (r *relationalDatabaseClientImpl) ConnectToDatabase() error {
 	var err error
 	r.db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Println("Error connecting to database:", err)
+		log.Println("Error connecting to relational-database:", err)
 		return err
 	}
 
 	r.db = r.db.Session(&gorm.Session{Logger: logger.Default.LogMode(logger.Silent)})
 
-	log.Println("Successfully connected to the database.")
+	log.Println("Successfully connected to the relational-database.")
 	return nil
 }
 
 func (r *relationalDatabaseClientImpl) setupTables() error {
 
 	err := r.db.AutoMigrate(
-		&RootKPIDefinitionEntity{},
+		&KPIDefinitionEntity{},
 		&GenericKPINodeEntity{},
 		&LogicalOperatorNodeEntity{},
 		&SubKPIDefinitionNodeEntity{},
 
-		&UserDefinedDeviceTypesEntity{},
-		&DeviceTypeParametersEntity{},
+		&UserDefinedDeviceTypeEntity{},
+		&DeviceTypeParameterEntity{},
 	)
 
 	if err != nil {
@@ -70,21 +90,21 @@ func (r *relationalDatabaseClientImpl) optionallyInsertKPIDefinitionData() error
 	var err error
 
 	var count int64
-	r.db.Model(&RootKPIDefinitionEntity{}).Count(&count)
+	r.db.Model(&KPIDefinitionEntity{}).Count(&count)
 	if count > 0 {
 		log.Println("The KPI definition data seem to be present: skipping insertion.")
 		return nil
 	}
 
-	for _, rootKPIDefinitionObject := range GetRootKPIDefinitions() {
-		err = r.insertRootKPIDefinitionIntoTheDatabase(rootKPIDefinitionObject)
+	for _, kpiDefinitionDTO := range util.GetArtificialKPIDefinitions() {
+		err = r.insertKPIDefinitionDTOIntoTheDatabase(kpiDefinitionDTO)
 		if err != nil {
-			log.Println("Error on insertRootKPIDefinitionIntoTheDatabase(...): ", err)
+			log.Println("Error on insertKPIDefinitionDTOIntoTheDatabase(...): ", err)
 			return err
 		}
 	}
 
-	log.Println("Successfully inserted KPI definition data into the database...")
+	log.Println("Successfully inserted KPI definition data into the relational-database...")
 	return nil
 }
 
@@ -93,15 +113,15 @@ func (r *relationalDatabaseClientImpl) optionallyInsertUserDefinedDeviceTypesDat
 	var err error
 
 	var count int64
-	r.db.Model(&UserDefinedDeviceTypesEntity{}).Count(&count)
+	r.db.Model(&UserDefinedDeviceTypeEntity{}).Count(&count)
 	if count > 0 {
 		log.Println("The user defined device types data seem to be present: skipping insertion.")
 		return nil
 	}
 
-	err = r.db.Create(&UserDefinedDeviceTypesEntity{
+	err = r.db.Create(&UserDefinedDeviceTypeEntity{
 		Denotation: "shelly1pro",
-		Parameters: []DeviceTypeParametersEntity{
+		Parameters: []DeviceTypeParameterEntity{
 			{
 				Name: "relay_0_temperature",
 				Type: "number",
@@ -117,26 +137,21 @@ func (r *relationalDatabaseClientImpl) optionallyInsertUserDefinedDeviceTypesDat
 		return err
 	}
 
-	log.Println("Successfully inserted user defined device types data into the database...")
+	log.Println("Successfully inserted user defined device types data into the relational-database...")
 	return nil
 }
 
 func (r *relationalDatabaseClientImpl) InitializeDatabase() error {
 
-	var err error
-
-	err = r.setupTables()
-	if err != nil {
+	if err := r.setupTables(); err != nil {
 		return err
 	}
 
-	err = r.optionallyInsertKPIDefinitionData()
-	if err != nil {
+	if err := r.optionallyInsertKPIDefinitionData(); err != nil {
 		return err
 	}
 
-	err = r.optionallyInsertUserDefinedDeviceTypesData()
-	if err != nil {
+	if err := r.optionallyInsertUserDefinedDeviceTypesData(); err != nil {
 		return err
 	}
 
@@ -144,8 +159,8 @@ func (r *relationalDatabaseClientImpl) InitializeDatabase() error {
 }
 
 func transformKPIDefinitionTree(
-	node Node,
-	parent *GenericKPINodeEntity,
+	node dto.FulfillableNode,
+	parentGenericKPINodeEntity *GenericKPINodeEntity,
 	genericKPINodeEntities []*GenericKPINodeEntity,
 	logicalOperatorNodeEntities []LogicalOperatorNodeEntity,
 	subKPIDefinitionNodeEntities []SubKPIDefinitionNodeEntity,
@@ -157,20 +172,20 @@ func transformKPIDefinitionTree(
 ) {
 
 	currentNodeEntity := &GenericKPINodeEntity{
-		ParentNode: parent,
+		ParentNode: parentGenericKPINodeEntity,
 	}
 	genericKPINodeEntities = append(genericKPINodeEntities, currentNodeEntity)
 
 	switch typedNode := node.(type) {
-	case *LogicalOperatorNode:
+	case *dto.LogicalOperatorNodeDTO:
 		logicalOperatorNodeEntities = append(logicalOperatorNodeEntities, LogicalOperatorNodeEntity{
 			Node: currentNodeEntity,
-			Type: typedNode.Type,
+			Type: string(typedNode.Type),
 		})
 		for _, childNode := range typedNode.ChildNodes {
 			_, genericKPINodeEntities, logicalOperatorNodeEntities, subKPIDefinitionNodeEntities = transformKPIDefinitionTree(childNode, currentNodeEntity, genericKPINodeEntities, logicalOperatorNodeEntities, subKPIDefinitionNodeEntities)
 		}
-	case *StringEqualitySubKPIDefinitionNode:
+	case *dto.StringEqualitySubKPIDefinitionNodeDTO:
 		subKPIDefinitionNodeEntities = append(subKPIDefinitionNodeEntities, SubKPIDefinitionNodeEntity{
 			Node:                         currentNodeEntity,
 			DeviceParameterSpecification: typedNode.DeviceParameterSpecification,
@@ -180,7 +195,7 @@ func transformKPIDefinitionTree(
 			StringReferenceValue:         &typedNode.ReferenceValue,
 			BooleanReferenceValue:        nil,
 		})
-	case *NumericLessThanSubKPIDefinitionNode:
+	case *dto.NumericLessThanSubKPIDefinitionNodeDTO:
 		subKPIDefinitionNodeEntities = append(subKPIDefinitionNodeEntities, SubKPIDefinitionNodeEntity{
 			Node:                         currentNodeEntity,
 			DeviceParameterSpecification: typedNode.DeviceParameterSpecification,
@@ -190,7 +205,7 @@ func transformKPIDefinitionTree(
 			StringReferenceValue:         nil,
 			BooleanReferenceValue:        nil,
 		})
-	case *NumericGreaterThanSubKPIDefinitionNode:
+	case *dto.NumericGreaterThanSubKPIDefinitionNodeDTO:
 		subKPIDefinitionNodeEntities = append(subKPIDefinitionNodeEntities, SubKPIDefinitionNodeEntity{
 			Node:                         currentNodeEntity,
 			DeviceParameterSpecification: typedNode.DeviceParameterSpecification,
@@ -200,7 +215,7 @@ func transformKPIDefinitionTree(
 			StringReferenceValue:         nil,
 			BooleanReferenceValue:        nil,
 		})
-	case *NumericEqualitySubKPIDefinitionNode:
+	case *dto.NumericEqualitySubKPIDefinitionNodeDTO:
 		subKPIDefinitionNodeEntities = append(subKPIDefinitionNodeEntities, SubKPIDefinitionNodeEntity{
 			Node:                         currentNodeEntity,
 			DeviceParameterSpecification: typedNode.DeviceParameterSpecification,
@@ -210,7 +225,7 @@ func transformKPIDefinitionTree(
 			StringReferenceValue:         nil,
 			BooleanReferenceValue:        nil,
 		})
-	case *NumericInRangeSubKPIDefinitionNode:
+	case *dto.NumericInRangeSubKPIDefinitionNodeDTO:
 		subKPIDefinitionNodeEntities = append(subKPIDefinitionNodeEntities, SubKPIDefinitionNodeEntity{
 			Node:                         currentNodeEntity,
 			DeviceParameterSpecification: typedNode.DeviceParameterSpecification,
@@ -220,7 +235,7 @@ func transformKPIDefinitionTree(
 			StringReferenceValue:         nil,
 			BooleanReferenceValue:        nil,
 		})
-	case *BooleanEqualitySubKPIDefinitionNode:
+	case *dto.BooleanEqualitySubKPIDefinitionNodeDTO:
 		subKPIDefinitionNodeEntities = append(subKPIDefinitionNodeEntities, SubKPIDefinitionNodeEntity{
 			Node:                         currentNodeEntity,
 			DeviceParameterSpecification: typedNode.DeviceParameterSpecification,
@@ -235,42 +250,36 @@ func transformKPIDefinitionTree(
 	return currentNodeEntity, genericKPINodeEntities, logicalOperatorNodeEntities, subKPIDefinitionNodeEntities
 }
 
-func (r *relationalDatabaseClientImpl) insertRootKPIDefinitionIntoTheDatabase(rootKPIDefinition RootKPIDefinition) error {
+func (r *relationalDatabaseClientImpl) insertKPIDefinitionDTOIntoTheDatabase(kpiDefinition dto.KPIDefinitionDTO) error {
 
-	var err error
+	genericKPINodeEntity, genericKPINodeEntities, logicalOperatorNodeEntities, subKPIDefinitionNodeEntities := transformKPIDefinitionTree(kpiDefinition.DefinitionRootNode, nil, []*GenericKPINodeEntity{}, []LogicalOperatorNodeEntity{}, []SubKPIDefinitionNodeEntity{})
 
-	genericKPINodeEntity, genericKPINodeEntities, logicalOperatorNodeEntities, subKPIDefinitionNodeEntities := transformKPIDefinitionTree(rootKPIDefinition.DefinitionRoot, nil, []*GenericKPINodeEntity{}, []LogicalOperatorNodeEntity{}, []SubKPIDefinitionNodeEntity{})
-
-	rootKPIDefinitionEntity := RootKPIDefinitionEntity{
-		DeviceTypeSpecification:  rootKPIDefinition.DeviceTypeSpecification,
-		HumanReadableDescription: rootKPIDefinition.HumanReadableDescription,
+	kpiDefinitionEntity := KPIDefinitionEntity{
+		DeviceTypeSpecification:  kpiDefinition.DeviceTypeSpecification,
+		HumanReadableDescription: kpiDefinition.HumanReadableDescription,
 		DefinitionRootNode:       genericKPINodeEntity,
 	}
 
 	for index, entity := range genericKPINodeEntities {
-		err = r.db.Create(&entity).Error
-		if err != nil {
+		if err := r.db.Create(&entity).Error; err != nil {
 			return err
 		}
 		genericKPINodeEntities[index] = entity
 	}
 
-	err = r.db.Create(&rootKPIDefinitionEntity).Error
-	if err != nil {
+	if err := r.db.Create(&kpiDefinitionEntity).Error; err != nil {
 		return err
 	}
 
 	for index, entity := range logicalOperatorNodeEntities {
-		err = r.db.Create(&entity).Error
-		if err != nil {
+		if err := r.db.Create(&entity).Error; err != nil {
 			return err
 		}
 		logicalOperatorNodeEntities[index] = entity
 	}
 
 	for index, entity := range subKPIDefinitionNodeEntities {
-		err = r.db.Create(&entity).Error
-		if err != nil {
+		if err := r.db.Create(&entity).Error; err != nil {
 			return err
 		}
 		subKPIDefinitionNodeEntities[index] = entity
@@ -285,8 +294,7 @@ func (r *relationalDatabaseClientImpl) fetchRemainingGenericKPINodeEntities(topG
 	for _, topGenericKPINodeEntity := range topGenericKPINodeEntities {
 
 		var nodes []GenericKPINodeEntity
-		err := r.db.Where("parent_node_id = ?", topGenericKPINodeEntity.ID).Find(&nodes).Error
-		if err != nil {
+		if err := r.db.Where("parent_node_id = ?", topGenericKPINodeEntity.ID).Find(&nodes).Error; err != nil {
 			return nil, err
 		}
 
@@ -302,40 +310,40 @@ func (r *relationalDatabaseClientImpl) fetchRemainingGenericKPINodeEntities(topG
 	return allNodes, nil
 }
 
-func (r *relationalDatabaseClientImpl) fetchRootKPIDefinitionEntities(targetDeviceType string) ([]RootKPIDefinitionEntity, error) {
+func (r *relationalDatabaseClientImpl) fetchKPIDefinitionEntities(targetDeviceType string) ([]KPIDefinitionEntity, error) {
 
 	var err error
-	var rootKPIDefinitionEntities []RootKPIDefinitionEntity
+	var kpiDefinitionEntities []KPIDefinitionEntity
 
-	err = r.db.Where("device_type_specification = ?", targetDeviceType).Find(&rootKPIDefinitionEntities).Error
+	err = r.db.Where("device_type_specification = ?", targetDeviceType).Find(&kpiDefinitionEntities).Error
 	if err != nil {
-		log.Println("Error loading data from database:", err)
-		return nil, fmt.Errorf("error obtaining data from the '%s' table: %w", RootKPIDefinitionTableName, err)
+		log.Println("Error loading data from relational-database:", err)
+		return nil, fmt.Errorf("error obtaining data from the '%s' table: %w", KPIDefinitionTableName, err)
 	}
 
-	return rootKPIDefinitionEntities, nil
+	return kpiDefinitionEntities, nil
 }
 
-func (r *relationalDatabaseClientImpl) fetchGenericKPINodeEntities(rootKPIDefinitionEntities []RootKPIDefinitionEntity) ([]GenericKPINodeEntity, error) {
+func (r *relationalDatabaseClientImpl) fetchGenericKPINodeEntities(kpiDefinitionEntities []KPIDefinitionEntity) ([]GenericKPINodeEntity, error) {
 
 	var err error
 	var genericKPINodeEntities []GenericKPINodeEntity
 
-	for _, rootKPIDefinitionEntity := range rootKPIDefinitionEntities {
+	for _, kpiDefinitionEntity := range kpiDefinitionEntities {
 
 		var rootGenericKPINodeEntity GenericKPINodeEntity
-		err = r.db.Where("id = ?", rootKPIDefinitionEntity.DefinitionRootNodeID).First(&rootGenericKPINodeEntity).Error
+		err = r.db.Where("id = ?", kpiDefinitionEntity.DefinitionRootNodeID).First(&rootGenericKPINodeEntity).Error
 		if err == nil {
 			genericKPINodeEntities = append(genericKPINodeEntities, rootGenericKPINodeEntity)
 		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-			log.Println("Error loading data from database:", err)
+			log.Println("Error loading data from relational-database:", err)
 			return nil, fmt.Errorf("error obtaining data from the '%s' table: %w", GenericKPINodeTableName, err)
 		}
 
 		var topGenericKPINodeEntities []GenericKPINodeEntity
-		err = r.db.Where("parent_node_id = ?", rootKPIDefinitionEntity.DefinitionRootNodeID).Find(&topGenericKPINodeEntities).Error
+		err = r.db.Where("parent_node_id = ?", kpiDefinitionEntity.DefinitionRootNodeID).Find(&topGenericKPINodeEntities).Error
 		if err != nil {
-			log.Println("Error loading data from database:", err)
+			log.Println("Error loading data from relational-database:", err)
 			return nil, fmt.Errorf("error obtaining data from the '%s' table: %w", GenericKPINodeTableName, err)
 		}
 		genericKPINodeEntities = append(genericKPINodeEntities, topGenericKPINodeEntities...)
@@ -343,7 +351,7 @@ func (r *relationalDatabaseClientImpl) fetchGenericKPINodeEntities(rootKPIDefini
 		var allRemainingGenericKPINodeEntities []GenericKPINodeEntity
 		allRemainingGenericKPINodeEntities, err = r.fetchRemainingGenericKPINodeEntities(topGenericKPINodeEntities)
 		if err != nil {
-			log.Println("Error loading data from database:", err)
+			log.Println("Error loading data from relational-database:", err)
 			return nil, fmt.Errorf("error obtaining data from the '%s' table: %w", GenericKPINodeTableName, err)
 		}
 		genericKPINodeEntities = append(genericKPINodeEntities, allRemainingGenericKPINodeEntities...)
@@ -364,7 +372,7 @@ func (r *relationalDatabaseClientImpl) fetchLogicalOperatorNodeEntities(genericK
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				continue
 			} else {
-				log.Println("Error loading data from database:", err)
+				log.Println("Error loading data from relational-database:", err)
 				return nil, fmt.Errorf("error obtaining data from the '%s' table: %w", LogicalOperatorNodeTableName, err)
 			}
 		}
@@ -386,7 +394,7 @@ func (r *relationalDatabaseClientImpl) fetchSubKPIDefinitionNodeEntities(generic
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				continue
 			} else {
-				log.Println("Error loading data from database:", err)
+				log.Println("Error loading data from relational-database:", err)
 				return nil, fmt.Errorf("error obtaining data from the '%s' table: %w", SubKPIDefinitionNodeTableName, err)
 			}
 		}
@@ -408,7 +416,7 @@ func prepareNodeChildrenMap(genericKPINodeEntities []GenericKPINodeEntity) map[u
 	return nodeChildrenMap
 }
 
-func reconstructNodeTree(genericKPINodeEntity GenericKPINodeEntity, nodeChildrenMap map[uint32][]GenericKPINodeEntity, logicalOperatorNodeEntities []LogicalOperatorNodeEntity, subKPIDefinitionNodeEntities []SubKPIDefinitionNodeEntity) Node {
+func reconstructNodeTree(genericKPINodeEntity GenericKPINodeEntity, nodeChildrenMap map[uint32][]GenericKPINodeEntity, logicalOperatorNodeEntities []LogicalOperatorNodeEntity, subKPIDefinitionNodeEntities []SubKPIDefinitionNodeEntity) dto.FulfillableNode {
 
 	for _, logicalOperatorNodeEntity := range logicalOperatorNodeEntities {
 
@@ -416,13 +424,13 @@ func reconstructNodeTree(genericKPINodeEntity GenericKPINodeEntity, nodeChildren
 		if logicalOperatorNodeEntityNodeID == genericKPINodeEntity.ID {
 
 			childGenericKPINodeEntities := nodeChildrenMap[logicalOperatorNodeEntityNodeID]
-			var childNodes []Node
+			var childNodes []dto.FulfillableNode
 			for _, childGenericKPINodeEntity := range childGenericKPINodeEntities {
 				childNode := reconstructNodeTree(childGenericKPINodeEntity, nodeChildrenMap, logicalOperatorNodeEntities, subKPIDefinitionNodeEntities)
 				childNodes = append(childNodes, childNode)
 			}
-			return &LogicalOperatorNode{
-				Type:       logicalOperatorNodeEntity.Type,
+			return &dto.LogicalOperatorNodeDTO{
+				Type:       dto.LogicalOperatorNodeType(logicalOperatorNodeEntity.Type),
 				ChildNodes: childNodes,
 			}
 		}
@@ -430,40 +438,40 @@ func reconstructNodeTree(genericKPINodeEntity GenericKPINodeEntity, nodeChildren
 
 	for _, subKPIDefinitionNodeEntity := range subKPIDefinitionNodeEntities {
 		if *subKPIDefinitionNodeEntity.NodeID == genericKPINodeEntity.ID {
-			subKPIDefinitionBaseNode := SubKPIDefinitionBaseNode{
+			subKPIDefinitionBaseNode := dto.SubKPIDefinitionBaseNodeDTO{
 				DeviceParameterSpecification: subKPIDefinitionNodeEntity.DeviceParameterSpecification,
 			}
 			switch subKPIDefinitionNodeEntity.Type {
 			case "string_equality":
-				return &StringEqualitySubKPIDefinitionNode{
-					SubKPIDefinitionBaseNode: subKPIDefinitionBaseNode,
-					ReferenceValue:           *subKPIDefinitionNodeEntity.StringReferenceValue,
+				return &dto.StringEqualitySubKPIDefinitionNodeDTO{
+					SubKPIDefinitionBaseNodeDTO: subKPIDefinitionBaseNode,
+					ReferenceValue:              *subKPIDefinitionNodeEntity.StringReferenceValue,
 				}
 			case "numeric_less_than":
-				return &NumericLessThanSubKPIDefinitionNode{
-					SubKPIDefinitionBaseNode: subKPIDefinitionBaseNode,
-					ReferenceValue:           *subKPIDefinitionNodeEntity.FirstNumericReferenceValue,
+				return &dto.NumericLessThanSubKPIDefinitionNodeDTO{
+					SubKPIDefinitionBaseNodeDTO: subKPIDefinitionBaseNode,
+					ReferenceValue:              *subKPIDefinitionNodeEntity.FirstNumericReferenceValue,
 				}
 			case "numeric_greater_than":
-				return &NumericGreaterThanSubKPIDefinitionNode{
-					SubKPIDefinitionBaseNode: subKPIDefinitionBaseNode,
-					ReferenceValue:           *subKPIDefinitionNodeEntity.FirstNumericReferenceValue,
+				return &dto.NumericGreaterThanSubKPIDefinitionNodeDTO{
+					SubKPIDefinitionBaseNodeDTO: subKPIDefinitionBaseNode,
+					ReferenceValue:              *subKPIDefinitionNodeEntity.FirstNumericReferenceValue,
 				}
 			case "numeric_equality":
-				return &NumericEqualitySubKPIDefinitionNode{
-					SubKPIDefinitionBaseNode: subKPIDefinitionBaseNode,
-					ReferenceValue:           *subKPIDefinitionNodeEntity.FirstNumericReferenceValue,
+				return &dto.NumericEqualitySubKPIDefinitionNodeDTO{
+					SubKPIDefinitionBaseNodeDTO: subKPIDefinitionBaseNode,
+					ReferenceValue:              *subKPIDefinitionNodeEntity.FirstNumericReferenceValue,
 				}
 			case "numeric_in_range":
-				return &NumericInRangeSubKPIDefinitionNode{
-					SubKPIDefinitionBaseNode: subKPIDefinitionBaseNode,
-					LowerBoundaryValue:       *subKPIDefinitionNodeEntity.FirstNumericReferenceValue,
-					UpperBoundaryValue:       *subKPIDefinitionNodeEntity.SecondNumericReferenceValue,
+				return &dto.NumericInRangeSubKPIDefinitionNodeDTO{
+					SubKPIDefinitionBaseNodeDTO: subKPIDefinitionBaseNode,
+					LowerBoundaryValue:          *subKPIDefinitionNodeEntity.FirstNumericReferenceValue,
+					UpperBoundaryValue:          *subKPIDefinitionNodeEntity.SecondNumericReferenceValue,
 				}
 			case "boolean_equality":
-				return &BooleanEqualitySubKPIDefinitionNode{
-					SubKPIDefinitionBaseNode: subKPIDefinitionBaseNode,
-					ReferenceValue:           *subKPIDefinitionNodeEntity.BooleanReferenceValue,
+				return &dto.BooleanEqualitySubKPIDefinitionNodeDTO{
+					SubKPIDefinitionBaseNodeDTO: subKPIDefinitionBaseNode,
+					ReferenceValue:              *subKPIDefinitionNodeEntity.BooleanReferenceValue,
 				}
 			}
 		}
@@ -472,37 +480,37 @@ func reconstructNodeTree(genericKPINodeEntity GenericKPINodeEntity, nodeChildren
 	return nil
 }
 
-func reconstructRootKPIDefinition(rootKPIDefinitionEntity RootKPIDefinitionEntity, genericKPINodeEntities []GenericKPINodeEntity, logicalOperatorNodeEntities []LogicalOperatorNodeEntity, subKPIDefinitionNodeEntities []SubKPIDefinitionNodeEntity) RootKPIDefinition {
+func reconstructKPIDefinition(kpiDefinitionEntity KPIDefinitionEntity, genericKPINodeEntities []GenericKPINodeEntity, logicalOperatorNodeEntities []LogicalOperatorNodeEntity, subKPIDefinitionNodeEntities []SubKPIDefinitionNodeEntity) dto.KPIDefinitionDTO {
 
-	var definitionRoot Node
+	var definitionRoot dto.FulfillableNode
 	nodeChildrenMap := prepareNodeChildrenMap(genericKPINodeEntities)
 
 	for _, genericKPINodeEntity := range genericKPINodeEntities {
-		if genericKPINodeEntity.ID == *rootKPIDefinitionEntity.DefinitionRootNodeID {
+		if genericKPINodeEntity.ID == *kpiDefinitionEntity.DefinitionRootNodeID {
 			definitionRoot = reconstructNodeTree(genericKPINodeEntity, nodeChildrenMap, logicalOperatorNodeEntities, subKPIDefinitionNodeEntities)
 			break
 		}
 	}
 
-	return RootKPIDefinition{
-		DeviceTypeSpecification:  rootKPIDefinitionEntity.DeviceTypeSpecification,
-		HumanReadableDescription: rootKPIDefinitionEntity.HumanReadableDescription,
-		DefinitionRoot:           definitionRoot,
+	return dto.KPIDefinitionDTO{
+		DeviceTypeSpecification:  kpiDefinitionEntity.DeviceTypeSpecification,
+		HumanReadableDescription: kpiDefinitionEntity.HumanReadableDescription,
+		DefinitionRootNode:       definitionRoot,
 	}
 }
 
-func (r *relationalDatabaseClientImpl) ObtainRootKPIDefinitionsForTheGivenDeviceType(targetDeviceType string) ([]RootKPIDefinition, error) {
+func (r *relationalDatabaseClientImpl) ObtainKPIDefinitionsForTheGivenDeviceType(targetDeviceType string) ([]dto.KPIDefinitionDTO, error) {
 
 	var err error
 
-	var rootKPIDefinitionEntities []RootKPIDefinitionEntity
-	rootKPIDefinitionEntities, err = r.fetchRootKPIDefinitionEntities(targetDeviceType)
+	var kpiDefinitionEntities []KPIDefinitionEntity
+	kpiDefinitionEntities, err = r.fetchKPIDefinitionEntities(targetDeviceType)
 	if err != nil {
 		return nil, err
 	}
 
 	var genericKPINodeEntities []GenericKPINodeEntity
-	genericKPINodeEntities, err = r.fetchGenericKPINodeEntities(rootKPIDefinitionEntities)
+	genericKPINodeEntities, err = r.fetchGenericKPINodeEntities(kpiDefinitionEntities)
 	if err != nil {
 		return nil, err
 	}
@@ -519,26 +527,26 @@ func (r *relationalDatabaseClientImpl) ObtainRootKPIDefinitionsForTheGivenDevice
 		return nil, err
 	}
 
-	var rootKPIDefinitions []RootKPIDefinition
-	for _, rootKPIDefinitionEntity := range rootKPIDefinitionEntities {
-		rootKPIDefinition := reconstructRootKPIDefinition(rootKPIDefinitionEntity, genericKPINodeEntities, logicalOperatorNodeEntities, subKPIDefinitionNodeEntities)
-		rootKPIDefinitions = append(rootKPIDefinitions, rootKPIDefinition)
+	var kpiDefinitions []dto.KPIDefinitionDTO
+	for _, kpiDefinitionEntity := range kpiDefinitionEntities {
+		kpiDefinition := reconstructKPIDefinition(kpiDefinitionEntity, genericKPINodeEntities, logicalOperatorNodeEntities, subKPIDefinitionNodeEntities)
+		kpiDefinitions = append(kpiDefinitions, kpiDefinition)
 	}
 
-	return rootKPIDefinitions, nil
+	return kpiDefinitions, nil
 }
 
-func (r *relationalDatabaseClientImpl) ObtainUserDefinedDeviceTypeByID(id uint32) (UserDefinedDeviceTypesEntity, error) {
+func (r *relationalDatabaseClientImpl) ObtainUserDefinedDeviceTypeByID(id uint32) (UserDefinedDeviceTypeEntity, error) {
 
-	var userDefinedDeviceTypesEntity UserDefinedDeviceTypesEntity
+	var userDefinedDeviceTypesEntity UserDefinedDeviceTypeEntity
 	err := r.db.Preload("Parameters").Where("id = ?", id).First(&userDefinedDeviceTypesEntity).Error
 
 	return userDefinedDeviceTypesEntity, err
 }
 
-func (r *relationalDatabaseClientImpl) ObtainAllUserDefinedDeviceTypes() ([]UserDefinedDeviceTypesEntity, error) {
+func (r *relationalDatabaseClientImpl) ObtainAllUserDefinedDeviceTypes() ([]UserDefinedDeviceTypeEntity, error) {
 
-	var userDefinedDeviceTypesEntities []UserDefinedDeviceTypesEntity
+	var userDefinedDeviceTypesEntities []UserDefinedDeviceTypeEntity
 	err := r.db.Preload("Parameters").Find(&userDefinedDeviceTypesEntities).Error
 
 	return userDefinedDeviceTypesEntities, err

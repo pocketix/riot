@@ -1,7 +1,7 @@
-package main
+package relational_database
 
 const (
-	RootKPIDefinitionTableName    = "root_kpi_definitions"
+	KPIDefinitionTableName        = "kpi_definitions"
 	GenericKPINodeTableName       = "generic_kpi_nodes"
 	LogicalOperatorNodeTableName  = "logical_operator_nodes"
 	SubKPIDefinitionNodeTableName = "sub_kpi_definition_nodes"
@@ -10,7 +10,7 @@ const (
 	DeviceTypeParametersTableName   = "device_type_parameters"
 )
 
-type RootKPIDefinitionEntity struct {
+type KPIDefinitionEntity struct {
 	ID                       uint32                `gorm:"column:id;primarykey;not null"`
 	DeviceTypeSpecification  string                `gorm:"column:device_type_specification;not null"`
 	HumanReadableDescription string                `gorm:"column:human_readable_description;not null"`
@@ -18,9 +18,9 @@ type RootKPIDefinitionEntity struct {
 	DefinitionRootNode       *GenericKPINodeEntity `gorm:"foreignKey:DefinitionRootNodeID"`
 }
 
-func (RootKPIDefinitionEntity) TableName() string {
+func (KPIDefinitionEntity) TableName() string {
 
-	return RootKPIDefinitionTableName
+	return KPIDefinitionTableName
 }
 
 type GenericKPINodeEntity struct {
@@ -35,9 +35,9 @@ func (GenericKPINodeEntity) TableName() string {
 }
 
 type LogicalOperatorNodeEntity struct {
-	NodeID *uint32                 `gorm:"column:node_id;primarykey;not null"`
-	Node   *GenericKPINodeEntity   `gorm:"foreignKey:NodeID"`
-	Type   LogicalOperatorNodeType `gorm:"column:type;not null"`
+	NodeID *uint32               `gorm:"column:node_id;primarykey;not null"`
+	Node   *GenericKPINodeEntity `gorm:"foreignKey:NodeID"`
+	Type   string                `gorm:"column:type;not null"`
 }
 
 func (LogicalOperatorNodeEntity) TableName() string {
@@ -61,25 +61,25 @@ func (SubKPIDefinitionNodeEntity) TableName() string {
 	return SubKPIDefinitionNodeTableName
 }
 
-type UserDefinedDeviceTypesEntity struct {
-	ID         uint32                       `gorm:"column:id;primarykey;not null"`
-	Denotation string                       `gorm:"column:denotation;not null"`
-	Parameters []DeviceTypeParametersEntity `gorm:"foreignKey:UserDefinedDeviceTypeID"`
+type UserDefinedDeviceTypeEntity struct {
+	ID         uint32                      `gorm:"column:id;primarykey;not null"`
+	Denotation string                      `gorm:"column:denotation;not null"`
+	Parameters []DeviceTypeParameterEntity `gorm:"foreignKey:UserDefinedDeviceTypeID"`
 }
 
-func (UserDefinedDeviceTypesEntity) TableName() string {
+func (UserDefinedDeviceTypeEntity) TableName() string {
 
 	return UserDefinedDeviceTypesTableName
 }
 
-type DeviceTypeParametersEntity struct {
+type DeviceTypeParameterEntity struct {
 	ID                      uint32 `gorm:"column:id;primarykey;not null"`
 	UserDefinedDeviceTypeID uint32 `gorm:"column:user_defined_device_type_id;not null"`
 	Name                    string `gorm:"column:name;not null"`
 	Type                    string `gorm:"column:type;not null"`
 }
 
-func (DeviceTypeParametersEntity) TableName() string {
+func (DeviceTypeParameterEntity) TableName() string {
 
 	return DeviceTypeParametersTableName
 }

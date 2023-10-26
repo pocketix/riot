@@ -1,12 +1,13 @@
-package main
+package graphql
 
 import (
+	"bp-bures-SfPDfSD/src/persistence/relational-database"
 	"errors"
 	"github.com/graphql-go/graphql"
 	"strconv"
 )
 
-func serializeDeviceTypeParameters(deviceTypeParameters []DeviceTypeParametersEntity) []map[string]interface{} {
+func serializeDeviceTypeParameters(deviceTypeParameters []relational_database.DeviceTypeParameterEntity) []map[string]interface{} {
 
 	serializedDeviceTypeParameters := make([]map[string]interface{}, len(deviceTypeParameters))
 
@@ -25,6 +26,8 @@ func GetSingleUserDefinedDeviceTypeQueryResolverFunction(p graphql.ResolveParams
 
 	var err error
 
+	relationalDatabaseClient, _ := relational_database.GetRelationalDatabaseClient()
+
 	idAsString, ok := p.Args["id"].(string)
 	if !ok {
 		return nil, errors.New("id argument is either missing or is not a string")
@@ -37,7 +40,7 @@ func GetSingleUserDefinedDeviceTypeQueryResolverFunction(p graphql.ResolveParams
 	}
 	u32ID := uint32(u64ID)
 
-	var userDefinedDeviceType UserDefinedDeviceTypesEntity
+	var userDefinedDeviceType relational_database.UserDefinedDeviceTypeEntity
 	userDefinedDeviceType, err = relationalDatabaseClient.ObtainUserDefinedDeviceTypeByID(u32ID)
 
 	return map[string]interface{}{
@@ -48,6 +51,8 @@ func GetSingleUserDefinedDeviceTypeQueryResolverFunction(p graphql.ResolveParams
 }
 
 func GetUserDefinedDeviceTypesQueryResolverFunction(_ graphql.ResolveParams) (interface{}, error) {
+
+	relationalDatabaseClient, _ := relational_database.GetRelationalDatabaseClient()
 
 	userDefinedDeviceTypes, err := relationalDatabaseClient.ObtainAllUserDefinedDeviceTypes()
 	if err != nil {

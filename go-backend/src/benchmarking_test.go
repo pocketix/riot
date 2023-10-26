@@ -1,35 +1,17 @@
 package main
 
 import (
+	"bp-bures-SfPDfSD/src/persistence/relational-database"
 	"log"
 	"testing"
 )
 
-func setupRelationalDatabaseClient() (RelationalDatabaseClient, error) {
-
-	var err error
-
-	relationalDatabaseClient = NewRelationalDatabaseClient()
-	err = relationalDatabaseClient.ConnectToDatabase()
-	if err != nil {
-		log.Println("Cannot connect to the relational database: terminating the benchmarking...")
-		return nil, err
-	}
-	err = relationalDatabaseClient.InitializeDatabase()
-	if err != nil {
-		log.Println("Cannot initialize the relational database: terminating the benchmarking...")
-		return nil, err
-	}
-
-	return relationalDatabaseClient, nil
-}
-
-func obtainCertainKPIDefinitionsFromRelationalDatabase(relationalDatabaseClient RelationalDatabaseClient) error {
+func obtainCertainKPIDefinitionsFromRelationalDatabase(relationalDatabaseClient relational_database.RelationalDatabaseClient) error {
 
 	deviceType := "shelly1pro"
-	_, err := relationalDatabaseClient.ObtainRootKPIDefinitionsForTheGivenDeviceType(deviceType)
+	_, err := relationalDatabaseClient.ObtainKPIDefinitionsForTheGivenDeviceType(deviceType)
 	if err != nil {
-		log.Printf("Could not load the KPI definitions for the device type '%s' from the database: cannot proceed with benchmarking...\n", deviceType)
+		log.Printf("Could not load the KPI definitions for the device type '%s' from the relational-database: cannot proceed with benchmarking...\n", deviceType)
 		return err
 	}
 
@@ -38,7 +20,7 @@ func obtainCertainKPIDefinitionsFromRelationalDatabase(relationalDatabaseClient 
 
 func BenchmarkObtainCertainKPIDefinitions(b *testing.B) {
 
-	relationalDatabaseClient, err := setupRelationalDatabaseClient()
+	relationalDatabaseClient, err := relational_database.GetRelationalDatabaseClient()
 	if err != nil {
 		b.Fatal(err)
 		return

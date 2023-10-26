@@ -1,11 +1,11 @@
-package main
+package graphql
 
 import (
 	"github.com/graphql-go/graphql"
 	"log"
 )
 
-func GenerateGraphQLSchema() (graphql.Schema, error) {
+func SetupGraphQLSchema() (graphql.Schema, error) {
 
 	DeviceParameterTypeEnum := graphql.NewEnum(graphql.EnumConfig{
 		Name: "DeviceParameterType",

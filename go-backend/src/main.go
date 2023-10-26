@@ -1,85 +1,36 @@
 package main
 
 import (
+	"bp-bures-SfPDfSD/src/api/graphql"
+	"bp-bures-SfPDfSD/src/middleware"
+	"bp-bures-SfPDfSD/src/persistence/relational-database"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-
-	"github.com/graphql-go/graphql"
 )
-
-type Input struct {
-	Query         string                 `query:"query"`
-	OperationName string                 `query:"operationName"`
-	Variables     map[string]interface{} `query:"variables"`
-}
 
 func main() {
 
-	var err error
+	// Initial setup of the relational-database client "singleton"
+	_, err := relational_database.GetRelationalDatabaseClient()
+	if err != nil {
+		log.Println("Error while trying to setup the relational-database client: terminating...")
+		return
+	}
 
+	// Starting KPI processing in a separate Goroutine
+	go middleware.StartProcessingKPIs()
+
+	// General web framework setup
 	app := fiber.New()
-	app.Use(cors.New(cors.Config{
+	app.Use(cors.New(cors.Config{ // Enabling CORS for the front-end (port 1234)
 		AllowOrigins: "http://localhost:1234",
 	}))
 
-	relationalDatabaseClient = NewRelationalDatabaseClient() // FIXME: Declaration is in demo.go...
-	err = relationalDatabaseClient.ConnectToDatabase()
-	if err != nil {
-		log.Println("Cannot connect to the relational database: terminating...")
-		return
-	}
-	err = relationalDatabaseClient.InitializeDatabase()
-	if err != nil {
-		log.Println("Cannot initialize the relational database: terminating...")
-		return
-	}
+	// GraphQL API setup
+	graphql.SetupGraphQLServer(app)
 
-	schema, err := GenerateGraphQLSchema()
-	if err != nil {
-		return
-	}
-
-	// curl 'http://localhost:9090/?query=query%7Bhello%7D'
-	app.Get("/", func(ctx *fiber.Ctx) error {
-		var input Input
-		if err := ctx.QueryParser(&input); err != nil {
-			return ctx.
-				Status(fiber.StatusInternalServerError).
-				SendString("Cannot parse query parameters: " + err.Error())
-		}
-
-		result := graphql.Do(graphql.Params{
-			Schema:         schema,
-			RequestString:  input.Query,
-			OperationName:  input.OperationName,
-			VariableValues: input.Variables,
-		})
-
-		ctx.Set("Content-Type", "application/graphql-response+json")
-		return ctx.JSON(result)
-	})
-
-	// curl 'http://localhost:9090/' --header 'content-type: application/json' --data-raw '{"query":"query{hello}"}'
-	app.Post("/", func(ctx *fiber.Ctx) error {
-		var input Input
-		if err := ctx.BodyParser(&input); err != nil {
-			return ctx.
-				Status(fiber.StatusInternalServerError).
-				SendString("Cannot parse body: " + err.Error())
-		}
-
-		result := graphql.Do(graphql.Params{
-			Schema:         schema,
-			RequestString:  input.Query,
-			OperationName:  input.OperationName,
-			VariableValues: input.Variables,
-		})
-
-		ctx.Set("Content-Type", "application/graphql-response+json")
-		return ctx.JSON(result)
-	})
-
+	// Final step: Exposing the GraphQL API of the system on port 9090
 	log.Fatal(app.Listen(":9090"))
 }
