@@ -7,7 +7,7 @@ import (
 
 func SetupGraphQLSchema() (graphql.Schema, error) {
 
-	DeviceParameterTypeEnum := graphql.NewEnum(graphql.EnumConfig{
+	deviceParameterTypeEnum := graphql.NewEnum(graphql.EnumConfig{
 		Name: "DeviceParameterType",
 		Values: graphql.EnumValueConfigMap{
 			"NUMBER": &graphql.EnumValueConfig{
@@ -33,7 +33,7 @@ func SetupGraphQLSchema() (graphql.Schema, error) {
 					Type: graphql.NewNonNull(graphql.String),
 				},
 				"type": &graphql.Field{
-					Type: graphql.NewNonNull(DeviceParameterTypeEnum),
+					Type: graphql.NewNonNull(deviceParameterTypeEnum),
 				},
 			},
 		},
@@ -41,7 +41,7 @@ func SetupGraphQLSchema() (graphql.Schema, error) {
 
 	userDefinedDeviceType := graphql.NewObject(
 		graphql.ObjectConfig{
-			Name: "DeviceType",
+			Name: "UserDefinedDevice",
 			Fields: graphql.Fields{
 				"id": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.ID),
@@ -60,18 +60,18 @@ func SetupGraphQLSchema() (graphql.Schema, error) {
 		Query: graphql.NewObject(graphql.ObjectConfig{
 			Name: "Query",
 			Fields: graphql.Fields{
-				"getSingleUserDefinedDeviceType": &graphql.Field{
+				"singleUserDefinedDeviceType": &graphql.Field{
 					Type: userDefinedDeviceType,
 					Args: graphql.FieldConfigArgument{
 						"id": &graphql.ArgumentConfig{
 							Type: graphql.NewNonNull(graphql.ID),
 						},
 					},
-					Resolve: GetSingleUserDefinedDeviceTypeQueryResolverFunction,
+					Resolve: singleUserDefinedDeviceTypeQueryResolverFunction,
 				},
-				"getUserDefinedDeviceTypes": &graphql.Field{
+				"userDefinedDeviceTypes": &graphql.Field{
 					Type:    graphql.NewList(userDefinedDeviceType),
-					Resolve: GetUserDefinedDeviceTypesQueryResolverFunction,
+					Resolve: userDefinedDeviceTypesQueryResolverFunction,
 				},
 			},
 		}),

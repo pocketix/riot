@@ -22,7 +22,7 @@ func serializeDeviceTypeParameters(deviceTypeParameters []relational_database.De
 	return serializedDeviceTypeParameters
 }
 
-func GetSingleUserDefinedDeviceTypeQueryResolverFunction(p graphql.ResolveParams) (interface{}, error) {
+func singleUserDefinedDeviceTypeQueryResolverFunction(p graphql.ResolveParams) (interface{}, error) {
 
 	var err error
 
@@ -50,7 +50,7 @@ func GetSingleUserDefinedDeviceTypeQueryResolverFunction(p graphql.ResolveParams
 	}, err
 }
 
-func GetUserDefinedDeviceTypesQueryResolverFunction(_ graphql.ResolveParams) (interface{}, error) {
+func userDefinedDeviceTypesQueryResolverFunction(_ graphql.ResolveParams) (interface{}, error) {
 
 	relationalDatabaseClient, _ := relational_database.GetRelationalDatabaseClient()
 
