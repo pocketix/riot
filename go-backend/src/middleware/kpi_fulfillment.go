@@ -47,38 +47,38 @@ type logicalOperatorNodeFulfillmentChecker struct{}
 
 func (_ *stringEqualityFulfillmentChecker) checkNodeFulfillment(node dto.FulfillableNode, deviceParameters *interface{}) bool {
 
-	n := node.(dto.StringEqualitySubKPIDefinitionNodeDTO)
+	n := node.(*dto.StringEqualitySubKPIDefinitionNodeDTO)
 	return getDeviceParameterValue(deviceParameters, n.DeviceParameterSpecification).(string) == n.ReferenceValue
 }
 
 func (_ *numericLessThanFulfillmentChecker) checkNodeFulfillment(node dto.FulfillableNode, deviceParameters *interface{}) bool {
 
-	n := node.(dto.NumericLessThanSubKPIDefinitionNodeDTO)
+	n := node.(*dto.NumericLessThanSubKPIDefinitionNodeDTO)
 	return getDeviceParameterValue(deviceParameters, n.DeviceParameterSpecification).(float64) < n.ReferenceValue
 }
 
 func (_ *numericGreaterThanFulfillmentChecker) checkNodeFulfillment(node dto.FulfillableNode, deviceParameters *interface{}) bool {
 
-	n := node.(dto.NumericGreaterThanSubKPIDefinitionNodeDTO)
+	n := node.(*dto.NumericGreaterThanSubKPIDefinitionNodeDTO)
 	return getDeviceParameterValue(deviceParameters, n.DeviceParameterSpecification).(float64) > n.ReferenceValue
 }
 
 func (_ *numericEqualityFulfillmentChecker) checkNodeFulfillment(node dto.FulfillableNode, deviceParameters *interface{}) bool {
 
-	n := node.(dto.NumericEqualitySubKPIDefinitionNodeDTO)
+	n := node.(*dto.NumericEqualitySubKPIDefinitionNodeDTO)
 	return getDeviceParameterValue(deviceParameters, n.DeviceParameterSpecification).(float64) == n.ReferenceValue
 }
 
 func (_ *numericInRangeFulfillmentChecker) checkNodeFulfillment(node dto.FulfillableNode, deviceParameters *interface{}) bool {
 
-	n := node.(dto.NumericInRangeSubKPIDefinitionNodeDTO)
+	n := node.(*dto.NumericInRangeSubKPIDefinitionNodeDTO)
 	deviceParameterValue := getDeviceParameterValue(deviceParameters, n.DeviceParameterSpecification).(float64)
 	return deviceParameterValue > n.LowerBoundaryValue && deviceParameterValue < n.UpperBoundaryValue
 }
 
 func (_ *booleanEqualityFulfillmentChecker) checkNodeFulfillment(node dto.FulfillableNode, deviceParameters *interface{}) bool {
 
-	n := node.(dto.BooleanEqualitySubKPIDefinitionNodeDTO)
+	n := node.(*dto.BooleanEqualitySubKPIDefinitionNodeDTO)
 	return getDeviceParameterValue(deviceParameters, n.DeviceParameterSpecification).(bool) == n.ReferenceValue
 }
 
@@ -102,7 +102,7 @@ func (_ *logicalOperatorNodeFulfillmentChecker) checkNodeFulfillment(node dto.Fu
 		return false
 	}
 
-	n := node.(dto.LogicalOperatorNodeDTO)
+	n := node.(*dto.LogicalOperatorNodeDTO)
 
 	switch n.Type {
 	case dto.AND:
