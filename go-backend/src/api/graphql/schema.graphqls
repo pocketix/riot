@@ -1,28 +1,36 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
-
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
+enum UserDefinedDeviceTypeParameterType {
+  STRING
+  NUMBER
+  BOOLEAN
 }
 
-type User {
+type UserDefinedDeviceTypeParameter {
   id: ID!
   name: String!
+  type: UserDefinedDeviceTypeParameterType!
+}
+
+type UserDefinedDeviceType {
+  id: ID!
+  denotation: String!
+  parameters: [UserDefinedDeviceTypeParameter!]!
+}
+
+input UserDefinedDeviceTypeParameterInput {
+  name: String!
+  type: UserDefinedDeviceTypeParameterType!
+}
+
+input NewUserDefinedDeviceTypeInput {
+  denotation: String!
+  parameters: [UserDefinedDeviceTypeParameterInput!]!
 }
 
 type Query {
-  todos: [Todo!]!
-}
-
-input NewTodo {
-  text: String!
-  userId: String!
+  singleUserDefinedDeviceType(input: ID!): UserDefinedDeviceType!
+  userDefinedDeviceTypes: [UserDefinedDeviceType!]!
 }
 
 type Mutation {
-  createTodo(input: NewTodo!): Todo!
+  createNewUserDefinedDeviceType(input: NewUserDefinedDeviceTypeInput!): UserDefinedDeviceType!
 }

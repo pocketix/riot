@@ -7,18 +7,56 @@ package graphql
 import (
 	"bp-bures-SfPDfSD/src/api/graphql/generated"
 	"bp-bures-SfPDfSD/src/api/graphql/model"
+	rdb "bp-bures-SfPDfSD/src/persistence/relational-database"
 	"context"
 	"fmt"
+	"strconv"
 )
 
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+// CreateNewUserDefinedDeviceType is the resolver for the createNewUserDefinedDeviceType field.
+func (r *mutationResolver) CreateNewUserDefinedDeviceType(ctx context.Context, input model.NewUserDefinedDeviceTypeInput) (*model.UserDefinedDeviceType, error) {
+
+	panic(fmt.Errorf("not implemented"))
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+// SingleUserDefinedDeviceType is the resolver for the singleUserDefinedDeviceType field.
+func (r *queryResolver) SingleUserDefinedDeviceType(_ context.Context, input string) (*model.UserDefinedDeviceType, error) {
+
+	id, err := strconv.ParseInt(input, 10, 32)
+	if err != nil {
+		return nil, err
+	}
+
+	rdbClient, err := rdb.GetRelationalDatabaseClient()
+	if err != nil {
+		return nil, err
+	}
+
+	userDefinedDeviceTypeEntity, err := rdbClient.ObtainUserDefinedDeviceTypeByID(uint32(id))
+	if err != nil {
+		return nil, err
+	}
+
+	outputParameters := make([]*model.UserDefinedDeviceTypeParameter, len(userDefinedDeviceTypeEntity.Parameters))
+	for index, entityParameter := range userDefinedDeviceTypeEntity.Parameters {
+		outputParameters[index] = &model.UserDefinedDeviceTypeParameter{
+			ID:   strconv.FormatUint(uint64(entityParameter.ID), 10),
+			Name: entityParameter.Name,
+			Type: model.UserDefinedDeviceTypeParameterType(entityParameter.Type),
+		}
+	}
+
+	return &model.UserDefinedDeviceType{
+		ID:         input,
+		Denotation: userDefinedDeviceTypeEntity.Denotation,
+		Parameters: outputParameters,
+	}, nil
+}
+
+// UserDefinedDeviceTypes is the resolver for the userDefinedDeviceTypes field.
+func (r *queryResolver) UserDefinedDeviceTypes(_ context.Context) ([]*model.UserDefinedDeviceType, error) {
+
+	panic(fmt.Errorf("not implemented"))
 }
 
 // Mutation returns generated.MutationResolver implementation.
