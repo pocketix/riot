@@ -1,4 +1,4 @@
-package graph
+package graphql
 
 // This file will not be regenerated automatically.
 //

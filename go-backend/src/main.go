@@ -3,7 +3,7 @@ package main
 import (
 	"bp-bures-SfPDfSD/src/api/graphql"
 	"bp-bures-SfPDfSD/src/middleware"
-	"bp-bures-SfPDfSD/src/persistence/relational-database"
+	rdb "bp-bures-SfPDfSD/src/persistence/relational-database"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,7 +13,7 @@ import (
 func main() {
 
 	// Initial setup of the relational-database client "singleton"
-	_, err := relational_database.GetRelationalDatabaseClient()
+	_, err := rdb.GetRelationalDatabaseClient()
 	if err != nil {
 		log.Println("Error while trying to setup the relational-database client: terminating...")
 		return
