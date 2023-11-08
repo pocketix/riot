@@ -31,22 +31,18 @@ func (r *queryResolver) SingleUserDefinedDeviceType(_ context.Context, input str
 		return nil, err
 	}
 
-	userDefinedDeviceTypeParameters, err := mapDeviceTypeParameterEntitiesToUserDefinedDeviceTypeParameters(userDefinedDeviceTypeEntity.Parameters)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.UserDefinedDeviceType{
-		ID:         input,
-		Denotation: userDefinedDeviceTypeEntity.Denotation,
-		Parameters: userDefinedDeviceTypeParameters,
-	}, nil
+	return mapUserDefinedDeviceTypeEntityToUserDefinedDeviceType(userDefinedDeviceTypeEntity)
 }
 
 // UserDefinedDeviceTypes is the resolver for the userDefinedDeviceTypes field.
 func (r *queryResolver) UserDefinedDeviceTypes(_ context.Context) ([]*model.UserDefinedDeviceType, error) {
 
-	panic(fmt.Errorf("not implemented"))
+	userDefinedDeviceTypeEntities, err := r.rdbClient.ObtainAllUserDefinedDeviceTypes()
+	if err != nil {
+		return nil, err
+	}
+
+	return mapUserDefinedDeviceTypeEntitiesToUserDefinedDeviceTypes(userDefinedDeviceTypeEntities)
 }
 
 // Mutation returns generated.MutationResolver implementation.

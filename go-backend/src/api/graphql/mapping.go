@@ -42,10 +42,39 @@ func mapDeviceTypeParameterEntitiesToUserDefinedDeviceTypeParameters(deviceTypeP
 	for index, deviceTypeParameterEntity := range deviceTypeParameterEntities {
 		userDefinedDeviceTypeParameter, err := mapDeviceTypeParameterEntityToUserDefinedDeviceTypeParameter(deviceTypeParameterEntity)
 		if err != nil {
-			return []*model.UserDefinedDeviceTypeParameter{}, err
+			return nil, err
 		}
 		userDefinedDeviceTypeParameters[index] = userDefinedDeviceTypeParameter
 	}
 
 	return userDefinedDeviceTypeParameters, nil
+}
+
+func mapUserDefinedDeviceTypeEntityToUserDefinedDeviceType(userDefinedDeviceTypeEntity rdb.UserDefinedDeviceTypeEntity) (*model.UserDefinedDeviceType, error) {
+
+	userDefinedDeviceTypeParameters, err := mapDeviceTypeParameterEntitiesToUserDefinedDeviceTypeParameters(userDefinedDeviceTypeEntity.Parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.UserDefinedDeviceType{
+		ID:         strconv.FormatUint(uint64(userDefinedDeviceTypeEntity.ID), 10),
+		Denotation: userDefinedDeviceTypeEntity.Denotation,
+		Parameters: userDefinedDeviceTypeParameters,
+	}, nil
+}
+
+func mapUserDefinedDeviceTypeEntitiesToUserDefinedDeviceTypes(userDefinedDeviceTypeEntities []rdb.UserDefinedDeviceTypeEntity) ([]*model.UserDefinedDeviceType, error) {
+
+	userDefinedDeviceTypes := make([]*model.UserDefinedDeviceType, len(userDefinedDeviceTypeEntities))
+
+	for index, userDefinedDeviceTypeEntity := range userDefinedDeviceTypeEntities {
+		userDefinedDeviceType, err := mapUserDefinedDeviceTypeEntityToUserDefinedDeviceType(userDefinedDeviceTypeEntity)
+		if err != nil {
+			return nil, err
+		}
+		userDefinedDeviceTypes[index] = userDefinedDeviceType
+	}
+
+	return userDefinedDeviceTypes, nil
 }
