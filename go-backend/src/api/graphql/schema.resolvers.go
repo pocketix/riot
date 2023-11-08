@@ -31,19 +31,15 @@ func (r *queryResolver) SingleUserDefinedDeviceType(_ context.Context, input str
 		return nil, err
 	}
 
-	outputParameters := make([]*model.UserDefinedDeviceTypeParameter, len(userDefinedDeviceTypeEntity.Parameters))
-	for index, entityParameter := range userDefinedDeviceTypeEntity.Parameters {
-		outputParameters[index] = &model.UserDefinedDeviceTypeParameter{
-			ID:   strconv.FormatUint(uint64(entityParameter.ID), 10),
-			Name: entityParameter.Name,
-			Type: model.UserDefinedDeviceTypeParameterType(entityParameter.Type),
-		}
+	userDefinedDeviceTypeParameters, err := mapDeviceTypeParameterEntitiesToUserDefinedDeviceTypeParameters(userDefinedDeviceTypeEntity.Parameters)
+	if err != nil {
+		return nil, err
 	}
 
 	return &model.UserDefinedDeviceType{
 		ID:         input,
 		Denotation: userDefinedDeviceTypeEntity.Denotation,
-		Parameters: outputParameters,
+		Parameters: userDefinedDeviceTypeParameters,
 	}, nil
 }
 
