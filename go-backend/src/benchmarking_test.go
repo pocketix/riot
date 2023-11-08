@@ -1,12 +1,12 @@
 package main
 
 import (
-	"bp-bures-SfPDfSD/src/persistence/relational-database"
+	rdb "bp-bures-SfPDfSD/src/persistence/relational-database"
 	"log"
 	"testing"
 )
 
-func obtainCertainKPIDefinitionsFromRelationalDatabase(relationalDatabaseClient relational_database.RelationalDatabaseClient) error {
+func obtainCertainKPIDefinitionsFromRelationalDatabase(relationalDatabaseClient rdb.RelationalDatabaseClient) error {
 
 	deviceType := "shelly1pro"
 	_, err := relationalDatabaseClient.ObtainKPIDefinitionsForTheGivenDeviceType(deviceType)
@@ -20,16 +20,17 @@ func obtainCertainKPIDefinitionsFromRelationalDatabase(relationalDatabaseClient 
 
 func BenchmarkObtainCertainKPIDefinitions(b *testing.B) {
 
-	relationalDatabaseClient, err := relational_database.GetRelationalDatabaseClient()
-	if err != nil {
+	if err := rdb.SetupRelationalDatabaseClient(); err != nil {
 		b.Fatal(err)
 		return
 	}
 
+	rdbClient := *rdb.GetRelationalDatabaseClientReference()
+
 	b.Run("FromRelationalDatabase", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			err := obtainCertainKPIDefinitionsFromRelationalDatabase(relationalDatabaseClient)
+			err := obtainCertainKPIDefinitionsFromRelationalDatabase(rdbClient)
 			if err != nil {
 				b.Fatal(err)
 				return

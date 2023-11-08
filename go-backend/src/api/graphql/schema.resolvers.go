@@ -7,7 +7,6 @@ package graphql
 import (
 	"bp-bures-SfPDfSD/src/api/graphql/generated"
 	"bp-bures-SfPDfSD/src/api/graphql/model"
-	rdb "bp-bures-SfPDfSD/src/persistence/relational-database"
 	"context"
 	"fmt"
 	"strconv"
@@ -27,12 +26,7 @@ func (r *queryResolver) SingleUserDefinedDeviceType(_ context.Context, input str
 		return nil, err
 	}
 
-	rdbClient, err := rdb.GetRelationalDatabaseClient()
-	if err != nil {
-		return nil, err
-	}
-
-	userDefinedDeviceTypeEntity, err := rdbClient.ObtainUserDefinedDeviceTypeByID(uint32(id))
+	userDefinedDeviceTypeEntity, err := r.rdbClient.ObtainUserDefinedDeviceTypeByID(uint32(id))
 	if err != nil {
 		return nil, err
 	}

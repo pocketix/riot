@@ -28,27 +28,27 @@ type relationalDatabaseClientImpl struct {
 	db *gorm.DB
 }
 
-var relationalDatabaseClient RelationalDatabaseClient = nil
+var rdbClientInstance RelationalDatabaseClient
 
-func GetRelationalDatabaseClient() (RelationalDatabaseClient, error) { // TODO: Is this a correct "Singleton" implementation in Go?
+func GetRelationalDatabaseClientReference() *RelationalDatabaseClient {
+
+	return &rdbClientInstance
+}
+
+func SetupRelationalDatabaseClient() error {
 
 	var err error
+	rdbClientInstance = &relationalDatabaseClientImpl{db: nil}
 
-	if relationalDatabaseClient == nil {
-		relationalDatabaseClient = &relationalDatabaseClientImpl{db: nil}
-		err = relationalDatabaseClient.ConnectToDatabase()
-		if err != nil {
-			log.Println("Cannot connect to the relational relational-database: terminating the DEMO...")
-			return nil, err
-		}
-		err = relationalDatabaseClient.InitializeDatabase()
-		if err != nil {
-			log.Println("Cannot initialize the relational relational-database: terminating the DEMO...")
-			return nil, err
-		}
+	if err = rdbClientInstance.ConnectToDatabase(); err != nil {
+		return err
 	}
 
-	return relationalDatabaseClient, nil
+	if err = rdbClientInstance.InitializeDatabase(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *relationalDatabaseClientImpl) ConnectToDatabase() error {

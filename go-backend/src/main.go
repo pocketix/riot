@@ -12,9 +12,8 @@ import (
 
 func main() {
 
-	// Initial setup of the relational-database client "singleton"
-	_, err := rdb.GetRelationalDatabaseClient()
-	if err != nil {
+	// Setup of the relational-database client
+	if err := rdb.SetupRelationalDatabaseClient(); err != nil {
 		log.Println("Error while trying to setup the relational-database client: terminating...")
 		return
 	}
@@ -29,7 +28,7 @@ func main() {
 	}))
 
 	// GraphQL API setup
-	graphql.SetupGraphQLServer(app)
+	graphql.SetupGraphQLServer(app, *rdb.GetRelationalDatabaseClientReference())
 
 	// Final step: Exposing the GraphQL API of the system on port 9090
 	log.Fatal(app.Listen(":9090"))

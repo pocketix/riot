@@ -3,7 +3,7 @@ package middleware
 import (
 	"bp-bures-SfPDfSD/src/dto"
 	"bp-bures-SfPDfSD/src/mqtt"
-	"bp-bures-SfPDfSD/src/persistence/relational-database"
+	rdb "bp-bures-SfPDfSD/src/persistence/relational-database"
 	"encoding/json"
 	"log"
 )
@@ -21,13 +21,8 @@ func checkKPIFulfillment(upstreamMessage dto.Dev5UpstreamMessageDTO) {
 	device := upstreamMessage.Data.Devices[0] // TODO: Just one device? Or multiple? And how many?
 	deviceType := device.DeviceType
 
-	relationalDatabaseClient, err := relational_database.GetRelationalDatabaseClient()
-	if err != nil {
-		log.Println("Error occurred while trying to obtain the relational-database client: cannot proceed with the KPI fulfillment check.")
-		return
-	}
-
-	rootKPIDefinitionsForTheGivenDeviceType, err := relationalDatabaseClient.ObtainKPIDefinitionsForTheGivenDeviceType(deviceType)
+	rdbClientReference := rdb.GetRelationalDatabaseClientReference()
+	rootKPIDefinitionsForTheGivenDeviceType, err := (*rdbClientReference).ObtainKPIDefinitionsForTheGivenDeviceType(deviceType)
 	if err != nil {
 		log.Printf("Could not load the KPI definitions for the device type '%s' from the relational-database: cannot proceed with the KPI fulfillment check.\n", deviceType)
 		return
