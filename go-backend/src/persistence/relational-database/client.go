@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -22,6 +23,7 @@ type RelationalDatabaseClient interface {
 	ObtainKPIDefinitionsForTheGivenDeviceType(deviceType string) ([]dto.KPIDefinitionDTO, error)
 	ObtainUserDefinedDeviceTypeByID(id uint32) (UserDefinedDeviceTypeEntity, error)
 	ObtainAllUserDefinedDeviceTypes() ([]UserDefinedDeviceTypeEntity, error)
+	InsertUserDefinedDeviceType(userDefinedDeviceTypeDTO dto.UserDefinedDeviceTypeDTO) (uint32, error)
 }
 
 type relationalDatabaseClientImpl struct {
@@ -550,4 +552,27 @@ func (r *relationalDatabaseClientImpl) ObtainAllUserDefinedDeviceTypes() ([]User
 	err := r.db.Preload("Parameters").Find(&userDefinedDeviceTypesEntities).Error
 
 	return userDefinedDeviceTypesEntities, err
+}
+
+func (r *relationalDatabaseClientImpl) InsertUserDefinedDeviceType(userDefinedDeviceTypeDTO dto.UserDefinedDeviceTypeDTO) (uint32, error) {
+
+	deviceTypeParameterEntities := make([]DeviceTypeParameterEntity, len(userDefinedDeviceTypeDTO.Parameters))
+
+	for index, userDefinedDeviceParameterDTO := range userDefinedDeviceTypeDTO.Parameters {
+		deviceTypeParameterEntities[index] = DeviceTypeParameterEntity{
+			Name: userDefinedDeviceParameterDTO.Name,
+			Type: strings.ToLower(string(userDefinedDeviceParameterDTO.Type)),
+		}
+	}
+
+	userDefinedDeviceTypeEntity := UserDefinedDeviceTypeEntity{
+		Denotation: userDefinedDeviceTypeDTO.Denotation,
+		Parameters: deviceTypeParameterEntities,
+	}
+
+	if err := r.db.Create(&userDefinedDeviceTypeEntity).Error; err != nil {
+		return 0, err
+	}
+
+	return userDefinedDeviceTypeEntity.ID, nil
 }

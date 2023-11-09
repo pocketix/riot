@@ -8,14 +8,24 @@ import (
 	"bp-bures-SfPDfSD/src/api/graphql/generated"
 	"bp-bures-SfPDfSD/src/api/graphql/model"
 	"context"
-	"fmt"
 	"strconv"
 )
 
 // CreateNewUserDefinedDeviceType is the resolver for the createNewUserDefinedDeviceType field.
-func (r *mutationResolver) CreateNewUserDefinedDeviceType(ctx context.Context, input model.NewUserDefinedDeviceTypeInput) (*model.UserDefinedDeviceType, error) {
+func (r *mutationResolver) CreateNewUserDefinedDeviceType(_ context.Context, input model.NewUserDefinedDeviceTypeInput) (*model.UserDefinedDeviceType, error) {
 
-	panic(fmt.Errorf("not implemented"))
+	dto := mapNewUserDefinedDeviceTypeInputToUserDefinedDeviceTypeDTO(input)
+	id, err := r.rdbClient.InsertUserDefinedDeviceType(dto)
+	if err != nil {
+		return nil, err
+	}
+
+	userDefinedDeviceTypeEntity, err := r.rdbClient.ObtainUserDefinedDeviceTypeByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapUserDefinedDeviceTypeEntityToUserDefinedDeviceType(userDefinedDeviceTypeEntity)
 }
 
 // SingleUserDefinedDeviceType is the resolver for the singleUserDefinedDeviceType field.

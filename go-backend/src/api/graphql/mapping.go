@@ -2,6 +2,7 @@ package graphql
 
 import (
 	"bp-bures-SfPDfSD/src/api/graphql/model"
+	"bp-bures-SfPDfSD/src/dto"
 	rdb "bp-bures-SfPDfSD/src/persistence/relational-database"
 	"errors"
 	"strconv"
@@ -77,4 +78,22 @@ func mapUserDefinedDeviceTypeEntitiesToUserDefinedDeviceTypes(userDefinedDeviceT
 	}
 
 	return userDefinedDeviceTypes, nil
+}
+
+func mapNewUserDefinedDeviceTypeInputToUserDefinedDeviceTypeDTO(input model.NewUserDefinedDeviceTypeInput) dto.UserDefinedDeviceTypeDTO {
+
+	userDefinedDeviceTypeDTOs := make([]dto.UserDefinedDeviceTypeParameterDTO, len(input.Parameters))
+
+	for index, userDefinedDeviceTypeParameterInput := range input.Parameters {
+		userDefinedDeviceTypeDTOs[index] = dto.UserDefinedDeviceTypeParameterDTO{
+			Name: userDefinedDeviceTypeParameterInput.Name,
+			Type: dto.UserDefinedDeviceTypeParameterType(userDefinedDeviceTypeParameterInput.Type),
+		}
+	}
+
+	return dto.UserDefinedDeviceTypeDTO{
+		ID:         nil,
+		Denotation: input.Denotation,
+		Parameters: userDefinedDeviceTypeDTOs,
+	}
 }
