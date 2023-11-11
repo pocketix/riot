@@ -1,12 +1,12 @@
 import React, {ReactElement} from "react"
-import styles from "./DTDPage.module.scss"
+import styles from "./DeviceTypesPage.module.scss"
 
 import gql from 'graphql-tag' // FIXME: Should not be necessary with correct build tool (Parcel) configuration...
 import {useQuery} from '@apollo/client'
 import USER_DEFINED_DEVICE_TYPES_QUERY from './../../graphql/queries/userDefinedDeviceTypes.graphql'
 import {UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables} from '../../generated/graphql'
 
-const DTDPage: React.FC = () => {
+const DeviceTypesPage: React.FC = () => {
 
     const {data, loading, error} = useQuery<UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables>(gql`${USER_DEFINED_DEVICE_TYPES_QUERY}`)
 
@@ -30,11 +30,11 @@ const DTDPage: React.FC = () => {
         </>
     }
 
-    return <div className={styles.main}>
-        <h1>Welcome to the DTD page!</h1>
-        <p>One can observe the already defined device types here and also define new ones at will...</p>
+    return <div className={styles.deviceTypesPage}>
+        <h1>Device Types</h1>
+        <p>For now, this page offers an overview of already defined device types.:</p>
         {content}
     </div>
 }
 
-export default DTDPage
+export default DeviceTypesPage

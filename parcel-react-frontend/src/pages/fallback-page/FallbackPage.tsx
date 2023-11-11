@@ -1,13 +1,12 @@
 import React from "react"
-import {Link} from "react-router-dom"
+import styles from "./FallbackPage.module.scss"
+import {CustomLink} from "../../components/main-layout/MainLayout"
 
 const FallbackPage: React.FC = () => {
 
-    return <div>
-        <h2>There is nothing here!</h2>
-        <p>
-            <Link to="/">Return to homepage</Link>
-        </p>
+    return <div className={styles.fallbackPage}>
+        <h1>There is nothing to be found on this URL...</h1>
+        <CustomLink route="/" text="Return to Homepage" iconIdentifier="arrow_back"></CustomLink>
     </div>
 }
 

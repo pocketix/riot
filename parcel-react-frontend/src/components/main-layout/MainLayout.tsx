@@ -1,14 +1,14 @@
 import React from "react"
-import {Link, Outlet} from "react-router-dom"
+import {NavigateFunction, Outlet, useNavigate} from "react-router-dom"
 import styles from "./MainLayout.module.scss"
 
 const MainLayout: React.FC = () => {
 
     return <div className={styles.outerContainer}>
         <div className={styles.sidePanel}>
-            <CustomLink route="/" text="Homepage" />
-            <CustomLink route="/dtd" text="DTD Page" />
-            <CustomLink route="/apollo-sandbox" text="Apollo Sandbox Page" />
+            <CustomLink route="/" text="Homepage" iconIdentifier="home" />
+            <CustomLink route="/device-types" text="Device types" iconIdentifier="home_iot_device" />
+            <CustomLink route="/apollo-sandbox" text="Apollo Sandbox" iconIdentifier="labs" />
         </div>
         <div className={styles.outletContainer}>
             <Outlet />
@@ -21,11 +21,15 @@ export default MainLayout
 interface CustomLinkProps {
     route: string
     text: string
+    iconIdentifier: string
 }
 
-const CustomLink: React.FC<CustomLinkProps> = ({route, text}) => {
+export const CustomLink: React.FC<CustomLinkProps> = ({route, text, iconIdentifier}) => {
 
-    return <div className={styles.customLink}>
-        <Link to={route}>{text}</Link>
+    const navigate: NavigateFunction = useNavigate()
+
+    return <div className={styles.customLink} onClick={() => navigate(route)}>
+        <span className="material-symbols-outlined">{iconIdentifier}</span>
+        <span>{text}</span>
     </div>
 }
