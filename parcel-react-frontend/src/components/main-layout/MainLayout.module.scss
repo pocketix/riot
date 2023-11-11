@@ -3,7 +3,7 @@
   height: 100vh;
 }
 
-.navigationContainer {
+.sidePanel {
   padding-right: 10px;
   padding-left: 10px;
   display: flex;
@@ -17,4 +17,14 @@
   justify-content: center;
   padding: 10px;
   flex: 1;
+}
+
+.customLink {
+  margin: 15px;
+
+  a {
+    font-size: 30px;
+    color: black;
+    text-decoration: none;
+  }
 }
