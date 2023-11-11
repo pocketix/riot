@@ -4,18 +4,36 @@
   "browserslist": "> 0.5%, last 2 versions, not dead",
   "scripts": {
     "start": "parcel",
-    "build": "parcel build"
+    "build": "parcel build",
+    "codegen": "graphql-codegen --config codegen.ts"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "5.0.0",
+    "@graphql-codegen/client-preset": "4.1.0",
+    "@parcel/transformer-graphql": "^2.10.2",
     "@parcel/transformer-sass": "^2.10.0",
     "@types/react-dom": "^18.2.0",
     "parcel": "latest",
     "process": "^0.11.10"
   },
   "dependencies": {
+    "@apollo/client": "^3.8.7",
     "@apollo/sandbox": "^2.5.1",
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/typescript": "^4.0.1",
+    "@graphql-codegen/typescript-operations": "^4.0.1",
+    "@graphql-codegen/typescript-react-apollo": "^4.1.0",
+    "graphql": "^16.8.1",
+    "graphql-tag": "^2.12.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.17.0"
+  },
+  "parcel": {
+    "transformers": {
+      "*.graphql": [
+        "@parcel/transformer-graphql"
+      ]
+    }
   }
 }
