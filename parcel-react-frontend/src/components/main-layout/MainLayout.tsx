@@ -7,6 +7,7 @@ const MainLayout: React.FC = () => {
     return <div className={styles.outerContainer}>
         <div className={styles.sidePanel}>
             <CustomLink route="/" text="Homepage" />
+            <CustomLink route="/dtd" text="DTD Page" />
             <CustomLink route="/apollo-sandbox" text="Apollo Sandbox Page" />
         </div>
         <div className={styles.outletContainer}>
