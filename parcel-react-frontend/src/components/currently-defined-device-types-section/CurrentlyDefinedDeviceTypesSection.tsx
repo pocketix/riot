@@ -20,10 +20,13 @@ const CurrentlyDefinedDeviceTypesSection: React.FC = () => {
     }
 
     if (data) {
-        return <div className={styles.section}>
-            {data.userDefinedDeviceTypes.map(deviceType => (
-                <DeviceTypeWidget id={deviceType.id} denotation={deviceType.denotation} parameters={deviceType.parameters} />
-            ))}
+        return <div className={styles.sectionContainer}>
+            <h2>Currently defined device types</h2>
+            <div className={styles.section}>
+                {data.userDefinedDeviceTypes.map(deviceType => (
+                    <DeviceTypeWidget id={deviceType.id} denotation={deviceType.denotation} parameters={deviceType.parameters} />
+                ))}
+            </div>
         </div>
     }
 }

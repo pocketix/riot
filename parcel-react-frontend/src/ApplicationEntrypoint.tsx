@@ -14,30 +14,44 @@ const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
     cache: new InMemoryCache()
 })
 
-const ApplicationEntrypoint: React.FC = () => {
-
-    const customMuiTheme: Theme = createTheme({
-        palette: {
-            mode: 'light',  // Use 'dark' for dark mode if needed
-            primary: {
-                main: '#000000',  // Black color
-                contrastText: '#ffffff',  // White text on primary color
-            },
-            secondary: {
-                main: '#ffffff',  // White color
-                contrastText: '#000000',  // Black text on secondary color
-            },
-            background: {
-                default: '#ffffff',  // White background
-                paper: '#f0f0f0',    // Slightly off-white for surfaces like cards
-            },
-            text: {
-                primary: '#000000',  // Primary text color (black)
-                secondary: 'rgba(0, 0, 0, 0.7)',  // Slightly lighter for secondary text
-                disabled: 'rgba(0, 0, 0, 0.38)'  // Disabled text color
+const customMuiTheme: Theme = createTheme({
+    palette: {
+        mode: 'light',
+        primary: {
+            main: '#000000',
+            contrastText: '#ffffff',
+        },
+        secondary: {
+            main: '#ffffff',
+            contrastText: '#000000',
+        },
+        background: {
+            default: '#ffffff',
+            paper: '#f0f0f0',
+        },
+        text: {
+            primary: '#000000',
+            secondary: 'rgba(0, 0, 0, 0.7)',
+            disabled: 'rgba(0, 0, 0, 0.38)'
+        },
+    },
+    components: {
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    color: '#000000',
+                    backgroundColor: '#e0e0e0',
+                    '&:hover': {
+                        backgroundColor: '#bdbdbd',
+                    },
+                    textTransform: 'none',
+                },
             },
         },
-    })
+    },
+})
+
+const ApplicationEntrypoint: React.FC = () => {
 
     return <ApolloProvider client={apolloClient}>
         <ThemeProvider theme={customMuiTheme}>
