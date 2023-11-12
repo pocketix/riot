@@ -7,7 +7,7 @@ import { Alert, LinearProgress } from '@mui/material'
 
 interface DeviceTypesPageViewProps {
   userDefinedDeviceTypesQueryData: UserDefinedDeviceTypesQuery
-  createNewUserDefinedDeviceType: (denotation: string) => Promise<void>
+  createNewUserDefinedDeviceType: (denotation: string, parameters: { name: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]) => Promise<void>
   deleteUserDefinedDeviceType: (id: string) => Promise<void>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
@@ -18,9 +18,7 @@ const DeviceTypesPageView: React.FC<DeviceTypesPageViewProps> = (props) => {
     <div className={styles.deviceTypesPage}>
       <h1>Device types</h1>
       <div className={styles.statusBar}>
-        {props.anyLoadingOccurs && (
-          <LinearProgress />
-        )}
+        {props.anyLoadingOccurs && <LinearProgress />}
         {props.anyErrorOccurred && <Alert severity="error">Error occurred in communication between system front-end and back-end</Alert>}
       </div>
       <CurrentlyDefinedDeviceTypesSection

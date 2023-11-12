@@ -5,6 +5,7 @@ import {
   CreateNewUserDefinedDeviceTypeMutationVariables,
   DeleteUserDefinedDeviceTypeMutation,
   DeleteUserDefinedDeviceTypeMutationVariables,
+  UserDefinedDeviceTypeParameterType,
   UserDefinedDeviceTypesQuery,
   UserDefinedDeviceTypesQueryVariables
 } from '../../generated/graphql'
@@ -46,12 +47,28 @@ const DeviceTypesPageController: React.FC = () => {
   }, [userDefinedDeviceTypesQueryRefetchFunction])
 
   const createNewUserDefinedDeviceType = useCallback(
-    async (denotation: string) => {
+    async (denotation: string, parameters: { name: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]) => {
+      const transformParameterType = (type: 'STRING' | 'NUMBER' | 'BOOLEAN'): UserDefinedDeviceTypeParameterType => {
+        switch (type) {
+          case 'STRING':
+            return UserDefinedDeviceTypeParameterType.String
+          case 'NUMBER':
+            return UserDefinedDeviceTypeParameterType.Number
+          case 'BOOLEAN':
+            return UserDefinedDeviceTypeParameterType.Boolean
+        }
+      }
+
       await createNewUserDefinedDeviceTypeMutationFunction({
         variables: {
           input: {
             denotation: denotation,
-            parameters: []
+            parameters: parameters.map((p) => {
+              return {
+                name: p.name,
+                type: transformParameterType(p.type)
+              }
+            })
           }
         }
       })
