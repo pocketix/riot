@@ -15,7 +15,7 @@ const DeviceTypesPage: React.FC = () => {
     return <div className={styles.deviceTypesPage}>
         <h1>Device types</h1>
         <CurrentlyDefinedDeviceTypesSection data={data} loading={loading} error={error}/>
-        <NewDeviceTypeForm userDefinedDeviceTypesQueryLoading={loading} userDefinedDeviceTypesQueryError={error} userDefinedDeviceTypesQueryRefetchFunction={refetch}/>
+        <NewDeviceTypeForm userDefinedDeviceTypesQueryLoading={loading} userDefinedDeviceTypesQueryError={error} userDefinedDeviceTypesQueryRefetch={refetch}/>
     </div>
 }
 
