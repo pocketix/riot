@@ -30,3 +30,8 @@
 .deleteButton {
   cursor: pointer;
 }
+
+.deleteButtonDisabled {
+  color: darkgray;
+  cursor: default;
+}

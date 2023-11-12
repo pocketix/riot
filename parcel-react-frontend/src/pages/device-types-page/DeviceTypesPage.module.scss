@@ -14,3 +14,10 @@
     margin: 3px 0;
   }
 }
+
+.statusBar {
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}

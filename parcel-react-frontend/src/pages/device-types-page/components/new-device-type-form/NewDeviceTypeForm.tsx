@@ -26,7 +26,6 @@ const NewDeviceTypeForm: React.FC<NewDeviceTypeFormProps> = (props) => {
   return (
     <div className={styles.form}>
       <h2>Define new device type</h2>
-      {props.anyErrorOccurred && <Alert severity="error">Error occurred in communication between system front-end and back-end</Alert>}
       <TextField error={denotationText.length === 0} label="Denotation" value={denotationText} disabled={isFormDisabled} onChange={onDenotationTextChange} />
       <Button disabled={isFormDisabled} onClick={onSubmitHandler}>
         Submit

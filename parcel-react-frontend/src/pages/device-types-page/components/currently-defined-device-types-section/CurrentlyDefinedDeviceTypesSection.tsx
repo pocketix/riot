@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { UserDefinedDeviceTypesQuery } from '../../../../generated/graphql'
-import { Alert, CircularProgress, FormControlLabel, Switch } from '@mui/material'
+import { FormControlLabel, Switch } from '@mui/material'
 import DeviceTypeWidget from '../device-type-widget/DeviceTypeWidget'
 import styles from './CurrentlyDefinedDeviceTypesSection.module.scss'
 
@@ -18,23 +18,23 @@ const CurrentlyDefinedDeviceTypesSection: React.FC<CurrentlyDefinedDeviceTypesSe
     setParametersDisplayed(event.target.checked)
   }
 
-  if (props.anyErrorOccurred || props.anyLoadingOccurs) {
-    return (
-      <div className={styles.nonStandardStateContainer}>
-        {props.anyErrorOccurred && <Alert severity="error">Error occurred in communication between system front-end and back-end</Alert>}
-        {props.anyLoadingOccurs && <CircularProgress />}
-      </div>
-    )
-  }
-
   return (
     <div className={styles.sectionContainer}>
       <h2>Currently defined device types</h2>
       <FormControlLabel control={<Switch checked={areParametersDisplayed} onChange={handleChange} />} label="Display parameters?" />
       <div className={styles.section}>
-        {props.userDefinedDeviceTypesQueryData.userDefinedDeviceTypes.map((deviceType) => (
-          <DeviceTypeWidget id={deviceType.id} denotation={deviceType.denotation} areParametersDisplayed={areParametersDisplayed} parameters={deviceType.parameters} deleteUserDefinedDeviceType={props.deleteUserDefinedDeviceType} />
-        ))}
+        {props.userDefinedDeviceTypesQueryData &&
+          props.userDefinedDeviceTypesQueryData.userDefinedDeviceTypes.map((deviceType) => (
+            <DeviceTypeWidget
+              id={deviceType.id}
+              denotation={deviceType.denotation}
+              areParametersDisplayed={areParametersDisplayed}
+              parameters={deviceType.parameters}
+              deleteUserDefinedDeviceType={props.deleteUserDefinedDeviceType}
+              anyLoadingOccurs={props.anyLoadingOccurs}
+              anyErrorOccurred={props.anyErrorOccurred}
+            />
+          ))}
       </div>
     </div>
   )

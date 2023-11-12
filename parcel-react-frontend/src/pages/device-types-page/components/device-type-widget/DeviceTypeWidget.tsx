@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import { Collapse } from '@mui/material'
 import styles from './DeviceTypeWidget.module.scss'
 
@@ -14,9 +14,20 @@ interface DeviceTypeWidgetProps {
   areParametersDisplayed: boolean
   parameters: DeviceTypeParameter[]
   deleteUserDefinedDeviceType: (id: string) => Promise<void>
+  anyLoadingOccurs: boolean
+  anyErrorOccurred: boolean
 }
 
 const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = (props) => {
+  const deleteButtonDisabled: boolean = useMemo<boolean>(() => props.anyLoadingOccurs || props.anyErrorOccurred, [props.anyLoadingOccurs, props.anyErrorOccurred])
+
+  const onDeleteHandler = useCallback(async () => {
+    if (deleteButtonDisabled) {
+      return
+    }
+    await props.deleteUserDefinedDeviceType(props.id)
+  }, [deleteButtonDisabled, props.deleteUserDefinedDeviceType, props.id])
+
   const parameterElements = (
     <>
       <div className={styles.parameterElements}>
@@ -40,7 +51,7 @@ const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = (props) => {
         <p>
           Denotation: <strong>{props.denotation}</strong>
         </p>
-        <div className={styles.deleteButton} onClick={() => props.deleteUserDefinedDeviceType(props.id)}>
+        <div className={`${deleteButtonDisabled ? styles.deleteButtonDisabled : styles.deleteButton}`} onClick={() => onDeleteHandler()}>
           <span className="material-symbols-outlined">delete</span>
         </div>
       </div>
