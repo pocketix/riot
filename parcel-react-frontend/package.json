@@ -5,7 +5,9 @@
   "scripts": {
     "start": "parcel",
     "build": "parcel build",
-    "codegen": "graphql-codegen --config codegen.ts"
+    "codegen": "graphql-codegen --config codegen.ts",
+    "format": "prettier --write \"**/*.{html,ts,tsx,scss,graphql}\"",
+    "check-format": "prettier --check \"**/*.{html,ts,tsx,scss,graphql}"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "5.0.0",
@@ -14,6 +16,7 @@
     "@parcel/transformer-sass": "^2.10.0",
     "@types/react-dom": "^18.2.0",
     "parcel": "latest",
+    "prettier": "3.0.3",
     "process": "^0.11.10"
   },
   "dependencies": {

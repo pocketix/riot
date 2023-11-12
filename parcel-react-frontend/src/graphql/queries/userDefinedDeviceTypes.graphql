@@ -1,11 +1,11 @@
 query UserDefinedDeviceTypes {
-    userDefinedDeviceTypes {
-        id
-        denotation
-        parameters {
-            id
-            name
-            type
-        }
+  userDefinedDeviceTypes {
+    id
+    denotation
+    parameters {
+      id
+      name
+      type
     }
+  }
 }

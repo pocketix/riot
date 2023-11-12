@@ -1,11 +1,11 @@
 mutation CreateNewUserDefinedDeviceType($input: NewUserDefinedDeviceTypeInput!) {
-    createNewUserDefinedDeviceType(input: $input) {
-        id
-        denotation
-        parameters {
-            id
-            name
-            type
-        }
+  createNewUserDefinedDeviceType(input: $input) {
+    id
+    denotation
+    parameters {
+      id
+      name
+      type
     }
+  }
 }

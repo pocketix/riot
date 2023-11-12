@@ -1,0 +1,2 @@
+# Ignore the generated code
+src/generated/graphql.ts

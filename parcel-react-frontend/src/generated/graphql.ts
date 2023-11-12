@@ -78,6 +78,13 @@ export type CreateNewUserDefinedDeviceTypeMutationVariables = Exact<{
 
 export type CreateNewUserDefinedDeviceTypeMutation = { __typename?: 'Mutation', createNewUserDefinedDeviceType: { __typename?: 'UserDefinedDeviceType', id: string, denotation: string, parameters: Array<{ __typename?: 'UserDefinedDeviceTypeParameter', id: string, name: string, type: UserDefinedDeviceTypeParameterType }> } };
 
+export type DeleteUserDefinedDeviceTypeMutationVariables = Exact<{
+  input: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteUserDefinedDeviceTypeMutation = { __typename?: 'Mutation', deleteUserDefinedDeviceType?: boolean | null };
+
 export type SingleUserDefinedDeviceTypeQueryVariables = Exact<{
   input: Scalars['ID']['input'];
 }>;
