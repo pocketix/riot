@@ -17,11 +17,17 @@ export type Scalars = {
 export type Mutation = {
   __typename?: 'Mutation';
   createNewUserDefinedDeviceType: UserDefinedDeviceType;
+  deleteUserDefinedDeviceType?: Maybe<Scalars['Boolean']['output']>;
 };
 
 
 export type MutationCreateNewUserDefinedDeviceTypeArgs = {
   input: NewUserDefinedDeviceTypeInput;
+};
+
+
+export type MutationDeleteUserDefinedDeviceTypeArgs = {
+  input: Scalars['ID']['input'];
 };
 
 export type NewUserDefinedDeviceTypeInput = {

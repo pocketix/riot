@@ -13,9 +13,10 @@ interface DeviceTypeWidgetProps {
     denotation: string
     areParametersDisplayed: boolean
     parameters: DeviceTypeParameter[]
+    deleteCertainUserDefinedDeviceType: (id: string) => Promise<void>
 }
 
-const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = ({denotation, areParametersDisplayed, parameters}) => {
+const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = ({id, denotation, areParametersDisplayed, parameters, deleteCertainUserDefinedDeviceType}) => {
 
     const parameterElements = <>
         <div className={styles.parameterElements}>
@@ -29,7 +30,12 @@ const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = ({denotation, areParam
     </>
 
     return <div className={styles.widget}>
-        <p>Denotation: <strong>{denotation}</strong></p>
+        <div className={styles.upperRow}>
+            <p>Denotation: <strong>{denotation}</strong></p>
+            <div className={styles.deleteButton} onClick={() => deleteCertainUserDefinedDeviceType(id)}>
+                <span className="material-symbols-outlined">delete</span>
+            </div>
+        </div>
         <Collapse in={areParametersDisplayed}>
             {parameterElements}
         </Collapse>

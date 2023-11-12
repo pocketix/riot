@@ -28,6 +28,21 @@ func (r *mutationResolver) CreateNewUserDefinedDeviceType(_ context.Context, inp
 	return mapUserDefinedDeviceTypeEntityToUserDefinedDeviceType(userDefinedDeviceTypeEntity)
 }
 
+// DeleteUserDefinedDeviceType is the resolver for the deleteUserDefinedDeviceType field.
+func (r *mutationResolver) DeleteUserDefinedDeviceType(ctx context.Context, input string) (*bool, error) {
+	id, err := strconv.ParseInt(input, 10, 32)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := r.rdbClient.DeleteUserDefinedDeviceType(uint32(id)); err != nil {
+		return nil, err
+	}
+
+	result := true
+	return &result, nil
+}
+
 // SingleUserDefinedDeviceType is the resolver for the singleUserDefinedDeviceType field.
 func (r *queryResolver) SingleUserDefinedDeviceType(_ context.Context, input string) (*model.UserDefinedDeviceType, error) {
 

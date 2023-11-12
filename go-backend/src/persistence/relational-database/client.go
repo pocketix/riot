@@ -24,6 +24,7 @@ type RelationalDatabaseClient interface {
 	ObtainUserDefinedDeviceTypeByID(id uint32) (UserDefinedDeviceTypeEntity, error)
 	ObtainAllUserDefinedDeviceTypes() ([]UserDefinedDeviceTypeEntity, error)
 	InsertUserDefinedDeviceType(userDefinedDeviceTypeDTO dto.UserDefinedDeviceTypeDTO) (uint32, error)
+	DeleteUserDefinedDeviceType(id uint32) error
 }
 
 type relationalDatabaseClientImpl struct {
@@ -575,4 +576,33 @@ func (r *relationalDatabaseClientImpl) InsertUserDefinedDeviceType(userDefinedDe
 	}
 
 	return userDefinedDeviceTypeEntity.ID, nil
+}
+
+func (r *relationalDatabaseClientImpl) DeleteUserDefinedDeviceType(id uint32) error { // TODO: Consider introducing database deletion constraints (ON DELETE CASCADE) to simplify this...
+
+	var userDefinedDeviceTypeEntity UserDefinedDeviceTypeEntity
+
+	if err := r.db.Preload("Parameters").Where("id = ?", id).First(&userDefinedDeviceTypeEntity).Error; err != nil {
+		return err
+	}
+
+	tx := r.db.Begin()
+
+	if len(userDefinedDeviceTypeEntity.Parameters) > 0 {
+		if err := tx.Where("user_defined_device_type_id = ?", userDefinedDeviceTypeEntity.ID).Delete(&DeviceTypeParameterEntity{}).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	if err := tx.Delete(&userDefinedDeviceTypeEntity).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
+	return nil
 }

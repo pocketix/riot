@@ -33,4 +33,5 @@ type Query {
 
 type Mutation {
   createNewUserDefinedDeviceType(input: NewUserDefinedDeviceTypeInput!): UserDefinedDeviceType!
+  deleteUserDefinedDeviceType(input: ID!): Boolean
 }

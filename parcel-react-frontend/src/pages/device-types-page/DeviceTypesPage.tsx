@@ -3,10 +3,10 @@ import styles from "./DeviceTypesPage.module.scss"
 
 import CurrentlyDefinedDeviceTypesSection from "../../components/currently-defined-device-types-section/CurrentlyDefinedDeviceTypesSection"
 import NewDeviceTypeForm from "../../components/new-device-type-form/NewDeviceTypeForm"
-import {useQuery} from "@apollo/client";
-import {UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables} from "../../generated/graphql";
-import gql from "graphql-tag";
-import USER_DEFINED_DEVICE_TYPES_QUERY from "../../graphql/queries/userDefinedDeviceTypes.graphql";
+import {useQuery} from "@apollo/client"
+import {UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables} from "../../generated/graphql"
+import gql from "graphql-tag"
+import USER_DEFINED_DEVICE_TYPES_QUERY from "../../graphql/queries/userDefinedDeviceTypes.graphql"
 
 const DeviceTypesPage: React.FC = () => {
 
@@ -14,7 +14,7 @@ const DeviceTypesPage: React.FC = () => {
 
     return <div className={styles.deviceTypesPage}>
         <h1>Device types</h1>
-        <CurrentlyDefinedDeviceTypesSection data={data} loading={loading} error={error}/>
+        <CurrentlyDefinedDeviceTypesSection data={data} loading={loading} error={error} refetch={refetch}/>
         <NewDeviceTypeForm userDefinedDeviceTypesQueryLoading={loading} userDefinedDeviceTypesQueryError={error} userDefinedDeviceTypesQueryRefetch={refetch}/>
     </div>
 }
