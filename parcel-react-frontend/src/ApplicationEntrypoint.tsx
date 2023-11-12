@@ -3,7 +3,7 @@ import {Routes, Route} from "react-router-dom"
 import {ApolloClient, InMemoryCache, ApolloProvider, NormalizedCacheObject} from '@apollo/client'
 import {createTheme, Theme, ThemeProvider} from "@mui/material"
 
-import MainLayout from "./components/main-layout/MainLayout"
+import PrimaryLayout from "./page-independent-components/primary-layout/PrimaryLayout"
 import Homepage from "./pages/homepage/Homepage"
 import ApolloSandboxPage from "./pages/apollo-sandbox-page/ApolloSandboxPage"
 import FallbackPage from "./pages/fallback-page/FallbackPage"
@@ -57,7 +57,7 @@ const ApplicationEntrypoint: React.FC = () => {
         <ThemeProvider theme={customMuiTheme}>
             <>
                 <Routes>
-                    <Route path="/" element={<MainLayout/>}>
+                    <Route path="/" element={<PrimaryLayout/>}>
                         <Route index element={<Homepage/>}/>
                         <Route path="device-types" element={<DeviceTypesPage/>}/>
                         <Route path="apollo-sandbox" element={<ApolloSandboxPage/>}/>

@@ -2,9 +2,9 @@ import React, { useState, useCallback, useMemo } from 'react'
 import { Alert, Button, TextField } from '@mui/material'
 import styles from './NewDeviceTypeForm.module.scss'
 import { useMutation, ApolloError } from '@apollo/client'
-import CREATE_NEW_USER_DEFINED_DEVICE_TYPE_MUTATION from '../../graphql/mutations/createNewUserDefinedDeviceType.graphql'
+import CREATE_NEW_USER_DEFINED_DEVICE_TYPE_MUTATION from '../../../../graphql/mutations/createNewUserDefinedDeviceType.graphql'
 import { RefetchFunction } from '@apollo/client/react/hooks/useSuspenseQuery'
-import { UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables } from '../../generated/graphql'
+import { UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables } from '../../../../generated/graphql'
 import gql from "graphql-tag";
 
 interface NewDeviceTypeFormProps {

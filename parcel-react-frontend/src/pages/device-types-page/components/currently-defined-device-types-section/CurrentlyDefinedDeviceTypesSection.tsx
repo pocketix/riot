@@ -1,11 +1,11 @@
 import React, {useCallback, useState} from "react"
 import {ApolloError, useMutation} from '@apollo/client'
-import {UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables} from '../../generated/graphql'
+import {UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables} from '../../../../generated/graphql'
 import {Alert, CircularProgress, FormControlLabel, Switch} from "@mui/material"
 import DeviceTypeWidget from "../device-type-widget/DeviceTypeWidget"
 import styles from "./CurrentlyDefinedDeviceTypesSection.module.scss"
 import gql from "graphql-tag";
-import DELETE_USER_DEFINED_DEVICE_TYPE_MUTATION from "../../graphql/mutations/deleteUserDefinedDeviceType.graphql"
+import DELETE_USER_DEFINED_DEVICE_TYPE_MUTATION from "../../../../graphql/mutations/deleteUserDefinedDeviceType.graphql"
 import {RefetchFunction} from "@apollo/client/react/hooks/useSuspenseQuery";
 
 interface CurrentlyDefinedDeviceTypesSectionProps {
