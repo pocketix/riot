@@ -1,5 +1,5 @@
-import React, {useState} from "react"
-import {Collapse, FormControlLabel, Switch} from "@mui/material"
+import React from "react"
+import {Collapse} from "@mui/material"
 import styles from "./DeviceTypeWidget.module.scss"
 
 interface DeviceTypeParameter {
@@ -11,16 +11,11 @@ interface DeviceTypeParameter {
 interface DeviceTypeWidgetProps {
     id: string
     denotation: string
+    areParametersDisplayed: boolean
     parameters: DeviceTypeParameter[]
 }
 
-const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = ({denotation, parameters}) => {
-
-    const [areParametersDisplayed, setParametersDisplayed] = useState<boolean>(true)
-
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setParametersDisplayed(event.target.checked)
-    }
+const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = ({denotation, areParametersDisplayed, parameters}) => {
 
     const parameterElements = <>
         <div className={styles.parameterElements}>
@@ -35,7 +30,6 @@ const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = ({denotation, paramete
 
     return <div className={styles.widget}>
         <p>Denotation: <strong>{denotation}</strong></p>
-        <FormControlLabel control={<Switch checked={areParametersDisplayed} onChange={handleChange} />} label="Display parameters?" />
         <Collapse in={areParametersDisplayed}>
             {parameterElements}
         </Collapse>
