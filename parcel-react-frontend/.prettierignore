@@ -1,2 +1,5 @@
+# Ingore the dist directory
+dist
+
 # Ignore the generated code
-src/generated/graphql.ts
+src/generated

@@ -7,7 +7,7 @@ import PrimaryLayout from './page-independent-components/primary-layout/PrimaryL
 import Homepage from './pages/homepage/Homepage'
 import ApolloSandboxPage from './pages/apollo-sandbox-page/ApolloSandboxPage'
 import FallbackPage from './pages/fallback-page/FallbackPage'
-import DeviceTypesPage from './pages/device-types-page/DeviceTypesPage'
+import DeviceTypesPageController from './pages/device-types-page/DeviceTypesPageController'
 
 const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   uri: 'http://localhost:9090',
@@ -59,7 +59,7 @@ const ApplicationEntrypoint: React.FC = () => {
           <Routes>
             <Route path="/" element={<PrimaryLayout />}>
               <Route index element={<Homepage />} />
-              <Route path="device-types" element={<DeviceTypesPage />} />
+              <Route path="device-types" element={<DeviceTypesPageController />} />
               <Route path="apollo-sandbox" element={<ApolloSandboxPage />} />
               <Route path="*" element={<FallbackPage />} />
             </Route>

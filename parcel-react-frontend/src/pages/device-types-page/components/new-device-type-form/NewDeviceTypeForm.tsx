@@ -1,58 +1,33 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useCallback, useMemo, ChangeEvent } from 'react'
 import { Alert, Button, TextField } from '@mui/material'
 import styles from './NewDeviceTypeForm.module.scss'
-import { useMutation, ApolloError } from '@apollo/client'
-import CREATE_NEW_USER_DEFINED_DEVICE_TYPE_MUTATION from '../../../../graphql/mutations/createNewUserDefinedDeviceType.graphql'
-import { RefetchFunction } from '@apollo/client/react/hooks/useSuspenseQuery'
-import { UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables } from '../../../../generated/graphql'
-import gql from 'graphql-tag'
 
 interface NewDeviceTypeFormProps {
-  userDefinedDeviceTypesQueryLoading: boolean
-  userDefinedDeviceTypesQueryError: ApolloError | undefined
-  userDefinedDeviceTypesQueryRefetch: RefetchFunction<UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables>
+  createNewUserDefinedDeviceType: (denotation: string) => Promise<void>
+  anyLoadingOccurs: boolean
+  anyErrorOccurred: boolean
 }
 
-const NewDeviceTypeForm: React.FC<NewDeviceTypeFormProps> = ({ userDefinedDeviceTypesQueryLoading, userDefinedDeviceTypesQueryError, userDefinedDeviceTypesQueryRefetch }) => {
-  const [denotationText, setDenotationText] = useState('shelly1pro')
-  const [submitError, setSubmitError] = useState<ApolloError | null>(null)
-
-  const isFormDisabled = useMemo(() => userDefinedDeviceTypesQueryLoading || userDefinedDeviceTypesQueryError !== undefined, [userDefinedDeviceTypesQueryLoading, userDefinedDeviceTypesQueryError])
-
-  const [createNewUserDefinedDeviceType] = useMutation(gql`
-    ${CREATE_NEW_USER_DEFINED_DEVICE_TYPE_MUTATION}
-  `)
+const NewDeviceTypeForm: React.FC<NewDeviceTypeFormProps> = (props) => {
+  const [denotationText, setDenotationText] = useState<string>('shelly1pro')
+  const isFormDisabled: boolean = useMemo<boolean>(() => props.anyLoadingOccurs || props.anyErrorOccurred, [props.anyLoadingOccurs, props.anyErrorOccurred])
 
   const onSubmitHandler = useCallback(async () => {
     if (denotationText.length === 0) {
       return
     }
-    try {
-      await createNewUserDefinedDeviceType({
-        variables: {
-          input: {
-            denotation: denotationText,
-            parameters: []
-          }
-        }
-      })
-      await userDefinedDeviceTypesQueryRefetch()
-    } catch (error) {
-      if (error instanceof ApolloError) {
-        setSubmitError(error)
-      }
-    }
-  }, [denotationText, createNewUserDefinedDeviceType, userDefinedDeviceTypesQueryRefetch])
+    await props.createNewUserDefinedDeviceType(denotationText)
+  }, [denotationText, props.createNewUserDefinedDeviceType])
 
-  const onDenotationTextChange = useCallback((e) => {
+  const onDenotationTextChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setDenotationText(e.target.value)
   }, [])
 
   return (
     <div className={styles.form}>
       <h2>Define new device type</h2>
-      {submitError && <Alert severity="error">Error: {submitError.message}</Alert>}
-      <TextField error={denotationText.length === 0} id="denotation" label="Denotation" value={denotationText} disabled={isFormDisabled} onChange={onDenotationTextChange} />
+      {props.anyErrorOccurred && <Alert severity="error">Error occurred in communication between system front-end and back-end</Alert>}
+      <TextField error={denotationText.length === 0} label="Denotation" value={denotationText} disabled={isFormDisabled} onChange={onDenotationTextChange} />
       <Button disabled={isFormDisabled} onClick={onSubmitHandler}>
         Submit
       </Button>

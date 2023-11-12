@@ -13,14 +13,14 @@ interface DeviceTypeWidgetProps {
   denotation: string
   areParametersDisplayed: boolean
   parameters: DeviceTypeParameter[]
-  deleteCertainUserDefinedDeviceType: (id: string) => Promise<void>
+  deleteUserDefinedDeviceType: (id: string) => Promise<void>
 }
 
-const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = ({ id, denotation, areParametersDisplayed, parameters, deleteCertainUserDefinedDeviceType }) => {
+const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = (props) => {
   const parameterElements = (
     <>
       <div className={styles.parameterElements}>
-        {parameters.map((parameter) => (
+        {props.parameters.map((parameter) => (
           <div className={styles.parameterElement}>
             <p>
               Name: <strong>{parameter.name}</strong>
@@ -38,13 +38,13 @@ const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = ({ id, denotation, are
     <div className={styles.widget}>
       <div className={styles.upperRow}>
         <p>
-          Denotation: <strong>{denotation}</strong>
+          Denotation: <strong>{props.denotation}</strong>
         </p>
-        <div className={styles.deleteButton} onClick={() => deleteCertainUserDefinedDeviceType(id)}>
+        <div className={styles.deleteButton} onClick={() => props.deleteUserDefinedDeviceType(props.id)}>
           <span className="material-symbols-outlined">delete</span>
         </div>
       </div>
-      <Collapse in={areParametersDisplayed}>{parameterElements}</Collapse>
+      <Collapse in={props.areParametersDisplayed}>{parameterElements}</Collapse>
     </div>
   )
 }
