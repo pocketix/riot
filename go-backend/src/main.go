@@ -3,7 +3,7 @@ package main
 import (
 	"bp-bures-SfPDfSD/src/api/graphql"
 	"bp-bures-SfPDfSD/src/middleware"
-	rdb "bp-bures-SfPDfSD/src/persistence/relational-database"
+	"bp-bures-SfPDfSD/src/persistence/rdb"
 	"log"
 
 	"github.com/gofiber/fiber/v2"

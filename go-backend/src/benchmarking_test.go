@@ -1,7 +1,7 @@
 package main
 
 import (
-	rdb "bp-bures-SfPDfSD/src/persistence/relational-database"
+	"bp-bures-SfPDfSD/src/persistence/rdb"
 	"log"
 	"testing"
 )

@@ -2,7 +2,7 @@ package graphql
 
 import (
 	"bp-bures-SfPDfSD/src/api/graphql/generated"
-	rdb "bp-bures-SfPDfSD/src/persistence/relational-database"
+	"bp-bures-SfPDfSD/src/persistence/rdb"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/gofiber/fiber/v2"

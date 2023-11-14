@@ -1,4 +1,4 @@
-package relational_database
+package schema
 
 const (
 	KPIDefinitionTableName        = "kpi_definitions"

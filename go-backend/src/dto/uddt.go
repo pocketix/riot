@@ -9,13 +9,13 @@ const (
 type UserDefinedDeviceTypeParameterType string
 
 type UserDefinedDeviceTypeParameterDTO struct {
-	ID   *uint32 // Optional
+	ID   *uint32
 	Name string
 	Type UserDefinedDeviceTypeParameterType
 }
 
 type UserDefinedDeviceTypeDTO struct {
-	ID         *uint32 // Optional
+	ID         *uint32
 	Denotation string
 	Parameters []UserDefinedDeviceTypeParameterDTO
 }
