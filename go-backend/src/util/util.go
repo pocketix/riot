@@ -2,7 +2,12 @@ package util
 
 import "bp-bures-SfPDfSD/src/dto"
 
-func GetArtificialKPIDefinitions() []dto.KPIDefinitionDTO {
+type ValueOrError struct {
+	Value interface{}
+	Error error
+}
+
+func GetArtificialKPIDefinitions() []dto.KPIDefinitionDTO { // TODO: Delete once replaced by user definition of the KPIs
 
 	rootKPIDefinitionObject1 := dto.KPIDefinitionDTO{
 		DeviceTypeSpecification:  "shelly1pro",

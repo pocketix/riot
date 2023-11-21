@@ -46,7 +46,7 @@ func (p *eclipsePahoBasedMqttClientImpl) Connect() error {
 
 func (p *eclipsePahoBasedMqttClientImpl) Subscribe(topic string, qos byte, incomingMessageCallbackFunction func([]byte)) error {
 	token := p.client.Subscribe(topic, qos, func(_ mqtt.Client, message mqtt.Message) {
-		incomingMessageCallbackFunction(message.Payload())
+		go incomingMessageCallbackFunction(message.Payload())
 	})
 	token.Wait()
 	err := token.Error()

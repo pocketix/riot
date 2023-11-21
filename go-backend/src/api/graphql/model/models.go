@@ -8,6 +8,13 @@ import (
 	"strconv"
 )
 
+type Device struct {
+	ID   string                 `json:"id"`
+	UID  string                 `json:"uid"`
+	Name string                 `json:"name"`
+	Type *UserDefinedDeviceType `json:"type"`
+}
+
 type NewUserDefinedDeviceTypeInput struct {
 	Denotation string                                 `json:"denotation"`
 	Parameters []*UserDefinedDeviceTypeParameterInput `json:"parameters"`

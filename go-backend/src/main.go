@@ -18,8 +18,8 @@ func main() {
 		return
 	}
 
-	// Starting KPI processing in a separate Goroutine
-	go middleware.StartProcessingKPIs()
+	// Start processing incoming MQTT communication in a separate Goroutine
+	go middleware.StartProcessingIncomingMQTTCommunication()
 
 	// General web framework setup
 	app := fiber.New()

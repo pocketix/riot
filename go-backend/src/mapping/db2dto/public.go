@@ -33,3 +33,15 @@ func MapUserDefinedDeviceTypeEntitiesToUserDefinedDeviceTypeDTOs(userDefinedDevi
 
 	return userDefinedDeviceTypeDTOs, nil
 }
+
+func MapDeviceEntityToDeviceDTO(e schema.DeviceEntity) dto.DeviceDTO {
+
+	userDefinedDeviceTypeDTO, _ := MapUserDefinedDeviceTypeEntityToUserDefinedDeviceTypeDTO(e.DeviceType) // TODO: Error handling...
+
+	return dto.DeviceDTO{
+		ID:         &e.ID,
+		UID:        e.UID,
+		Name:       e.Name,
+		DeviceType: userDefinedDeviceTypeDTO,
+	}
+}

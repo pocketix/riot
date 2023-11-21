@@ -10,12 +10,12 @@ import (
 	"bp-bures-SfPDfSD/src/mapping/api2dto"
 	"bp-bures-SfPDfSD/src/mapping/dto2api"
 	"context"
+	"github.com/thoas/go-funk"
 	"strconv"
 )
 
 // CreateNewUserDefinedDeviceType is the resolver for the createNewUserDefinedDeviceType field.
-func (r *mutationResolver) CreateNewUserDefinedDeviceType(_ context.Context, input model.NewUserDefinedDeviceTypeInput) (*model.UserDefinedDeviceType, error) {
-
+func (r *mutationResolver) CreateNewUserDefinedDeviceType(ctx context.Context, input model.NewUserDefinedDeviceTypeInput) (*model.UserDefinedDeviceType, error) {
 	dto := api2dto.MapNewUserDefinedDeviceTypeInputToUserDefinedDeviceTypeDTO(input)
 	id, err := r.rdbClient.InsertUserDefinedDeviceType(dto)
 	if err != nil {
@@ -32,7 +32,6 @@ func (r *mutationResolver) CreateNewUserDefinedDeviceType(_ context.Context, inp
 
 // DeleteUserDefinedDeviceType is the resolver for the deleteUserDefinedDeviceType field.
 func (r *mutationResolver) DeleteUserDefinedDeviceType(ctx context.Context, input string) (*bool, error) {
-
 	id, err := strconv.ParseInt(input, 10, 32)
 	if err != nil {
 		return nil, err
@@ -47,8 +46,7 @@ func (r *mutationResolver) DeleteUserDefinedDeviceType(ctx context.Context, inpu
 }
 
 // SingleUserDefinedDeviceType is the resolver for the singleUserDefinedDeviceType field.
-func (r *queryResolver) SingleUserDefinedDeviceType(_ context.Context, input string) (*model.UserDefinedDeviceType, error) {
-
+func (r *queryResolver) SingleUserDefinedDeviceType(ctx context.Context, input string) (*model.UserDefinedDeviceType, error) {
 	id, err := strconv.ParseInt(input, 10, 32)
 	if err != nil {
 		return nil, err
@@ -63,14 +61,24 @@ func (r *queryResolver) SingleUserDefinedDeviceType(_ context.Context, input str
 }
 
 // UserDefinedDeviceTypes is the resolver for the userDefinedDeviceTypes field.
-func (r *queryResolver) UserDefinedDeviceTypes(_ context.Context) ([]*model.UserDefinedDeviceType, error) {
-
+func (r *queryResolver) UserDefinedDeviceTypes(ctx context.Context) ([]*model.UserDefinedDeviceType, error) {
 	userDefinedDeviceTypeDTOs, err := r.rdbClient.ObtainAllUserDefinedDeviceTypes()
 	if err != nil {
 		return nil, err
 	}
 
 	return dto2api.MapUserDefinedDeviceTypeDTOsToUserDefinedDeviceTypes(userDefinedDeviceTypeDTOs)
+}
+
+// Devices is the resolver for the devices field.
+func (r *queryResolver) Devices(ctx context.Context) ([]*model.Device, error) {
+
+	deviceDTOs, err := r.rdbClient.ObtainAllDevices()
+	if err != nil {
+		return nil, err
+	}
+
+	return funk.Map(deviceDTOs, dto2api.MapDeviceDTOToDevice).([]*model.Device), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

@@ -26,9 +26,17 @@ input NewUserDefinedDeviceTypeInput {
   parameters: [UserDefinedDeviceTypeParameterInput!]!
 }
 
+type Device {
+  id: ID!
+  uid: String!
+  name: String!
+  type: UserDefinedDeviceType!
+}
+
 type Query {
   singleUserDefinedDeviceType(input: ID!): UserDefinedDeviceType!
   userDefinedDeviceTypes: [UserDefinedDeviceType!]!
+  devices: [Device!]!
 }
 
 type Mutation {

@@ -8,6 +8,7 @@ const (
 
 	UserDefinedDeviceTypesTableName = "user_defined_device_types"
 	DeviceTypeParametersTableName   = "device_type_parameters"
+	DevicesTableName                = "devices"
 )
 
 type KPIDefinitionEntity struct {
@@ -82,4 +83,17 @@ type DeviceTypeParameterEntity struct {
 func (DeviceTypeParameterEntity) TableName() string {
 
 	return DeviceTypeParametersTableName
+}
+
+type DeviceEntity struct {
+	ID           uint32                      `gorm:"column:id;primarykey;not null"`
+	UID          string                      `gorm:"column:uid;not null"`
+	Name         string                      `gorm:"column:name;not null"`
+	DeviceTypeID uint32                      `gorm:"column:device_type_id"`
+	DeviceType   UserDefinedDeviceTypeEntity `gorm:"foreignKey:DeviceTypeID"`
+}
+
+func (DeviceEntity) TableName() string {
+
+	return DevicesTableName
 }

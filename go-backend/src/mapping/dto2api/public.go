@@ -3,6 +3,8 @@ package dto2api
 import (
 	"bp-bures-SfPDfSD/src/api/graphql/model"
 	"bp-bures-SfPDfSD/src/dto"
+	"bp-bures-SfPDfSD/src/util"
+	"github.com/thoas/go-funk"
 	"strconv"
 )
 
@@ -20,17 +22,34 @@ func MapUserDefinedDeviceTypeDTOToUserDefinedDeviceType(userDefinedDeviceTypeDTO
 	}, nil
 }
 
-func MapUserDefinedDeviceTypeDTOsToUserDefinedDeviceTypes(userDefinedDeviceTypeDTOs []dto.UserDefinedDeviceTypeDTO) ([]*model.UserDefinedDeviceType, error) {
+func MapUserDefinedDeviceTypeDTOsToUserDefinedDeviceTypes(userDefinedDeviceTypeDTOs []dto.UserDefinedDeviceTypeDTO) ([]*model.UserDefinedDeviceType, error) { // TODO: Example of go-funk code-style along with error handling...
 
-	userDefinedDeviceTypes := make([]*model.UserDefinedDeviceType, len(userDefinedDeviceTypeDTOs))
-
-	for index, userDefinedDeviceTypeDTO := range userDefinedDeviceTypeDTOs {
-		userDefinedDeviceType, err := MapUserDefinedDeviceTypeDTOToUserDefinedDeviceType(userDefinedDeviceTypeDTO)
-		if err != nil {
-			return nil, err
+	results := funk.Map(userDefinedDeviceTypeDTOs, func(u dto.UserDefinedDeviceTypeDTO) util.ValueOrError {
+		res, err := MapUserDefinedDeviceTypeDTOToUserDefinedDeviceType(u)
+		return util.ValueOrError{
+			Value: res,
+			Error: err,
 		}
-		userDefinedDeviceTypes[index] = userDefinedDeviceType
+	}).([]util.ValueOrError)
+
+	errElem := funk.Find(results, func(r util.ValueOrError) bool { return r.Error != nil })
+	if errElem != nil {
+		return nil, errElem.(util.ValueOrError).Error
 	}
 
-	return userDefinedDeviceTypes, nil
+	return funk.Map(results, func(r util.ValueOrError) *model.UserDefinedDeviceType {
+		return r.Value.(*model.UserDefinedDeviceType)
+	}).([]*model.UserDefinedDeviceType), nil
+}
+
+func MapDeviceDTOToDevice(deviceDTO dto.DeviceDTO) *model.Device {
+
+	userDefinedDeviceType, _ := MapUserDefinedDeviceTypeDTOToUserDefinedDeviceType(*deviceDTO.DeviceType) // TODO: Error handling... but error occurrence here is improbable...
+
+	return &model.Device{
+		ID:   strconv.FormatUint(uint64(*deviceDTO.ID), 10),
+		UID:  deviceDTO.UID,
+		Name: deviceDTO.Name,
+		Type: userDefinedDeviceType,
+	}
 }

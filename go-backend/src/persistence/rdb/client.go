@@ -3,8 +3,10 @@ package rdb
 import (
 	"bp-bures-SfPDfSD/src/dto"
 	"bp-bures-SfPDfSD/src/mapping/db2dto"
+	"bp-bures-SfPDfSD/src/mapping/dto2db"
 	"bp-bures-SfPDfSD/src/persistence/rdb/schema"
 	"bp-bures-SfPDfSD/src/util"
+	"github.com/thoas/go-funk"
 	"log"
 	"strings"
 
@@ -25,6 +27,8 @@ type RelationalDatabaseClient interface {
 	ObtainAllUserDefinedDeviceTypes() ([]dto.UserDefinedDeviceTypeDTO, error)
 	InsertUserDefinedDeviceType(userDefinedDeviceTypeDTO dto.UserDefinedDeviceTypeDTO) (uint32, error)
 	DeleteUserDefinedDeviceType(id uint32) error
+	InsertDevice(deviceDTO dto.DeviceDTO) (uint32, error)
+	ObtainAllDevices() ([]dto.DeviceDTO, error)
 }
 
 type relationalDatabaseClientImpl struct {
@@ -79,6 +83,7 @@ func (r *relationalDatabaseClientImpl) setupTables() error {
 
 		&schema.UserDefinedDeviceTypeEntity{},
 		&schema.DeviceTypeParameterEntity{},
+		&schema.DeviceEntity{},
 	)
 
 	if err != nil {
@@ -267,4 +272,34 @@ func (r *relationalDatabaseClientImpl) DeleteUserDefinedDeviceType(id uint32) er
 	}
 
 	return nil
+}
+
+func (r *relationalDatabaseClientImpl) InsertDevice(deviceDTO dto.DeviceDTO) (uint32, error) {
+
+	var deviceEntity = dto2db.MapDeviceDTOToDeviceEntity(deviceDTO)
+
+	if err := r.db.Create(&deviceEntity).Error; err != nil {
+		return 0, err
+	}
+
+	return deviceEntity.ID, nil
+}
+
+func (r *relationalDatabaseClientImpl) ObtainAllDevices() ([]dto.DeviceDTO, error) {
+
+	var deviceEntities []schema.DeviceEntity
+	if err := r.db.Find(&deviceEntities).Error; err != nil {
+		return nil, err
+	}
+
+	for index, deviceEntity := range deviceEntities { // TODO: Is this any better than getting all device types at once and mapping them against devices?
+		var userDefinedDeviceTypesEntity schema.UserDefinedDeviceTypeEntity
+		if err := r.db.Preload("Parameters").Where("id = ?", deviceEntity.DeviceTypeID).First(&userDefinedDeviceTypesEntity).Error; err != nil {
+			return nil, err
+		}
+		deviceEntity.DeviceType = userDefinedDeviceTypesEntity
+		deviceEntities[index] = deviceEntity
+	}
+
+	return funk.Map(deviceEntities, db2dto.MapDeviceEntityToDeviceDTO).([]dto.DeviceDTO), nil
 }

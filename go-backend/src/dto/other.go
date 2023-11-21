@@ -19,3 +19,10 @@ type UserDefinedDeviceTypeDTO struct {
 	Denotation string
 	Parameters []UserDefinedDeviceTypeParameterDTO
 }
+
+type DeviceDTO struct {
+	ID         *uint32
+	UID        string
+	Name       string
+	DeviceType *UserDefinedDeviceTypeDTO
+}
