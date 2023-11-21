@@ -1,9 +1,8 @@
 import React from 'react'
-import styles from './DeviceTypesPage.module.scss'
 import CurrentlyDefinedDeviceTypesSection from './components/currently-defined-device-types-section/CurrentlyDefinedDeviceTypesSection'
 import NewDeviceTypeForm from './components/new-device-type-form/NewDeviceTypeForm'
 import { UserDefinedDeviceTypesQuery } from '../../generated/graphql'
-import { Alert, LinearProgress } from '@mui/material'
+import StandardContentPageTemplate from '../../page-independent-components/standard-content-page-template/StandardContentPageTemplate'
 
 interface DeviceTypesPageViewProps {
   userDefinedDeviceTypesQueryData: UserDefinedDeviceTypesQuery
@@ -15,12 +14,7 @@ interface DeviceTypesPageViewProps {
 
 const DeviceTypesPageView: React.FC<DeviceTypesPageViewProps> = (props) => {
   return (
-    <div className={styles.deviceTypesPage}>
-      <h1>Device types</h1>
-      <div className={styles.statusBar}>
-        {props.anyLoadingOccurs && <LinearProgress />}
-        {props.anyErrorOccurred && <Alert severity="error">Error occurred in communication between system front-end and back-end</Alert>}
-      </div>
+    <StandardContentPageTemplate pageTitle="Device types" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
       <CurrentlyDefinedDeviceTypesSection
         userDefinedDeviceTypesQueryData={props.userDefinedDeviceTypesQueryData}
         deleteUserDefinedDeviceType={props.deleteUserDefinedDeviceType}
@@ -28,7 +22,7 @@ const DeviceTypesPageView: React.FC<DeviceTypesPageViewProps> = (props) => {
         anyErrorOccurred={props.anyErrorOccurred}
       />
       <NewDeviceTypeForm createNewUserDefinedDeviceType={props.createNewUserDefinedDeviceType} anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred} />
-    </div>
+    </StandardContentPageTemplate>
   )
 }
 

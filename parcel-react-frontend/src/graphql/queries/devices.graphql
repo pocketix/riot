@@ -1,0 +1,11 @@
+query Devices {
+  devices {
+    id
+    uid
+    name
+    type {
+      id
+      denotation
+    }
+  }
+}

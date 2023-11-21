@@ -1,0 +1,17 @@
+.cardContainer {
+  margin: 10px 0;
+  padding: 20px;
+  border-radius: 8px;
+  background: #eaeaea;
+}
+
+.header {
+  display: flex;
+  gap: 30px;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.header > :last-child {
+  margin-left: auto;
+}

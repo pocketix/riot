@@ -8,6 +8,7 @@ const PrimaryLayout: React.FC = () => {
     <div className={styles.outerContainer}>
       <div className={styles.sidePanel}>
         <CustomLinkButton route="/" text="Homepage" iconIdentifier="home" />
+        <CustomLinkButton route="/devices" text="Devices" iconIdentifier="lightbulb" />
         <CustomLinkButton route="/device-types" text="Device types" iconIdentifier="home_iot_device" />
         <CustomLinkButton route="/apollo-sandbox" text="Apollo Sandbox" iconIdentifier="labs" />
       </div>

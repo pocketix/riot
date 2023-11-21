@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { Collapse } from '@mui/material'
 import styles from './DeviceTypeWidget.module.scss'
+import GenericCardTemplate from '../../../../page-independent-components/generic-card-template/GenericCardTemplate'
 
 interface DeviceTypeParameter {
   id: string
@@ -19,7 +20,7 @@ interface DeviceTypeWidgetProps {
 }
 
 const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = (props) => {
-  const deleteButtonDisabled: boolean = useMemo<boolean>(() => props.anyLoadingOccurs || props.anyErrorOccurred, [props.anyLoadingOccurs, props.anyErrorOccurred])
+  const deleteButtonDisabled: boolean = useMemo<boolean>(() => props.anyErrorOccurred, [props.anyErrorOccurred])
 
   const onDeleteHandler = useCallback(async () => {
     if (deleteButtonDisabled) {
@@ -46,17 +47,23 @@ const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = (props) => {
   )
 
   return (
-    <div className={styles.widget}>
-      <div className={styles.upperRow}>
-        <p>
-          Denotation: <strong>{props.denotation}</strong>
-        </p>
-        <div className={`${deleteButtonDisabled ? styles.deleteButtonDisabled : styles.deleteButton}`} onClick={() => onDeleteHandler()}>
-          <span className="material-symbols-outlined">delete</span>
-        </div>
-      </div>
-      <Collapse in={props.areParametersDisplayed}>{parameterElements}</Collapse>
-    </div>
+    <GenericCardTemplate
+      headerContent={
+        <>
+          <div className={`${deleteButtonDisabled ? styles.deleteButtonDisabled : styles.deleteButton}`} onClick={() => onDeleteHandler()}>
+            <span className="material-symbols-outlined">delete</span>
+          </div>
+        </>
+      }
+      bodyContent={
+        <>
+          <p>
+            Denotation: <strong>{props.denotation}</strong>
+          </p>
+          <Collapse in={props.areParametersDisplayed}>{parameterElements}</Collapse>
+        </>
+      }
+    ></GenericCardTemplate>
   )
 }
 

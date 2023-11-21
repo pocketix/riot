@@ -14,6 +14,14 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type Device = {
+  __typename?: 'Device';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  type: UserDefinedDeviceType;
+  uid: Scalars['String']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   createNewUserDefinedDeviceType: UserDefinedDeviceType;
@@ -37,6 +45,7 @@ export type NewUserDefinedDeviceTypeInput = {
 
 export type Query = {
   __typename?: 'Query';
+  devices: Array<Device>;
   singleUserDefinedDeviceType: UserDefinedDeviceType;
   userDefinedDeviceTypes: Array<UserDefinedDeviceType>;
 };
@@ -84,6 +93,11 @@ export type DeleteUserDefinedDeviceTypeMutationVariables = Exact<{
 
 
 export type DeleteUserDefinedDeviceTypeMutation = { __typename?: 'Mutation', deleteUserDefinedDeviceType?: boolean | null };
+
+export type DevicesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type DevicesQuery = { __typename?: 'Query', devices: Array<{ __typename?: 'Device', id: string, uid: string, name: string, type: { __typename?: 'UserDefinedDeviceType', id: string, denotation: string } }> };
 
 export type SingleUserDefinedDeviceTypeQueryVariables = Exact<{
   input: Scalars['ID']['input'];
