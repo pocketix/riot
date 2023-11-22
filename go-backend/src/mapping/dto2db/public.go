@@ -13,9 +13,11 @@ func MapDeviceDTOToDeviceEntity(d dto.DeviceDTO) schema.DeviceEntity {
 		UID:  d.UID,
 		Name: d.Name,
 		DeviceType: schema.UserDefinedDeviceTypeEntity{
+			ID:         *d.DeviceType.ID,
 			Denotation: d.DeviceType.Denotation,
 			Parameters: funk.Map(d.DeviceType.Parameters, func(d dto.UserDefinedDeviceTypeParameterDTO) schema.DeviceTypeParameterEntity {
 				return schema.DeviceTypeParameterEntity{
+					ID:   *d.ID,
 					Name: d.Name,
 					Type: strings.ToLower(string(d.Type)),
 				}
