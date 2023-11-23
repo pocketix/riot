@@ -65,7 +65,7 @@ func registerDeviceIfNotAlreadyPresent(deviceData dto.Dev5DeviceDTO, deviceTypeD
 		DeviceType: deviceTypeDTOReference,
 	}
 
-	_, err = (*rdb.GetRelationalDatabaseClientReference()).InsertDevice(newDeviceDTO)
+	_, err = (*rdb.GetRelationalDatabaseClientReference()).InsertOrUpdateDevice(newDeviceDTO)
 	return err
 }
 

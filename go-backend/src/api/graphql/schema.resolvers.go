@@ -10,15 +10,16 @@ import (
 	"bp-bures-SfPDfSD/src/mapping/api2dto"
 	"bp-bures-SfPDfSD/src/mapping/dto2api"
 	"context"
-	"github.com/thoas/go-funk"
 	"strconv"
+
+	"github.com/thoas/go-funk"
 )
 
 // CreateNewDeviceType is the resolver for the createNewDeviceType field.
 func (r *mutationResolver) CreateNewDeviceType(_ context.Context, input model.NewDeviceTypeInput) (*model.DeviceType, error) {
 
-	dto := api2dto.MapNewDeviceTypeInputToDeviceTypeDTO(input)
-	id, err := r.rdbClient.InsertDeviceType(dto)
+	deviceTypeDTOFromInput := api2dto.MapNewDeviceTypeInputToDeviceTypeDTO(input)
+	id, err := r.rdbClient.InsertDeviceType(deviceTypeDTOFromInput)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +32,8 @@ func (r *mutationResolver) CreateNewDeviceType(_ context.Context, input model.Ne
 	return dto2api.MapDeviceTypeDTOToDeviceType(deviceTypeDTO)
 }
 
-func (r *mutationResolver) DeleteDeviceType(ctx context.Context, input string) (*bool, error) {
+// DeleteDeviceType is the resolver for the deleteDeviceType field.
+func (r *mutationResolver) DeleteDeviceType(_ context.Context, input string) (*bool, error) {
 
 	id, err := strconv.ParseInt(input, 10, 32)
 	if err != nil {
@@ -45,8 +47,32 @@ func (r *mutationResolver) DeleteDeviceType(ctx context.Context, input string) (
 	result := true
 	return &result, nil
 }
-func (r *queryResolver) SingleDeviceType(ctx context.Context, input string) (*model.DeviceType, error) {
 
+// UpdateDeviceName is the resolver for the updateDeviceName field.
+func (r *mutationResolver) UpdateDeviceName(_ context.Context, id string, newName string) (*model.Device, error) {
+
+	idAsInteger, err := strconv.ParseInt(id, 10, 32)
+	if err != nil {
+		return nil, err
+	}
+
+	deviceDTO, err := r.rdbClient.ObtainDeviceByID(uint32(idAsInteger))
+	if err != nil {
+		return nil, err
+	}
+
+	deviceDTO.Name = newName
+
+	_, err = r.rdbClient.InsertOrUpdateDevice(deviceDTO)
+	if err != nil {
+		return nil, err
+	}
+
+	return dto2api.MapDeviceDTOToDevice(deviceDTO), nil
+}
+
+// SingleDeviceType is the resolver for the singleDeviceType field.
+func (r *queryResolver) SingleDeviceType(ctx context.Context, input string) (*model.DeviceType, error) {
 	id, err := strconv.ParseInt(input, 10, 32)
 	if err != nil {
 		return nil, err
@@ -59,7 +85,9 @@ func (r *queryResolver) SingleDeviceType(ctx context.Context, input string) (*mo
 
 	return dto2api.MapDeviceTypeDTOToDeviceType(deviceTypeDTO)
 }
-func (r *queryResolver) DeviceTypes(ctx context.Context) ([]*model.DeviceType, error) {
+
+// DeviceTypes is the resolver for the deviceTypes field.
+func (r *queryResolver) DeviceTypes(_ context.Context) ([]*model.DeviceType, error) {
 
 	deviceTypeDTOs, err := r.rdbClient.ObtainAllDeviceTypes()
 	if err != nil {

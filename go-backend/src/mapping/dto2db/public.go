@@ -9,7 +9,13 @@ import (
 
 func MapDeviceDTOToDeviceEntity(d dto.DeviceDTO) schema.DeviceEntity {
 
+	var entityID uint32 = 0
+	if d.ID != nil {
+		entityID = *d.ID
+	}
+
 	return schema.DeviceEntity{
+		ID:   entityID,
 		UID:  d.UID,
 		Name: d.Name,
 		DeviceType: schema.DeviceTypeEntity{

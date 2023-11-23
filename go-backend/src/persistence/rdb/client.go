@@ -27,7 +27,8 @@ type RelationalDatabaseClient interface {
 	ObtainAllDeviceTypes() ([]dto.DeviceTypeDTO, error)
 	InsertDeviceType(DeviceTypeDTO dto.DeviceTypeDTO) (uint32, error)
 	DeleteDeviceType(id uint32) error
-	InsertDevice(deviceDTO dto.DeviceDTO) (uint32, error)
+	InsertOrUpdateDevice(deviceDTO dto.DeviceDTO) (uint32, error)
+	ObtainDeviceByID(id uint32) (dto.DeviceDTO, error)
 	ObtainAllDevices() ([]dto.DeviceDTO, error)
 }
 
@@ -274,15 +275,29 @@ func (r *relationalDatabaseClientImpl) DeleteDeviceType(id uint32) error { // TO
 	return nil
 }
 
-func (r *relationalDatabaseClientImpl) InsertDevice(deviceDTO dto.DeviceDTO) (uint32, error) {
+func (r *relationalDatabaseClientImpl) InsertOrUpdateDevice(deviceDTO dto.DeviceDTO) (uint32, error) {
 
 	var deviceEntity = dto2db.MapDeviceDTOToDeviceEntity(deviceDTO)
 
-	if err := r.db.Create(&deviceEntity).Error; err != nil {
+	if err := r.db.Save(&deviceEntity).Error; err != nil {
 		return 0, err
 	}
 
 	return deviceEntity.ID, nil
+}
+
+func (r *relationalDatabaseClientImpl) ObtainDeviceByID(id uint32) (dto.DeviceDTO, error) {
+
+	var err error
+	var deviceEntity schema.DeviceEntity
+	var deviceTypeEntity schema.DeviceTypeEntity
+
+	err = r.db.Where("id = ?", id).First(&deviceEntity).Error
+	err = r.db.Preload("Parameters").Where("id = ?", deviceEntity.DeviceTypeID).First(&deviceTypeEntity).Error
+
+	deviceEntity.DeviceType = deviceTypeEntity
+
+	return db2dto.MapDeviceEntityToDeviceDTO(deviceEntity), err
 }
 
 func (r *relationalDatabaseClientImpl) ObtainAllDevices() ([]dto.DeviceDTO, error) {
