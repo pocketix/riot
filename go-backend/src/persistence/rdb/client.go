@@ -23,10 +23,10 @@ type RelationalDatabaseClient interface {
 	ConnectToDatabase() error
 	InitializeDatabase() error
 	ObtainKPIDefinitionsForTheGivenDeviceType(deviceType string) ([]dto.KPIDefinitionDTO, error)
-	ObtainUserDefinedDeviceTypeByID(id uint32) (dto.UserDefinedDeviceTypeDTO, error)
-	ObtainAllUserDefinedDeviceTypes() ([]dto.UserDefinedDeviceTypeDTO, error)
-	InsertUserDefinedDeviceType(userDefinedDeviceTypeDTO dto.UserDefinedDeviceTypeDTO) (uint32, error)
-	DeleteUserDefinedDeviceType(id uint32) error
+	ObtainDeviceTypeByID(id uint32) (dto.DeviceTypeDTO, error)
+	ObtainAllDeviceTypes() ([]dto.DeviceTypeDTO, error)
+	InsertDeviceType(DeviceTypeDTO dto.DeviceTypeDTO) (uint32, error)
+	DeleteDeviceType(id uint32) error
 	InsertDevice(deviceDTO dto.DeviceDTO) (uint32, error)
 	ObtainAllDevices() ([]dto.DeviceDTO, error)
 }
@@ -81,7 +81,7 @@ func (r *relationalDatabaseClientImpl) setupTables() error {
 		&schema.LogicalOperatorNodeEntity{},
 		&schema.SubKPIDefinitionNodeEntity{},
 
-		&schema.UserDefinedDeviceTypeEntity{},
+		&schema.DeviceTypeEntity{},
 		&schema.DeviceTypeParameterEntity{},
 		&schema.DeviceEntity{},
 	)
@@ -204,65 +204,65 @@ func (r *relationalDatabaseClientImpl) ObtainKPIDefinitionsForTheGivenDeviceType
 	return kpiDefinitions, nil
 }
 
-func (r *relationalDatabaseClientImpl) ObtainUserDefinedDeviceTypeByID(id uint32) (dto.UserDefinedDeviceTypeDTO, error) {
+func (r *relationalDatabaseClientImpl) ObtainDeviceTypeByID(id uint32) (dto.DeviceTypeDTO, error) {
 
-	var userDefinedDeviceTypesEntity schema.UserDefinedDeviceTypeEntity
-	err := r.db.Preload("Parameters").Where("id = ?", id).First(&userDefinedDeviceTypesEntity).Error
+	var deviceTypeEntity schema.DeviceTypeEntity
+	err := r.db.Preload("Parameters").Where("id = ?", id).First(&deviceTypeEntity).Error
 
-	userDefinedDeviceTypeDTO, err := db2dto.MapUserDefinedDeviceTypeEntityToUserDefinedDeviceTypeDTO(userDefinedDeviceTypesEntity) // TODO: Relocate this to service layer once it exists...
-	return *userDefinedDeviceTypeDTO, err
+	deviceTypeDTO, err := db2dto.MapDeviceTypeEntityToDeviceTypeDTO(deviceTypeEntity) // TODO: Relocate this to service layer once it exists...
+	return *deviceTypeDTO, err
 }
 
-func (r *relationalDatabaseClientImpl) ObtainAllUserDefinedDeviceTypes() ([]dto.UserDefinedDeviceTypeDTO, error) {
+func (r *relationalDatabaseClientImpl) ObtainAllDeviceTypes() ([]dto.DeviceTypeDTO, error) {
 
-	var userDefinedDeviceTypesEntities []schema.UserDefinedDeviceTypeEntity
-	err := r.db.Preload("Parameters").Find(&userDefinedDeviceTypesEntities).Error
+	var deviceTypeEntities []schema.DeviceTypeEntity
+	err := r.db.Preload("Parameters").Find(&deviceTypeEntities).Error
 
-	userDefinedDeviceTypeDTOs, err := db2dto.MapUserDefinedDeviceTypeEntitiesToUserDefinedDeviceTypeDTOs(userDefinedDeviceTypesEntities) // TODO: Relocate this to service layer once it exists...
-	return userDefinedDeviceTypeDTOs, err
+	deviceTypeDTOs, err := db2dto.MapDeviceTypeEntitiesToDeviceTypeDTOs(deviceTypeEntities) // TODO: Relocate this to service layer once it exists...
+	return deviceTypeDTOs, err
 }
 
-func (r *relationalDatabaseClientImpl) InsertUserDefinedDeviceType(userDefinedDeviceTypeDTO dto.UserDefinedDeviceTypeDTO) (uint32, error) {
+func (r *relationalDatabaseClientImpl) InsertDeviceType(DeviceTypeDTO dto.DeviceTypeDTO) (uint32, error) {
 
-	deviceTypeParameterEntities := make([]schema.DeviceTypeParameterEntity, len(userDefinedDeviceTypeDTO.Parameters))
+	deviceTypeParameterEntities := make([]schema.DeviceTypeParameterEntity, len(DeviceTypeDTO.Parameters))
 
-	for index, userDefinedDeviceParameterDTO := range userDefinedDeviceTypeDTO.Parameters {
+	for index, deviceParameterDTO := range DeviceTypeDTO.Parameters {
 		deviceTypeParameterEntities[index] = schema.DeviceTypeParameterEntity{
-			Name: userDefinedDeviceParameterDTO.Name,
-			Type: strings.ToLower(string(userDefinedDeviceParameterDTO.Type)),
+			Name: deviceParameterDTO.Name,
+			Type: strings.ToLower(string(deviceParameterDTO.Type)),
 		}
 	}
 
-	userDefinedDeviceTypeEntity := schema.UserDefinedDeviceTypeEntity{
-		Denotation: userDefinedDeviceTypeDTO.Denotation,
+	deviceTypeEntity := schema.DeviceTypeEntity{
+		Denotation: DeviceTypeDTO.Denotation,
 		Parameters: deviceTypeParameterEntities,
 	}
 
-	if err := r.db.Create(&userDefinedDeviceTypeEntity).Error; err != nil {
+	if err := r.db.Create(&deviceTypeEntity).Error; err != nil {
 		return 0, err
 	}
 
-	return userDefinedDeviceTypeEntity.ID, nil
+	return deviceTypeEntity.ID, nil
 }
 
-func (r *relationalDatabaseClientImpl) DeleteUserDefinedDeviceType(id uint32) error { // TODO: Consider introducing database deletion constraints (ON DELETE CASCADE) to simplify this...
+func (r *relationalDatabaseClientImpl) DeleteDeviceType(id uint32) error { // TODO: Consider introducing database deletion constraints (ON DELETE CASCADE) to simplify this...
 
-	var userDefinedDeviceTypeEntity schema.UserDefinedDeviceTypeEntity
+	var deviceTypeEntity schema.DeviceTypeEntity
 
-	if err := r.db.Preload("Parameters").Where("id = ?", id).First(&userDefinedDeviceTypeEntity).Error; err != nil {
+	if err := r.db.Preload("Parameters").Where("id = ?", id).First(&deviceTypeEntity).Error; err != nil {
 		return err
 	}
 
 	tx := r.db.Begin()
 
-	if len(userDefinedDeviceTypeEntity.Parameters) > 0 {
-		if err := tx.Where("user_defined_device_type_id = ?", userDefinedDeviceTypeEntity.ID).Delete(&schema.DeviceTypeParameterEntity{}).Error; err != nil {
+	if len(deviceTypeEntity.Parameters) > 0 {
+		if err := tx.Where("user_defined_device_type_id = ?", deviceTypeEntity.ID).Delete(&schema.DeviceTypeParameterEntity{}).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
 	}
 
-	if err := tx.Delete(&userDefinedDeviceTypeEntity).Error; err != nil {
+	if err := tx.Delete(&deviceTypeEntity).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -293,11 +293,11 @@ func (r *relationalDatabaseClientImpl) ObtainAllDevices() ([]dto.DeviceDTO, erro
 	}
 
 	for index, deviceEntity := range deviceEntities { // TODO: Is this any better than getting all device types at once and mapping them against devices?
-		var userDefinedDeviceTypesEntity schema.UserDefinedDeviceTypeEntity
-		if err := r.db.Preload("Parameters").Where("id = ?", deviceEntity.DeviceTypeID).First(&userDefinedDeviceTypesEntity).Error; err != nil {
+		var deviceTypeEntity schema.DeviceTypeEntity
+		if err := r.db.Preload("Parameters").Where("id = ?", deviceEntity.DeviceTypeID).First(&deviceTypeEntity).Error; err != nil {
 			return nil, err
 		}
-		deviceEntity.DeviceType = userDefinedDeviceTypesEntity
+		deviceEntity.DeviceType = deviceTypeEntity
 		deviceEntities[index] = deviceEntity
 	}
 

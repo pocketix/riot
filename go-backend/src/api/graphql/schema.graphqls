@@ -1,45 +1,45 @@
-enum UserDefinedDeviceTypeParameterType {
+enum DeviceTypeParameterType {
   STRING
   NUMBER
   BOOLEAN
 }
 
-type UserDefinedDeviceTypeParameter {
+type DeviceTypeParameter {
   id: ID!
   name: String!
-  type: UserDefinedDeviceTypeParameterType!
+  type: DeviceTypeParameterType!
 }
 
-type UserDefinedDeviceType {
+type DeviceType {
   id: ID!
   denotation: String!
-  parameters: [UserDefinedDeviceTypeParameter!]!
+  parameters: [DeviceTypeParameter!]!
 }
 
-input UserDefinedDeviceTypeParameterInput {
+input DeviceTypeParameterInput {
   name: String!
-  type: UserDefinedDeviceTypeParameterType!
+  type: DeviceTypeParameterType!
 }
 
-input NewUserDefinedDeviceTypeInput {
+input NewDeviceTypeInput {
   denotation: String!
-  parameters: [UserDefinedDeviceTypeParameterInput!]!
+  parameters: [DeviceTypeParameterInput!]!
 }
 
 type Device {
   id: ID!
   uid: String!
   name: String!
-  type: UserDefinedDeviceType!
+  type: DeviceType!
 }
 
 type Query {
-  singleUserDefinedDeviceType(input: ID!): UserDefinedDeviceType!
-  userDefinedDeviceTypes: [UserDefinedDeviceType!]!
+  singleDeviceType(input: ID!): DeviceType!
+  deviceTypes: [DeviceType!]!
   devices: [Device!]!
 }
 
 type Mutation {
-  createNewUserDefinedDeviceType(input: NewUserDefinedDeviceTypeInput!): UserDefinedDeviceType!
-  deleteUserDefinedDeviceType(input: ID!): Boolean
+  createNewDeviceType(input: NewDeviceTypeInput!): DeviceType!
+  deleteDeviceType(input: ID!): Boolean
 }

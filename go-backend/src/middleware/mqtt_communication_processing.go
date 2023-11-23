@@ -47,7 +47,7 @@ func checkKPIFulfillment(deviceData dto.Dev5DeviceDTO) { // TODO: Implement KPI 
 	log.Println("----- ----- ----- ----- ----- ----- ----- -----")
 }
 
-func registerDeviceIfNotAlreadyPresent(deviceData dto.Dev5DeviceDTO, deviceTypeDTOReference *dto.UserDefinedDeviceTypeDTO) error {
+func registerDeviceIfNotAlreadyPresent(deviceData dto.Dev5DeviceDTO, deviceTypeDTOReference *dto.DeviceTypeDTO) error {
 
 	currentlyPresentDevices, err := (*rdb.GetRelationalDatabaseClientReference()).ObtainAllDevices()
 	if err != nil {
@@ -69,19 +69,19 @@ func registerDeviceIfNotAlreadyPresent(deviceData dto.Dev5DeviceDTO, deviceTypeD
 	return err
 }
 
-func compareDeviceTypeAgainstTrackedTypes(incomingMessageDeviceType string) (bool, *dto.UserDefinedDeviceTypeDTO, error) {
+func compareDeviceTypeAgainstTrackedTypes(incomingMessageDeviceType string) (bool, *dto.DeviceTypeDTO, error) {
 
-	deviceTypeDTOs, err := (*rdb.GetRelationalDatabaseClientReference()).ObtainAllUserDefinedDeviceTypes()
+	deviceTypeDTOs, err := (*rdb.GetRelationalDatabaseClientReference()).ObtainAllDeviceTypes()
 	if err != nil {
 		return false, nil, err
 	}
 
-	res := funk.Find(deviceTypeDTOs, func(u dto.UserDefinedDeviceTypeDTO) bool { return u.Denotation == incomingMessageDeviceType })
+	res := funk.Find(deviceTypeDTOs, func(u dto.DeviceTypeDTO) bool { return u.Denotation == incomingMessageDeviceType })
 	if res == nil {
 		return false, nil, nil
 	}
 
-	deviceTypeDTO := res.(dto.UserDefinedDeviceTypeDTO)
+	deviceTypeDTO := res.(dto.DeviceTypeDTO)
 
 	return true, &deviceTypeDTO, nil
 }

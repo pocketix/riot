@@ -1,65 +1,65 @@
 import React, { useCallback } from 'react'
 import { ApolloError, MutationFunction, MutationTuple, QueryResult, useMutation, useQuery } from '@apollo/client'
 import {
-  CreateNewUserDefinedDeviceTypeMutation,
-  CreateNewUserDefinedDeviceTypeMutationVariables,
-  DeleteUserDefinedDeviceTypeMutation,
-  DeleteUserDefinedDeviceTypeMutationVariables,
-  UserDefinedDeviceTypeParameterType,
-  UserDefinedDeviceTypesQuery,
-  UserDefinedDeviceTypesQueryVariables
+  CreateNewDeviceTypeMutation,
+  CreateNewDeviceTypeMutationVariables,
+  DeleteDeviceTypeMutation,
+  DeleteDeviceTypeMutationVariables,
+  DeviceTypeParameterType,
+  DeviceTypesQuery,
+  DeviceTypesQueryVariables
 } from '../../generated/graphql'
 import gql from 'graphql-tag'
-import USER_DEFINED_DEVICE_TYPES_QUERY from '../../graphql/queries/userDefinedDeviceTypes.graphql'
+import DEVICE_TYPES_QUERY from '../../graphql/queries/deviceTypes.graphql'
 import { RefetchFunction } from '@apollo/client/react/hooks/useSuspenseQuery'
 import DeviceTypesPageView from './DeviceTypesPageView'
-import DELETE_USER_DEFINED_DEVICE_TYPE_MUTATION from '../../graphql/mutations/deleteUserDefinedDeviceType.graphql'
-import CREATE_NEW_USER_DEFINED_DEVICE_TYPE_MUTATION from '../../graphql/mutations/createNewUserDefinedDeviceType.graphql'
+import DELETE_DEVICE_TYPE_MUTATION from '../../graphql/mutations/deleteDeviceType.graphql'
+import CREATE_NEW_DEVICE_TYPE_MUTATION from '../../graphql/mutations/createNewDeviceType.graphql'
 
 const DeviceTypesPageController: React.FC = () => {
-  const userDefinedDeviceTypesQueryResult: QueryResult<UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables> = useQuery<UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables>(gql`
-    ${USER_DEFINED_DEVICE_TYPES_QUERY}
+  const deviceTypesQueryResult: QueryResult<DeviceTypesQuery, DeviceTypesQueryVariables> = useQuery<DeviceTypesQuery, DeviceTypesQueryVariables>(gql`
+    ${DEVICE_TYPES_QUERY}
   `)
-  const userDefinedDeviceTypesQueryData: UserDefinedDeviceTypesQuery = userDefinedDeviceTypesQueryResult.data
-  const userDefinedDeviceTypesQueryLoading: boolean = userDefinedDeviceTypesQueryResult.loading
-  const userDefinedDeviceTypesQueryError: ApolloError | undefined = userDefinedDeviceTypesQueryResult.error
-  const userDefinedDeviceTypesQueryRefetchFunction: RefetchFunction<UserDefinedDeviceTypesQuery, UserDefinedDeviceTypesQueryVariables> = userDefinedDeviceTypesQueryResult.refetch
+  const deviceTypesQueryData: DeviceTypesQuery = deviceTypesQueryResult.data
+  const deviceTypesQueryLoading: boolean = deviceTypesQueryResult.loading
+  const deviceTypesQueryError: ApolloError | undefined = deviceTypesQueryResult.error
+  const deviceTypesQueryRefetchFunction: RefetchFunction<DeviceTypesQuery, DeviceTypesQueryVariables> = deviceTypesQueryResult.refetch
 
-  const deleteUserDefinedDeviceTypeMutationResult: MutationTuple<DeleteUserDefinedDeviceTypeMutation, DeleteUserDefinedDeviceTypeMutationVariables> = useMutation<DeleteUserDefinedDeviceTypeMutation, DeleteUserDefinedDeviceTypeMutationVariables>(gql`
-    ${DELETE_USER_DEFINED_DEVICE_TYPE_MUTATION}
+  const deleteDeviceTypeMutationResult: MutationTuple<DeleteDeviceTypeMutation, DeleteDeviceTypeMutationVariables> = useMutation<DeleteDeviceTypeMutation, DeleteDeviceTypeMutationVariables>(gql`
+    ${DELETE_DEVICE_TYPE_MUTATION}
   `)
-  const deleteUserDefinedDeviceTypeMutationFunction: MutationFunction<DeleteUserDefinedDeviceTypeMutation, DeleteUserDefinedDeviceTypeMutationVariables> = deleteUserDefinedDeviceTypeMutationResult[0]
-  const deleteUserDefinedDeviceTypeMutationLoading: boolean = deleteUserDefinedDeviceTypeMutationResult[1].loading
-  const deleteUserDefinedDeviceTypeMutationError: ApolloError | undefined = deleteUserDefinedDeviceTypeMutationResult[1].error
+  const deleteDeviceTypeMutationFunction: MutationFunction<DeleteDeviceTypeMutation, DeleteDeviceTypeMutationVariables> = deleteDeviceTypeMutationResult[0]
+  const deleteDeviceTypeMutationLoading: boolean = deleteDeviceTypeMutationResult[1].loading
+  const deleteDeviceTypeMutationError: ApolloError | undefined = deleteDeviceTypeMutationResult[1].error
 
-  const createNewUserDefinedDeviceTypeMutationResult: MutationTuple<CreateNewUserDefinedDeviceTypeMutation, CreateNewUserDefinedDeviceTypeMutationVariables> = useMutation<
-    CreateNewUserDefinedDeviceTypeMutation,
-    CreateNewUserDefinedDeviceTypeMutationVariables
+  const createNewDeviceTypeMutationResult: MutationTuple<CreateNewDeviceTypeMutation, CreateNewDeviceTypeMutationVariables> = useMutation<
+    CreateNewDeviceTypeMutation,
+    CreateNewDeviceTypeMutationVariables
   >(gql`
-    ${CREATE_NEW_USER_DEFINED_DEVICE_TYPE_MUTATION}
+    ${CREATE_NEW_DEVICE_TYPE_MUTATION}
   `)
-  const createNewUserDefinedDeviceTypeMutationFunction: MutationFunction<CreateNewUserDefinedDeviceTypeMutation, CreateNewUserDefinedDeviceTypeMutationVariables> = createNewUserDefinedDeviceTypeMutationResult[0]
-  const createNewUserDefinedDeviceTypeMutationLoading: boolean = createNewUserDefinedDeviceTypeMutationResult[1].loading
-  const createNewUserDefinedDeviceTypeMutationError: ApolloError | undefined = createNewUserDefinedDeviceTypeMutationResult[1].error
+  const createNewDeviceTypeMutationFunction: MutationFunction<CreateNewDeviceTypeMutation, CreateNewDeviceTypeMutationVariables> = createNewDeviceTypeMutationResult[0]
+  const createNewDeviceTypeMutationLoading: boolean = createNewDeviceTypeMutationResult[1].loading
+  const createNewDeviceTypeMutationError: ApolloError | undefined = createNewDeviceTypeMutationResult[1].error
 
-  const refetchUserDefinedDeviceTypes = useCallback(async () => {
-    await userDefinedDeviceTypesQueryRefetchFunction()
-  }, [userDefinedDeviceTypesQueryRefetchFunction])
+  const refetchDeviceTypes = useCallback(async () => {
+    await deviceTypesQueryRefetchFunction()
+  }, [deviceTypesQueryRefetchFunction])
 
-  const createNewUserDefinedDeviceType = useCallback(
+  const createNewDeviceType = useCallback(
     async (denotation: string, parameters: { name: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]) => {
-      const transformParameterType = (type: 'STRING' | 'NUMBER' | 'BOOLEAN'): UserDefinedDeviceTypeParameterType => {
+      const transformParameterType = (type: 'STRING' | 'NUMBER' | 'BOOLEAN'): DeviceTypeParameterType => {
         switch (type) {
           case 'STRING':
-            return UserDefinedDeviceTypeParameterType.String
+            return DeviceTypeParameterType.String
           case 'NUMBER':
-            return UserDefinedDeviceTypeParameterType.Number
+            return DeviceTypeParameterType.Number
           case 'BOOLEAN':
-            return UserDefinedDeviceTypeParameterType.Boolean
+            return DeviceTypeParameterType.Boolean
         }
       }
 
-      await createNewUserDefinedDeviceTypeMutationFunction({
+      await createNewDeviceTypeMutationFunction({
         variables: {
           input: {
             denotation: denotation,
@@ -72,31 +72,31 @@ const DeviceTypesPageController: React.FC = () => {
           }
         }
       })
-      await refetchUserDefinedDeviceTypes()
+      await refetchDeviceTypes()
     },
-    [deleteUserDefinedDeviceTypeMutationFunction, refetchUserDefinedDeviceTypes]
+    [deleteDeviceTypeMutationFunction, refetchDeviceTypes]
   )
 
-  const deleteUserDefinedDeviceType = useCallback(
+  const deleteDeviceType = useCallback(
     async (id: string) => {
-      await deleteUserDefinedDeviceTypeMutationFunction({
+      await deleteDeviceTypeMutationFunction({
         variables: {
           input: id
         }
       })
-      await refetchUserDefinedDeviceTypes()
+      await refetchDeviceTypes()
     },
-    [deleteUserDefinedDeviceTypeMutationFunction, refetchUserDefinedDeviceTypes]
+    [deleteDeviceTypeMutationFunction, refetchDeviceTypes]
   )
 
-  const anyLoadingOccurs: boolean = userDefinedDeviceTypesQueryLoading || createNewUserDefinedDeviceTypeMutationLoading || deleteUserDefinedDeviceTypeMutationLoading
-  const anyErrorOccurred: boolean = !!userDefinedDeviceTypesQueryError || !!createNewUserDefinedDeviceTypeMutationError || !!deleteUserDefinedDeviceTypeMutationError
+  const anyLoadingOccurs: boolean = deviceTypesQueryLoading || createNewDeviceTypeMutationLoading || deleteDeviceTypeMutationLoading
+  const anyErrorOccurred: boolean = !!deviceTypesQueryError || !!createNewDeviceTypeMutationError || !!deleteDeviceTypeMutationError
 
   return (
     <DeviceTypesPageView
-      userDefinedDeviceTypesQueryData={userDefinedDeviceTypesQueryData}
-      createNewUserDefinedDeviceType={createNewUserDefinedDeviceType}
-      deleteUserDefinedDeviceType={deleteUserDefinedDeviceType}
+      deviceTypesQueryData={deviceTypesQueryData}
+      createNewDeviceType={createNewDeviceType}
+      deleteDeviceType={deleteDeviceType}
       anyLoadingOccurs={anyLoadingOccurs}
       anyErrorOccurred={anyErrorOccurred}
     />

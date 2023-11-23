@@ -9,73 +9,73 @@ import (
 )
 
 type Device struct {
-	ID   string                 `json:"id"`
-	UID  string                 `json:"uid"`
-	Name string                 `json:"name"`
-	Type *UserDefinedDeviceType `json:"type"`
+	ID   string      `json:"id"`
+	UID  string      `json:"uid"`
+	Name string      `json:"name"`
+	Type *DeviceType `json:"type"`
 }
 
-type NewUserDefinedDeviceTypeInput struct {
-	Denotation string                                 `json:"denotation"`
-	Parameters []*UserDefinedDeviceTypeParameterInput `json:"parameters"`
+type DeviceType struct {
+	ID         string                 `json:"id"`
+	Denotation string                 `json:"denotation"`
+	Parameters []*DeviceTypeParameter `json:"parameters"`
 }
 
-type UserDefinedDeviceType struct {
-	ID         string                            `json:"id"`
-	Denotation string                            `json:"denotation"`
-	Parameters []*UserDefinedDeviceTypeParameter `json:"parameters"`
+type DeviceTypeParameter struct {
+	ID   string                  `json:"id"`
+	Name string                  `json:"name"`
+	Type DeviceTypeParameterType `json:"type"`
 }
 
-type UserDefinedDeviceTypeParameter struct {
-	ID   string                             `json:"id"`
-	Name string                             `json:"name"`
-	Type UserDefinedDeviceTypeParameterType `json:"type"`
+type DeviceTypeParameterInput struct {
+	Name string                  `json:"name"`
+	Type DeviceTypeParameterType `json:"type"`
 }
 
-type UserDefinedDeviceTypeParameterInput struct {
-	Name string                             `json:"name"`
-	Type UserDefinedDeviceTypeParameterType `json:"type"`
+type NewDeviceTypeInput struct {
+	Denotation string                      `json:"denotation"`
+	Parameters []*DeviceTypeParameterInput `json:"parameters"`
 }
 
-type UserDefinedDeviceTypeParameterType string
+type DeviceTypeParameterType string
 
 const (
-	UserDefinedDeviceTypeParameterTypeString  UserDefinedDeviceTypeParameterType = "STRING"
-	UserDefinedDeviceTypeParameterTypeNumber  UserDefinedDeviceTypeParameterType = "NUMBER"
-	UserDefinedDeviceTypeParameterTypeBoolean UserDefinedDeviceTypeParameterType = "BOOLEAN"
+	DeviceTypeParameterTypeString  DeviceTypeParameterType = "STRING"
+	DeviceTypeParameterTypeNumber  DeviceTypeParameterType = "NUMBER"
+	DeviceTypeParameterTypeBoolean DeviceTypeParameterType = "BOOLEAN"
 )
 
-var AllUserDefinedDeviceTypeParameterType = []UserDefinedDeviceTypeParameterType{
-	UserDefinedDeviceTypeParameterTypeString,
-	UserDefinedDeviceTypeParameterTypeNumber,
-	UserDefinedDeviceTypeParameterTypeBoolean,
+var AllDeviceTypeParameterType = []DeviceTypeParameterType{
+	DeviceTypeParameterTypeString,
+	DeviceTypeParameterTypeNumber,
+	DeviceTypeParameterTypeBoolean,
 }
 
-func (e UserDefinedDeviceTypeParameterType) IsValid() bool {
+func (e DeviceTypeParameterType) IsValid() bool {
 	switch e {
-	case UserDefinedDeviceTypeParameterTypeString, UserDefinedDeviceTypeParameterTypeNumber, UserDefinedDeviceTypeParameterTypeBoolean:
+	case DeviceTypeParameterTypeString, DeviceTypeParameterTypeNumber, DeviceTypeParameterTypeBoolean:
 		return true
 	}
 	return false
 }
 
-func (e UserDefinedDeviceTypeParameterType) String() string {
+func (e DeviceTypeParameterType) String() string {
 	return string(e)
 }
 
-func (e *UserDefinedDeviceTypeParameterType) UnmarshalGQL(v interface{}) error {
+func (e *DeviceTypeParameterType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = UserDefinedDeviceTypeParameterType(str)
+	*e = DeviceTypeParameterType(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid UserDefinedDeviceTypeParameterType", str)
+		return fmt.Errorf("%s is not a valid DeviceTypeParameterType", str)
 	}
 	return nil
 }
 
-func (e UserDefinedDeviceTypeParameterType) MarshalGQL(w io.Writer) {
+func (e DeviceTypeParameterType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

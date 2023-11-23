@@ -3,7 +3,7 @@ import { Button, FormControl, Grid, InputLabel, MenuItem, Select, SelectChangeEv
 import styles from './NewDeviceTypeForm.module.scss'
 
 interface NewDeviceTypeFormProps {
-  createNewUserDefinedDeviceType: (denotation: string, parameters: { name: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]) => Promise<void>
+  createNewDeviceType: (denotation: string, parameters: { name: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]) => Promise<void>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }
@@ -15,8 +15,8 @@ const NewDeviceTypeForm: React.FC<NewDeviceTypeFormProps> = (props) => {
   const isFormDisabled: boolean = useMemo<boolean>(() => props.anyLoadingOccurs || props.anyErrorOccurred, [props.anyLoadingOccurs, props.anyErrorOccurred])
 
   const onSubmitHandler = useCallback(async () => {
-    await props.createNewUserDefinedDeviceType(denotation, parameters as { name: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[])
-  }, [denotation, parameters, props.createNewUserDefinedDeviceType])
+    await props.createNewDeviceType(denotation, parameters as { name: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[])
+  }, [denotation, parameters, props.createNewDeviceType])
 
   const onDenotationChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setDenotation(e.target.value)

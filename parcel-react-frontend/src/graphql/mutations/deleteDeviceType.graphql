@@ -1,0 +1,3 @@
+mutation DeleteDeviceType($input: ID!) {
+  deleteDeviceType(input: $input)
+}

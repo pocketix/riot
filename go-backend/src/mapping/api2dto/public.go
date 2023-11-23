@@ -5,20 +5,20 @@ import (
 	"bp-bures-SfPDfSD/src/dto"
 )
 
-func MapNewUserDefinedDeviceTypeInputToUserDefinedDeviceTypeDTO(input model.NewUserDefinedDeviceTypeInput) dto.UserDefinedDeviceTypeDTO {
+func MapNewDeviceTypeInputToDeviceTypeDTO(input model.NewDeviceTypeInput) dto.DeviceTypeDTO {
 
-	userDefinedDeviceTypeDTOs := make([]dto.UserDefinedDeviceTypeParameterDTO, len(input.Parameters))
+	deviceTypeDTOs := make([]dto.DeviceTypeParameterDTO, len(input.Parameters))
 
-	for index, userDefinedDeviceTypeParameterInput := range input.Parameters {
-		userDefinedDeviceTypeDTOs[index] = dto.UserDefinedDeviceTypeParameterDTO{
-			Name: userDefinedDeviceTypeParameterInput.Name,
-			Type: dto.UserDefinedDeviceTypeParameterType(userDefinedDeviceTypeParameterInput.Type),
+	for index, deviceTypeParameterInput := range input.Parameters {
+		deviceTypeDTOs[index] = dto.DeviceTypeParameterDTO{
+			Name: deviceTypeParameterInput.Name,
+			Type: dto.DeviceTypeParameterType(deviceTypeParameterInput.Type),
 		}
 	}
 
-	return dto.UserDefinedDeviceTypeDTO{
+	return dto.DeviceTypeDTO{
 		ID:         nil,
 		Denotation: input.Denotation,
-		Parameters: userDefinedDeviceTypeDTOs,
+		Parameters: deviceTypeDTOs,
 	}
 }

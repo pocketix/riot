@@ -1,3 +1,0 @@
-mutation DeleteUserDefinedDeviceType($input: ID!) {
-  deleteUserDefinedDeviceType(input: $input)
-}

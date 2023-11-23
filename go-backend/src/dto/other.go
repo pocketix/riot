@@ -1,28 +1,28 @@
 package dto
 
 const (
-	UserDefinedDeviceTypeParameterTypeString  UserDefinedDeviceTypeParameterType = "STRING"
-	UserDefinedDeviceTypeParameterTypeNumber  UserDefinedDeviceTypeParameterType = "NUMBER"
-	UserDefinedDeviceTypeParameterTypeBoolean UserDefinedDeviceTypeParameterType = "BOOLEAN"
+	DeviceTypeParameterTypeString  DeviceTypeParameterType = "STRING"
+	DeviceTypeParameterTypeNumber  DeviceTypeParameterType = "NUMBER"
+	DeviceTypeParameterTypeBoolean DeviceTypeParameterType = "BOOLEAN"
 )
 
-type UserDefinedDeviceTypeParameterType string
+type DeviceTypeParameterType string
 
-type UserDefinedDeviceTypeParameterDTO struct {
+type DeviceTypeParameterDTO struct {
 	ID   *uint32
 	Name string
-	Type UserDefinedDeviceTypeParameterType
+	Type DeviceTypeParameterType
 }
 
-type UserDefinedDeviceTypeDTO struct {
+type DeviceTypeDTO struct {
 	ID         *uint32
 	Denotation string
-	Parameters []UserDefinedDeviceTypeParameterDTO
+	Parameters []DeviceTypeParameterDTO
 }
 
 type DeviceDTO struct {
 	ID         *uint32
 	UID        string
 	Name       string
-	DeviceType *UserDefinedDeviceTypeDTO
+	DeviceType *DeviceTypeDTO
 }

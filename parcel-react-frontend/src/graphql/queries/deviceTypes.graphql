@@ -1,5 +1,5 @@
-query UserDefinedDeviceTypes {
-  userDefinedDeviceTypes {
+query DeviceTypes {
+  deviceTypes {
     id
     denotation
     parameters {

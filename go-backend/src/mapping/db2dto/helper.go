@@ -6,45 +6,45 @@ import (
 	"errors"
 )
 
-func mapDeviceTypeParameterEntityTypeStringToUserDefinedDeviceTypeParameterDTOType(input string) (dto.UserDefinedDeviceTypeParameterType, error) {
+func mapDeviceTypeParameterEntityTypeStringToDeviceTypeParameterDTOType(input string) (dto.DeviceTypeParameterType, error) {
 
 	switch input {
 	case "string", "STRING":
-		return dto.UserDefinedDeviceTypeParameterTypeString, nil
+		return dto.DeviceTypeParameterTypeString, nil
 	case "number", "NUMBER":
-		return dto.UserDefinedDeviceTypeParameterTypeNumber, nil
+		return dto.DeviceTypeParameterTypeNumber, nil
 	case "boolean", "BOOLEAN":
-		return dto.UserDefinedDeviceTypeParameterTypeBoolean, nil
+		return dto.DeviceTypeParameterTypeBoolean, nil
 	default:
-		return "", errors.New("invalid value – cannot map it to 'dto.UserDefinedDeviceTypeParameterType'")
+		return "", errors.New("invalid value – cannot map it to 'dto.DeviceTypeParameterType'")
 	}
 }
 
-func mapDeviceTypeParameterEntityToUserDefinedDeviceTypeParameterDTO(deviceTypeParameterEntity schema.DeviceTypeParameterEntity) (*dto.UserDefinedDeviceTypeParameterDTO, error) {
+func mapDeviceTypeParameterEntityToDeviceTypeParameterDTO(deviceTypeParameterEntity schema.DeviceTypeParameterEntity) (*dto.DeviceTypeParameterDTO, error) {
 
-	userDefinedDeviceTypeParameterDTOType, err := mapDeviceTypeParameterEntityTypeStringToUserDefinedDeviceTypeParameterDTOType(deviceTypeParameterEntity.Type)
+	deviceTypeParameterDTOType, err := mapDeviceTypeParameterEntityTypeStringToDeviceTypeParameterDTOType(deviceTypeParameterEntity.Type)
 	if err != nil {
 		return nil, err
 	}
 
-	return &dto.UserDefinedDeviceTypeParameterDTO{
+	return &dto.DeviceTypeParameterDTO{
 		ID:   &deviceTypeParameterEntity.ID,
 		Name: deviceTypeParameterEntity.Name,
-		Type: userDefinedDeviceTypeParameterDTOType,
+		Type: deviceTypeParameterDTOType,
 	}, nil
 }
 
-func mapDeviceTypeParameterEntitiesToUserDefinedDeviceTypeParameterDTOs(deviceTypeParameterEntities []schema.DeviceTypeParameterEntity) ([]dto.UserDefinedDeviceTypeParameterDTO, error) {
+func mapDeviceTypeParameterEntitiesToDeviceTypeParameterDTOs(deviceTypeParameterEntities []schema.DeviceTypeParameterEntity) ([]dto.DeviceTypeParameterDTO, error) {
 
-	userDefinedDeviceTypeParameterDTOs := make([]dto.UserDefinedDeviceTypeParameterDTO, len(deviceTypeParameterEntities))
+	deviceTypeParameterDTOs := make([]dto.DeviceTypeParameterDTO, len(deviceTypeParameterEntities))
 
 	for index, deviceTypeParameterEntity := range deviceTypeParameterEntities {
-		userDefinedDeviceTypeParameterDTO, err := mapDeviceTypeParameterEntityToUserDefinedDeviceTypeParameterDTO(deviceTypeParameterEntity)
+		deviceTypeParameterDTO, err := mapDeviceTypeParameterEntityToDeviceTypeParameterDTO(deviceTypeParameterEntity)
 		if err != nil {
 			return nil, err
 		}
-		userDefinedDeviceTypeParameterDTOs[index] = *userDefinedDeviceTypeParameterDTO
+		deviceTypeParameterDTOs[index] = *deviceTypeParameterDTO
 	}
 
-	return userDefinedDeviceTypeParameterDTOs, nil
+	return deviceTypeParameterDTOs, nil
 }

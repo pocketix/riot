@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
-import { UserDefinedDeviceTypesQuery } from '../../../../generated/graphql'
+import { DeviceTypesQuery } from '../../../../generated/graphql'
 import { FormControlLabel, Switch } from '@mui/material'
 import DeviceTypeWidget from '../device-type-widget/DeviceTypeWidget'
 import styles from './CurrentlyDefinedDeviceTypesSection.module.scss'
 
 interface CurrentlyDefinedDeviceTypesSectionProps {
-  userDefinedDeviceTypesQueryData: UserDefinedDeviceTypesQuery
-  deleteUserDefinedDeviceType: (id: string) => Promise<void>
+  deviceTypesQueryData: DeviceTypesQuery
+  deleteDeviceType: (id: string) => Promise<void>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }
@@ -23,14 +23,14 @@ const CurrentlyDefinedDeviceTypesSection: React.FC<CurrentlyDefinedDeviceTypesSe
       <h2>Currently defined device types</h2>
       <FormControlLabel control={<Switch checked={areParametersDisplayed} onChange={handleChange} />} label="Display parameters?" />
       <div className={styles.section}>
-        {props.userDefinedDeviceTypesQueryData &&
-          props.userDefinedDeviceTypesQueryData.userDefinedDeviceTypes.map((deviceType) => (
+        {props.deviceTypesQueryData &&
+          props.deviceTypesQueryData.deviceTypes.map((deviceType) => (
             <DeviceTypeWidget
               id={deviceType.id}
               denotation={deviceType.denotation}
               areParametersDisplayed={areParametersDisplayed}
               parameters={deviceType.parameters}
-              deleteUserDefinedDeviceType={props.deleteUserDefinedDeviceType}
+              deleteDeviceType={props.deleteDeviceType}
               anyLoadingOccurs={props.anyLoadingOccurs}
               anyErrorOccurred={props.anyErrorOccurred}
             />

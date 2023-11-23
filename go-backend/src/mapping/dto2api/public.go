@@ -8,24 +8,24 @@ import (
 	"strconv"
 )
 
-func MapUserDefinedDeviceTypeDTOToUserDefinedDeviceType(userDefinedDeviceTypeDTO dto.UserDefinedDeviceTypeDTO) (*model.UserDefinedDeviceType, error) {
+func MapDeviceTypeDTOToDeviceType(deviceTypeDTO dto.DeviceTypeDTO) (*model.DeviceType, error) {
 
-	userDefinedDeviceTypeParameters, err := mapDeviceTypeParameterDTOsToUserDefinedDeviceTypeParameters(userDefinedDeviceTypeDTO.Parameters)
+	deviceTypeParameters, err := mapDeviceTypeParameterDTOsToDeviceTypeParameters(deviceTypeDTO.Parameters)
 	if err != nil {
 		return nil, err
 	}
 
-	return &model.UserDefinedDeviceType{
-		ID:         strconv.FormatUint(uint64(*userDefinedDeviceTypeDTO.ID), 10),
-		Denotation: userDefinedDeviceTypeDTO.Denotation,
-		Parameters: userDefinedDeviceTypeParameters,
+	return &model.DeviceType{
+		ID:         strconv.FormatUint(uint64(*deviceTypeDTO.ID), 10),
+		Denotation: deviceTypeDTO.Denotation,
+		Parameters: deviceTypeParameters,
 	}, nil
 }
 
-func MapUserDefinedDeviceTypeDTOsToUserDefinedDeviceTypes(userDefinedDeviceTypeDTOs []dto.UserDefinedDeviceTypeDTO) ([]*model.UserDefinedDeviceType, error) { // TODO: Example of go-funk code-style along with error handling...
+func MapDeviceTypeDTOsToDeviceTypes(DeviceTypeDTOs []dto.DeviceTypeDTO) ([]*model.DeviceType, error) { // TODO: Example of go-funk code-style along with error handling...
 
-	results := funk.Map(userDefinedDeviceTypeDTOs, func(u dto.UserDefinedDeviceTypeDTO) util.ValueOrError {
-		res, err := MapUserDefinedDeviceTypeDTOToUserDefinedDeviceType(u)
+	results := funk.Map(DeviceTypeDTOs, func(u dto.DeviceTypeDTO) util.ValueOrError {
+		res, err := MapDeviceTypeDTOToDeviceType(u)
 		return util.ValueOrError{
 			Value: res,
 			Error: err,
@@ -37,19 +37,19 @@ func MapUserDefinedDeviceTypeDTOsToUserDefinedDeviceTypes(userDefinedDeviceTypeD
 		return nil, errElem.(util.ValueOrError).Error
 	}
 
-	return funk.Map(results, func(r util.ValueOrError) *model.UserDefinedDeviceType {
-		return r.Value.(*model.UserDefinedDeviceType)
-	}).([]*model.UserDefinedDeviceType), nil
+	return funk.Map(results, func(r util.ValueOrError) *model.DeviceType {
+		return r.Value.(*model.DeviceType)
+	}).([]*model.DeviceType), nil
 }
 
 func MapDeviceDTOToDevice(deviceDTO dto.DeviceDTO) *model.Device {
 
-	userDefinedDeviceType, _ := MapUserDefinedDeviceTypeDTOToUserDefinedDeviceType(*deviceDTO.DeviceType) // TODO: Error handling... but error occurrence here is improbable...
+	deviceType, _ := MapDeviceTypeDTOToDeviceType(*deviceDTO.DeviceType) // TODO: Error handling... but error occurrence here is improbable...
 
 	return &model.Device{
 		ID:   strconv.FormatUint(uint64(*deviceDTO.ID), 10),
 		UID:  deviceDTO.UID,
 		Name: deviceDTO.Name,
-		Type: userDefinedDeviceType,
+		Type: deviceType,
 	}
 }

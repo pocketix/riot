@@ -14,64 +14,63 @@ import (
 	"strconv"
 )
 
-// CreateNewUserDefinedDeviceType is the resolver for the createNewUserDefinedDeviceType field.
-func (r *mutationResolver) CreateNewUserDefinedDeviceType(ctx context.Context, input model.NewUserDefinedDeviceTypeInput) (*model.UserDefinedDeviceType, error) {
-	dto := api2dto.MapNewUserDefinedDeviceTypeInputToUserDefinedDeviceTypeDTO(input)
-	id, err := r.rdbClient.InsertUserDefinedDeviceType(dto)
+// CreateNewDeviceType is the resolver for the createNewDeviceType field.
+func (r *mutationResolver) CreateNewDeviceType(_ context.Context, input model.NewDeviceTypeInput) (*model.DeviceType, error) {
+
+	dto := api2dto.MapNewDeviceTypeInputToDeviceTypeDTO(input)
+	id, err := r.rdbClient.InsertDeviceType(dto)
 	if err != nil {
 		return nil, err
 	}
 
-	userDefinedDeviceTypeDTO, err := r.rdbClient.ObtainUserDefinedDeviceTypeByID(id)
+	deviceTypeDTO, err := r.rdbClient.ObtainDeviceTypeByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	return dto2api.MapUserDefinedDeviceTypeDTOToUserDefinedDeviceType(userDefinedDeviceTypeDTO)
+	return dto2api.MapDeviceTypeDTOToDeviceType(deviceTypeDTO)
 }
 
-// DeleteUserDefinedDeviceType is the resolver for the deleteUserDefinedDeviceType field.
-func (r *mutationResolver) DeleteUserDefinedDeviceType(ctx context.Context, input string) (*bool, error) {
+func (r *mutationResolver) DeleteDeviceType(ctx context.Context, input string) (*bool, error) {
+
 	id, err := strconv.ParseInt(input, 10, 32)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := r.rdbClient.DeleteUserDefinedDeviceType(uint32(id)); err != nil {
+	if err := r.rdbClient.DeleteDeviceType(uint32(id)); err != nil {
 		return nil, err
 	}
 
 	result := true
 	return &result, nil
 }
+func (r *queryResolver) SingleDeviceType(ctx context.Context, input string) (*model.DeviceType, error) {
 
-// SingleUserDefinedDeviceType is the resolver for the singleUserDefinedDeviceType field.
-func (r *queryResolver) SingleUserDefinedDeviceType(ctx context.Context, input string) (*model.UserDefinedDeviceType, error) {
 	id, err := strconv.ParseInt(input, 10, 32)
 	if err != nil {
 		return nil, err
 	}
 
-	userDefinedDeviceTypeDTO, err := r.rdbClient.ObtainUserDefinedDeviceTypeByID(uint32(id))
+	deviceTypeDTO, err := r.rdbClient.ObtainDeviceTypeByID(uint32(id))
 	if err != nil {
 		return nil, err
 	}
 
-	return dto2api.MapUserDefinedDeviceTypeDTOToUserDefinedDeviceType(userDefinedDeviceTypeDTO)
+	return dto2api.MapDeviceTypeDTOToDeviceType(deviceTypeDTO)
 }
+func (r *queryResolver) DeviceTypes(ctx context.Context) ([]*model.DeviceType, error) {
 
-// UserDefinedDeviceTypes is the resolver for the userDefinedDeviceTypes field.
-func (r *queryResolver) UserDefinedDeviceTypes(ctx context.Context) ([]*model.UserDefinedDeviceType, error) {
-	userDefinedDeviceTypeDTOs, err := r.rdbClient.ObtainAllUserDefinedDeviceTypes()
+	deviceTypeDTOs, err := r.rdbClient.ObtainAllDeviceTypes()
 	if err != nil {
 		return nil, err
 	}
 
-	return dto2api.MapUserDefinedDeviceTypeDTOsToUserDefinedDeviceTypes(userDefinedDeviceTypeDTOs)
+	return dto2api.MapDeviceTypeDTOsToDeviceTypes(deviceTypeDTOs)
 }
 
 // Devices is the resolver for the devices field.
-func (r *queryResolver) Devices(ctx context.Context) ([]*model.Device, error) {
+func (r *queryResolver) Devices(_ context.Context) ([]*model.Device, error) {
 
 	deviceDTOs, err := r.rdbClient.ObtainAllDevices()
 	if err != nil {

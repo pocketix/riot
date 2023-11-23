@@ -53,37 +53,37 @@ type ComplexityRoot struct {
 		UID  func(childComplexity int) int
 	}
 
-	Mutation struct {
-		CreateNewUserDefinedDeviceType func(childComplexity int, input model.NewUserDefinedDeviceTypeInput) int
-		DeleteUserDefinedDeviceType    func(childComplexity int, input string) int
-	}
-
-	Query struct {
-		Devices                     func(childComplexity int) int
-		SingleUserDefinedDeviceType func(childComplexity int, input string) int
-		UserDefinedDeviceTypes      func(childComplexity int) int
-	}
-
-	UserDefinedDeviceType struct {
+	DeviceType struct {
 		Denotation func(childComplexity int) int
 		ID         func(childComplexity int) int
 		Parameters func(childComplexity int) int
 	}
 
-	UserDefinedDeviceTypeParameter struct {
+	DeviceTypeParameter struct {
 		ID   func(childComplexity int) int
 		Name func(childComplexity int) int
 		Type func(childComplexity int) int
 	}
+
+	Mutation struct {
+		CreateNewDeviceType func(childComplexity int, input model.NewDeviceTypeInput) int
+		DeleteDeviceType    func(childComplexity int, input string) int
+	}
+
+	Query struct {
+		DeviceTypes      func(childComplexity int) int
+		Devices          func(childComplexity int) int
+		SingleDeviceType func(childComplexity int, input string) int
+	}
 }
 
 type MutationResolver interface {
-	CreateNewUserDefinedDeviceType(ctx context.Context, input model.NewUserDefinedDeviceTypeInput) (*model.UserDefinedDeviceType, error)
-	DeleteUserDefinedDeviceType(ctx context.Context, input string) (*bool, error)
+	CreateNewDeviceType(ctx context.Context, input model.NewDeviceTypeInput) (*model.DeviceType, error)
+	DeleteDeviceType(ctx context.Context, input string) (*bool, error)
 }
 type QueryResolver interface {
-	SingleUserDefinedDeviceType(ctx context.Context, input string) (*model.UserDefinedDeviceType, error)
-	UserDefinedDeviceTypes(ctx context.Context) ([]*model.UserDefinedDeviceType, error)
+	SingleDeviceType(ctx context.Context, input string) (*model.DeviceType, error)
+	DeviceTypes(ctx context.Context) ([]*model.DeviceType, error)
 	Devices(ctx context.Context) ([]*model.Device, error)
 }
 
@@ -134,29 +134,78 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Device.UID(childComplexity), true
 
-	case "Mutation.createNewUserDefinedDeviceType":
-		if e.complexity.Mutation.CreateNewUserDefinedDeviceType == nil {
+	case "DeviceType.denotation":
+		if e.complexity.DeviceType.Denotation == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createNewUserDefinedDeviceType_args(context.TODO(), rawArgs)
+		return e.complexity.DeviceType.Denotation(childComplexity), true
+
+	case "DeviceType.id":
+		if e.complexity.DeviceType.ID == nil {
+			break
+		}
+
+		return e.complexity.DeviceType.ID(childComplexity), true
+
+	case "DeviceType.parameters":
+		if e.complexity.DeviceType.Parameters == nil {
+			break
+		}
+
+		return e.complexity.DeviceType.Parameters(childComplexity), true
+
+	case "DeviceTypeParameter.id":
+		if e.complexity.DeviceTypeParameter.ID == nil {
+			break
+		}
+
+		return e.complexity.DeviceTypeParameter.ID(childComplexity), true
+
+	case "DeviceTypeParameter.name":
+		if e.complexity.DeviceTypeParameter.Name == nil {
+			break
+		}
+
+		return e.complexity.DeviceTypeParameter.Name(childComplexity), true
+
+	case "DeviceTypeParameter.type":
+		if e.complexity.DeviceTypeParameter.Type == nil {
+			break
+		}
+
+		return e.complexity.DeviceTypeParameter.Type(childComplexity), true
+
+	case "Mutation.createNewDeviceType":
+		if e.complexity.Mutation.CreateNewDeviceType == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createNewDeviceType_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateNewUserDefinedDeviceType(childComplexity, args["input"].(model.NewUserDefinedDeviceTypeInput)), true
+		return e.complexity.Mutation.CreateNewDeviceType(childComplexity, args["input"].(model.NewDeviceTypeInput)), true
 
-	case "Mutation.deleteUserDefinedDeviceType":
-		if e.complexity.Mutation.DeleteUserDefinedDeviceType == nil {
+	case "Mutation.deleteDeviceType":
+		if e.complexity.Mutation.DeleteDeviceType == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteUserDefinedDeviceType_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_deleteDeviceType_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteUserDefinedDeviceType(childComplexity, args["input"].(string)), true
+		return e.complexity.Mutation.DeleteDeviceType(childComplexity, args["input"].(string)), true
+
+	case "Query.deviceTypes":
+		if e.complexity.Query.DeviceTypes == nil {
+			break
+		}
+
+		return e.complexity.Query.DeviceTypes(childComplexity), true
 
 	case "Query.devices":
 		if e.complexity.Query.Devices == nil {
@@ -165,66 +214,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Devices(childComplexity), true
 
-	case "Query.singleUserDefinedDeviceType":
-		if e.complexity.Query.SingleUserDefinedDeviceType == nil {
+	case "Query.singleDeviceType":
+		if e.complexity.Query.SingleDeviceType == nil {
 			break
 		}
 
-		args, err := ec.field_Query_singleUserDefinedDeviceType_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_singleDeviceType_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.SingleUserDefinedDeviceType(childComplexity, args["input"].(string)), true
-
-	case "Query.userDefinedDeviceTypes":
-		if e.complexity.Query.UserDefinedDeviceTypes == nil {
-			break
-		}
-
-		return e.complexity.Query.UserDefinedDeviceTypes(childComplexity), true
-
-	case "UserDefinedDeviceType.denotation":
-		if e.complexity.UserDefinedDeviceType.Denotation == nil {
-			break
-		}
-
-		return e.complexity.UserDefinedDeviceType.Denotation(childComplexity), true
-
-	case "UserDefinedDeviceType.id":
-		if e.complexity.UserDefinedDeviceType.ID == nil {
-			break
-		}
-
-		return e.complexity.UserDefinedDeviceType.ID(childComplexity), true
-
-	case "UserDefinedDeviceType.parameters":
-		if e.complexity.UserDefinedDeviceType.Parameters == nil {
-			break
-		}
-
-		return e.complexity.UserDefinedDeviceType.Parameters(childComplexity), true
-
-	case "UserDefinedDeviceTypeParameter.id":
-		if e.complexity.UserDefinedDeviceTypeParameter.ID == nil {
-			break
-		}
-
-		return e.complexity.UserDefinedDeviceTypeParameter.ID(childComplexity), true
-
-	case "UserDefinedDeviceTypeParameter.name":
-		if e.complexity.UserDefinedDeviceTypeParameter.Name == nil {
-			break
-		}
-
-		return e.complexity.UserDefinedDeviceTypeParameter.Name(childComplexity), true
-
-	case "UserDefinedDeviceTypeParameter.type":
-		if e.complexity.UserDefinedDeviceTypeParameter.Type == nil {
-			break
-		}
-
-		return e.complexity.UserDefinedDeviceTypeParameter.Type(childComplexity), true
+		return e.complexity.Query.SingleDeviceType(childComplexity, args["input"].(string)), true
 
 	}
 	return 0, false
@@ -234,8 +234,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
-		ec.unmarshalInputNewUserDefinedDeviceTypeInput,
-		ec.unmarshalInputUserDefinedDeviceTypeParameterInput,
+		ec.unmarshalInputDeviceTypeParameterInput,
+		ec.unmarshalInputNewDeviceTypeInput,
 	)
 	first := true
 
@@ -333,50 +333,50 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema.graphqls", Input: `enum UserDefinedDeviceTypeParameterType {
+	{Name: "../schema.graphqls", Input: `enum DeviceTypeParameterType {
   STRING
   NUMBER
   BOOLEAN
 }
 
-type UserDefinedDeviceTypeParameter {
+type DeviceTypeParameter {
   id: ID!
   name: String!
-  type: UserDefinedDeviceTypeParameterType!
+  type: DeviceTypeParameterType!
 }
 
-type UserDefinedDeviceType {
+type DeviceType {
   id: ID!
   denotation: String!
-  parameters: [UserDefinedDeviceTypeParameter!]!
+  parameters: [DeviceTypeParameter!]!
 }
 
-input UserDefinedDeviceTypeParameterInput {
+input DeviceTypeParameterInput {
   name: String!
-  type: UserDefinedDeviceTypeParameterType!
+  type: DeviceTypeParameterType!
 }
 
-input NewUserDefinedDeviceTypeInput {
+input NewDeviceTypeInput {
   denotation: String!
-  parameters: [UserDefinedDeviceTypeParameterInput!]!
+  parameters: [DeviceTypeParameterInput!]!
 }
 
 type Device {
   id: ID!
   uid: String!
   name: String!
-  type: UserDefinedDeviceType!
+  type: DeviceType!
 }
 
 type Query {
-  singleUserDefinedDeviceType(input: ID!): UserDefinedDeviceType!
-  userDefinedDeviceTypes: [UserDefinedDeviceType!]!
+  singleDeviceType(input: ID!): DeviceType!
+  deviceTypes: [DeviceType!]!
   devices: [Device!]!
 }
 
 type Mutation {
-  createNewUserDefinedDeviceType(input: NewUserDefinedDeviceTypeInput!): UserDefinedDeviceType!
-  deleteUserDefinedDeviceType(input: ID!): Boolean
+  createNewDeviceType(input: NewDeviceTypeInput!): DeviceType!
+  deleteDeviceType(input: ID!): Boolean
 }
 `, BuiltIn: false},
 }
@@ -386,13 +386,13 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_createNewUserDefinedDeviceType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createNewDeviceType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.NewUserDefinedDeviceTypeInput
+	var arg0 model.NewDeviceTypeInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewUserDefinedDeviceTypeInput2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐNewUserDefinedDeviceTypeInput(ctx, tmp)
+		arg0, err = ec.unmarshalNNewDeviceTypeInput2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐNewDeviceTypeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -401,7 +401,7 @@ func (ec *executionContext) field_Mutation_createNewUserDefinedDeviceType_args(c
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteUserDefinedDeviceType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_deleteDeviceType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -431,7 +431,7 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_singleUserDefinedDeviceType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_singleDeviceType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -642,9 +642,9 @@ func (ec *executionContext) _Device_type(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.UserDefinedDeviceType)
+	res := resTmp.(*model.DeviceType)
 	fc.Result = res
-	return ec.marshalNUserDefinedDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceType(ctx, field.Selections, res)
+	return ec.marshalNDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Device_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -656,20 +656,20 @@ func (ec *executionContext) fieldContext_Device_type(ctx context.Context, field 
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_UserDefinedDeviceType_id(ctx, field)
+				return ec.fieldContext_DeviceType_id(ctx, field)
 			case "denotation":
-				return ec.fieldContext_UserDefinedDeviceType_denotation(ctx, field)
+				return ec.fieldContext_DeviceType_denotation(ctx, field)
 			case "parameters":
-				return ec.fieldContext_UserDefinedDeviceType_parameters(ctx, field)
+				return ec.fieldContext_DeviceType_parameters(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserDefinedDeviceType", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type DeviceType", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createNewUserDefinedDeviceType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createNewUserDefinedDeviceType(ctx, field)
+func (ec *executionContext) _DeviceType_id(ctx context.Context, field graphql.CollectedField, obj *model.DeviceType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeviceType_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -682,7 +682,7 @@ func (ec *executionContext) _Mutation_createNewUserDefinedDeviceType(ctx context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateNewUserDefinedDeviceType(rctx, fc.Args["input"].(model.NewUserDefinedDeviceTypeInput))
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -694,45 +694,26 @@ func (ec *executionContext) _Mutation_createNewUserDefinedDeviceType(ctx context
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.UserDefinedDeviceType)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNUserDefinedDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceType(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createNewUserDefinedDeviceType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_DeviceType_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "Mutation",
+		Object:     "DeviceType",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_UserDefinedDeviceType_id(ctx, field)
-			case "denotation":
-				return ec.fieldContext_UserDefinedDeviceType_denotation(ctx, field)
-			case "parameters":
-				return ec.fieldContext_UserDefinedDeviceType_parameters(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type UserDefinedDeviceType", field.Name)
+			return nil, errors.New("field of type ID does not have child fields")
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createNewUserDefinedDeviceType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deleteUserDefinedDeviceType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteUserDefinedDeviceType(ctx, field)
+func (ec *executionContext) _DeviceType_denotation(ctx context.Context, field graphql.CollectedField, obj *model.DeviceType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeviceType_denotation(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -745,7 +726,298 @@ func (ec *executionContext) _Mutation_deleteUserDefinedDeviceType(ctx context.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteUserDefinedDeviceType(rctx, fc.Args["input"].(string))
+		return obj.Denotation, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeviceType_denotation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeviceType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeviceType_parameters(ctx context.Context, field graphql.CollectedField, obj *model.DeviceType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeviceType_parameters(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Parameters, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DeviceTypeParameter)
+	fc.Result = res
+	return ec.marshalNDeviceTypeParameter2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeviceType_parameters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeviceType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DeviceTypeParameter_id(ctx, field)
+			case "name":
+				return ec.fieldContext_DeviceTypeParameter_name(ctx, field)
+			case "type":
+				return ec.fieldContext_DeviceTypeParameter_type(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DeviceTypeParameter", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeviceTypeParameter_id(ctx context.Context, field graphql.CollectedField, obj *model.DeviceTypeParameter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeviceTypeParameter_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeviceTypeParameter_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeviceTypeParameter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeviceTypeParameter_name(ctx context.Context, field graphql.CollectedField, obj *model.DeviceTypeParameter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeviceTypeParameter_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeviceTypeParameter_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeviceTypeParameter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeviceTypeParameter_type(ctx context.Context, field graphql.CollectedField, obj *model.DeviceTypeParameter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeviceTypeParameter_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DeviceTypeParameterType)
+	fc.Result = res
+	return ec.marshalNDeviceTypeParameterType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeviceTypeParameter_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeviceTypeParameter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DeviceTypeParameterType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createNewDeviceType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createNewDeviceType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateNewDeviceType(rctx, fc.Args["input"].(model.NewDeviceTypeInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.DeviceType)
+	fc.Result = res
+	return ec.marshalNDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createNewDeviceType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_DeviceType_id(ctx, field)
+			case "denotation":
+				return ec.fieldContext_DeviceType_denotation(ctx, field)
+			case "parameters":
+				return ec.fieldContext_DeviceType_parameters(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DeviceType", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createNewDeviceType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteDeviceType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteDeviceType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteDeviceType(rctx, fc.Args["input"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -759,7 +1031,7 @@ func (ec *executionContext) _Mutation_deleteUserDefinedDeviceType(ctx context.Co
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteUserDefinedDeviceType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deleteDeviceType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -776,15 +1048,15 @@ func (ec *executionContext) fieldContext_Mutation_deleteUserDefinedDeviceType(ct
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteUserDefinedDeviceType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_deleteDeviceType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_singleUserDefinedDeviceType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_singleUserDefinedDeviceType(ctx, field)
+func (ec *executionContext) _Query_singleDeviceType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_singleDeviceType(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -797,7 +1069,7 @@ func (ec *executionContext) _Query_singleUserDefinedDeviceType(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().SingleUserDefinedDeviceType(rctx, fc.Args["input"].(string))
+		return ec.resolvers.Query().SingleDeviceType(rctx, fc.Args["input"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -809,12 +1081,12 @@ func (ec *executionContext) _Query_singleUserDefinedDeviceType(ctx context.Conte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.UserDefinedDeviceType)
+	res := resTmp.(*model.DeviceType)
 	fc.Result = res
-	return ec.marshalNUserDefinedDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceType(ctx, field.Selections, res)
+	return ec.marshalNDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_singleUserDefinedDeviceType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_singleDeviceType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -823,13 +1095,13 @@ func (ec *executionContext) fieldContext_Query_singleUserDefinedDeviceType(ctx c
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_UserDefinedDeviceType_id(ctx, field)
+				return ec.fieldContext_DeviceType_id(ctx, field)
 			case "denotation":
-				return ec.fieldContext_UserDefinedDeviceType_denotation(ctx, field)
+				return ec.fieldContext_DeviceType_denotation(ctx, field)
 			case "parameters":
-				return ec.fieldContext_UserDefinedDeviceType_parameters(ctx, field)
+				return ec.fieldContext_DeviceType_parameters(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserDefinedDeviceType", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type DeviceType", field.Name)
 		},
 	}
 	defer func() {
@@ -839,15 +1111,15 @@ func (ec *executionContext) fieldContext_Query_singleUserDefinedDeviceType(ctx c
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_singleUserDefinedDeviceType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_singleDeviceType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_userDefinedDeviceTypes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_userDefinedDeviceTypes(ctx, field)
+func (ec *executionContext) _Query_deviceTypes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_deviceTypes(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -860,7 +1132,7 @@ func (ec *executionContext) _Query_userDefinedDeviceTypes(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().UserDefinedDeviceTypes(rctx)
+		return ec.resolvers.Query().DeviceTypes(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -872,12 +1144,12 @@ func (ec *executionContext) _Query_userDefinedDeviceTypes(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.UserDefinedDeviceType)
+	res := resTmp.([]*model.DeviceType)
 	fc.Result = res
-	return ec.marshalNUserDefinedDeviceType2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeᚄ(ctx, field.Selections, res)
+	return ec.marshalNDeviceType2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_userDefinedDeviceTypes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_deviceTypes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -886,13 +1158,13 @@ func (ec *executionContext) fieldContext_Query_userDefinedDeviceTypes(ctx contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_UserDefinedDeviceType_id(ctx, field)
+				return ec.fieldContext_DeviceType_id(ctx, field)
 			case "denotation":
-				return ec.fieldContext_UserDefinedDeviceType_denotation(ctx, field)
+				return ec.fieldContext_DeviceType_denotation(ctx, field)
 			case "parameters":
-				return ec.fieldContext_UserDefinedDeviceType_parameters(ctx, field)
+				return ec.fieldContext_DeviceType_parameters(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type UserDefinedDeviceType", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type DeviceType", field.Name)
 		},
 	}
 	return fc, nil
@@ -1076,278 +1348,6 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserDefinedDeviceType_id(ctx context.Context, field graphql.CollectedField, obj *model.UserDefinedDeviceType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserDefinedDeviceType_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserDefinedDeviceType_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserDefinedDeviceType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserDefinedDeviceType_denotation(ctx context.Context, field graphql.CollectedField, obj *model.UserDefinedDeviceType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserDefinedDeviceType_denotation(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Denotation, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserDefinedDeviceType_denotation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserDefinedDeviceType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserDefinedDeviceType_parameters(ctx context.Context, field graphql.CollectedField, obj *model.UserDefinedDeviceType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserDefinedDeviceType_parameters(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Parameters, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.UserDefinedDeviceTypeParameter)
-	fc.Result = res
-	return ec.marshalNUserDefinedDeviceTypeParameter2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeParameterᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserDefinedDeviceType_parameters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserDefinedDeviceType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_UserDefinedDeviceTypeParameter_id(ctx, field)
-			case "name":
-				return ec.fieldContext_UserDefinedDeviceTypeParameter_name(ctx, field)
-			case "type":
-				return ec.fieldContext_UserDefinedDeviceTypeParameter_type(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type UserDefinedDeviceTypeParameter", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserDefinedDeviceTypeParameter_id(ctx context.Context, field graphql.CollectedField, obj *model.UserDefinedDeviceTypeParameter) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserDefinedDeviceTypeParameter_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserDefinedDeviceTypeParameter_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserDefinedDeviceTypeParameter",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserDefinedDeviceTypeParameter_name(ctx context.Context, field graphql.CollectedField, obj *model.UserDefinedDeviceTypeParameter) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserDefinedDeviceTypeParameter_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserDefinedDeviceTypeParameter_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserDefinedDeviceTypeParameter",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UserDefinedDeviceTypeParameter_type(ctx context.Context, field graphql.CollectedField, obj *model.UserDefinedDeviceTypeParameter) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UserDefinedDeviceTypeParameter_type(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.UserDefinedDeviceTypeParameterType)
-	fc.Result = res
-	return ec.marshalNUserDefinedDeviceTypeParameterType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeParameterType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UserDefinedDeviceTypeParameter_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UserDefinedDeviceTypeParameter",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UserDefinedDeviceTypeParameterType does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3126,46 +3126,8 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputNewUserDefinedDeviceTypeInput(ctx context.Context, obj interface{}) (model.NewUserDefinedDeviceTypeInput, error) {
-	var it model.NewUserDefinedDeviceTypeInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"denotation", "parameters"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "denotation":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("denotation"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Denotation = data
-		case "parameters":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parameters"))
-			data, err := ec.unmarshalNUserDefinedDeviceTypeParameterInput2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeParameterInputᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Parameters = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputUserDefinedDeviceTypeParameterInput(ctx context.Context, obj interface{}) (model.UserDefinedDeviceTypeParameterInput, error) {
-	var it model.UserDefinedDeviceTypeParameterInput
+func (ec *executionContext) unmarshalInputDeviceTypeParameterInput(ctx context.Context, obj interface{}) (model.DeviceTypeParameterInput, error) {
+	var it model.DeviceTypeParameterInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -3191,11 +3153,49 @@ func (ec *executionContext) unmarshalInputUserDefinedDeviceTypeParameterInput(ct
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			data, err := ec.unmarshalNUserDefinedDeviceTypeParameterType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeParameterType(ctx, v)
+			data, err := ec.unmarshalNDeviceTypeParameterType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterType(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Type = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputNewDeviceTypeInput(ctx context.Context, obj interface{}) (model.NewDeviceTypeInput, error) {
+	var it model.NewDeviceTypeInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"denotation", "parameters"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "denotation":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("denotation"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Denotation = data
+		case "parameters":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parameters"))
+			data, err := ec.unmarshalNDeviceTypeParameterInput2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Parameters = data
 		}
 	}
 
@@ -3264,6 +3264,104 @@ func (ec *executionContext) _Device(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
+var deviceTypeImplementors = []string{"DeviceType"}
+
+func (ec *executionContext) _DeviceType(ctx context.Context, sel ast.SelectionSet, obj *model.DeviceType) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deviceTypeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeviceType")
+		case "id":
+			out.Values[i] = ec._DeviceType_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "denotation":
+			out.Values[i] = ec._DeviceType_denotation(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "parameters":
+			out.Values[i] = ec._DeviceType_parameters(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var deviceTypeParameterImplementors = []string{"DeviceTypeParameter"}
+
+func (ec *executionContext) _DeviceTypeParameter(ctx context.Context, sel ast.SelectionSet, obj *model.DeviceTypeParameter) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deviceTypeParameterImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeviceTypeParameter")
+		case "id":
+			out.Values[i] = ec._DeviceTypeParameter_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._DeviceTypeParameter_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._DeviceTypeParameter_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -3283,16 +3381,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "createNewUserDefinedDeviceType":
+		case "createNewDeviceType":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createNewUserDefinedDeviceType(ctx, field)
+				return ec._Mutation_createNewDeviceType(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "deleteUserDefinedDeviceType":
+		case "deleteDeviceType":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteUserDefinedDeviceType(ctx, field)
+				return ec._Mutation_deleteDeviceType(ctx, field)
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -3336,7 +3434,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "singleUserDefinedDeviceType":
+		case "singleDeviceType":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -3345,7 +3443,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_singleUserDefinedDeviceType(ctx, field)
+				res = ec._Query_singleDeviceType(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3358,7 +3456,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "userDefinedDeviceTypes":
+		case "deviceTypes":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -3367,7 +3465,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_userDefinedDeviceTypes(ctx, field)
+				res = ec._Query_deviceTypes(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3410,104 +3508,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var userDefinedDeviceTypeImplementors = []string{"UserDefinedDeviceType"}
-
-func (ec *executionContext) _UserDefinedDeviceType(ctx context.Context, sel ast.SelectionSet, obj *model.UserDefinedDeviceType) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, userDefinedDeviceTypeImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("UserDefinedDeviceType")
-		case "id":
-			out.Values[i] = ec._UserDefinedDeviceType_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "denotation":
-			out.Values[i] = ec._UserDefinedDeviceType_denotation(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "parameters":
-			out.Values[i] = ec._UserDefinedDeviceType_parameters(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var userDefinedDeviceTypeParameterImplementors = []string{"UserDefinedDeviceTypeParameter"}
-
-func (ec *executionContext) _UserDefinedDeviceTypeParameter(ctx context.Context, sel ast.SelectionSet, obj *model.UserDefinedDeviceTypeParameter) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, userDefinedDeviceTypeParameterImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("UserDefinedDeviceTypeParameter")
-		case "id":
-			out.Values[i] = ec._UserDefinedDeviceTypeParameter_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "name":
-			out.Values[i] = ec._UserDefinedDeviceTypeParameter_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "type":
-			out.Values[i] = ec._UserDefinedDeviceTypeParameter_type(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3926,6 +3926,150 @@ func (ec *executionContext) marshalNDevice2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapi�
 	return ec._Device(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNDeviceType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceType(ctx context.Context, sel ast.SelectionSet, v model.DeviceType) graphql.Marshaler {
+	return ec._DeviceType(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDeviceType2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DeviceType) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceType(ctx context.Context, sel ast.SelectionSet, v *model.DeviceType) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DeviceType(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNDeviceTypeParameter2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DeviceTypeParameter) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDeviceTypeParameter2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameter(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDeviceTypeParameter2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameter(ctx context.Context, sel ast.SelectionSet, v *model.DeviceTypeParameter) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DeviceTypeParameter(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNDeviceTypeParameterInput2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterInputᚄ(ctx context.Context, v interface{}) ([]*model.DeviceTypeParameterInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.DeviceTypeParameterInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNDeviceTypeParameterInput2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNDeviceTypeParameterInput2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterInput(ctx context.Context, v interface{}) (*model.DeviceTypeParameterInput, error) {
+	res, err := ec.unmarshalInputDeviceTypeParameterInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNDeviceTypeParameterType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterType(ctx context.Context, v interface{}) (model.DeviceTypeParameterType, error) {
+	var res model.DeviceTypeParameterType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDeviceTypeParameterType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterType(ctx context.Context, sel ast.SelectionSet, v model.DeviceTypeParameterType) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3941,8 +4085,8 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) unmarshalNNewUserDefinedDeviceTypeInput2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐNewUserDefinedDeviceTypeInput(ctx context.Context, v interface{}) (model.NewUserDefinedDeviceTypeInput, error) {
-	res, err := ec.unmarshalInputNewUserDefinedDeviceTypeInput(ctx, v)
+func (ec *executionContext) unmarshalNNewDeviceTypeInput2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐNewDeviceTypeInput(ctx context.Context, v interface{}) (model.NewDeviceTypeInput, error) {
+	res, err := ec.unmarshalInputNewDeviceTypeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -3959,150 +4103,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNUserDefinedDeviceType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceType(ctx context.Context, sel ast.SelectionSet, v model.UserDefinedDeviceType) graphql.Marshaler {
-	return ec._UserDefinedDeviceType(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNUserDefinedDeviceType2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserDefinedDeviceType) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUserDefinedDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNUserDefinedDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceType(ctx context.Context, sel ast.SelectionSet, v *model.UserDefinedDeviceType) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._UserDefinedDeviceType(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNUserDefinedDeviceTypeParameter2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeParameterᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UserDefinedDeviceTypeParameter) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNUserDefinedDeviceTypeParameter2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeParameter(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNUserDefinedDeviceTypeParameter2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeParameter(ctx context.Context, sel ast.SelectionSet, v *model.UserDefinedDeviceTypeParameter) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._UserDefinedDeviceTypeParameter(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNUserDefinedDeviceTypeParameterInput2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeParameterInputᚄ(ctx context.Context, v interface{}) ([]*model.UserDefinedDeviceTypeParameterInput, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.UserDefinedDeviceTypeParameterInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNUserDefinedDeviceTypeParameterInput2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeParameterInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) unmarshalNUserDefinedDeviceTypeParameterInput2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeParameterInput(ctx context.Context, v interface{}) (*model.UserDefinedDeviceTypeParameterInput, error) {
-	res, err := ec.unmarshalInputUserDefinedDeviceTypeParameterInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNUserDefinedDeviceTypeParameterType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeParameterType(ctx context.Context, v interface{}) (model.UserDefinedDeviceTypeParameterType, error) {
-	var res model.UserDefinedDeviceTypeParameterType
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNUserDefinedDeviceTypeParameterType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐUserDefinedDeviceTypeParameterType(ctx context.Context, sel ast.SelectionSet, v model.UserDefinedDeviceTypeParameterType) graphql.Marshaler {
-	return v
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

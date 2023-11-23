@@ -14,7 +14,7 @@ interface DeviceTypeWidgetProps {
   denotation: string
   areParametersDisplayed: boolean
   parameters: DeviceTypeParameter[]
-  deleteUserDefinedDeviceType: (id: string) => Promise<void>
+  deleteDeviceType: (id: string) => Promise<void>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }
@@ -26,8 +26,8 @@ const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = (props) => {
     if (deleteButtonDisabled) {
       return
     }
-    await props.deleteUserDefinedDeviceType(props.id)
-  }, [deleteButtonDisabled, props.deleteUserDefinedDeviceType, props.id])
+    await props.deleteDeviceType(props.id)
+  }, [deleteButtonDisabled, props.deleteDeviceType, props.id])
 
   const parameterElements = (
     <>

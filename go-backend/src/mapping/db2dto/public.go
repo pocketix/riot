@@ -5,43 +5,43 @@ import (
 	"bp-bures-SfPDfSD/src/persistence/rdb/schema"
 )
 
-func MapUserDefinedDeviceTypeEntityToUserDefinedDeviceTypeDTO(userDefinedDeviceTypesEntity schema.UserDefinedDeviceTypeEntity) (*dto.UserDefinedDeviceTypeDTO, error) {
+func MapDeviceTypeEntityToDeviceTypeDTO(deviceTypeEntity schema.DeviceTypeEntity) (*dto.DeviceTypeDTO, error) {
 
-	userDefinedDeviceTypeParameterDTOs, err := mapDeviceTypeParameterEntitiesToUserDefinedDeviceTypeParameterDTOs(userDefinedDeviceTypesEntity.Parameters)
+	deviceTypeParameterDTOs, err := mapDeviceTypeParameterEntitiesToDeviceTypeParameterDTOs(deviceTypeEntity.Parameters)
 	if err != nil {
 		return nil, err
 	}
 
-	return &dto.UserDefinedDeviceTypeDTO{
-		ID:         &userDefinedDeviceTypesEntity.ID,
-		Denotation: userDefinedDeviceTypesEntity.Denotation,
-		Parameters: userDefinedDeviceTypeParameterDTOs,
+	return &dto.DeviceTypeDTO{
+		ID:         &deviceTypeEntity.ID,
+		Denotation: deviceTypeEntity.Denotation,
+		Parameters: deviceTypeParameterDTOs,
 	}, nil
 }
 
-func MapUserDefinedDeviceTypeEntitiesToUserDefinedDeviceTypeDTOs(userDefinedDeviceTypesEntities []schema.UserDefinedDeviceTypeEntity) ([]dto.UserDefinedDeviceTypeDTO, error) {
+func MapDeviceTypeEntitiesToDeviceTypeDTOs(deviceTypeEntities []schema.DeviceTypeEntity) ([]dto.DeviceTypeDTO, error) {
 
-	userDefinedDeviceTypeDTOs := make([]dto.UserDefinedDeviceTypeDTO, len(userDefinedDeviceTypesEntities))
+	deviceTypeDTOs := make([]dto.DeviceTypeDTO, len(deviceTypeEntities))
 
-	for index, userDefinedDeviceTypesEntity := range userDefinedDeviceTypesEntities {
-		userDefinedDeviceTypeDTO, err := MapUserDefinedDeviceTypeEntityToUserDefinedDeviceTypeDTO(userDefinedDeviceTypesEntity)
+	for index, deviceTypeEntity := range deviceTypeEntities {
+		deviceTypeDTO, err := MapDeviceTypeEntityToDeviceTypeDTO(deviceTypeEntity)
 		if err != nil {
 			return nil, err
 		}
-		userDefinedDeviceTypeDTOs[index] = *userDefinedDeviceTypeDTO
+		deviceTypeDTOs[index] = *deviceTypeDTO
 	}
 
-	return userDefinedDeviceTypeDTOs, nil
+	return deviceTypeDTOs, nil
 }
 
-func MapDeviceEntityToDeviceDTO(e schema.DeviceEntity) dto.DeviceDTO {
+func MapDeviceEntityToDeviceDTO(deviceEntity schema.DeviceEntity) dto.DeviceDTO {
 
-	userDefinedDeviceTypeDTO, _ := MapUserDefinedDeviceTypeEntityToUserDefinedDeviceTypeDTO(e.DeviceType) // TODO: Error handling...
+	deviceTypeDTO, _ := MapDeviceTypeEntityToDeviceTypeDTO(deviceEntity.DeviceType) // TODO: Error handling...
 
 	return dto.DeviceDTO{
-		ID:         &e.ID,
-		UID:        e.UID,
-		Name:       e.Name,
-		DeviceType: userDefinedDeviceTypeDTO,
+		ID:         &deviceEntity.ID,
+		UID:        deviceEntity.UID,
+		Name:       deviceEntity.Name,
+		DeviceType: deviceTypeDTO,
 	}
 }

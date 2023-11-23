@@ -18,95 +18,88 @@ export type Device = {
   __typename?: 'Device';
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-  type: UserDefinedDeviceType;
+  type: DeviceType;
   uid: Scalars['String']['output'];
 };
 
-export type Mutation = {
-  __typename?: 'Mutation';
-  createNewUserDefinedDeviceType: UserDefinedDeviceType;
-  deleteUserDefinedDeviceType?: Maybe<Scalars['Boolean']['output']>;
-};
-
-
-export type MutationCreateNewUserDefinedDeviceTypeArgs = {
-  input: NewUserDefinedDeviceTypeInput;
-};
-
-
-export type MutationDeleteUserDefinedDeviceTypeArgs = {
-  input: Scalars['ID']['input'];
-};
-
-export type NewUserDefinedDeviceTypeInput = {
-  denotation: Scalars['String']['input'];
-  parameters: Array<UserDefinedDeviceTypeParameterInput>;
-};
-
-export type Query = {
-  __typename?: 'Query';
-  devices: Array<Device>;
-  singleUserDefinedDeviceType: UserDefinedDeviceType;
-  userDefinedDeviceTypes: Array<UserDefinedDeviceType>;
-};
-
-
-export type QuerySingleUserDefinedDeviceTypeArgs = {
-  input: Scalars['ID']['input'];
-};
-
-export type UserDefinedDeviceType = {
-  __typename?: 'UserDefinedDeviceType';
+export type DeviceType = {
+  __typename?: 'DeviceType';
   denotation: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  parameters: Array<UserDefinedDeviceTypeParameter>;
+  parameters: Array<DeviceTypeParameter>;
 };
 
-export type UserDefinedDeviceTypeParameter = {
-  __typename?: 'UserDefinedDeviceTypeParameter';
+export type DeviceTypeParameter = {
+  __typename?: 'DeviceTypeParameter';
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-  type: UserDefinedDeviceTypeParameterType;
+  type: DeviceTypeParameterType;
 };
 
-export type UserDefinedDeviceTypeParameterInput = {
+export type DeviceTypeParameterInput = {
   name: Scalars['String']['input'];
-  type: UserDefinedDeviceTypeParameterType;
+  type: DeviceTypeParameterType;
 };
 
-export enum UserDefinedDeviceTypeParameterType {
+export enum DeviceTypeParameterType {
   Boolean = 'BOOLEAN',
   Number = 'NUMBER',
   String = 'STRING'
 }
 
-export type CreateNewUserDefinedDeviceTypeMutationVariables = Exact<{
-  input: NewUserDefinedDeviceTypeInput;
+export type Mutation = {
+  __typename?: 'Mutation';
+  createNewDeviceType: DeviceType;
+  deleteDeviceType?: Maybe<Scalars['Boolean']['output']>;
+};
+
+
+export type MutationCreateNewDeviceTypeArgs = {
+  input: NewDeviceTypeInput;
+};
+
+
+export type MutationDeleteDeviceTypeArgs = {
+  input: Scalars['ID']['input'];
+};
+
+export type NewDeviceTypeInput = {
+  denotation: Scalars['String']['input'];
+  parameters: Array<DeviceTypeParameterInput>;
+};
+
+export type Query = {
+  __typename?: 'Query';
+  deviceTypes: Array<DeviceType>;
+  devices: Array<Device>;
+  singleDeviceType: DeviceType;
+};
+
+
+export type QuerySingleDeviceTypeArgs = {
+  input: Scalars['ID']['input'];
+};
+
+export type CreateNewDeviceTypeMutationVariables = Exact<{
+  input: NewDeviceTypeInput;
 }>;
 
 
-export type CreateNewUserDefinedDeviceTypeMutation = { __typename?: 'Mutation', createNewUserDefinedDeviceType: { __typename?: 'UserDefinedDeviceType', id: string, denotation: string, parameters: Array<{ __typename?: 'UserDefinedDeviceTypeParameter', id: string, name: string, type: UserDefinedDeviceTypeParameterType }> } };
+export type CreateNewDeviceTypeMutation = { __typename?: 'Mutation', createNewDeviceType: { __typename?: 'DeviceType', id: string, denotation: string, parameters: Array<{ __typename?: 'DeviceTypeParameter', id: string, name: string, type: DeviceTypeParameterType }> } };
 
-export type DeleteUserDefinedDeviceTypeMutationVariables = Exact<{
+export type DeleteDeviceTypeMutationVariables = Exact<{
   input: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteUserDefinedDeviceTypeMutation = { __typename?: 'Mutation', deleteUserDefinedDeviceType?: boolean | null };
+export type DeleteDeviceTypeMutation = { __typename?: 'Mutation', deleteDeviceType?: boolean | null };
+
+export type DeviceTypesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type DeviceTypesQuery = { __typename?: 'Query', deviceTypes: Array<{ __typename?: 'DeviceType', id: string, denotation: string, parameters: Array<{ __typename?: 'DeviceTypeParameter', id: string, name: string, type: DeviceTypeParameterType }> }> };
 
 export type DevicesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type DevicesQuery = { __typename?: 'Query', devices: Array<{ __typename?: 'Device', id: string, uid: string, name: string, type: { __typename?: 'UserDefinedDeviceType', id: string, denotation: string } }> };
-
-export type SingleUserDefinedDeviceTypeQueryVariables = Exact<{
-  input: Scalars['ID']['input'];
-}>;
-
-
-export type SingleUserDefinedDeviceTypeQuery = { __typename?: 'Query', singleUserDefinedDeviceType: { __typename?: 'UserDefinedDeviceType', id: string, denotation: string, parameters: Array<{ __typename?: 'UserDefinedDeviceTypeParameter', id: string, name: string, type: UserDefinedDeviceTypeParameterType }> } };
-
-export type UserDefinedDeviceTypesQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type UserDefinedDeviceTypesQuery = { __typename?: 'Query', userDefinedDeviceTypes: Array<{ __typename?: 'UserDefinedDeviceType', id: string, denotation: string, parameters: Array<{ __typename?: 'UserDefinedDeviceTypeParameter', id: string, name: string, type: UserDefinedDeviceTypeParameterType }> }> };
+export type DevicesQuery = { __typename?: 'Query', devices: Array<{ __typename?: 'Device', id: string, uid: string, name: string, type: { __typename?: 'DeviceType', id: string, denotation: string } }> };
