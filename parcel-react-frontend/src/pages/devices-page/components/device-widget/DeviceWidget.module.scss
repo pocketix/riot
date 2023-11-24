@@ -1,0 +1,22 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  font-size: 18px;
+
+  p {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
+  strong {
+    font-weight: 700;
+  }
+}
+
+.deviceNameRow {
+  display: flex;
+  gap: 5px;
+  align-items: baseline;
+}
