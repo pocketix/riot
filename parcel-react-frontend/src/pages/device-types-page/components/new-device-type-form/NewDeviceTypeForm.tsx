@@ -22,7 +22,7 @@ const NewDeviceTypeForm: React.FC<NewDeviceTypeFormProps> = (props) => {
     } else if (denotation.length === 0) {
       return 'Denotation must be a non-empty string'
     } else {
-      return 'Denotation must be a unique'
+      return 'Denotation must be unique'
     }
   }, [denotationFieldError, denotation])
   const formSubmitButtonDisabled: boolean = useMemo<boolean>(() => isFormDisabled || denotationFieldError || parameters.some((p) => p.name.length === 0), [isFormDisabled, denotationFieldError, parameters])
