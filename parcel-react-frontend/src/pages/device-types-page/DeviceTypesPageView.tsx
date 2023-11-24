@@ -15,12 +15,7 @@ interface DeviceTypesPageViewProps {
 const DeviceTypesPageView: React.FC<DeviceTypesPageViewProps> = (props) => {
   return (
     <StandardContentPageTemplate pageTitle="Device types" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
-      <CurrentlyDefinedDeviceTypesSection
-        deviceTypesQueryData={props.deviceTypesQueryData}
-        deleteDeviceType={props.deleteDeviceType}
-        anyLoadingOccurs={props.anyLoadingOccurs}
-        anyErrorOccurred={props.anyErrorOccurred}
-      />
+      <CurrentlyDefinedDeviceTypesSection deviceTypesQueryData={props.deviceTypesQueryData} deleteDeviceType={props.deleteDeviceType} anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred} />
       <NewDeviceTypeForm createNewDeviceType={props.createNewDeviceType} anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred} />
     </StandardContentPageTemplate>
   )

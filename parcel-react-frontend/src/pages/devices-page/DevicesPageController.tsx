@@ -1,9 +1,6 @@
 import React, { useCallback } from 'react'
 import { ApolloError, QueryResult, useQuery } from '@apollo/client'
-import {
-  DevicesQuery,
-  DevicesQueryVariables,
-} from '../../generated/graphql'
+import { DevicesQuery, DevicesQueryVariables } from '../../generated/graphql'
 import gql from 'graphql-tag'
 import DEVICES_QUERY from '../../graphql/queries/devices.graphql'
 import DevicesPageView from './DevicesPageView'

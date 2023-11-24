@@ -1,14 +1,6 @@
 import React, { useCallback } from 'react'
 import { ApolloError, MutationFunction, MutationTuple, QueryResult, useMutation, useQuery } from '@apollo/client'
-import {
-  CreateNewDeviceTypeMutation,
-  CreateNewDeviceTypeMutationVariables,
-  DeleteDeviceTypeMutation,
-  DeleteDeviceTypeMutationVariables,
-  DeviceTypeParameterType,
-  DeviceTypesQuery,
-  DeviceTypesQueryVariables
-} from '../../generated/graphql'
+import { CreateNewDeviceTypeMutation, CreateNewDeviceTypeMutationVariables, DeleteDeviceTypeMutation, DeleteDeviceTypeMutationVariables, DeviceTypeParameterType, DeviceTypesQuery, DeviceTypesQueryVariables } from '../../generated/graphql'
 import gql from 'graphql-tag'
 import DEVICE_TYPES_QUERY from '../../graphql/queries/deviceTypes.graphql'
 import { RefetchFunction } from '@apollo/client/react/hooks/useSuspenseQuery'
@@ -32,10 +24,7 @@ const DeviceTypesPageController: React.FC = () => {
   const deleteDeviceTypeMutationLoading: boolean = deleteDeviceTypeMutationResult[1].loading
   const deleteDeviceTypeMutationError: ApolloError | undefined = deleteDeviceTypeMutationResult[1].error
 
-  const createNewDeviceTypeMutationResult: MutationTuple<CreateNewDeviceTypeMutation, CreateNewDeviceTypeMutationVariables> = useMutation<
-    CreateNewDeviceTypeMutation,
-    CreateNewDeviceTypeMutationVariables
-  >(gql`
+  const createNewDeviceTypeMutationResult: MutationTuple<CreateNewDeviceTypeMutation, CreateNewDeviceTypeMutationVariables> = useMutation<CreateNewDeviceTypeMutation, CreateNewDeviceTypeMutationVariables>(gql`
     ${CREATE_NEW_DEVICE_TYPE_MUTATION}
   `)
   const createNewDeviceTypeMutationFunction: MutationFunction<CreateNewDeviceTypeMutation, CreateNewDeviceTypeMutationVariables> = createNewDeviceTypeMutationResult[0]
@@ -92,15 +81,7 @@ const DeviceTypesPageController: React.FC = () => {
   const anyLoadingOccurs: boolean = deviceTypesQueryLoading || createNewDeviceTypeMutationLoading || deleteDeviceTypeMutationLoading
   const anyErrorOccurred: boolean = !!deviceTypesQueryError || !!createNewDeviceTypeMutationError || !!deleteDeviceTypeMutationError
 
-  return (
-    <DeviceTypesPageView
-      deviceTypesQueryData={deviceTypesQueryData}
-      createNewDeviceType={createNewDeviceType}
-      deleteDeviceType={deleteDeviceType}
-      anyLoadingOccurs={anyLoadingOccurs}
-      anyErrorOccurred={anyErrorOccurred}
-    />
-  )
+  return <DeviceTypesPageView deviceTypesQueryData={deviceTypesQueryData} createNewDeviceType={createNewDeviceType} deleteDeviceType={deleteDeviceType} anyLoadingOccurs={anyLoadingOccurs} anyErrorOccurred={anyErrorOccurred} />
 }
 
 export default DeviceTypesPageController
