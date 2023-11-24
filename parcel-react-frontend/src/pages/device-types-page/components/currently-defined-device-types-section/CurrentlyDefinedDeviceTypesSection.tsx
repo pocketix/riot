@@ -26,6 +26,7 @@ const CurrentlyDefinedDeviceTypesSection: React.FC<CurrentlyDefinedDeviceTypesSe
         {props.deviceTypesQueryData &&
           props.deviceTypesQueryData.deviceTypes.map((deviceType) => (
             <DeviceTypeWidget
+              key={deviceType.id}
               id={deviceType.id}
               denotation={deviceType.denotation}
               areParametersDisplayed={areParametersDisplayed}

@@ -33,7 +33,7 @@ const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = (props) => {
     <>
       <div className={styles.parameterElements}>
         {props.parameters.map((parameter) => (
-          <div className={styles.parameterElement}>
+          <div key={parameter.id} className={styles.parameterElement}>
             <p>
               Name: <strong>{parameter.name}</strong>
             </p>

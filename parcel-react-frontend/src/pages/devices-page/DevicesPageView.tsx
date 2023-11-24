@@ -1,7 +1,7 @@
 import React from 'react'
 import { DevicesQuery } from '../../generated/graphql'
 import StandardContentPageTemplate from '../../page-independent-components/standard-content-page-template/StandardContentPageTemplate'
-import styles from "./DevicesPageView.module.scss"
+import styles from './DevicesPageView.module.scss'
 import DevicesSection from './components/devices-section/DevicesSection'
 
 interface DeviceTypesPageViewProps {
