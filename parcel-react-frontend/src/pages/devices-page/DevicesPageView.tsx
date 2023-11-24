@@ -7,6 +7,7 @@ import DevicesSection from './components/devices-section/DevicesSection'
 interface DeviceTypesPageViewProps {
   devicesQueryData: DevicesQuery
   refetchDevices: VoidFunction
+  updateDeviceName: (id: string, newName: string) => Promise<void>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }
@@ -20,7 +21,7 @@ const DevicesPageView: React.FC<DeviceTypesPageViewProps> = (props) => {
           refresh
         </span>
       </div>
-      <DevicesSection devicesQueryData={props.devicesQueryData}></DevicesSection>
+      <DevicesSection devicesQueryData={props.devicesQueryData} updateDeviceName={props.updateDeviceName}></DevicesSection>
     </StandardContentPageTemplate>
   )
 }

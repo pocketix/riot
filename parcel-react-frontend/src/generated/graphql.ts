@@ -51,6 +51,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   createNewDeviceType: DeviceType;
   deleteDeviceType?: Maybe<Scalars['Boolean']['output']>;
+  updateDeviceName: Device;
 };
 
 
@@ -61,6 +62,12 @@ export type MutationCreateNewDeviceTypeArgs = {
 
 export type MutationDeleteDeviceTypeArgs = {
   input: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateDeviceNameArgs = {
+  id: Scalars['ID']['input'];
+  newName: Scalars['String']['input'];
 };
 
 export type NewDeviceTypeInput = {
@@ -93,6 +100,14 @@ export type DeleteDeviceTypeMutationVariables = Exact<{
 
 
 export type DeleteDeviceTypeMutation = { __typename?: 'Mutation', deleteDeviceType?: boolean | null };
+
+export type UpdateDeviceNameMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  newName: Scalars['String']['input'];
+}>;
+
+
+export type UpdateDeviceNameMutation = { __typename?: 'Mutation', updateDeviceName: { __typename?: 'Device', id: string } };
 
 export type DeviceTypesQueryVariables = Exact<{ [key: string]: never; }>;
 

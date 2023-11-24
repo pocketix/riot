@@ -24,18 +24,21 @@ const CurrentlyDefinedDeviceTypesSection: React.FC<CurrentlyDefinedDeviceTypesSe
       <FormControlLabel control={<Switch checked={areParametersDisplayed} onChange={handleChange} />} label="Display parameters?" />
       <div className={styles.section}>
         {props.deviceTypesQueryData &&
-          props.deviceTypesQueryData.deviceTypes.map((deviceType) => (
-            <DeviceTypeWidget
-              key={deviceType.id}
-              id={deviceType.id}
-              denotation={deviceType.denotation}
-              areParametersDisplayed={areParametersDisplayed}
-              parameters={deviceType.parameters}
-              deleteDeviceType={props.deleteDeviceType}
-              anyLoadingOccurs={props.anyLoadingOccurs}
-              anyErrorOccurred={props.anyErrorOccurred}
-            />
-          ))}
+          props.deviceTypesQueryData.deviceTypes
+            .slice()
+            .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10))
+            .map((deviceType) => (
+              <DeviceTypeWidget
+                key={deviceType.id}
+                id={deviceType.id}
+                denotation={deviceType.denotation}
+                areParametersDisplayed={areParametersDisplayed}
+                parameters={deviceType.parameters}
+                deleteDeviceType={props.deleteDeviceType}
+                anyLoadingOccurs={props.anyLoadingOccurs}
+                anyErrorOccurred={props.anyErrorOccurred}
+              />
+            ))}
       </div>
     </div>
   )

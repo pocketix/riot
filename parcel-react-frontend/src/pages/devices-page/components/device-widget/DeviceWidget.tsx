@@ -25,9 +25,11 @@ const PlainTextField = styled(TextField)({
 })
 
 interface DeviceWidgetProps {
+  id: string
   name: string
   uid: string
   typeDenotation: string
+  updateDeviceName: (id: string, newName: string) => Promise<void>
 }
 
 const DeviceWidget: React.FC<DeviceWidgetProps> = (props) => {
@@ -43,12 +45,12 @@ const DeviceWidget: React.FC<DeviceWidgetProps> = (props) => {
     }
   }, [])
 
-  const onNameConfirm = useCallback(() => {
+  const onNameConfirm = useCallback(async () => {
     if (name === '') {
       setName(props.name)
       return
     }
-    console.log('New name: ', name)
+    await props.updateDeviceName(props.id, name)
   }, [name])
 
   return (
