@@ -113,7 +113,7 @@ func (r *relationalDatabaseClientImpl) optionallyInsertKPIDefinitionData() error
 		}
 	}
 
-	log.Println("Successfully inserted user defined device types data into the relational-database...")
+	log.Println("Successfully inserted KPI definitions into the relational-database...")
 	return nil
 }
 
@@ -257,7 +257,7 @@ func (r *relationalDatabaseClientImpl) DeleteDeviceType(id uint32) error { // TO
 	tx := r.db.Begin()
 
 	if len(deviceTypeEntity.Parameters) > 0 {
-		if err := tx.Where("user_defined_device_type_id = ?", deviceTypeEntity.ID).Delete(&schema.DeviceTypeParameterEntity{}).Error; err != nil {
+		if err := tx.Where("device_type_id = ?", deviceTypeEntity.ID).Delete(&schema.DeviceTypeParameterEntity{}).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
