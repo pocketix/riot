@@ -12,7 +12,15 @@ import DevicesPageController from './pages/devices-page/DevicesPageController'
 
 const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   uri: 'http://localhost:9090',
-  cache: new InMemoryCache()
+  cache: new InMemoryCache(),
+  defaultOptions: { // TODO: Currently bypassing the Apollo Client cache...
+    watchQuery: {
+      fetchPolicy: 'network-only',
+    },
+    query: {
+      fetchPolicy: 'network-only',
+    }
+  },
 })
 
 const customMuiTheme: Theme = createTheme({

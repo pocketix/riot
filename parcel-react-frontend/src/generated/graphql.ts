@@ -112,7 +112,7 @@ export type UpdateDeviceNameMutation = { __typename?: 'Mutation', updateDeviceNa
 export type DeviceTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type DeviceTypesQuery = { __typename?: 'Query', deviceTypes: Array<{ __typename?: 'DeviceType', id: string, denotation: string, parameters: Array<{ __typename?: 'DeviceTypeParameter', id: string, name: string, type: DeviceTypeParameterType }> }> };
+export type DeviceTypesQuery = { __typename?: 'Query', deviceTypes: Array<{ __typename?: 'DeviceType', id: string, denotation: string, parameters: Array<{ __typename?: 'DeviceTypeParameter', id: string, name: string, type: DeviceTypeParameterType }> }>, devices: Array<{ __typename?: 'Device', type: { __typename?: 'DeviceType', id: string } }> };
 
 export type DevicesQueryVariables = Exact<{ [key: string]: never; }>;
 

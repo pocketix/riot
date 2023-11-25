@@ -27,18 +27,22 @@ const CurrentlyDefinedDeviceTypesSection: React.FC<CurrentlyDefinedDeviceTypesSe
           props.deviceTypesQueryData.deviceTypes
             .slice()
             .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10))
-            .map((deviceType) => (
-              <DeviceTypeWidget
-                key={deviceType.id}
-                id={deviceType.id}
-                denotation={deviceType.denotation}
-                areParametersDisplayed={areParametersDisplayed}
-                parameters={deviceType.parameters}
-                deleteDeviceType={props.deleteDeviceType}
-                anyLoadingOccurs={props.anyLoadingOccurs}
-                anyErrorOccurred={props.anyErrorOccurred}
-              />
-            ))}
+            .map((deviceType) => {
+              const deleteButtonDisabled: boolean = props.deviceTypesQueryData && props.deviceTypesQueryData.devices && props.deviceTypesQueryData.devices.some((device) => device.type.id === deviceType.id)
+              return (
+                <DeviceTypeWidget
+                  key={deviceType.id}
+                  id={deviceType.id}
+                  denotation={deviceType.denotation}
+                  areParametersDisplayed={areParametersDisplayed}
+                  parameters={deviceType.parameters}
+                  deleteDeviceType={props.deleteDeviceType}
+                  anyLoadingOccurs={props.anyLoadingOccurs}
+                  anyErrorOccurred={props.anyErrorOccurred}
+                  deviceButtonDisabled={deleteButtonDisabled}
+                />
+              )
+            })}
       </div>
     </div>
   )

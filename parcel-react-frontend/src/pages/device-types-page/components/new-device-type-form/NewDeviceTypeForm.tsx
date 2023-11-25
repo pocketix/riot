@@ -15,7 +15,7 @@ const NewDeviceTypeForm: React.FC<NewDeviceTypeFormProps> = (props) => {
   const [parameters, setParameters] = useState<{ name: string; type: string }[]>([{ name: 'relay_0_temperature', type: 'NUMBER' }])
 
   const isFormDisabled: boolean = useMemo<boolean>(() => props.anyLoadingOccurs || props.anyErrorOccurred, [props.anyLoadingOccurs, props.anyErrorOccurred])
-  const denotationFieldError: boolean = useMemo<boolean>(() => denotation.length === 0 || props?.deviceTypesQueryData?.deviceTypes.some((deviceType) => deviceType.denotation === denotation), [denotation, props.deviceTypesQueryData])
+  const denotationFieldError: boolean = useMemo<boolean>(() => denotation.length === 0 || props.deviceTypesQueryData?.deviceTypes.some((deviceType) => deviceType.denotation === denotation), [denotation, props.deviceTypesQueryData])
   const denotationFieldHelperText: string = useMemo<string>(() => {
     if (!denotationFieldError) {
       return ''
@@ -66,8 +66,8 @@ const NewDeviceTypeForm: React.FC<NewDeviceTypeFormProps> = (props) => {
         </Grid>
         <Grid item xs={4} />
         {parameters.map((parameter, index) => {
-          const parameterNameFieldError: boolean = useMemo<boolean>(() => parameter.name.length === 0, [parameter.name])
-          const parameterNameFieldHelperText: string = useMemo<string>(() => (parameterNameFieldError ? 'Parameter name must be a non-empty string' : ''), [parameter.name])
+          const parameterNameFieldError: boolean = parameter.name.length === 0
+          const parameterNameFieldHelperText: string = parameterNameFieldError ? 'Parameter name must be a non-empty string' : ''
 
           return (
             <React.Fragment key={index}>

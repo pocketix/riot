@@ -1,0 +1,16 @@
+.customAction {
+  border-radius: 8px;
+  padding: 15px 35px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+
+  span {
+    font-size: 30px;
+  }
+}
+
+.customAction:hover {
+  background-color: #e5e5e5;
+}

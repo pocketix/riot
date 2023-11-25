@@ -17,10 +17,11 @@ interface DeviceTypeWidgetProps {
   deleteDeviceType: (id: string) => Promise<void>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
+  deviceButtonDisabled: boolean
 }
 
 const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = (props) => {
-  const deleteButtonDisabled: boolean = useMemo<boolean>(() => props.anyErrorOccurred, [props.anyErrorOccurred])
+  const deleteButtonDisabled: boolean = useMemo<boolean>(() => props.deviceButtonDisabled || props.anyErrorOccurred, [props.deviceButtonDisabled, props.anyErrorOccurred])
 
   const onDeleteHandler = useCallback(async () => {
     if (deleteButtonDisabled) {
