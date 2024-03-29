@@ -1,15 +1,16 @@
 # System for Processing Data from Smart Devices
-a Bachelor thesis project of Michal Bureš...
+a Bachelor thesis project of Michal Bureš
 
 ## Prerequisites
 
 - Supported operating system
   - Windows
-    - Including powershell 7 or later or WSL
-    - If you decide to use WSL, use the Linux variants of commands and command sequences
+    - Including PowerShell 5.1 or later
   - Linux
-    - No extra requirements regarding Linux, just use some "normal" distribution
-- Go
+    - No extra requirements regarding Linux
+  - WSL
+    - Use Linux commands
+- Go runtime
   - Version 1.21 or later
 - Docker
   - Version 20.10.20 or later
@@ -18,58 +19,79 @@ a Bachelor thesis project of Michal Bureš...
 - Npm
   - 8.19.2 or later
 
-## Important notes
+## Important notes: read before proceeding
 
-- For all commands and command sequences to work, one must run them from the root directory of the project...
+- For all commands to work, one must run them from the root directory of the project
 - The root directory contains the following files and directories:
   - README.md (file)
-  - docker (directory)
   - docker-compose.yml (file)
-  - go-backend (directory)
-  - parcel-react-frontend (directory)
-- Without the support services running the back-end of the system will either not work as expected or not at all
-- Without the back-end of the system running, the front-end of the system will not behave as expected
-- Check that the required ports are free on your system:
+  - docker (directory)
+  - backend (directory)
+  - frontend (directory)
+- Without the complementary services running the system will either not work as expected or not at all
+  - The pgAdmin service is optional – it is used mainly for debug purposes
+- Without at least one instance of all backend services ('Backend core', 'Message processing unit', 'MQTT preprocessor') running, the frontend of the system will not work as expected
+- Check that the ports required by the system, and it's complementary services are free on your system:
   - Mosquitto MQTT broker
     - 9001
     - 1883
   - PostgreSQL database
     - 5432
-  - pgAdmin
+  - pgAdmin (optional)
     - 8081
-  - System back-end
+  - GraphQL API of the 'Backend core' service
     - 9090
-  - System front-end
+  - Frontend of the system
     - 1234
 
-## Run the support services (PostgreSQL database, pgAdmin, Mosquitto MQTT broker, ...)
-- To run the support services, use:
+## Run the complementary services (PostgreSQL database, pgAdmin, Mosquitto MQTT broker, ...)
+- To run all complementary services, run:
 ```shell
 docker-compose up
 ```
-- To stop running the support services, use:
+- To stop all complementary services, run:
 ```shell
 docker-compose down
 ```
-or simply use the Ctrl+C key combination...
 
-## Run the back-end of the system
+## Build and run the backend services
 
-### Windows (requires PowerShell 7 or later)
+### 1. 'Backend core'
 
-```shell
-cd go-backend/src && Remove-Item -Path "../bin/SfPDfSD.exe" -Force && go build -o ../bin/SfPDfSD.exe && cd .. && ./bin/SfPDfSD.exe
-```
-
-### Linux
-```shell
-cd go-backend/src && rm -rf ./../bin/SfPDfSD && go build -o ../bin/SfPDfSD && cd .. && ./bin/SfPDfSD
-```
-
-## Run the front-end of the system
+#### Windows (requires PowerShell 5.1 or later)
 
 ```shell
-cd parcel-react-frontend && npm run start
+cd backend/backend-core/src; if (Test-Path "../../bin/SfPDfSD-backend-core.exe") {Remove-Item "../../bin/SfPDfSD-backend-core.exe" -Force}; go build -o ../../bin/SfPDfSD-backend-core.exe; cd ../../..; if (Test-Path "./backend/bin/SfPDfSD-backend-core.exe") {./backend/bin/SfPDfSD-backend-core.exe} else {Write-Output "'Backend core': executable not found."}
 ```
 
-![Project graphics](parcel-react-frontend/resources/images/homepage-graphics.jpg)
+#### Linux
+
+```shell
+cd backend/backend-core/src && rm -rf ./../../bin/SfPDfSD-backend-core && go build -o ../../bin/SfPDfSD-backend-core && cd ../.. && ./bin/SfPDfSD-backend-core
+```
+
+### 2. 'Message processing unit'
+
+TODO: Implement & supply commands
+
+### 3. 'MQTT preprocessor'
+
+TODO: Implement & supply commands
+
+## Build and run the frontend of the system
+
+The following command should work on both Windows (PowerShell 5.1 or later) and Linux.:
+
+```shell
+cd frontend; npm install; npm run start
+```
+
+## Using and testing the system
+
+Upon completing all previously mentioned steps, the system should be fully operational and ready for usage and testing.
+You can access the system through its [frontend](http://localhost:1234).
+Remember that running the provided commands leads to running a single instance of all backend services along with the complementary services
+and frontend on a single machine. This is fine for functionality testing. However, the system is not actually supposed to be
+deployed this way and so running it like this can lead to suboptimal performance (throughput, capacity, ...) characteristics.
+
+![](frontend/resources/images/homepage-graphics.jpg)

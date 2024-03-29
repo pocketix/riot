@@ -1,7 +1,7 @@
 //go:build tools
 // +build tools
 
-package tools
+package backend_core
 
 import (
 	_ "github.com/99designs/gqlgen"
