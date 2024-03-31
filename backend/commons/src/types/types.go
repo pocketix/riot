@@ -1,0 +1,17 @@
+package types
+
+type RequestForKPIFulfillmentCheck struct {
+	Timestamp  float32     `json:"timestamp"`
+	SD         SDInfo      `json:"sd"`
+	Parameters interface{} `json:"parameters"`
+}
+
+type RequestForSDRegistration struct {
+	Timestamp float32 `json:"timestamp"`
+	SD        SDInfo  `json:"sd"`
+}
+
+type SDInfo struct {
+	UID  string `json:"uid"`
+	Type string `json:"type"`
+}

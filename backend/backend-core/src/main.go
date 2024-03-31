@@ -1,35 +1,26 @@
 package main
 
 import (
-	"bp-bures-SfPDfSD/src/api/graphql"
-	"bp-bures-SfPDfSD/src/middleware"
-	"bp-bures-SfPDfSD/src/persistence/rdb"
-	"log"
-
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/generated"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"log"
 )
 
 func main() {
-
-	// Setup of the relational-database client
-	if err := rdb.SetupRelationalDatabaseClient(); err != nil {
-		log.Println("Error while trying to setup the relational-database client: terminating...")
-		return
-	}
-
-	// Start processing incoming MQTT communication in a separate Goroutine
-	go middleware.StartProcessingIncomingMQTTCommunication()
-
-	// General web framework setup
+	db.SetupRelationalDatabaseClient()
+	rabbitmq.SetupRabbitMQ()
 	app := fiber.New()
-	app.Use(cors.New(cors.Config{ // Enabling CORS for the front-end (port 1234)
+	app.Use(cors.New(cors.Config{
 		AllowOrigins: "http://localhost:1234",
 	}))
-
-	// GraphQL API setup
-	graphql.SetupGraphQLServer(app, *rdb.GetRelationalDatabaseClientReference())
-
-	// Final step: Exposing the GraphQL API of the system on port 9090
+	app.Use("/", adaptor.HTTPHandler(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graphql.Resolver{
+		RdbClientInstance: db.GetRelationalDatabaseClientInstance(),
+	}}))))
 	log.Fatal(app.Listen(":9090"))
 }

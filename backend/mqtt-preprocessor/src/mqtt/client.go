@@ -1,9 +1,8 @@
 package mqtt
 
 import (
-	"log"
-
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"log"
 )
 
 const (

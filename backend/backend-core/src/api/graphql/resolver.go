@@ -1,7 +1,9 @@
 package graphql
 
-import "bp-bures-SfPDfSD/src/persistence/rdb"
+import (
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db"
+)
 
 type Resolver struct {
-	rdbClient rdb.RelationalDatabaseClient
+	RdbClientInstance *db.RelationalDatabaseClient
 }

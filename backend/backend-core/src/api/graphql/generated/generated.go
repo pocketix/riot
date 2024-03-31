@@ -3,7 +3,6 @@
 package generated
 
 import (
-	"bp-bures-SfPDfSD/src/api/graphql/model"
 	"bytes"
 	"context"
 	"errors"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -46,47 +46,47 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	Device struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
-		Type func(childComplexity int) int
-		UID  func(childComplexity int) int
+	Mutation struct {
+		CreateSDType     func(childComplexity int, input model.SDTypeInput) int
+		DeleteSDType     func(childComplexity int, id string) int
+		UpdateSDInstance func(childComplexity int, id string, newUserIdentifier string) int
 	}
 
-	DeviceType struct {
+	Query struct {
+		SdInstances func(childComplexity int) int
+		SdType      func(childComplexity int, id string) int
+		SdTypes     func(childComplexity int) int
+	}
+
+	SDInstance struct {
+		ID             func(childComplexity int) int
+		Type           func(childComplexity int) int
+		UID            func(childComplexity int) int
+		UserIdentifier func(childComplexity int) int
+	}
+
+	SDParameter struct {
+		Denotation func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Type       func(childComplexity int) int
+	}
+
+	SDType struct {
 		Denotation func(childComplexity int) int
 		ID         func(childComplexity int) int
 		Parameters func(childComplexity int) int
 	}
-
-	DeviceTypeParameter struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
-		Type func(childComplexity int) int
-	}
-
-	Mutation struct {
-		CreateNewDeviceType func(childComplexity int, input model.NewDeviceTypeInput) int
-		DeleteDeviceType    func(childComplexity int, input string) int
-		UpdateDeviceName    func(childComplexity int, id string, newName string) int
-	}
-
-	Query struct {
-		DeviceTypes      func(childComplexity int) int
-		Devices          func(childComplexity int) int
-		SingleDeviceType func(childComplexity int, input string) int
-	}
 }
 
 type MutationResolver interface {
-	CreateNewDeviceType(ctx context.Context, input model.NewDeviceTypeInput) (*model.DeviceType, error)
-	DeleteDeviceType(ctx context.Context, input string) (*bool, error)
-	UpdateDeviceName(ctx context.Context, id string, newName string) (*model.Device, error)
+	CreateSDType(ctx context.Context, input model.SDTypeInput) (*model.SDType, error)
+	DeleteSDType(ctx context.Context, id string) (*bool, error)
+	UpdateSDInstance(ctx context.Context, id string, newUserIdentifier string) (*model.SDInstance, error)
 }
 type QueryResolver interface {
-	SingleDeviceType(ctx context.Context, input string) (*model.DeviceType, error)
-	DeviceTypes(ctx context.Context) ([]*model.DeviceType, error)
-	Devices(ctx context.Context) ([]*model.Device, error)
+	SdType(ctx context.Context, id string) (*model.SDType, error)
+	SdTypes(ctx context.Context) ([]*model.SDType, error)
+	SdInstances(ctx context.Context) ([]*model.SDInstance, error)
 }
 
 type executableSchema struct {
@@ -108,137 +108,137 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Device.id":
-		if e.complexity.Device.ID == nil {
+	case "Mutation.createSDType":
+		if e.complexity.Mutation.CreateSDType == nil {
 			break
 		}
 
-		return e.complexity.Device.ID(childComplexity), true
-
-	case "Device.name":
-		if e.complexity.Device.Name == nil {
-			break
-		}
-
-		return e.complexity.Device.Name(childComplexity), true
-
-	case "Device.type":
-		if e.complexity.Device.Type == nil {
-			break
-		}
-
-		return e.complexity.Device.Type(childComplexity), true
-
-	case "Device.uid":
-		if e.complexity.Device.UID == nil {
-			break
-		}
-
-		return e.complexity.Device.UID(childComplexity), true
-
-	case "DeviceType.denotation":
-		if e.complexity.DeviceType.Denotation == nil {
-			break
-		}
-
-		return e.complexity.DeviceType.Denotation(childComplexity), true
-
-	case "DeviceType.id":
-		if e.complexity.DeviceType.ID == nil {
-			break
-		}
-
-		return e.complexity.DeviceType.ID(childComplexity), true
-
-	case "DeviceType.parameters":
-		if e.complexity.DeviceType.Parameters == nil {
-			break
-		}
-
-		return e.complexity.DeviceType.Parameters(childComplexity), true
-
-	case "DeviceTypeParameter.id":
-		if e.complexity.DeviceTypeParameter.ID == nil {
-			break
-		}
-
-		return e.complexity.DeviceTypeParameter.ID(childComplexity), true
-
-	case "DeviceTypeParameter.name":
-		if e.complexity.DeviceTypeParameter.Name == nil {
-			break
-		}
-
-		return e.complexity.DeviceTypeParameter.Name(childComplexity), true
-
-	case "DeviceTypeParameter.type":
-		if e.complexity.DeviceTypeParameter.Type == nil {
-			break
-		}
-
-		return e.complexity.DeviceTypeParameter.Type(childComplexity), true
-
-	case "Mutation.createNewDeviceType":
-		if e.complexity.Mutation.CreateNewDeviceType == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createNewDeviceType_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createSDType_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateNewDeviceType(childComplexity, args["input"].(model.NewDeviceTypeInput)), true
+		return e.complexity.Mutation.CreateSDType(childComplexity, args["input"].(model.SDTypeInput)), true
 
-	case "Mutation.deleteDeviceType":
-		if e.complexity.Mutation.DeleteDeviceType == nil {
+	case "Mutation.deleteSDType":
+		if e.complexity.Mutation.DeleteSDType == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteDeviceType_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_deleteSDType_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteDeviceType(childComplexity, args["input"].(string)), true
+		return e.complexity.Mutation.DeleteSDType(childComplexity, args["id"].(string)), true
 
-	case "Mutation.updateDeviceName":
-		if e.complexity.Mutation.UpdateDeviceName == nil {
+	case "Mutation.updateSDInstance":
+		if e.complexity.Mutation.UpdateSDInstance == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateDeviceName_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateSDInstance_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateDeviceName(childComplexity, args["id"].(string), args["newName"].(string)), true
+		return e.complexity.Mutation.UpdateSDInstance(childComplexity, args["id"].(string), args["newUserIdentifier"].(string)), true
 
-	case "Query.deviceTypes":
-		if e.complexity.Query.DeviceTypes == nil {
+	case "Query.sdInstances":
+		if e.complexity.Query.SdInstances == nil {
 			break
 		}
 
-		return e.complexity.Query.DeviceTypes(childComplexity), true
+		return e.complexity.Query.SdInstances(childComplexity), true
 
-	case "Query.devices":
-		if e.complexity.Query.Devices == nil {
+	case "Query.sdType":
+		if e.complexity.Query.SdType == nil {
 			break
 		}
 
-		return e.complexity.Query.Devices(childComplexity), true
-
-	case "Query.singleDeviceType":
-		if e.complexity.Query.SingleDeviceType == nil {
-			break
-		}
-
-		args, err := ec.field_Query_singleDeviceType_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_sdType_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.SingleDeviceType(childComplexity, args["input"].(string)), true
+		return e.complexity.Query.SdType(childComplexity, args["id"].(string)), true
+
+	case "Query.sdTypes":
+		if e.complexity.Query.SdTypes == nil {
+			break
+		}
+
+		return e.complexity.Query.SdTypes(childComplexity), true
+
+	case "SDInstance.id":
+		if e.complexity.SDInstance.ID == nil {
+			break
+		}
+
+		return e.complexity.SDInstance.ID(childComplexity), true
+
+	case "SDInstance.type":
+		if e.complexity.SDInstance.Type == nil {
+			break
+		}
+
+		return e.complexity.SDInstance.Type(childComplexity), true
+
+	case "SDInstance.uid":
+		if e.complexity.SDInstance.UID == nil {
+			break
+		}
+
+		return e.complexity.SDInstance.UID(childComplexity), true
+
+	case "SDInstance.userIdentifier":
+		if e.complexity.SDInstance.UserIdentifier == nil {
+			break
+		}
+
+		return e.complexity.SDInstance.UserIdentifier(childComplexity), true
+
+	case "SDParameter.denotation":
+		if e.complexity.SDParameter.Denotation == nil {
+			break
+		}
+
+		return e.complexity.SDParameter.Denotation(childComplexity), true
+
+	case "SDParameter.id":
+		if e.complexity.SDParameter.ID == nil {
+			break
+		}
+
+		return e.complexity.SDParameter.ID(childComplexity), true
+
+	case "SDParameter.type":
+		if e.complexity.SDParameter.Type == nil {
+			break
+		}
+
+		return e.complexity.SDParameter.Type(childComplexity), true
+
+	case "SDType.denotation":
+		if e.complexity.SDType.Denotation == nil {
+			break
+		}
+
+		return e.complexity.SDType.Denotation(childComplexity), true
+
+	case "SDType.id":
+		if e.complexity.SDType.ID == nil {
+			break
+		}
+
+		return e.complexity.SDType.ID(childComplexity), true
+
+	case "SDType.parameters":
+		if e.complexity.SDType.Parameters == nil {
+			break
+		}
+
+		return e.complexity.SDType.Parameters(childComplexity), true
 
 	}
 	return 0, false
@@ -248,8 +248,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
-		ec.unmarshalInputDeviceTypeParameterInput,
-		ec.unmarshalInputNewDeviceTypeInput,
+		ec.unmarshalInputSDParameterInput,
+		ec.unmarshalInputSDTypeInput,
 	)
 	first := true
 
@@ -347,51 +347,51 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema.graphqls", Input: `enum DeviceTypeParameterType {
+	{Name: "../schema.graphqls", Input: `enum SDParameterType {
   STRING
   NUMBER
   BOOLEAN
 }
 
-type DeviceTypeParameter {
-  id: ID!
-  name: String!
-  type: DeviceTypeParameterType!
-}
-
-type DeviceType {
+type SDParameter {
   id: ID!
   denotation: String!
-  parameters: [DeviceTypeParameter!]!
+  type: SDParameterType!
 }
 
-input DeviceTypeParameterInput {
-  name: String!
-  type: DeviceTypeParameterType!
-}
-
-input NewDeviceTypeInput {
+type SDType {
+  id: ID!
   denotation: String!
-  parameters: [DeviceTypeParameterInput!]!
+  parameters: [SDParameter!]!
 }
 
-type Device {
+input SDParameterInput {
+  denotation: String!
+  type: SDParameterType!
+}
+
+input SDTypeInput {
+  denotation: String!
+  parameters: [SDParameterInput!]!
+}
+
+type SDInstance {
   id: ID!
   uid: String!
-  name: String!
-  type: DeviceType!
+  userIdentifier: String!
+  type: SDType!
 }
 
 type Query {
-  singleDeviceType(input: ID!): DeviceType!
-  deviceTypes: [DeviceType!]!
-  devices: [Device!]!
+  sdType(id: ID!): SDType!
+  sdTypes: [SDType!]!
+  sdInstances: [SDInstance!]!
 }
 
 type Mutation {
-  createNewDeviceType(input: NewDeviceTypeInput!): DeviceType!
-  deleteDeviceType(input: ID!): Boolean
-  updateDeviceName(id: ID!, newName: String!): Device!
+  createSDType(input: SDTypeInput!): SDType!
+  deleteSDType(id: ID!): Boolean
+  updateSDInstance(id: ID!, newUserIdentifier: String!): SDInstance!
 }
 `, BuiltIn: false},
 }
@@ -401,13 +401,13 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_createNewDeviceType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createSDType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.NewDeviceTypeInput
+	var arg0 model.SDTypeInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewDeviceTypeInput2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐNewDeviceTypeInput(ctx, tmp)
+		arg0, err = ec.unmarshalNSDTypeInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDTypeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -416,22 +416,22 @@ func (ec *executionContext) field_Mutation_createNewDeviceType_args(ctx context.
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteDeviceType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_deleteSDType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["id"] = arg0
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateDeviceName_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_updateSDInstance_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -444,14 +444,14 @@ func (ec *executionContext) field_Mutation_updateDeviceName_args(ctx context.Con
 	}
 	args["id"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["newName"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newName"))
+	if tmp, ok := rawArgs["newUserIdentifier"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newUserIdentifier"))
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["newName"] = arg1
+	args["newUserIdentifier"] = arg1
 	return args, nil
 }
 
@@ -470,18 +470,18 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_singleDeviceType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_sdType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -523,8 +523,8 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Device_id(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Device_id(ctx, field)
+func (ec *executionContext) _Mutation_createSDType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createSDType(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -537,7 +537,7 @@ func (ec *executionContext) _Device_id(ctx context.Context, field graphql.Collec
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return ec.resolvers.Mutation().CreateSDType(rctx, fc.Args["input"].(model.SDTypeInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -549,468 +549,12 @@ func (ec *executionContext) _Device_id(ctx context.Context, field graphql.Collec
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.SDType)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNSDType2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Device_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Device",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Device_uid(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Device_uid(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Device_uid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Device",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Device_name(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Device_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Device_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Device",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Device_type(ctx context.Context, field graphql.CollectedField, obj *model.Device) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Device_type(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.DeviceType)
-	fc.Result = res
-	return ec.marshalNDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Device_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Device",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_DeviceType_id(ctx, field)
-			case "denotation":
-				return ec.fieldContext_DeviceType_denotation(ctx, field)
-			case "parameters":
-				return ec.fieldContext_DeviceType_parameters(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type DeviceType", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DeviceType_id(ctx context.Context, field graphql.CollectedField, obj *model.DeviceType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DeviceType_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DeviceType_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DeviceType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DeviceType_denotation(ctx context.Context, field graphql.CollectedField, obj *model.DeviceType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DeviceType_denotation(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Denotation, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DeviceType_denotation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DeviceType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DeviceType_parameters(ctx context.Context, field graphql.CollectedField, obj *model.DeviceType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DeviceType_parameters(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Parameters, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.DeviceTypeParameter)
-	fc.Result = res
-	return ec.marshalNDeviceTypeParameter2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DeviceType_parameters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DeviceType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_DeviceTypeParameter_id(ctx, field)
-			case "name":
-				return ec.fieldContext_DeviceTypeParameter_name(ctx, field)
-			case "type":
-				return ec.fieldContext_DeviceTypeParameter_type(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type DeviceTypeParameter", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DeviceTypeParameter_id(ctx context.Context, field graphql.CollectedField, obj *model.DeviceTypeParameter) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DeviceTypeParameter_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DeviceTypeParameter_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DeviceTypeParameter",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DeviceTypeParameter_name(ctx context.Context, field graphql.CollectedField, obj *model.DeviceTypeParameter) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DeviceTypeParameter_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DeviceTypeParameter_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DeviceTypeParameter",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _DeviceTypeParameter_type(ctx context.Context, field graphql.CollectedField, obj *model.DeviceTypeParameter) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DeviceTypeParameter_type(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.DeviceTypeParameterType)
-	fc.Result = res
-	return ec.marshalNDeviceTypeParameterType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_DeviceTypeParameter_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "DeviceTypeParameter",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DeviceTypeParameterType does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createNewDeviceType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createNewDeviceType(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateNewDeviceType(rctx, fc.Args["input"].(model.NewDeviceTypeInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.DeviceType)
-	fc.Result = res
-	return ec.marshalNDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createNewDeviceType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createSDType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1019,13 +563,13 @@ func (ec *executionContext) fieldContext_Mutation_createNewDeviceType(ctx contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_DeviceType_id(ctx, field)
+				return ec.fieldContext_SDType_id(ctx, field)
 			case "denotation":
-				return ec.fieldContext_DeviceType_denotation(ctx, field)
+				return ec.fieldContext_SDType_denotation(ctx, field)
 			case "parameters":
-				return ec.fieldContext_DeviceType_parameters(ctx, field)
+				return ec.fieldContext_SDType_parameters(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type DeviceType", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
 	}
 	defer func() {
@@ -1035,15 +579,15 @@ func (ec *executionContext) fieldContext_Mutation_createNewDeviceType(ctx contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createNewDeviceType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createSDType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deleteDeviceType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteDeviceType(ctx, field)
+func (ec *executionContext) _Mutation_deleteSDType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteSDType(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1056,7 +600,7 @@ func (ec *executionContext) _Mutation_deleteDeviceType(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteDeviceType(rctx, fc.Args["input"].(string))
+		return ec.resolvers.Mutation().DeleteSDType(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1070,7 +614,7 @@ func (ec *executionContext) _Mutation_deleteDeviceType(ctx context.Context, fiel
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteDeviceType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deleteSDType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1087,15 +631,15 @@ func (ec *executionContext) fieldContext_Mutation_deleteDeviceType(ctx context.C
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteDeviceType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_deleteSDType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateDeviceName(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateDeviceName(ctx, field)
+func (ec *executionContext) _Mutation_updateSDInstance(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateSDInstance(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1108,7 +652,7 @@ func (ec *executionContext) _Mutation_updateDeviceName(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateDeviceName(rctx, fc.Args["id"].(string), fc.Args["newName"].(string))
+		return ec.resolvers.Mutation().UpdateSDInstance(rctx, fc.Args["id"].(string), fc.Args["newUserIdentifier"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1120,12 +664,12 @@ func (ec *executionContext) _Mutation_updateDeviceName(ctx context.Context, fiel
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Device)
+	res := resTmp.(*model.SDInstance)
 	fc.Result = res
-	return ec.marshalNDevice2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDevice(ctx, field.Selections, res)
+	return ec.marshalNSDInstance2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstance(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateDeviceName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateSDInstance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1134,15 +678,15 @@ func (ec *executionContext) fieldContext_Mutation_updateDeviceName(ctx context.C
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Device_id(ctx, field)
+				return ec.fieldContext_SDInstance_id(ctx, field)
 			case "uid":
-				return ec.fieldContext_Device_uid(ctx, field)
-			case "name":
-				return ec.fieldContext_Device_name(ctx, field)
+				return ec.fieldContext_SDInstance_uid(ctx, field)
+			case "userIdentifier":
+				return ec.fieldContext_SDInstance_userIdentifier(ctx, field)
 			case "type":
-				return ec.fieldContext_Device_type(ctx, field)
+				return ec.fieldContext_SDInstance_type(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Device", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SDInstance", field.Name)
 		},
 	}
 	defer func() {
@@ -1152,15 +696,15 @@ func (ec *executionContext) fieldContext_Mutation_updateDeviceName(ctx context.C
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateDeviceName_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateSDInstance_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_singleDeviceType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_singleDeviceType(ctx, field)
+func (ec *executionContext) _Query_sdType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_sdType(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1173,7 +717,7 @@ func (ec *executionContext) _Query_singleDeviceType(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().SingleDeviceType(rctx, fc.Args["input"].(string))
+		return ec.resolvers.Query().SdType(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1185,12 +729,12 @@ func (ec *executionContext) _Query_singleDeviceType(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.DeviceType)
+	res := resTmp.(*model.SDType)
 	fc.Result = res
-	return ec.marshalNDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceType(ctx, field.Selections, res)
+	return ec.marshalNSDType2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_singleDeviceType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_sdType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -1199,13 +743,13 @@ func (ec *executionContext) fieldContext_Query_singleDeviceType(ctx context.Cont
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_DeviceType_id(ctx, field)
+				return ec.fieldContext_SDType_id(ctx, field)
 			case "denotation":
-				return ec.fieldContext_DeviceType_denotation(ctx, field)
+				return ec.fieldContext_SDType_denotation(ctx, field)
 			case "parameters":
-				return ec.fieldContext_DeviceType_parameters(ctx, field)
+				return ec.fieldContext_SDType_parameters(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type DeviceType", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
 	}
 	defer func() {
@@ -1215,15 +759,15 @@ func (ec *executionContext) fieldContext_Query_singleDeviceType(ctx context.Cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_singleDeviceType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_sdType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_deviceTypes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_deviceTypes(ctx, field)
+func (ec *executionContext) _Query_sdTypes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_sdTypes(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1236,7 +780,7 @@ func (ec *executionContext) _Query_deviceTypes(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DeviceTypes(rctx)
+		return ec.resolvers.Query().SdTypes(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1248,12 +792,12 @@ func (ec *executionContext) _Query_deviceTypes(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.DeviceType)
+	res := resTmp.([]*model.SDType)
 	fc.Result = res
-	return ec.marshalNDeviceType2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeᚄ(ctx, field.Selections, res)
+	return ec.marshalNSDType2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDTypeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_deviceTypes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_sdTypes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -1262,20 +806,20 @@ func (ec *executionContext) fieldContext_Query_deviceTypes(ctx context.Context, 
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_DeviceType_id(ctx, field)
+				return ec.fieldContext_SDType_id(ctx, field)
 			case "denotation":
-				return ec.fieldContext_DeviceType_denotation(ctx, field)
+				return ec.fieldContext_SDType_denotation(ctx, field)
 			case "parameters":
-				return ec.fieldContext_DeviceType_parameters(ctx, field)
+				return ec.fieldContext_SDType_parameters(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type DeviceType", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_devices(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_devices(ctx, field)
+func (ec *executionContext) _Query_sdInstances(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_sdInstances(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1288,7 +832,7 @@ func (ec *executionContext) _Query_devices(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Devices(rctx)
+		return ec.resolvers.Query().SdInstances(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1300,12 +844,12 @@ func (ec *executionContext) _Query_devices(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Device)
+	res := resTmp.([]*model.SDInstance)
 	fc.Result = res
-	return ec.marshalNDevice2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceᚄ(ctx, field.Selections, res)
+	return ec.marshalNSDInstance2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_devices(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_sdInstances(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -1314,15 +858,15 @@ func (ec *executionContext) fieldContext_Query_devices(ctx context.Context, fiel
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_Device_id(ctx, field)
+				return ec.fieldContext_SDInstance_id(ctx, field)
 			case "uid":
-				return ec.fieldContext_Device_uid(ctx, field)
-			case "name":
-				return ec.fieldContext_Device_name(ctx, field)
+				return ec.fieldContext_SDInstance_uid(ctx, field)
+			case "userIdentifier":
+				return ec.fieldContext_SDInstance_userIdentifier(ctx, field)
 			case "type":
-				return ec.fieldContext_Device_type(ctx, field)
+				return ec.fieldContext_SDInstance_type(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Device", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SDInstance", field.Name)
 		},
 	}
 	return fc, nil
@@ -1452,6 +996,462 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDInstance_id(ctx context.Context, field graphql.CollectedField, obj *model.SDInstance) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDInstance_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDInstance_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDInstance",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDInstance_uid(ctx context.Context, field graphql.CollectedField, obj *model.SDInstance) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDInstance_uid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDInstance_uid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDInstance",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDInstance_userIdentifier(ctx context.Context, field graphql.CollectedField, obj *model.SDInstance) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDInstance_userIdentifier(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserIdentifier, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDInstance_userIdentifier(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDInstance",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDInstance_type(ctx context.Context, field graphql.CollectedField, obj *model.SDInstance) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDInstance_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SDType)
+	fc.Result = res
+	return ec.marshalNSDType2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDInstance_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDInstance",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SDType_id(ctx, field)
+			case "denotation":
+				return ec.fieldContext_SDType_denotation(ctx, field)
+			case "parameters":
+				return ec.fieldContext_SDType_parameters(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDParameter_id(ctx context.Context, field graphql.CollectedField, obj *model.SDParameter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDParameter_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDParameter_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDParameter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDParameter_denotation(ctx context.Context, field graphql.CollectedField, obj *model.SDParameter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDParameter_denotation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Denotation, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDParameter_denotation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDParameter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDParameter_type(ctx context.Context, field graphql.CollectedField, obj *model.SDParameter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDParameter_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.SDParameterType)
+	fc.Result = res
+	return ec.marshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDParameter_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDParameter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type SDParameterType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDType_id(ctx context.Context, field graphql.CollectedField, obj *model.SDType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDType_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDType_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDType_denotation(ctx context.Context, field graphql.CollectedField, obj *model.SDType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDType_denotation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Denotation, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDType_denotation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDType_parameters(ctx context.Context, field graphql.CollectedField, obj *model.SDType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDType_parameters(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Parameters, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SDParameter)
+	fc.Result = res
+	return ec.marshalNSDParameter2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDType_parameters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SDParameter_id(ctx, field)
+			case "denotation":
+				return ec.fieldContext_SDParameter_denotation(ctx, field)
+			case "type":
+				return ec.fieldContext_SDParameter_type(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SDParameter", field.Name)
 		},
 	}
 	return fc, nil
@@ -3230,34 +3230,30 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputDeviceTypeParameterInput(ctx context.Context, obj interface{}) (model.DeviceTypeParameterInput, error) {
-	var it model.DeviceTypeParameterInput
+func (ec *executionContext) unmarshalInputSDParameterInput(ctx context.Context, obj interface{}) (model.SDParameterInput, error) {
+	var it model.SDParameterInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "type"}
+	fieldsInOrder := [...]string{"denotation", "type"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "name":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		case "denotation":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("denotation"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Name = data
+			it.Denotation = data
 		case "type":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			data, err := ec.unmarshalNDeviceTypeParameterType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterType(ctx, v)
+			data, err := ec.unmarshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3268,8 +3264,8 @@ func (ec *executionContext) unmarshalInputDeviceTypeParameterInput(ctx context.C
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewDeviceTypeInput(ctx context.Context, obj interface{}) (model.NewDeviceTypeInput, error) {
-	var it model.NewDeviceTypeInput
+func (ec *executionContext) unmarshalInputSDTypeInput(ctx context.Context, obj interface{}) (model.SDTypeInput, error) {
+	var it model.SDTypeInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -3283,8 +3279,6 @@ func (ec *executionContext) unmarshalInputNewDeviceTypeInput(ctx context.Context
 		}
 		switch k {
 		case "denotation":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("denotation"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -3292,10 +3286,8 @@ func (ec *executionContext) unmarshalInputNewDeviceTypeInput(ctx context.Context
 			}
 			it.Denotation = data
 		case "parameters":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parameters"))
-			data, err := ec.unmarshalNDeviceTypeParameterInput2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterInputᚄ(ctx, v)
+			data, err := ec.unmarshalNSDParameterInput2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3313,158 +3305,6 @@ func (ec *executionContext) unmarshalInputNewDeviceTypeInput(ctx context.Context
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
-
-var deviceImplementors = []string{"Device"}
-
-func (ec *executionContext) _Device(ctx context.Context, sel ast.SelectionSet, obj *model.Device) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, deviceImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Device")
-		case "id":
-			out.Values[i] = ec._Device_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "uid":
-			out.Values[i] = ec._Device_uid(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "name":
-			out.Values[i] = ec._Device_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "type":
-			out.Values[i] = ec._Device_type(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var deviceTypeImplementors = []string{"DeviceType"}
-
-func (ec *executionContext) _DeviceType(ctx context.Context, sel ast.SelectionSet, obj *model.DeviceType) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, deviceTypeImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("DeviceType")
-		case "id":
-			out.Values[i] = ec._DeviceType_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "denotation":
-			out.Values[i] = ec._DeviceType_denotation(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "parameters":
-			out.Values[i] = ec._DeviceType_parameters(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var deviceTypeParameterImplementors = []string{"DeviceTypeParameter"}
-
-func (ec *executionContext) _DeviceTypeParameter(ctx context.Context, sel ast.SelectionSet, obj *model.DeviceTypeParameter) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, deviceTypeParameterImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("DeviceTypeParameter")
-		case "id":
-			out.Values[i] = ec._DeviceTypeParameter_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "name":
-			out.Values[i] = ec._DeviceTypeParameter_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "type":
-			out.Values[i] = ec._DeviceTypeParameter_type(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
 
 var mutationImplementors = []string{"Mutation"}
 
@@ -3485,20 +3325,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "createNewDeviceType":
+		case "createSDType":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createNewDeviceType(ctx, field)
+				return ec._Mutation_createSDType(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "deleteDeviceType":
+		case "deleteSDType":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteDeviceType(ctx, field)
+				return ec._Mutation_deleteSDType(ctx, field)
 			})
-		case "updateDeviceName":
+		case "updateSDInstance":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateDeviceName(ctx, field)
+				return ec._Mutation_updateSDInstance(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -3545,7 +3385,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "singleDeviceType":
+		case "sdType":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -3554,7 +3394,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_singleDeviceType(ctx, field)
+				res = ec._Query_sdType(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3567,7 +3407,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "deviceTypes":
+		case "sdTypes":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -3576,7 +3416,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_deviceTypes(ctx, field)
+				res = ec._Query_sdTypes(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3589,7 +3429,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "devices":
+		case "sdInstances":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -3598,7 +3438,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_devices(ctx, field)
+				res = ec._Query_sdInstances(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3619,6 +3459,158 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var sDInstanceImplementors = []string{"SDInstance"}
+
+func (ec *executionContext) _SDInstance(ctx context.Context, sel ast.SelectionSet, obj *model.SDInstance) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sDInstanceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SDInstance")
+		case "id":
+			out.Values[i] = ec._SDInstance_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "uid":
+			out.Values[i] = ec._SDInstance_uid(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "userIdentifier":
+			out.Values[i] = ec._SDInstance_userIdentifier(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._SDInstance_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var sDParameterImplementors = []string{"SDParameter"}
+
+func (ec *executionContext) _SDParameter(ctx context.Context, sel ast.SelectionSet, obj *model.SDParameter) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sDParameterImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SDParameter")
+		case "id":
+			out.Values[i] = ec._SDParameter_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "denotation":
+			out.Values[i] = ec._SDParameter_denotation(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._SDParameter_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var sDTypeImplementors = []string{"SDType"}
+
+func (ec *executionContext) _SDType(ctx context.Context, sel ast.SelectionSet, obj *model.SDType) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sDTypeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SDType")
+		case "id":
+			out.Values[i] = ec._SDType_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "denotation":
+			out.Values[i] = ec._SDType_denotation(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "parameters":
+			out.Values[i] = ec._SDType_parameters(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3983,208 +3975,6 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNDevice2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDevice(ctx context.Context, sel ast.SelectionSet, v model.Device) graphql.Marshaler {
-	return ec._Device(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNDevice2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Device) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNDevice2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDevice(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNDevice2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDevice(ctx context.Context, sel ast.SelectionSet, v *model.Device) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Device(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNDeviceType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceType(ctx context.Context, sel ast.SelectionSet, v model.DeviceType) graphql.Marshaler {
-	return ec._DeviceType(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNDeviceType2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DeviceType) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceType(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNDeviceType2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceType(ctx context.Context, sel ast.SelectionSet, v *model.DeviceType) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._DeviceType(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNDeviceTypeParameter2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DeviceTypeParameter) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNDeviceTypeParameter2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameter(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNDeviceTypeParameter2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameter(ctx context.Context, sel ast.SelectionSet, v *model.DeviceTypeParameter) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._DeviceTypeParameter(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNDeviceTypeParameterInput2ᚕᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterInputᚄ(ctx context.Context, v interface{}) ([]*model.DeviceTypeParameterInput, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.DeviceTypeParameterInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNDeviceTypeParameterInput2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) unmarshalNDeviceTypeParameterInput2ᚖbpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterInput(ctx context.Context, v interface{}) (*model.DeviceTypeParameterInput, error) {
-	res, err := ec.unmarshalInputDeviceTypeParameterInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNDeviceTypeParameterType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterType(ctx context.Context, v interface{}) (model.DeviceTypeParameterType, error) {
-	var res model.DeviceTypeParameterType
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNDeviceTypeParameterType2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐDeviceTypeParameterType(ctx context.Context, sel ast.SelectionSet, v model.DeviceTypeParameterType) graphql.Marshaler {
-	return v
-}
-
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4200,8 +3990,210 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) unmarshalNNewDeviceTypeInput2bpᚑburesᚑSfPDfSDᚋsrcᚋapiᚋgraphqlᚋmodelᚐNewDeviceTypeInput(ctx context.Context, v interface{}) (model.NewDeviceTypeInput, error) {
-	res, err := ec.unmarshalInputNewDeviceTypeInput(ctx, v)
+func (ec *executionContext) marshalNSDInstance2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstance(ctx context.Context, sel ast.SelectionSet, v model.SDInstance) graphql.Marshaler {
+	return ec._SDInstance(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSDInstance2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SDInstance) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSDInstance2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstance(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSDInstance2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstance(ctx context.Context, sel ast.SelectionSet, v *model.SDInstance) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SDInstance(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSDParameter2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SDParameter) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSDParameter2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameter(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSDParameter2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameter(ctx context.Context, sel ast.SelectionSet, v *model.SDParameter) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SDParameter(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSDParameterInput2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterInputᚄ(ctx context.Context, v interface{}) ([]*model.SDParameterInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.SDParameterInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNSDParameterInput2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNSDParameterInput2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterInput(ctx context.Context, v interface{}) (*model.SDParameterInput, error) {
+	res, err := ec.unmarshalInputSDParameterInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterType(ctx context.Context, v interface{}) (model.SDParameterType, error) {
+	var res model.SDParameterType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterType(ctx context.Context, sel ast.SelectionSet, v model.SDParameterType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNSDType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDType(ctx context.Context, sel ast.SelectionSet, v model.SDType) graphql.Marshaler {
+	return ec._SDType(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSDType2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SDType) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSDType2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSDType2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDType(ctx context.Context, sel ast.SelectionSet, v *model.SDType) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SDType(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSDTypeInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDTypeInput(ctx context.Context, v interface{}) (model.SDTypeInput, error) {
+	res, err := ec.unmarshalInputSDTypeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

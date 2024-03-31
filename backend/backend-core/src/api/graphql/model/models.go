@@ -8,74 +8,80 @@ import (
 	"strconv"
 )
 
-type Device struct {
-	ID   string      `json:"id"`
-	UID  string      `json:"uid"`
-	Name string      `json:"name"`
-	Type *DeviceType `json:"type"`
+type Mutation struct {
 }
 
-type DeviceType struct {
-	ID         string                 `json:"id"`
-	Denotation string                 `json:"denotation"`
-	Parameters []*DeviceTypeParameter `json:"parameters"`
+type Query struct {
 }
 
-type DeviceTypeParameter struct {
-	ID   string                  `json:"id"`
-	Name string                  `json:"name"`
-	Type DeviceTypeParameterType `json:"type"`
+type SDInstance struct {
+	ID             string  `json:"id"`
+	UID            string  `json:"uid"`
+	UserIdentifier string  `json:"userIdentifier"`
+	Type           *SDType `json:"type"`
 }
 
-type DeviceTypeParameterInput struct {
-	Name string                  `json:"name"`
-	Type DeviceTypeParameterType `json:"type"`
+type SDParameter struct {
+	ID         string          `json:"id"`
+	Denotation string          `json:"denotation"`
+	Type       SDParameterType `json:"type"`
 }
 
-type NewDeviceTypeInput struct {
-	Denotation string                      `json:"denotation"`
-	Parameters []*DeviceTypeParameterInput `json:"parameters"`
+type SDParameterInput struct {
+	Denotation string          `json:"denotation"`
+	Type       SDParameterType `json:"type"`
 }
 
-type DeviceTypeParameterType string
+type SDType struct {
+	ID         string         `json:"id"`
+	Denotation string         `json:"denotation"`
+	Parameters []*SDParameter `json:"parameters"`
+}
+
+type SDTypeInput struct {
+	Denotation string              `json:"denotation"`
+	Parameters []*SDParameterInput `json:"parameters"`
+}
+
+type SDParameterType string
 
 const (
-	DeviceTypeParameterTypeString  DeviceTypeParameterType = "STRING"
-	DeviceTypeParameterTypeNumber  DeviceTypeParameterType = "NUMBER"
-	DeviceTypeParameterTypeBoolean DeviceTypeParameterType = "BOOLEAN"
+	SDParameterTypeString  SDParameterType = "STRING"
+	SDParameterTypeNumber  SDParameterType = "NUMBER"
+	SDParameterTypeBoolean SDParameterType = "BOOLEAN"
 )
 
-var AllDeviceTypeParameterType = []DeviceTypeParameterType{
-	DeviceTypeParameterTypeString,
-	DeviceTypeParameterTypeNumber,
-	DeviceTypeParameterTypeBoolean,
+var AllSDParameterType = []SDParameterType{
+	SDParameterTypeString,
+	SDParameterTypeNumber,
+	SDParameterTypeBoolean,
 }
 
-func (e DeviceTypeParameterType) IsValid() bool {
+func (e SDParameterType) IsValid() bool {
 	switch e {
-	case DeviceTypeParameterTypeString, DeviceTypeParameterTypeNumber, DeviceTypeParameterTypeBoolean:
+	case SDParameterTypeString, SDParameterTypeNumber, SDParameterTypeBoolean:
 		return true
 	}
 	return false
 }
 
-func (e DeviceTypeParameterType) String() string {
+func (e SDParameterType) String() string {
 	return string(e)
 }
 
-func (e *DeviceTypeParameterType) UnmarshalGQL(v interface{}) error {
+func (e *SDParameterType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = DeviceTypeParameterType(str)
+	*e = SDParameterType(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid DeviceTypeParameterType", str)
+		return fmt.Errorf("%s is not a valid SDParameterType", str)
 	}
 	return nil
 }
 
-func (e DeviceTypeParameterType) MarshalGQL(w io.Writer) {
+func (e SDParameterType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

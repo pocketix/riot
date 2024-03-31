@@ -1,46 +1,46 @@
-enum DeviceTypeParameterType {
+enum SDParameterType {
   STRING
   NUMBER
   BOOLEAN
 }
 
-type DeviceTypeParameter {
-  id: ID!
-  name: String!
-  type: DeviceTypeParameterType!
-}
-
-type DeviceType {
+type SDParameter {
   id: ID!
   denotation: String!
-  parameters: [DeviceTypeParameter!]!
+  type: SDParameterType!
 }
 
-input DeviceTypeParameterInput {
-  name: String!
-  type: DeviceTypeParameterType!
-}
-
-input NewDeviceTypeInput {
+type SDType {
+  id: ID!
   denotation: String!
-  parameters: [DeviceTypeParameterInput!]!
+  parameters: [SDParameter!]!
 }
 
-type Device {
+input SDParameterInput {
+  denotation: String!
+  type: SDParameterType!
+}
+
+input SDTypeInput {
+  denotation: String!
+  parameters: [SDParameterInput!]!
+}
+
+type SDInstance {
   id: ID!
   uid: String!
-  name: String!
-  type: DeviceType!
+  userIdentifier: String!
+  type: SDType!
 }
 
 type Query {
-  singleDeviceType(input: ID!): DeviceType!
-  deviceTypes: [DeviceType!]!
-  devices: [Device!]!
+  sdType(id: ID!): SDType!
+  sdTypes: [SDType!]!
+  sdInstances: [SDInstance!]!
 }
 
 type Mutation {
-  createNewDeviceType(input: NewDeviceTypeInput!): DeviceType!
-  deleteDeviceType(input: ID!): Boolean
-  updateDeviceName(id: ID!, newName: String!): Device!
+  createSDType(input: SDTypeInput!): SDType!
+  deleteSDType(id: ID!): Boolean
+  updateSDInstance(id: ID!, newUserIdentifier: String!): SDInstance!
 }
