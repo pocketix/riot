@@ -23,8 +23,9 @@ type SDTypeDTO struct {
 }
 
 type SDInstanceDTO struct {
-	ID             util.Optional[uint32]
-	UID            string
-	UserIdentifier string
-	SDType         util.Optional[SDTypeDTO]
+	ID              util.Optional[uint32]
+	UID             string
+	ConfirmedByUser bool
+	UserIdentifier  string
+	SDType          util.Optional[SDTypeDTO]
 }

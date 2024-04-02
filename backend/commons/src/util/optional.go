@@ -12,6 +12,14 @@ func NewOptionalOf[T any](payload T) Optional[T] {
 	}
 }
 
+func NewOptionalFromPointer[T any](pointer *T) Optional[T] {
+	if pointer == nil {
+		return NewEmptyOptional[T]()
+	} else {
+		return NewOptionalOf[T](*pointer)
+	}
+}
+
 func NewEmptyOptional[T any]() Optional[T] {
 	return Optional[T]{
 		isPresent: false,
@@ -23,5 +31,8 @@ func (o Optional[T]) IsPresent() bool {
 }
 
 func (o Optional[T]) GetPayload() T {
+	if !o.isPresent {
+		panic("trying to access Optional[T] payload that is not present")
+	}
 	return o.payload
 }

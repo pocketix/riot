@@ -6,40 +6,41 @@ package graphql
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/generated"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/service"
 )
 
 // CreateSDType is the resolver for the createSDType field.
 func (r *mutationResolver) CreateSDType(ctx context.Context, input model.SDTypeInput) (*model.SDType, error) {
-	panic(fmt.Errorf("not implemented: CreateSDType - createSDType"))
+	return service.CreateSDType(input).Unwrap()
 }
 
 // DeleteSDType is the resolver for the deleteSDType field.
-func (r *mutationResolver) DeleteSDType(ctx context.Context, id string) (*bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteSDType - deleteSDType"))
+func (r *mutationResolver) DeleteSDType(ctx context.Context, id string) (bool, error) {
+	err := service.DeleteSDType(id)
+	return err == nil, err
 }
 
 // UpdateSDInstance is the resolver for the updateSDInstance field.
-func (r *mutationResolver) UpdateSDInstance(ctx context.Context, id string, newUserIdentifier string) (*model.SDInstance, error) {
-	panic(fmt.Errorf("not implemented: UpdateSDInstance - updateSDInstance"))
+func (r *mutationResolver) UpdateSDInstance(ctx context.Context, id string, input model.SDInstanceUpdateInput) (*model.SDInstance, error) {
+	return service.UpdateSDInstance(id, input).Unwrap()
 }
 
 // SdType is the resolver for the sdType field.
 func (r *queryResolver) SdType(ctx context.Context, id string) (*model.SDType, error) {
-	panic(fmt.Errorf("not implemented: SdType - sdType"))
+	return service.GetSDType(id).Unwrap()
 }
 
 // SdTypes is the resolver for the sdTypes field.
 func (r *queryResolver) SdTypes(ctx context.Context) ([]*model.SDType, error) {
-	panic(fmt.Errorf("not implemented: SdTypes - sdTypes"))
+	return service.GetSDTypes().Unwrap()
 }
 
 // SdInstances is the resolver for the sdInstances field.
 func (r *queryResolver) SdInstances(ctx context.Context) ([]*model.SDInstance, error) {
-	panic(fmt.Errorf("not implemented: SdInstances - sdInstances"))
+	return service.GetSDInstances().Unwrap()
 }
 
 // Mutation returns generated.MutationResolver implementation.

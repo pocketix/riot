@@ -17,12 +17,18 @@ const (
 type RelationalDatabaseClient interface {
 	ConnectToDatabase() error
 	InitializeDatabase() error
-	PersistKPIDefinition(kpiDefinition kpi.DefinitionDTO) error
-	LoadKPIDefinitions() ([]kpi.DefinitionDTO, error)
-	PersistSDType(sdType types.SDTypeDTO) error
-	LoadSDTypes() ([]types.SDTypeDTO, error)
-	PersistSDInstance(sdInstance types.SDInstanceDTO) error
-	LoadSDInstances() ([]types.SDInstanceDTO, error)
+	PersistKPIDefinition(kpiDefinition kpi.DefinitionDTO) cUtil.Result[uint32]
+	LoadKPIDefinition(id uint32) cUtil.Result[kpi.DefinitionDTO]
+	LoadKPIDefinitions() cUtil.Result[[]kpi.DefinitionDTO]
+	DeleteKPIDefinition(id uint32) error
+	PersistSDType(sdType types.SDTypeDTO) cUtil.Result[uint32]
+	LoadSDType(id uint32) cUtil.Result[types.SDTypeDTO]
+	LoadSDTypes() cUtil.Result[[]types.SDTypeDTO]
+	DeleteSDType(id uint32) error
+	PersistSDInstance(sdInstance types.SDInstanceDTO) cUtil.Result[uint32]
+	LoadSDInstance(id uint32) cUtil.Result[types.SDInstanceDTO]
+	LoadSDInstances() cUtil.Result[[]types.SDInstanceDTO]
+	DeleteSDInstance(id uint32) error
 }
 
 type relationalDatabaseClientImpl struct {
@@ -63,32 +69,62 @@ func (r *relationalDatabaseClientImpl) InitializeDatabase() error {
 	)
 }
 
-func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition kpi.DefinitionDTO) error {
+func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition kpi.DefinitionDTO) cUtil.Result[uint32] {
+	// TODO: Implement
+	return cUtil.NewFailureResult[uint32](nil)
+}
+
+func (r *relationalDatabaseClientImpl) LoadKPIDefinition(id uint32) cUtil.Result[kpi.DefinitionDTO] {
+	// TODO: Implement
+	return cUtil.NewFailureResult[kpi.DefinitionDTO](nil)
+}
+
+func (r *relationalDatabaseClientImpl) LoadKPIDefinitions() cUtil.Result[[]kpi.DefinitionDTO] {
+	// TODO: Implement
+	return cUtil.NewFailureResult[[]kpi.DefinitionDTO](nil)
+}
+
+func (r *relationalDatabaseClientImpl) DeleteKPIDefinition(id uint32) error {
 	// TODO: Implement
 	return nil
 }
 
-func (r *relationalDatabaseClientImpl) LoadKPIDefinitions() ([]kpi.DefinitionDTO, error) {
+func (r *relationalDatabaseClientImpl) PersistSDType(sdType types.SDTypeDTO) cUtil.Result[uint32] {
 	// TODO: Implement
-	return nil, nil
+	return cUtil.NewFailureResult[uint32](nil)
 }
 
-func (r *relationalDatabaseClientImpl) PersistSDType(sdType types.SDTypeDTO) error {
+func (r *relationalDatabaseClientImpl) LoadSDType(id uint32) cUtil.Result[types.SDTypeDTO] {
+	// TODO: Implement
+	return cUtil.NewFailureResult[types.SDTypeDTO](nil)
+}
+
+func (r *relationalDatabaseClientImpl) LoadSDTypes() cUtil.Result[[]types.SDTypeDTO] {
+	// TODO: Implement
+	return cUtil.NewFailureResult[[]types.SDTypeDTO](nil)
+}
+
+func (r *relationalDatabaseClientImpl) DeleteSDType(id uint32) error {
 	// TODO: Implement
 	return nil
 }
 
-func (r *relationalDatabaseClientImpl) LoadSDTypes() ([]types.SDTypeDTO, error) {
+func (r *relationalDatabaseClientImpl) PersistSDInstance(sdInstance types.SDInstanceDTO) cUtil.Result[uint32] {
 	// TODO: Implement
-	return nil, nil
+	return cUtil.NewFailureResult[uint32](nil)
 }
 
-func (r *relationalDatabaseClientImpl) PersistSDInstance(sdInstance types.SDInstanceDTO) error {
+func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) cUtil.Result[types.SDInstanceDTO] {
+	// TODO: Implement
+	return cUtil.NewFailureResult[types.SDInstanceDTO](nil)
+}
+
+func (r *relationalDatabaseClientImpl) LoadSDInstances() cUtil.Result[[]types.SDInstanceDTO] {
+	// TODO: Implement
+	return cUtil.NewFailureResult[[]types.SDInstanceDTO](nil)
+}
+
+func (r *relationalDatabaseClientImpl) DeleteSDInstance(id uint32) error {
 	// TODO: Implement
 	return nil
-}
-
-func (r *relationalDatabaseClientImpl) LoadSDInstances() ([]types.SDInstanceDTO, error) {
-	// TODO: Implement
-	return nil, nil
 }

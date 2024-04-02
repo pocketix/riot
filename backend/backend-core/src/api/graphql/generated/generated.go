@@ -46,10 +46,51 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	BooleanEQKPIAtomNode struct {
+		ReferenceValue           func(childComplexity int) int
+		SdParameterSpecification func(childComplexity int) int
+	}
+
+	KPIDefinition struct {
+		RootNode            func(childComplexity int) int
+		SdTypeSpecification func(childComplexity int) int
+		UserIdentifier      func(childComplexity int) int
+	}
+
+	LogicalOperationKPINode struct {
+		ChildNodes func(childComplexity int) int
+		Type       func(childComplexity int) int
+	}
+
 	Mutation struct {
 		CreateSDType     func(childComplexity int, input model.SDTypeInput) int
 		DeleteSDType     func(childComplexity int, id string) int
-		UpdateSDInstance func(childComplexity int, id string, newUserIdentifier string) int
+		UpdateSDInstance func(childComplexity int, id string, input model.SDInstanceUpdateInput) int
+	}
+
+	NumericEQKPIAtomNode struct {
+		ReferenceValue           func(childComplexity int) int
+		SdParameterSpecification func(childComplexity int) int
+	}
+
+	NumericGEQKPIAtomNode struct {
+		ReferenceValue           func(childComplexity int) int
+		SdParameterSpecification func(childComplexity int) int
+	}
+
+	NumericGTKPIAtomNode struct {
+		ReferenceValue           func(childComplexity int) int
+		SdParameterSpecification func(childComplexity int) int
+	}
+
+	NumericLEQKPIAtomNode struct {
+		ReferenceValue           func(childComplexity int) int
+		SdParameterSpecification func(childComplexity int) int
+	}
+
+	NumericLTKPIAtomNode struct {
+		ReferenceValue           func(childComplexity int) int
+		SdParameterSpecification func(childComplexity int) int
 	}
 
 	Query struct {
@@ -59,10 +100,11 @@ type ComplexityRoot struct {
 	}
 
 	SDInstance struct {
-		ID             func(childComplexity int) int
-		Type           func(childComplexity int) int
-		UID            func(childComplexity int) int
-		UserIdentifier func(childComplexity int) int
+		ConfirmedByUser func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Type            func(childComplexity int) int
+		UID             func(childComplexity int) int
+		UserIdentifier  func(childComplexity int) int
 	}
 
 	SDParameter struct {
@@ -76,12 +118,17 @@ type ComplexityRoot struct {
 		ID         func(childComplexity int) int
 		Parameters func(childComplexity int) int
 	}
+
+	StringEQKPIAtomNode struct {
+		ReferenceValue           func(childComplexity int) int
+		SdParameterSpecification func(childComplexity int) int
+	}
 }
 
 type MutationResolver interface {
 	CreateSDType(ctx context.Context, input model.SDTypeInput) (*model.SDType, error)
-	DeleteSDType(ctx context.Context, id string) (*bool, error)
-	UpdateSDInstance(ctx context.Context, id string, newUserIdentifier string) (*model.SDInstance, error)
+	DeleteSDType(ctx context.Context, id string) (bool, error)
+	UpdateSDInstance(ctx context.Context, id string, input model.SDInstanceUpdateInput) (*model.SDInstance, error)
 }
 type QueryResolver interface {
 	SdType(ctx context.Context, id string) (*model.SDType, error)
@@ -107,6 +154,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "BooleanEQKPIAtomNode.referenceValue":
+		if e.complexity.BooleanEQKPIAtomNode.ReferenceValue == nil {
+			break
+		}
+
+		return e.complexity.BooleanEQKPIAtomNode.ReferenceValue(childComplexity), true
+
+	case "BooleanEQKPIAtomNode.sdParameterSpecification":
+		if e.complexity.BooleanEQKPIAtomNode.SdParameterSpecification == nil {
+			break
+		}
+
+		return e.complexity.BooleanEQKPIAtomNode.SdParameterSpecification(childComplexity), true
+
+	case "KPIDefinition.rootNode":
+		if e.complexity.KPIDefinition.RootNode == nil {
+			break
+		}
+
+		return e.complexity.KPIDefinition.RootNode(childComplexity), true
+
+	case "KPIDefinition.sdTypeSpecification":
+		if e.complexity.KPIDefinition.SdTypeSpecification == nil {
+			break
+		}
+
+		return e.complexity.KPIDefinition.SdTypeSpecification(childComplexity), true
+
+	case "KPIDefinition.userIdentifier":
+		if e.complexity.KPIDefinition.UserIdentifier == nil {
+			break
+		}
+
+		return e.complexity.KPIDefinition.UserIdentifier(childComplexity), true
+
+	case "LogicalOperationKPINode.childNodes":
+		if e.complexity.LogicalOperationKPINode.ChildNodes == nil {
+			break
+		}
+
+		return e.complexity.LogicalOperationKPINode.ChildNodes(childComplexity), true
+
+	case "LogicalOperationKPINode.type":
+		if e.complexity.LogicalOperationKPINode.Type == nil {
+			break
+		}
+
+		return e.complexity.LogicalOperationKPINode.Type(childComplexity), true
 
 	case "Mutation.createSDType":
 		if e.complexity.Mutation.CreateSDType == nil {
@@ -142,7 +238,77 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateSDInstance(childComplexity, args["id"].(string), args["newUserIdentifier"].(string)), true
+		return e.complexity.Mutation.UpdateSDInstance(childComplexity, args["id"].(string), args["input"].(model.SDInstanceUpdateInput)), true
+
+	case "NumericEQKPIAtomNode.referenceValue":
+		if e.complexity.NumericEQKPIAtomNode.ReferenceValue == nil {
+			break
+		}
+
+		return e.complexity.NumericEQKPIAtomNode.ReferenceValue(childComplexity), true
+
+	case "NumericEQKPIAtomNode.sdParameterSpecification":
+		if e.complexity.NumericEQKPIAtomNode.SdParameterSpecification == nil {
+			break
+		}
+
+		return e.complexity.NumericEQKPIAtomNode.SdParameterSpecification(childComplexity), true
+
+	case "NumericGEQKPIAtomNode.referenceValue":
+		if e.complexity.NumericGEQKPIAtomNode.ReferenceValue == nil {
+			break
+		}
+
+		return e.complexity.NumericGEQKPIAtomNode.ReferenceValue(childComplexity), true
+
+	case "NumericGEQKPIAtomNode.sdParameterSpecification":
+		if e.complexity.NumericGEQKPIAtomNode.SdParameterSpecification == nil {
+			break
+		}
+
+		return e.complexity.NumericGEQKPIAtomNode.SdParameterSpecification(childComplexity), true
+
+	case "NumericGTKPIAtomNode.referenceValue":
+		if e.complexity.NumericGTKPIAtomNode.ReferenceValue == nil {
+			break
+		}
+
+		return e.complexity.NumericGTKPIAtomNode.ReferenceValue(childComplexity), true
+
+	case "NumericGTKPIAtomNode.sdParameterSpecification":
+		if e.complexity.NumericGTKPIAtomNode.SdParameterSpecification == nil {
+			break
+		}
+
+		return e.complexity.NumericGTKPIAtomNode.SdParameterSpecification(childComplexity), true
+
+	case "NumericLEQKPIAtomNode.referenceValue":
+		if e.complexity.NumericLEQKPIAtomNode.ReferenceValue == nil {
+			break
+		}
+
+		return e.complexity.NumericLEQKPIAtomNode.ReferenceValue(childComplexity), true
+
+	case "NumericLEQKPIAtomNode.sdParameterSpecification":
+		if e.complexity.NumericLEQKPIAtomNode.SdParameterSpecification == nil {
+			break
+		}
+
+		return e.complexity.NumericLEQKPIAtomNode.SdParameterSpecification(childComplexity), true
+
+	case "NumericLTKPIAtomNode.referenceValue":
+		if e.complexity.NumericLTKPIAtomNode.ReferenceValue == nil {
+			break
+		}
+
+		return e.complexity.NumericLTKPIAtomNode.ReferenceValue(childComplexity), true
+
+	case "NumericLTKPIAtomNode.sdParameterSpecification":
+		if e.complexity.NumericLTKPIAtomNode.SdParameterSpecification == nil {
+			break
+		}
+
+		return e.complexity.NumericLTKPIAtomNode.SdParameterSpecification(childComplexity), true
 
 	case "Query.sdInstances":
 		if e.complexity.Query.SdInstances == nil {
@@ -169,6 +335,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.SdTypes(childComplexity), true
+
+	case "SDInstance.confirmedByUser":
+		if e.complexity.SDInstance.ConfirmedByUser == nil {
+			break
+		}
+
+		return e.complexity.SDInstance.ConfirmedByUser(childComplexity), true
 
 	case "SDInstance.id":
 		if e.complexity.SDInstance.ID == nil {
@@ -240,6 +413,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SDType.Parameters(childComplexity), true
 
+	case "StringEQKPIAtomNode.referenceValue":
+		if e.complexity.StringEQKPIAtomNode.ReferenceValue == nil {
+			break
+		}
+
+		return e.complexity.StringEQKPIAtomNode.ReferenceValue(childComplexity), true
+
+	case "StringEQKPIAtomNode.sdParameterSpecification":
+		if e.complexity.StringEQKPIAtomNode.SdParameterSpecification == nil {
+			break
+		}
+
+		return e.complexity.StringEQKPIAtomNode.SdParameterSpecification(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -248,6 +435,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputSDInstanceUpdateInput,
 		ec.unmarshalInputSDParameterInput,
 		ec.unmarshalInputSDTypeInput,
 	)
@@ -347,7 +535,9 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema.graphqls", Input: `enum SDParameterType {
+	{Name: "../schema.graphqls", Input: `# ----- SD types and instances -----
+
+enum SDParameterType {
   STRING
   NUMBER
   BOOLEAN
@@ -378,9 +568,73 @@ input SDTypeInput {
 type SDInstance {
   id: ID!
   uid: String!
+  confirmedByUser: Boolean!
   userIdentifier: String!
   type: SDType!
 }
+
+input SDInstanceUpdateInput {
+  userIdentifier: String
+  confirmedByUser: Boolean
+}
+
+# ----- KPIs -----
+
+type KPIDefinition {
+  sdTypeSpecification: String!
+  userIdentifier: String!
+  rootNode: KPINode
+}
+
+union KPINode = StringEQKPIAtomNode | BooleanEQKPIAtomNode | NumericEQKPIAtomNode | NumericGTKPIAtomNode | NumericGEQKPIAtomNode | NumericLTKPIAtomNode | NumericLEQKPIAtomNode | LogicalOperationKPINode
+
+type StringEQKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: String!
+}
+
+type BooleanEQKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: Boolean!
+}
+
+type NumericEQKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: Float!
+}
+
+type NumericGTKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: Float!
+}
+
+type NumericGEQKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: Float!
+}
+
+type NumericLTKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: Float!
+}
+
+type NumericLEQKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: Float!
+}
+
+enum LogicalOperationKPINodeType {
+  AND
+  OR
+  NOR
+}
+
+type LogicalOperationKPINode {
+  type: LogicalOperationKPINodeType!
+  childNodes: [KPINode!]!
+}
+
+# ----- Queries and Mutations -----
 
 type Query {
   sdType(id: ID!): SDType!
@@ -390,8 +644,8 @@ type Query {
 
 type Mutation {
   createSDType(input: SDTypeInput!): SDType!
-  deleteSDType(id: ID!): Boolean
-  updateSDInstance(id: ID!, newUserIdentifier: String!): SDInstance!
+  deleteSDType(id: ID!): Boolean!
+  updateSDInstance(id: ID!, input: SDInstanceUpdateInput!): SDInstance!
 }
 `, BuiltIn: false},
 }
@@ -443,15 +697,15 @@ func (ec *executionContext) field_Mutation_updateSDInstance_args(ctx context.Con
 		}
 	}
 	args["id"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["newUserIdentifier"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newUserIdentifier"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg1 model.SDInstanceUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNSDInstanceUpdateInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["newUserIdentifier"] = arg1
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -522,6 +776,311 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _BooleanEQKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField, obj *model.BooleanEQKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BooleanEQKPIAtomNode_sdParameterSpecification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SdParameterSpecification, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BooleanEQKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BooleanEQKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BooleanEQKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField, obj *model.BooleanEQKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BooleanEQKPIAtomNode_referenceValue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReferenceValue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BooleanEQKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BooleanEQKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KPIDefinition_sdTypeSpecification(ctx context.Context, field graphql.CollectedField, obj *model.KPIDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KPIDefinition_sdTypeSpecification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SdTypeSpecification, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KPIDefinition_sdTypeSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KPIDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KPIDefinition_userIdentifier(ctx context.Context, field graphql.CollectedField, obj *model.KPIDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KPIDefinition_userIdentifier(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserIdentifier, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KPIDefinition_userIdentifier(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KPIDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KPIDefinition_rootNode(ctx context.Context, field graphql.CollectedField, obj *model.KPIDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KPIDefinition_rootNode(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RootNode, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(model.KPINode)
+	fc.Result = res
+	return ec.marshalOKPINode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINode(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KPIDefinition_rootNode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KPIDefinition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type KPINode does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LogicalOperationKPINode_type(ctx context.Context, field graphql.CollectedField, obj *model.LogicalOperationKPINode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LogicalOperationKPINode_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.LogicalOperationKPINodeType)
+	fc.Result = res
+	return ec.marshalNLogicalOperationKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐLogicalOperationKPINodeType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LogicalOperationKPINode_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LogicalOperationKPINode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type LogicalOperationKPINodeType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LogicalOperationKPINode_childNodes(ctx context.Context, field graphql.CollectedField, obj *model.LogicalOperationKPINode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LogicalOperationKPINode_childNodes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChildNodes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.KPINode)
+	fc.Result = res
+	return ec.marshalNKPINode2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINodeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LogicalOperationKPINode_childNodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LogicalOperationKPINode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type KPINode does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _Mutation_createSDType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createSDType(ctx, field)
@@ -607,11 +1166,14 @@ func (ec *executionContext) _Mutation_deleteSDType(ctx context.Context, field gr
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*bool)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_deleteSDType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -652,7 +1214,7 @@ func (ec *executionContext) _Mutation_updateSDInstance(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateSDInstance(rctx, fc.Args["id"].(string), fc.Args["newUserIdentifier"].(string))
+		return ec.resolvers.Mutation().UpdateSDInstance(rctx, fc.Args["id"].(string), fc.Args["input"].(model.SDInstanceUpdateInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -681,6 +1243,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSDInstance(ctx context.C
 				return ec.fieldContext_SDInstance_id(ctx, field)
 			case "uid":
 				return ec.fieldContext_SDInstance_uid(ctx, field)
+			case "confirmedByUser":
+				return ec.fieldContext_SDInstance_confirmedByUser(ctx, field)
 			case "userIdentifier":
 				return ec.fieldContext_SDInstance_userIdentifier(ctx, field)
 			case "type":
@@ -699,6 +1263,446 @@ func (ec *executionContext) fieldContext_Mutation_updateSDInstance(ctx context.C
 	if fc.Args, err = ec.field_Mutation_updateSDInstance_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NumericEQKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField, obj *model.NumericEQKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NumericEQKPIAtomNode_sdParameterSpecification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SdParameterSpecification, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NumericEQKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NumericEQKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NumericEQKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField, obj *model.NumericEQKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NumericEQKPIAtomNode_referenceValue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReferenceValue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NumericEQKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NumericEQKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NumericGEQKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField, obj *model.NumericGEQKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NumericGEQKPIAtomNode_sdParameterSpecification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SdParameterSpecification, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NumericGEQKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NumericGEQKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NumericGEQKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField, obj *model.NumericGEQKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NumericGEQKPIAtomNode_referenceValue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReferenceValue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NumericGEQKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NumericGEQKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NumericGTKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField, obj *model.NumericGTKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NumericGTKPIAtomNode_sdParameterSpecification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SdParameterSpecification, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NumericGTKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NumericGTKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NumericGTKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField, obj *model.NumericGTKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NumericGTKPIAtomNode_referenceValue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReferenceValue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NumericGTKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NumericGTKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NumericLEQKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField, obj *model.NumericLEQKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NumericLEQKPIAtomNode_sdParameterSpecification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SdParameterSpecification, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NumericLEQKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NumericLEQKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NumericLEQKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField, obj *model.NumericLEQKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NumericLEQKPIAtomNode_referenceValue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReferenceValue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NumericLEQKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NumericLEQKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NumericLTKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField, obj *model.NumericLTKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NumericLTKPIAtomNode_sdParameterSpecification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SdParameterSpecification, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NumericLTKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NumericLTKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NumericLTKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField, obj *model.NumericLTKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NumericLTKPIAtomNode_referenceValue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReferenceValue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NumericLTKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NumericLTKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -861,6 +1865,8 @@ func (ec *executionContext) fieldContext_Query_sdInstances(ctx context.Context, 
 				return ec.fieldContext_SDInstance_id(ctx, field)
 			case "uid":
 				return ec.fieldContext_SDInstance_uid(ctx, field)
+			case "confirmedByUser":
+				return ec.fieldContext_SDInstance_confirmedByUser(ctx, field)
 			case "userIdentifier":
 				return ec.fieldContext_SDInstance_userIdentifier(ctx, field)
 			case "type":
@@ -1084,6 +2090,50 @@ func (ec *executionContext) fieldContext_SDInstance_uid(ctx context.Context, fie
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDInstance_confirmedByUser(ctx context.Context, field graphql.CollectedField, obj *model.SDInstance) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDInstance_confirmedByUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ConfirmedByUser, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDInstance_confirmedByUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDInstance",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1452,6 +2502,94 @@ func (ec *executionContext) fieldContext_SDType_parameters(ctx context.Context, 
 				return ec.fieldContext_SDParameter_type(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDParameter", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StringEQKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField, obj *model.StringEQKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StringEQKPIAtomNode_sdParameterSpecification(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SdParameterSpecification, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StringEQKPIAtomNode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StringEQKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StringEQKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField, obj *model.StringEQKPIAtomNode) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StringEQKPIAtomNode_referenceValue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReferenceValue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StringEQKPIAtomNode_referenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StringEQKPIAtomNode",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3230,6 +4368,40 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputSDInstanceUpdateInput(ctx context.Context, obj interface{}) (model.SDInstanceUpdateInput, error) {
+	var it model.SDInstanceUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"userIdentifier", "confirmedByUser"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "userIdentifier":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIdentifier"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIdentifier = data
+		case "confirmedByUser":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("confirmedByUser"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ConfirmedByUser = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSDParameterInput(ctx context.Context, obj interface{}) (model.SDParameterInput, error) {
 	var it model.SDParameterInput
 	asMap := map[string]interface{}{}
@@ -3302,9 +4474,208 @@ func (ec *executionContext) unmarshalInputSDTypeInput(ctx context.Context, obj i
 
 // region    ************************** interface.gotpl ***************************
 
+func (ec *executionContext) _KPINode(ctx context.Context, sel ast.SelectionSet, obj model.KPINode) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.StringEQKPIAtomNode:
+		return ec._StringEQKPIAtomNode(ctx, sel, &obj)
+	case *model.StringEQKPIAtomNode:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._StringEQKPIAtomNode(ctx, sel, obj)
+	case model.BooleanEQKPIAtomNode:
+		return ec._BooleanEQKPIAtomNode(ctx, sel, &obj)
+	case *model.BooleanEQKPIAtomNode:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._BooleanEQKPIAtomNode(ctx, sel, obj)
+	case model.NumericEQKPIAtomNode:
+		return ec._NumericEQKPIAtomNode(ctx, sel, &obj)
+	case *model.NumericEQKPIAtomNode:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._NumericEQKPIAtomNode(ctx, sel, obj)
+	case model.NumericGTKPIAtomNode:
+		return ec._NumericGTKPIAtomNode(ctx, sel, &obj)
+	case *model.NumericGTKPIAtomNode:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._NumericGTKPIAtomNode(ctx, sel, obj)
+	case model.NumericGEQKPIAtomNode:
+		return ec._NumericGEQKPIAtomNode(ctx, sel, &obj)
+	case *model.NumericGEQKPIAtomNode:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._NumericGEQKPIAtomNode(ctx, sel, obj)
+	case model.NumericLTKPIAtomNode:
+		return ec._NumericLTKPIAtomNode(ctx, sel, &obj)
+	case *model.NumericLTKPIAtomNode:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._NumericLTKPIAtomNode(ctx, sel, obj)
+	case model.NumericLEQKPIAtomNode:
+		return ec._NumericLEQKPIAtomNode(ctx, sel, &obj)
+	case *model.NumericLEQKPIAtomNode:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._NumericLEQKPIAtomNode(ctx, sel, obj)
+	case model.LogicalOperationKPINode:
+		return ec._LogicalOperationKPINode(ctx, sel, &obj)
+	case *model.LogicalOperationKPINode:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._LogicalOperationKPINode(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var booleanEQKPIAtomNodeImplementors = []string{"BooleanEQKPIAtomNode", "KPINode"}
+
+func (ec *executionContext) _BooleanEQKPIAtomNode(ctx context.Context, sel ast.SelectionSet, obj *model.BooleanEQKPIAtomNode) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, booleanEQKPIAtomNodeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BooleanEQKPIAtomNode")
+		case "sdParameterSpecification":
+			out.Values[i] = ec._BooleanEQKPIAtomNode_sdParameterSpecification(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "referenceValue":
+			out.Values[i] = ec._BooleanEQKPIAtomNode_referenceValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var kPIDefinitionImplementors = []string{"KPIDefinition"}
+
+func (ec *executionContext) _KPIDefinition(ctx context.Context, sel ast.SelectionSet, obj *model.KPIDefinition) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, kPIDefinitionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("KPIDefinition")
+		case "sdTypeSpecification":
+			out.Values[i] = ec._KPIDefinition_sdTypeSpecification(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "userIdentifier":
+			out.Values[i] = ec._KPIDefinition_userIdentifier(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rootNode":
+			out.Values[i] = ec._KPIDefinition_rootNode(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var logicalOperationKPINodeImplementors = []string{"LogicalOperationKPINode", "KPINode"}
+
+func (ec *executionContext) _LogicalOperationKPINode(ctx context.Context, sel ast.SelectionSet, obj *model.LogicalOperationKPINode) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, logicalOperationKPINodeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LogicalOperationKPINode")
+		case "type":
+			out.Values[i] = ec._LogicalOperationKPINode_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "childNodes":
+			out.Values[i] = ec._LogicalOperationKPINode_childNodes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
 
 var mutationImplementors = []string{"Mutation"}
 
@@ -3336,10 +4707,233 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteSDType(ctx, field)
 			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "updateSDInstance":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateSDInstance(ctx, field)
 			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var numericEQKPIAtomNodeImplementors = []string{"NumericEQKPIAtomNode", "KPINode"}
+
+func (ec *executionContext) _NumericEQKPIAtomNode(ctx context.Context, sel ast.SelectionSet, obj *model.NumericEQKPIAtomNode) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, numericEQKPIAtomNodeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NumericEQKPIAtomNode")
+		case "sdParameterSpecification":
+			out.Values[i] = ec._NumericEQKPIAtomNode_sdParameterSpecification(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "referenceValue":
+			out.Values[i] = ec._NumericEQKPIAtomNode_referenceValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var numericGEQKPIAtomNodeImplementors = []string{"NumericGEQKPIAtomNode", "KPINode"}
+
+func (ec *executionContext) _NumericGEQKPIAtomNode(ctx context.Context, sel ast.SelectionSet, obj *model.NumericGEQKPIAtomNode) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, numericGEQKPIAtomNodeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NumericGEQKPIAtomNode")
+		case "sdParameterSpecification":
+			out.Values[i] = ec._NumericGEQKPIAtomNode_sdParameterSpecification(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "referenceValue":
+			out.Values[i] = ec._NumericGEQKPIAtomNode_referenceValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var numericGTKPIAtomNodeImplementors = []string{"NumericGTKPIAtomNode", "KPINode"}
+
+func (ec *executionContext) _NumericGTKPIAtomNode(ctx context.Context, sel ast.SelectionSet, obj *model.NumericGTKPIAtomNode) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, numericGTKPIAtomNodeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NumericGTKPIAtomNode")
+		case "sdParameterSpecification":
+			out.Values[i] = ec._NumericGTKPIAtomNode_sdParameterSpecification(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "referenceValue":
+			out.Values[i] = ec._NumericGTKPIAtomNode_referenceValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var numericLEQKPIAtomNodeImplementors = []string{"NumericLEQKPIAtomNode", "KPINode"}
+
+func (ec *executionContext) _NumericLEQKPIAtomNode(ctx context.Context, sel ast.SelectionSet, obj *model.NumericLEQKPIAtomNode) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, numericLEQKPIAtomNodeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NumericLEQKPIAtomNode")
+		case "sdParameterSpecification":
+			out.Values[i] = ec._NumericLEQKPIAtomNode_sdParameterSpecification(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "referenceValue":
+			out.Values[i] = ec._NumericLEQKPIAtomNode_referenceValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var numericLTKPIAtomNodeImplementors = []string{"NumericLTKPIAtomNode", "KPINode"}
+
+func (ec *executionContext) _NumericLTKPIAtomNode(ctx context.Context, sel ast.SelectionSet, obj *model.NumericLTKPIAtomNode) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, numericLTKPIAtomNodeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NumericLTKPIAtomNode")
+		case "sdParameterSpecification":
+			out.Values[i] = ec._NumericLTKPIAtomNode_sdParameterSpecification(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "referenceValue":
+			out.Values[i] = ec._NumericLTKPIAtomNode_referenceValue(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3503,6 +5097,11 @@ func (ec *executionContext) _SDInstance(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "confirmedByUser":
+			out.Values[i] = ec._SDInstance_confirmedByUser(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "userIdentifier":
 			out.Values[i] = ec._SDInstance_userIdentifier(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3608,6 +5207,50 @@ func (ec *executionContext) _SDType(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "parameters":
 			out.Values[i] = ec._SDType_parameters(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var stringEQKPIAtomNodeImplementors = []string{"StringEQKPIAtomNode", "KPINode"}
+
+func (ec *executionContext) _StringEQKPIAtomNode(ctx context.Context, sel ast.SelectionSet, obj *model.StringEQKPIAtomNode) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, stringEQKPIAtomNodeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("StringEQKPIAtomNode")
+		case "sdParameterSpecification":
+			out.Values[i] = ec._StringEQKPIAtomNode_sdParameterSpecification(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "referenceValue":
+			out.Values[i] = ec._StringEQKPIAtomNode_referenceValue(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3975,6 +5618,21 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	res := graphql.MarshalFloatContext(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return graphql.WrapContextMarshaler(ctx, res)
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3988,6 +5646,70 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNKPINode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINode(ctx context.Context, sel ast.SelectionSet, v model.KPINode) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._KPINode(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNKPINode2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINodeᚄ(ctx context.Context, sel ast.SelectionSet, v []model.KPINode) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNKPINode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINode(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNLogicalOperationKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐLogicalOperationKPINodeType(ctx context.Context, v interface{}) (model.LogicalOperationKPINodeType, error) {
+	var res model.LogicalOperationKPINodeType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNLogicalOperationKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐLogicalOperationKPINodeType(ctx context.Context, sel ast.SelectionSet, v model.LogicalOperationKPINodeType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNSDInstance2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstance(ctx context.Context, sel ast.SelectionSet, v model.SDInstance) graphql.Marshaler {
@@ -4046,6 +5768,11 @@ func (ec *executionContext) marshalNSDInstance2ᚖgithubᚗcomᚋMichalBuresᚑO
 		return graphql.Null
 	}
 	return ec._SDInstance(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSDInstanceUpdateInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceUpdateInput(ctx context.Context, v interface{}) (model.SDInstanceUpdateInput, error) {
+	res, err := ec.unmarshalInputSDInstanceUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNSDParameter2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SDParameter) graphql.Marshaler {
@@ -4489,6 +6216,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOKPINode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINode(ctx context.Context, sel ast.SelectionSet, v model.KPINode) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._KPINode(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

@@ -66,11 +66,12 @@ func (SDParameterEntity) TableName() string {
 }
 
 type SDInstanceEntity struct {
-	ID             uint32       `gorm:"column:id;primarykey;not null"`
-	UID            string       `gorm:"column:uid;not null"`
-	UserIdentifier string       `gorm:"column:user_identifier;not null"`
-	SDTypeID       uint32       `gorm:"column:sd_type_id"`
-	SDType         SDTypeEntity `gorm:"foreignKey:SDTypeID"`
+	ID              uint32       `gorm:"column:id;primarykey;not null"`
+	UID             string       `gorm:"column:uid;not null"`
+	ConfirmedByUser bool         `gorm:"column:confirmed_by_user;not null"`
+	UserIdentifier  string       `gorm:"column:user_identifier;not null"`
+	SDTypeID        uint32       `gorm:"column:sd_type_id"`
+	SDType          SDTypeEntity `gorm:"foreignKey:SDTypeID"`
 }
 
 func (SDInstanceEntity) TableName() string {

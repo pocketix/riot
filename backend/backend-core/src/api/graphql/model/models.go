@@ -8,17 +8,82 @@ import (
 	"strconv"
 )
 
+type KPINode interface {
+	IsKPINode()
+}
+
+type BooleanEQKPIAtomNode struct {
+	SdParameterSpecification string `json:"sdParameterSpecification"`
+	ReferenceValue           bool   `json:"referenceValue"`
+}
+
+func (BooleanEQKPIAtomNode) IsKPINode() {}
+
+type KPIDefinition struct {
+	SdTypeSpecification string  `json:"sdTypeSpecification"`
+	UserIdentifier      string  `json:"userIdentifier"`
+	RootNode            KPINode `json:"rootNode,omitempty"`
+}
+
+type LogicalOperationKPINode struct {
+	Type       LogicalOperationKPINodeType `json:"type"`
+	ChildNodes []KPINode                   `json:"childNodes"`
+}
+
+func (LogicalOperationKPINode) IsKPINode() {}
+
 type Mutation struct {
 }
+
+type NumericEQKPIAtomNode struct {
+	SdParameterSpecification string  `json:"sdParameterSpecification"`
+	ReferenceValue           float64 `json:"referenceValue"`
+}
+
+func (NumericEQKPIAtomNode) IsKPINode() {}
+
+type NumericGEQKPIAtomNode struct {
+	SdParameterSpecification string  `json:"sdParameterSpecification"`
+	ReferenceValue           float64 `json:"referenceValue"`
+}
+
+func (NumericGEQKPIAtomNode) IsKPINode() {}
+
+type NumericGTKPIAtomNode struct {
+	SdParameterSpecification string  `json:"sdParameterSpecification"`
+	ReferenceValue           float64 `json:"referenceValue"`
+}
+
+func (NumericGTKPIAtomNode) IsKPINode() {}
+
+type NumericLEQKPIAtomNode struct {
+	SdParameterSpecification string  `json:"sdParameterSpecification"`
+	ReferenceValue           float64 `json:"referenceValue"`
+}
+
+func (NumericLEQKPIAtomNode) IsKPINode() {}
+
+type NumericLTKPIAtomNode struct {
+	SdParameterSpecification string  `json:"sdParameterSpecification"`
+	ReferenceValue           float64 `json:"referenceValue"`
+}
+
+func (NumericLTKPIAtomNode) IsKPINode() {}
 
 type Query struct {
 }
 
 type SDInstance struct {
-	ID             string  `json:"id"`
-	UID            string  `json:"uid"`
-	UserIdentifier string  `json:"userIdentifier"`
-	Type           *SDType `json:"type"`
+	ID              string  `json:"id"`
+	UID             string  `json:"uid"`
+	ConfirmedByUser bool    `json:"confirmedByUser"`
+	UserIdentifier  string  `json:"userIdentifier"`
+	Type            *SDType `json:"type"`
+}
+
+type SDInstanceUpdateInput struct {
+	UserIdentifier  *string `json:"userIdentifier,omitempty"`
+	ConfirmedByUser *bool   `json:"confirmedByUser,omitempty"`
 }
 
 type SDParameter struct {
@@ -41,6 +106,56 @@ type SDType struct {
 type SDTypeInput struct {
 	Denotation string              `json:"denotation"`
 	Parameters []*SDParameterInput `json:"parameters"`
+}
+
+type StringEQKPIAtomNode struct {
+	SdParameterSpecification string `json:"sdParameterSpecification"`
+	ReferenceValue           string `json:"referenceValue"`
+}
+
+func (StringEQKPIAtomNode) IsKPINode() {}
+
+type LogicalOperationKPINodeType string
+
+const (
+	LogicalOperationKPINodeTypeAnd LogicalOperationKPINodeType = "AND"
+	LogicalOperationKPINodeTypeOr  LogicalOperationKPINodeType = "OR"
+	LogicalOperationKPINodeTypeNor LogicalOperationKPINodeType = "NOR"
+)
+
+var AllLogicalOperationKPINodeType = []LogicalOperationKPINodeType{
+	LogicalOperationKPINodeTypeAnd,
+	LogicalOperationKPINodeTypeOr,
+	LogicalOperationKPINodeTypeNor,
+}
+
+func (e LogicalOperationKPINodeType) IsValid() bool {
+	switch e {
+	case LogicalOperationKPINodeTypeAnd, LogicalOperationKPINodeTypeOr, LogicalOperationKPINodeTypeNor:
+		return true
+	}
+	return false
+}
+
+func (e LogicalOperationKPINodeType) String() string {
+	return string(e)
+}
+
+func (e *LogicalOperationKPINodeType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = LogicalOperationKPINodeType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid LogicalOperationKPINodeType", str)
+	}
+	return nil
+}
+
+func (e LogicalOperationKPINodeType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type SDParameterType string

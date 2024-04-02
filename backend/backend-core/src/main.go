@@ -13,14 +13,13 @@ import (
 )
 
 func main() {
+	// Set up PostgreSQL database and its client
 	db.SetupRelationalDatabaseClient()
+	// Set up RabbitMQ "infrastructure"
 	rabbitmq.SetupRabbitMQ()
+	// Set up the Fiber web application and GraphQL API
 	app := fiber.New()
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:1234",
-	}))
-	app.Use("/", adaptor.HTTPHandler(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graphql.Resolver{
-		RdbClientInstance: db.GetRelationalDatabaseClientInstance(),
-	}}))))
+	app.Use(cors.New(cors.Config{AllowOrigins: "http://localhost:1234"}))
+	app.Use("/", adaptor.HTTPHandler(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graphql.Resolver{}}))))
 	log.Fatal(app.Listen(":9090"))
 }

@@ -1,3 +1,5 @@
+# ----- SD types and instances -----
+
 enum SDParameterType {
   STRING
   NUMBER
@@ -29,9 +31,73 @@ input SDTypeInput {
 type SDInstance {
   id: ID!
   uid: String!
+  confirmedByUser: Boolean!
   userIdentifier: String!
   type: SDType!
 }
+
+input SDInstanceUpdateInput {
+  userIdentifier: String
+  confirmedByUser: Boolean
+}
+
+# ----- KPIs -----
+
+type KPIDefinition {
+  sdTypeSpecification: String!
+  userIdentifier: String!
+  rootNode: KPINode
+}
+
+union KPINode = StringEQKPIAtomNode | BooleanEQKPIAtomNode | NumericEQKPIAtomNode | NumericGTKPIAtomNode | NumericGEQKPIAtomNode | NumericLTKPIAtomNode | NumericLEQKPIAtomNode | LogicalOperationKPINode
+
+type StringEQKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: String!
+}
+
+type BooleanEQKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: Boolean!
+}
+
+type NumericEQKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: Float!
+}
+
+type NumericGTKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: Float!
+}
+
+type NumericGEQKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: Float!
+}
+
+type NumericLTKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: Float!
+}
+
+type NumericLEQKPIAtomNode {
+  sdParameterSpecification: String!
+  referenceValue: Float!
+}
+
+enum LogicalOperationKPINodeType {
+  AND
+  OR
+  NOR
+}
+
+type LogicalOperationKPINode {
+  type: LogicalOperationKPINodeType!
+  childNodes: [KPINode!]!
+}
+
+# ----- Queries and Mutations -----
 
 type Query {
   sdType(id: ID!): SDType!
@@ -41,6 +107,6 @@ type Query {
 
 type Mutation {
   createSDType(input: SDTypeInput!): SDType!
-  deleteSDType(id: ID!): Boolean
-  updateSDInstance(id: ID!, newUserIdentifier: String!): SDInstance!
+  deleteSDType(id: ID!): Boolean!
+  updateSDInstance(id: ID!, input: SDInstanceUpdateInput!): SDInstance!
 }
