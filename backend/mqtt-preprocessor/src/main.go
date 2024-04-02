@@ -36,8 +36,8 @@ func generateNewKPIFulfillmentCheckRequest(ctx context.Context, channel *amqp.Ch
 	rabbitmq.EnqueueJSONMessage(ctx, channel, constants.KPIFulfillmentCheckRequestsQueueName, messagePayload, &errorMessage)
 }
 
-func checkForSDTypeListUpdates(channel *amqp.Channel) {
-	rabbitMQMessageChannel, err := channel.Consume(constants.SDTypeListUpdatesQueueName, "", true, false, false, false, nil)
+func checkForSetOfSDTypesUpdates(channel *amqp.Channel) {
+	rabbitMQMessageChannel, err := channel.Consume(constants.SetOfSDTypesUpdatesQueueName, "", true, false, false, false, nil)
 	cUtil.TerminateOnError(err, fmt.Sprintf("Failed to register a consumer: %s", err))
 	for rabbitMQMessage := range rabbitMQMessageChannel {
 		messageContentType := rabbitMQMessage.ContentType
@@ -47,7 +47,7 @@ func checkForSDTypeListUpdates(channel *amqp.Channel) {
 		}
 		var updatedSDTypesSlice []string
 		if err := json.Unmarshal(rabbitMQMessage.Body, &updatedSDTypesSlice); err != nil {
-			log.Printf("Failed to unmarshall a RabbitMQ message from the '%s' queue: it's not a JSON array of strings\n", constants.SDTypeListUpdatesQueueName)
+			log.Printf("Failed to unmarshall a RabbitMQ message from the '%s' queue: it's not a JSON array of strings\n", constants.SetOfSDTypesUpdatesQueueName)
 			continue
 		}
 		updatedSDTypes := cUtil.SliceToSet(updatedSDTypesSlice)
@@ -113,7 +113,7 @@ func main() {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		checkForSDTypeListUpdates(channel)
+		checkForSetOfSDTypesUpdates(channel)
 	}()
 	mqttClient := mqtt.NewEclipsePahoBasedMqttClient(mqttBrokerURI, mqttClientID, mqttBrokerUsername, mqttBrokerPassword)
 	cUtil.TerminateOnError(mqttClient.Connect(), fmt.Sprintf("Failed to connect to the MQTT broker [%s]", mqttBrokerURI))

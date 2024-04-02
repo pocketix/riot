@@ -1,7 +1,10 @@
 package db
 
 import (
+	"errors"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/schema"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/db2dto"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2db"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
 	cUtil "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
@@ -17,15 +20,15 @@ const (
 type RelationalDatabaseClient interface {
 	ConnectToDatabase() error
 	InitializeDatabase() error
-	PersistKPIDefinition(kpiDefinition kpi.DefinitionDTO) cUtil.Result[uint32]
+	PersistKPIDefinition(kpiDefinitionDTO kpi.DefinitionDTO) cUtil.Result[uint32]
 	LoadKPIDefinition(id uint32) cUtil.Result[kpi.DefinitionDTO]
 	LoadKPIDefinitions() cUtil.Result[[]kpi.DefinitionDTO]
 	DeleteKPIDefinition(id uint32) error
-	PersistSDType(sdType types.SDTypeDTO) cUtil.Result[uint32]
+	PersistSDType(sdTypeDTO types.SDTypeDTO) cUtil.Result[uint32]
 	LoadSDType(id uint32) cUtil.Result[types.SDTypeDTO]
 	LoadSDTypes() cUtil.Result[[]types.SDTypeDTO]
 	DeleteSDType(id uint32) error
-	PersistSDInstance(sdInstance types.SDInstanceDTO) cUtil.Result[uint32]
+	PersistSDInstance(sdInstanceDTO types.SDInstanceDTO) cUtil.Result[uint32]
 	LoadSDInstance(id uint32) cUtil.Result[types.SDInstanceDTO]
 	LoadSDInstances() cUtil.Result[[]types.SDInstanceDTO]
 	DeleteSDInstance(id uint32) error
@@ -69,62 +72,112 @@ func (r *relationalDatabaseClientImpl) InitializeDatabase() error {
 	)
 }
 
-func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition kpi.DefinitionDTO) cUtil.Result[uint32] {
+func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinitionDTO kpi.DefinitionDTO) cUtil.Result[uint32] {
 	// TODO: Implement
-	return cUtil.NewFailureResult[uint32](nil)
+	return cUtil.NewFailureResult[uint32](errors.New("[rdb client] not implemented"))
 }
 
 func (r *relationalDatabaseClientImpl) LoadKPIDefinition(id uint32) cUtil.Result[kpi.DefinitionDTO] {
 	// TODO: Implement
-	return cUtil.NewFailureResult[kpi.DefinitionDTO](nil)
+	return cUtil.NewFailureResult[kpi.DefinitionDTO](errors.New("[rdb client] not implemented"))
 }
 
 func (r *relationalDatabaseClientImpl) LoadKPIDefinitions() cUtil.Result[[]kpi.DefinitionDTO] {
 	// TODO: Implement
-	return cUtil.NewFailureResult[[]kpi.DefinitionDTO](nil)
+	return cUtil.NewFailureResult[[]kpi.DefinitionDTO](errors.New("[rdb client] not implemented"))
 }
 
 func (r *relationalDatabaseClientImpl) DeleteKPIDefinition(id uint32) error {
 	// TODO: Implement
-	return nil
+	return errors.New("[rdb client] not implemented")
 }
 
-func (r *relationalDatabaseClientImpl) PersistSDType(sdType types.SDTypeDTO) cUtil.Result[uint32] {
-	// TODO: Implement
-	return cUtil.NewFailureResult[uint32](nil)
+func (r *relationalDatabaseClientImpl) PersistSDType(sdTypeDTO types.SDTypeDTO) cUtil.Result[uint32] {
+	sdTypeEntity := dto2db.SDTypeDTOToSDTypeEntity(sdTypeDTO)
+	err := r.db.Save(&sdTypeEntity).Error
+	if err != nil {
+		return cUtil.NewFailureResult[uint32](err)
+	}
+	return cUtil.NewSuccessResult[uint32](sdTypeEntity.ID)
 }
 
 func (r *relationalDatabaseClientImpl) LoadSDType(id uint32) cUtil.Result[types.SDTypeDTO] {
-	// TODO: Implement
-	return cUtil.NewFailureResult[types.SDTypeDTO](nil)
+	var sdTypeEntity schema.SDTypeEntity
+	err := r.db.Preload("Parameters").Where("id = ?", id).First(&sdTypeEntity).Error
+	if err != nil {
+		return cUtil.NewFailureResult[types.SDTypeDTO](err)
+	}
+	return cUtil.NewSuccessResult[types.SDTypeDTO](db2dto.SDTypeEntityToSDTypeDTO(sdTypeEntity))
 }
 
 func (r *relationalDatabaseClientImpl) LoadSDTypes() cUtil.Result[[]types.SDTypeDTO] {
-	// TODO: Implement
-	return cUtil.NewFailureResult[[]types.SDTypeDTO](nil)
+	var sdTypeEntities []schema.SDTypeEntity
+	err := r.db.Preload("Parameters").Find(&sdTypeEntities).Error
+	if err != nil {
+		return cUtil.NewFailureResult[[]types.SDTypeDTO](err)
+	}
+	return cUtil.NewSuccessResult[[]types.SDTypeDTO](cUtil.Map(sdTypeEntities, db2dto.SDTypeEntityToSDTypeDTO))
 }
 
 func (r *relationalDatabaseClientImpl) DeleteSDType(id uint32) error {
-	// TODO: Implement
+	var err error
+	var sdInstanceEntities []schema.SDInstanceEntity
+	err = r.db.Find(&sdInstanceEntities).Error
+	if err != nil {
+		return err
+	}
+	if cUtil.Any(sdInstanceEntities, func(sdInstanceEntity schema.SDInstanceEntity) bool { return sdInstanceEntity.SDTypeID == id }) {
+		return errors.New("cannot delete SD type with existing SD instances tied to it")
+	}
+	tx := r.db.Begin()
+	err = tx.Where("sd_type_id = ?", id).Delete(&schema.SDParameterEntity{}).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	err = tx.Delete(&schema.SDTypeEntity{}, id).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
 	return nil
 }
 
-func (r *relationalDatabaseClientImpl) PersistSDInstance(sdInstance types.SDInstanceDTO) cUtil.Result[uint32] {
+func (r *relationalDatabaseClientImpl) PersistSDInstance(sdInstanceDTO types.SDInstanceDTO) cUtil.Result[uint32] {
 	// TODO: Implement
-	return cUtil.NewFailureResult[uint32](nil)
+	return cUtil.NewFailureResult[uint32](errors.New("[rdb client] not implemented"))
 }
 
 func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) cUtil.Result[types.SDInstanceDTO] {
 	// TODO: Implement
-	return cUtil.NewFailureResult[types.SDInstanceDTO](nil)
+	return cUtil.NewFailureResult[types.SDInstanceDTO](errors.New("[rdb client] not implemented"))
 }
 
 func (r *relationalDatabaseClientImpl) LoadSDInstances() cUtil.Result[[]types.SDInstanceDTO] {
-	// TODO: Implement
-	return cUtil.NewFailureResult[[]types.SDInstanceDTO](nil)
+	var err error
+	var sdInstanceEntities []schema.SDInstanceEntity
+	err = r.db.Find(&sdInstanceEntities).Error
+	if err != nil {
+		return cUtil.NewFailureResult[[]types.SDInstanceDTO](err)
+	}
+	var sdTypeEntities []schema.SDTypeEntity
+	err = r.db.Preload("Parameters").Find(&sdTypeEntities).Error
+	if err != nil {
+		return cUtil.NewFailureResult[[]types.SDInstanceDTO](err)
+	}
+	sdTypeEntityByIdMap := make(map[uint32]schema.SDTypeEntity)
+	for _, sdTypeEntity := range sdTypeEntities {
+		sdTypeEntityByIdMap[sdTypeEntity.ID] = sdTypeEntity
+	}
+	for index, sdInstanceEntity := range sdInstanceEntities {
+		sdInstanceEntity.SDType = sdTypeEntityByIdMap[sdInstanceEntity.SDTypeID]
+		sdInstanceEntities[index] = sdInstanceEntity
+	}
+	return cUtil.NewSuccessResult[[]types.SDInstanceDTO](cUtil.Map(sdInstanceEntities, db2dto.SDInstanceEntityToSDInstanceDTO))
 }
 
 func (r *relationalDatabaseClientImpl) DeleteSDInstance(id uint32) error {
 	// TODO: Implement
-	return nil
+	return errors.New("[rdb client] not implemented")
 }

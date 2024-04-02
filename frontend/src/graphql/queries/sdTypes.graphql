@@ -1,14 +1,14 @@
-query DeviceTypes {
-  deviceTypes {
+query SDTypes {
+  sdTypes {
     id
     denotation
     parameters {
       id
-      name
+      denotation
       type
     }
   }
-  devices {
+  sdInstances {
     type {
       id
     }

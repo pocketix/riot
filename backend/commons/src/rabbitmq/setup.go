@@ -11,6 +11,7 @@ func SetupRabbitMQ() {
 	util.TerminateOnError(err, "Failed to connect to RabbitMQ")
 	channel, err := connection.Channel()
 	util.TerminateOnError(err, "Failed to open a channel")
-	DeclareStandardRabbitMQQueue(channel, constants.SDTypeListUpdatesQueueName)
 	DeclareStandardRabbitMQQueue(channel, constants.KPIFulfillmentCheckRequestsQueueName)
+	DeclareStandardRabbitMQQueue(channel, constants.SDInstanceRegistrationRequestsQueueName)
+	DeclareStandardRabbitMQQueue(channel, constants.SetOfSDTypesUpdatesQueueName)
 }

@@ -23,13 +23,13 @@ func EMap[T any, U any](sourceSlice []T, mappingFunction func(T) (U, error)) ([]
 }
 
 // FindFirst is a custom functional programming helper function useful to find the first item in a slice that satisfies the supplied predicate. If there is no such item, the function returns nil.
-func FindFirst[T any](sourceSlice []T, predicate func(T) bool) *T {
-	for index, sourceSliceItem := range sourceSlice {
+func FindFirst[T any](sourceSlice []T, predicate func(T) bool) Optional[T] {
+	for _, sourceSliceItem := range sourceSlice {
 		if predicate(sourceSliceItem) {
-			return &sourceSlice[index]
+			return NewOptionalOf[T](sourceSliceItem)
 		}
 	}
-	return nil
+	return NewEmptyOptional[T]()
 }
 
 // Any is a custom functional programming helper function useful to check if there is any item in the slice that satisfies the supplied predicate.

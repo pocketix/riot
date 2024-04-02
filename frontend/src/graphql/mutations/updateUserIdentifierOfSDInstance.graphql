@@ -1,0 +1,17 @@
+mutation UpdateUserIdentifierOfSDInstance($id: ID!, $newUserIdentifier: String!) {
+  updateSDInstance(id: $id, input: {userIdentifier: $newUserIdentifier}) {
+    id,
+    uid
+    confirmedByUser,
+    userIdentifier,
+    type {
+      id,
+      denotation,
+      parameters {
+        id
+        denotation
+        type
+      }
+    }
+  }
+}

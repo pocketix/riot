@@ -6,7 +6,7 @@ type RequestForKPIFulfillmentCheck struct {
 	Parameters interface{} `json:"parameters"`
 }
 
-type RequestForSDRegistration struct {
+type RequestForSDInstanceRegistration struct {
 	Timestamp float32 `json:"timestamp"`
 	SD        SDInfo  `json:"sd"`
 }

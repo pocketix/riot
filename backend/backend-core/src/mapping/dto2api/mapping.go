@@ -36,6 +36,6 @@ func SDInstanceDTOToSDInstance(sdInstanceDTO types.SDInstanceDTO) *model.SDInsta
 		UID:             sdInstanceDTO.UID,
 		ConfirmedByUser: sdInstanceDTO.ConfirmedByUser,
 		UserIdentifier:  sdInstanceDTO.UserIdentifier,
-		Type:            SDTypeDTOToSDType(sdInstanceDTO.SDType.GetPayload()),
+		Type:            SDTypeDTOToSDType(sdInstanceDTO.SDType),
 	}
 }

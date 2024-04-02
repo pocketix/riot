@@ -55,10 +55,10 @@ func (SDTypeEntity) TableName() string {
 }
 
 type SDParameterEntity struct {
-	ID       uint32 `gorm:"column:id;primarykey;not null"`
-	SDTypeID uint32 `gorm:"column:sd_type_id;not null"`
-	Name     string `gorm:"column:name;not null"`
-	Type     string `gorm:"column:type;not null"`
+	ID         uint32 `gorm:"column:id;primarykey;not null"`
+	SDTypeID   uint32 `gorm:"column:sd_type_id;not null"`
+	Denotation string `gorm:"column:denotation;not null"`
+	Type       string `gorm:"column:type;not null"`
 }
 
 func (SDParameterEntity) TableName() string {

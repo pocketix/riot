@@ -27,5 +27,5 @@ type SDInstanceDTO struct {
 	UID             string
 	ConfirmedByUser bool
 	UserIdentifier  string
-	SDType          util.Optional[SDTypeDTO]
+	SDType          SDTypeDTO
 }

@@ -14,107 +14,176 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
-export type Device = {
-  __typename?: 'Device';
-  id: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-  type: DeviceType;
-  uid: Scalars['String']['output'];
+export type BooleanEqkpiAtomNode = {
+  __typename?: 'BooleanEQKPIAtomNode';
+  referenceValue: Scalars['Boolean']['output'];
+  sdParameterSpecification: Scalars['String']['output'];
 };
 
-export type DeviceType = {
-  __typename?: 'DeviceType';
+export type KpiDefinition = {
+  __typename?: 'KPIDefinition';
+  rootNode?: Maybe<KpiNode>;
+  sdTypeSpecification: Scalars['String']['output'];
+  userIdentifier: Scalars['String']['output'];
+};
+
+export type KpiNode = BooleanEqkpiAtomNode | LogicalOperationKpiNode | NumericEqkpiAtomNode | NumericGeqkpiAtomNode | NumericGtkpiAtomNode | NumericLeqkpiAtomNode | NumericLtkpiAtomNode | StringEqkpiAtomNode;
+
+export type LogicalOperationKpiNode = {
+  __typename?: 'LogicalOperationKPINode';
+  childNodes: Array<KpiNode>;
+  type: LogicalOperationKpiNodeType;
+};
+
+export enum LogicalOperationKpiNodeType {
+  And = 'AND',
+  Nor = 'NOR',
+  Or = 'OR'
+}
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  createSDType: SdType;
+  deleteSDType: Scalars['Boolean']['output'];
+  updateSDInstance: SdInstance;
+};
+
+
+export type MutationCreateSdTypeArgs = {
+  input: SdTypeInput;
+};
+
+
+export type MutationDeleteSdTypeArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateSdInstanceArgs = {
+  id: Scalars['ID']['input'];
+  input: SdInstanceUpdateInput;
+};
+
+export type NumericEqkpiAtomNode = {
+  __typename?: 'NumericEQKPIAtomNode';
+  referenceValue: Scalars['Float']['output'];
+  sdParameterSpecification: Scalars['String']['output'];
+};
+
+export type NumericGeqkpiAtomNode = {
+  __typename?: 'NumericGEQKPIAtomNode';
+  referenceValue: Scalars['Float']['output'];
+  sdParameterSpecification: Scalars['String']['output'];
+};
+
+export type NumericGtkpiAtomNode = {
+  __typename?: 'NumericGTKPIAtomNode';
+  referenceValue: Scalars['Float']['output'];
+  sdParameterSpecification: Scalars['String']['output'];
+};
+
+export type NumericLeqkpiAtomNode = {
+  __typename?: 'NumericLEQKPIAtomNode';
+  referenceValue: Scalars['Float']['output'];
+  sdParameterSpecification: Scalars['String']['output'];
+};
+
+export type NumericLtkpiAtomNode = {
+  __typename?: 'NumericLTKPIAtomNode';
+  referenceValue: Scalars['Float']['output'];
+  sdParameterSpecification: Scalars['String']['output'];
+};
+
+export type Query = {
+  __typename?: 'Query';
+  sdInstances: Array<SdInstance>;
+  sdType: SdType;
+  sdTypes: Array<SdType>;
+};
+
+
+export type QuerySdTypeArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type SdInstance = {
+  __typename?: 'SDInstance';
+  confirmedByUser: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  type: SdType;
+  uid: Scalars['String']['output'];
+  userIdentifier: Scalars['String']['output'];
+};
+
+export type SdInstanceUpdateInput = {
+  confirmedByUser?: InputMaybe<Scalars['Boolean']['input']>;
+  userIdentifier?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type SdParameter = {
+  __typename?: 'SDParameter';
   denotation: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  parameters: Array<DeviceTypeParameter>;
+  type: SdParameterType;
 };
 
-export type DeviceTypeParameter = {
-  __typename?: 'DeviceTypeParameter';
-  id: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-  type: DeviceTypeParameterType;
+export type SdParameterInput = {
+  denotation: Scalars['String']['input'];
+  type: SdParameterType;
 };
 
-export type DeviceTypeParameterInput = {
-  name: Scalars['String']['input'];
-  type: DeviceTypeParameterType;
-};
-
-export enum DeviceTypeParameterType {
+export enum SdParameterType {
   Boolean = 'BOOLEAN',
   Number = 'NUMBER',
   String = 'STRING'
 }
 
-export type Mutation = {
-  __typename?: 'Mutation';
-  createNewDeviceType: DeviceType;
-  deleteDeviceType?: Maybe<Scalars['Boolean']['output']>;
-  updateDeviceName: Device;
+export type SdType = {
+  __typename?: 'SDType';
+  denotation: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  parameters: Array<SdParameter>;
 };
 
-
-export type MutationCreateNewDeviceTypeArgs = {
-  input: NewDeviceTypeInput;
-};
-
-
-export type MutationDeleteDeviceTypeArgs = {
-  input: Scalars['ID']['input'];
-};
-
-
-export type MutationUpdateDeviceNameArgs = {
-  id: Scalars['ID']['input'];
-  newName: Scalars['String']['input'];
-};
-
-export type NewDeviceTypeInput = {
+export type SdTypeInput = {
   denotation: Scalars['String']['input'];
-  parameters: Array<DeviceTypeParameterInput>;
+  parameters: Array<SdParameterInput>;
 };
 
-export type Query = {
-  __typename?: 'Query';
-  deviceTypes: Array<DeviceType>;
-  devices: Array<Device>;
-  singleDeviceType: DeviceType;
+export type StringEqkpiAtomNode = {
+  __typename?: 'StringEQKPIAtomNode';
+  referenceValue: Scalars['String']['output'];
+  sdParameterSpecification: Scalars['String']['output'];
 };
 
-
-export type QuerySingleDeviceTypeArgs = {
-  input: Scalars['ID']['input'];
-};
-
-export type CreateNewDeviceTypeMutationVariables = Exact<{
-  input: NewDeviceTypeInput;
+export type CreateSdTypeMutationVariables = Exact<{
+  input: SdTypeInput;
 }>;
 
 
-export type CreateNewDeviceTypeMutation = { __typename?: 'Mutation', createNewDeviceType: { __typename?: 'DeviceType', id: string, denotation: string, parameters: Array<{ __typename?: 'DeviceTypeParameter', id: string, name: string, type: DeviceTypeParameterType }> } };
+export type CreateSdTypeMutation = { __typename?: 'Mutation', createSDType: { __typename?: 'SDType', id: string, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: string, denotation: string, type: SdParameterType }> } };
 
-export type DeleteDeviceTypeMutationVariables = Exact<{
-  input: Scalars['ID']['input'];
-}>;
-
-
-export type DeleteDeviceTypeMutation = { __typename?: 'Mutation', deleteDeviceType?: boolean | null };
-
-export type UpdateDeviceNameMutationVariables = Exact<{
+export type DeleteSdTypeMutationVariables = Exact<{
   id: Scalars['ID']['input'];
-  newName: Scalars['String']['input'];
 }>;
 
 
-export type UpdateDeviceNameMutation = { __typename?: 'Mutation', updateDeviceName: { __typename?: 'Device', id: string } };
+export type DeleteSdTypeMutation = { __typename?: 'Mutation', deleteSDType: boolean };
 
-export type DeviceTypesQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type DeviceTypesQuery = { __typename?: 'Query', deviceTypes: Array<{ __typename?: 'DeviceType', id: string, denotation: string, parameters: Array<{ __typename?: 'DeviceTypeParameter', id: string, name: string, type: DeviceTypeParameterType }> }>, devices: Array<{ __typename?: 'Device', type: { __typename?: 'DeviceType', id: string } }> };
-
-export type DevicesQueryVariables = Exact<{ [key: string]: never; }>;
+export type UpdateUserIdentifierOfSdInstanceMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  newUserIdentifier: Scalars['String']['input'];
+}>;
 
 
-export type DevicesQuery = { __typename?: 'Query', devices: Array<{ __typename?: 'Device', id: string, uid: string, name: string, type: { __typename?: 'DeviceType', id: string, denotation: string } }> };
+export type UpdateUserIdentifierOfSdInstanceMutation = { __typename?: 'Mutation', updateSDInstance: { __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: string, denotation: string, type: SdParameterType }> } } };
+
+export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }> };
+
+export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SdTypesQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: string, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: string, denotation: string, type: SdParameterType }> }>, sdInstances: Array<{ __typename?: 'SDInstance', type: { __typename?: 'SDType', id: string } }> };

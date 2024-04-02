@@ -1,8 +1,8 @@
-query Devices {
-  devices {
+query SDInstances {
+  sdInstances {
     id
     uid
-    name
+    userIdentifier
     type {
       id
       denotation

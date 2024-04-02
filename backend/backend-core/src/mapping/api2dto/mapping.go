@@ -13,7 +13,7 @@ func SDTypeInputToSDTypeDTO(sdTypeInput model.SDTypeInput) types.SDTypeDTO {
 		Parameters: util.Map(sdTypeInput.Parameters, func(sdParameterInput *model.SDParameterInput) types.SDParameterDTO {
 			return types.SDParameterDTO{
 				ID:         util.NewEmptyOptional[uint32](),
-				Denotation: sdTypeInput.Denotation,
+				Denotation: sdParameterInput.Denotation,
 				Type: func(sdParameterType model.SDParameterType) types.SDParameterType {
 					switch sdParameterType {
 					case model.SDParameterTypeString:

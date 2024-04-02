@@ -1,34 +1,34 @@
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { Collapse } from '@mui/material'
-import styles from './DeviceTypeWidget.module.scss'
+import styles from './SDTypeCard.module.scss'
 import GenericCardTemplate from '../../../../page-independent-components/generic-card-template/GenericCardTemplate'
 
-interface DeviceTypeParameter {
+interface SDTypeParameter {
   id: string
-  name: string
+  denotation: string
   type: 'STRING' | 'NUMBER' | 'BOOLEAN'
 }
 
-interface DeviceTypeWidgetProps {
+interface SDTypeCardProps {
   id: string
   denotation: string
   areParametersDisplayed: boolean
-  parameters: DeviceTypeParameter[]
-  deleteDeviceType: (id: string) => Promise<void>
+  parameters: SDTypeParameter[]
+  deleteSDType: (id: string) => Promise<void>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
-  deviceButtonDisabled: boolean
+  isDeleteButtonDisabled: boolean
 }
 
-const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = (props) => {
-  const deleteButtonDisabled: boolean = useMemo<boolean>(() => props.deviceButtonDisabled || props.anyErrorOccurred, [props.deviceButtonDisabled, props.anyErrorOccurred])
+const SDTypeCard: React.FC<SDTypeCardProps> = (props) => {
+  const deleteButtonDisabled: boolean = useMemo<boolean>(() => props.isDeleteButtonDisabled || props.anyErrorOccurred, [props.isDeleteButtonDisabled, props.anyErrorOccurred])
 
   const onDeleteHandler = useCallback(async () => {
     if (deleteButtonDisabled) {
       return
     }
-    await props.deleteDeviceType(props.id)
-  }, [deleteButtonDisabled, props.deleteDeviceType, props.id])
+    await props.deleteSDType(props.id)
+  }, [deleteButtonDisabled, props.deleteSDType, props.id])
 
   const parameterElements = (
     <>
@@ -36,7 +36,7 @@ const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = (props) => {
         {props.parameters.map((parameter) => (
           <div key={parameter.id} className={styles.parameterElement}>
             <p>
-              Name: <strong>{parameter.name}</strong>
+              Denotation: <strong>{parameter.denotation}</strong>
             </p>
             <p>
               Type: <strong>{parameter.type}</strong>
@@ -68,4 +68,4 @@ const DeviceTypeWidget: React.FC<DeviceTypeWidgetProps> = (props) => {
   )
 }
 
-export default DeviceTypeWidget
+export default SDTypeCard
