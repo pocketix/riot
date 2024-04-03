@@ -13,14 +13,15 @@ import SDInstancesPageController from './pages/sd-instances-page/SDInstancesPage
 const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   uri: 'http://localhost:9090',
   cache: new InMemoryCache(),
-  defaultOptions: { // TODO: Currently bypassing the Apollo Client cache...
+  defaultOptions: {
+    // TODO: Currently bypassing the Apollo Client cache...
     watchQuery: {
-      fetchPolicy: 'network-only',
+      fetchPolicy: 'network-only'
     },
     query: {
-      fetchPolicy: 'network-only',
+      fetchPolicy: 'network-only'
     }
-  },
+  }
 })
 
 const customMuiTheme: Theme = createTheme({

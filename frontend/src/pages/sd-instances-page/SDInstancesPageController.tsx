@@ -1,11 +1,12 @@
 import React, { useCallback } from 'react'
 import { ApolloError, MutationFunction, MutationTuple, QueryResult, useMutation, useQuery } from '@apollo/client'
-import { SdInstancesQuery, SdInstancesQueryVariables, UpdateUserIdentifierOfSdInstanceMutation, UpdateUserIdentifierOfSdInstanceMutationVariables } from '../../generated/graphql'
+import { ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables, SdInstancesQuery, SdInstancesQueryVariables, UpdateUserIdentifierOfSdInstanceMutation, UpdateUserIdentifierOfSdInstanceMutationVariables } from '../../generated/graphql'
 import gql from 'graphql-tag'
 import qSDInstances from '../../graphql/queries/sdInstances.graphql'
 import SDInstancesPageView from './SDInstancesPageView'
 import { RefetchFunction } from '@apollo/client/react/hooks/useSuspenseQuery'
 import mUpdateUserIdentifierOfSDInstance from '../../graphql/mutations/updateUserIdentifierOfSDInstance.graphql'
+import mConfirmSDInstance from '../../graphql/mutations/confirmSDInstance.graphql'
 
 const SDInstancesPageController: React.FC = () => {
   const sdInstancesQueryResult: QueryResult<SdInstancesQuery, SdInstancesQueryVariables> = useQuery<SdInstancesQuery, SdInstancesQueryVariables>(gql(qSDInstances))
@@ -19,8 +20,13 @@ const SDInstancesPageController: React.FC = () => {
   const updateUserIdentifierOfSdInstanceMutationLoading: boolean = updateUserIdentifierOfSdInstanceMutationResult[1].loading
   const updateUserIdentifierOfSdInstanceMutationError: ApolloError | undefined = updateUserIdentifierOfSdInstanceMutationResult[1].error
 
-  const anyLoadingOccurs: boolean = sdInstancesQueryLoading || updateUserIdentifierOfSdInstanceMutationLoading
-  const anyErrorOccurred: boolean = !!sdInstancesQueryError || !!updateUserIdentifierOfSdInstanceMutationError
+  const confirmSdInstanceMutationResult: MutationTuple<ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables> = useMutation<ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables>(gql(mConfirmSDInstance))
+  const confirmSdInstanceMutationFunction: MutationFunction<ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables> = confirmSdInstanceMutationResult[0]
+  const confirmSdInstanceMutationLoading: boolean = confirmSdInstanceMutationResult[1].loading
+  const confirmSdInstanceMutationError: ApolloError | undefined = confirmSdInstanceMutationResult[1].error
+
+  const anyLoadingOccurs: boolean = sdInstancesQueryLoading || updateUserIdentifierOfSdInstanceMutationLoading || confirmSdInstanceMutationLoading
+  const anyErrorOccurred: boolean = !!sdInstancesQueryError || !!updateUserIdentifierOfSdInstanceMutationError || !!confirmSdInstanceMutationError
 
   const refetchSDInstances = useCallback(async (): Promise<void> => {
     await sdInstancesQueryRefetchFunction()
@@ -38,7 +44,18 @@ const SDInstancesPageController: React.FC = () => {
     [updateUserIdentifierOfSdInstanceMutationFunction]
   )
 
-  return <SDInstancesPageView sdInstancesQueryData={sdInstancesQueryData} refetchSDInstances={refetchSDInstances} updateUserIdentifierOfSdInstance={updateUserIdentifierOfSdInstance} anyLoadingOccurs={anyLoadingOccurs} anyErrorOccurred={anyErrorOccurred} />
+  const confirmSdInstance = useCallback(
+    async (id: string): Promise<void> => {
+      await confirmSdInstanceMutationFunction({
+        variables: {
+          id: id
+        }
+      })
+    },
+    [confirmSdInstanceMutationFunction]
+  )
+
+  return <SDInstancesPageView sdInstancesQueryData={sdInstancesQueryData} refetchSDInstances={refetchSDInstances} updateUserIdentifierOfSdInstance={updateUserIdentifierOfSdInstance} confirmSdInstance={confirmSdInstance} anyLoadingOccurs={anyLoadingOccurs} anyErrorOccurred={anyErrorOccurred} />
 }
 
 export default SDInstancesPageController

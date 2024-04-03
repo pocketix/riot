@@ -145,31 +145,39 @@ func (r *relationalDatabaseClientImpl) DeleteSDType(id uint32) error {
 }
 
 func (r *relationalDatabaseClientImpl) PersistSDInstance(sdInstanceDTO types.SDInstanceDTO) cUtil.Result[uint32] {
-	// TODO: Implement
-	return cUtil.NewFailureResult[uint32](errors.New("[rdb client] not implemented"))
+	sdInstanceEntity := dto2db.SDInstanceDTOToSDInstanceEntity(sdInstanceDTO)
+	err := r.db.Save(&sdInstanceEntity).Error
+	if err != nil {
+		return cUtil.NewFailureResult[uint32](err)
+	}
+	return cUtil.NewSuccessResult[uint32](sdInstanceEntity.ID)
 }
 
 func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) cUtil.Result[types.SDInstanceDTO] {
-	// TODO: Implement
-	return cUtil.NewFailureResult[types.SDInstanceDTO](errors.New("[rdb client] not implemented"))
+	var sdInstanceEntity schema.SDInstanceEntity
+	err := r.db.Where("id = ?", id).First(&sdInstanceEntity).Error
+	if err != nil {
+		return cUtil.NewFailureResult[types.SDInstanceDTO](err)
+	}
+	getSDTypeEntityByIdMapResult := r.getSDTypeEntityByIdMap()
+	if getSDTypeEntityByIdMapResult.IsFailure() {
+		return cUtil.NewFailureResult[types.SDInstanceDTO](getSDTypeEntityByIdMapResult.GetError())
+	}
+	sdInstanceEntity.SDType = getSDTypeEntityByIdMapResult.GetPayload()[sdInstanceEntity.SDTypeID]
+	return cUtil.NewSuccessResult[types.SDInstanceDTO](db2dto.SDInstanceEntityToSDInstanceDTO(sdInstanceEntity))
 }
 
 func (r *relationalDatabaseClientImpl) LoadSDInstances() cUtil.Result[[]types.SDInstanceDTO] {
-	var err error
 	var sdInstanceEntities []schema.SDInstanceEntity
-	err = r.db.Find(&sdInstanceEntities).Error
+	err := r.db.Find(&sdInstanceEntities).Error
 	if err != nil {
 		return cUtil.NewFailureResult[[]types.SDInstanceDTO](err)
 	}
-	var sdTypeEntities []schema.SDTypeEntity
-	err = r.db.Preload("Parameters").Find(&sdTypeEntities).Error
-	if err != nil {
-		return cUtil.NewFailureResult[[]types.SDInstanceDTO](err)
+	getSDTypeEntityByIdMapResult := r.getSDTypeEntityByIdMap()
+	if getSDTypeEntityByIdMapResult.IsFailure() {
+		return cUtil.NewFailureResult[[]types.SDInstanceDTO](getSDTypeEntityByIdMapResult.GetError())
 	}
-	sdTypeEntityByIdMap := make(map[uint32]schema.SDTypeEntity)
-	for _, sdTypeEntity := range sdTypeEntities {
-		sdTypeEntityByIdMap[sdTypeEntity.ID] = sdTypeEntity
-	}
+	sdTypeEntityByIdMap := getSDTypeEntityByIdMapResult.GetPayload()
 	for index, sdInstanceEntity := range sdInstanceEntities {
 		sdInstanceEntity.SDType = sdTypeEntityByIdMap[sdInstanceEntity.SDTypeID]
 		sdInstanceEntities[index] = sdInstanceEntity

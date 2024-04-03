@@ -6,7 +6,7 @@ import StandardContentPageTemplate from '../../page-independent-components/stand
 
 interface SDTypesPageViewProps {
   sdTypesQueryData: SdTypesQuery
-  createSDType: (denotation: string, parameters: { denotation: string, type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]) => Promise<void>
+  createSDType: (denotation: string, parameters: { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]) => Promise<void>
   deleteSDType: (id: string) => Promise<void>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
@@ -14,7 +14,7 @@ interface SDTypesPageViewProps {
 
 const SDTypesPageView: React.FC<SDTypesPageViewProps> = (props) => {
   return (
-    <StandardContentPageTemplate pageTitle="SD types" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
+    <StandardContentPageTemplate pageTitle="SD type definitions" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
       <SDTypesSection sdTypesQueryData={props.sdTypesQueryData} deleteSDType={props.deleteSDType} anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred} />
       <CreateSDTypeForm sdTypesQueryData={props.sdTypesQueryData} createSDType={props.createSDType} anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred} />
     </StandardContentPageTemplate>

@@ -156,6 +156,13 @@ export type StringEqkpiAtomNode = {
   sdParameterSpecification: Scalars['String']['output'];
 };
 
+export type ConfirmSdInstanceMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type ConfirmSdInstanceMutation = { __typename?: 'Mutation', updateSDInstance: { __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: string, denotation: string, type: SdParameterType }> } } };
+
 export type CreateSdTypeMutationVariables = Exact<{
   input: SdTypeInput;
 }>;
@@ -181,7 +188,7 @@ export type UpdateUserIdentifierOfSdInstanceMutation = { __typename?: 'Mutation'
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }> };
+export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }> };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 

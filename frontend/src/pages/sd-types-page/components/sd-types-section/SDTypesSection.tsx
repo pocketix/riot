@@ -29,19 +29,7 @@ const SDTypesSection: React.FC<SDTypesSectionProps> = (props) => {
             .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10))
             .map((sdType) => {
               const deleteButtonDisabled: boolean = props.sdTypesQueryData && props.sdTypesQueryData.sdInstances && props.sdTypesQueryData.sdInstances.some((sdInstance) => sdInstance.type.id === sdType.id)
-              return (
-                <SDTypeCard
-                  key={sdType.id}
-                  id={sdType.id}
-                  denotation={sdType.denotation}
-                  areParametersDisplayed={areParametersDisplayed}
-                  parameters={sdType.parameters}
-                  deleteSDType={props.deleteSDType}
-                  anyLoadingOccurs={props.anyLoadingOccurs}
-                  anyErrorOccurred={props.anyErrorOccurred}
-                  isDeleteButtonDisabled={deleteButtonDisabled}
-                />
-              )
+              return <SDTypeCard key={sdType.id} id={sdType.id} denotation={sdType.denotation} areParametersDisplayed={areParametersDisplayed} parameters={sdType.parameters} deleteSDType={props.deleteSDType} anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred} isDeleteButtonDisabled={deleteButtonDisabled} />
             })}
       </div>
     </div>

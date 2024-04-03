@@ -1,5 +1,5 @@
-mutation UpdateUserIdentifierOfSDInstance($id: ID!, $newUserIdentifier: String!) {
-  updateSDInstance(id: $id, input: { userIdentifier: $newUserIdentifier }) {
+mutation confirmSDInstance($id: ID!) {
+  updateSDInstance(id: $id, input: { confirmedByUser: true }) {
     id
     uid
     confirmedByUser

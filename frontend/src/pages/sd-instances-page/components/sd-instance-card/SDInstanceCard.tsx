@@ -1,6 +1,6 @@
 import React, { ChangeEvent, KeyboardEvent, useCallback, useState } from 'react'
 import GenericCardTemplate from '../../../../page-independent-components/generic-card-template/GenericCardTemplate'
-import { TextField } from '@mui/material'
+import { Button, TextField } from '@mui/material'
 import styles from './SDInstanceCard.module.scss'
 import { styled } from '@mui/material/styles'
 
@@ -29,7 +29,9 @@ interface SDInstanceCardProps {
   userIdentifier: string
   uid: string
   sdTypeDenotation: string
+  confirmedByUser: boolean
   updateUserIdentifierOfSdInstance: (id: string, newUserIdentifier: string) => Promise<void>
+  confirmSdInstance: (id: string) => Promise<void>
 }
 
 const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
@@ -41,7 +43,7 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
 
   const onKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key == 'Enter') {
-      (e.target as EventTarget & HTMLInputElement).blur()
+      ;(e.target as EventTarget & HTMLInputElement).blur()
     }
   }, [])
 
@@ -59,16 +61,19 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
       bodyContent={
         <>
           <div className={styles.body}>
-            <div className={styles.userIdentifierRow}>
-              <p>User identifier:</p>
-              <PlainTextField id="standard-basic" label="" variant="standard" value={userIdentifier} onChange={onUserIdentifierChange} onKeyDown={onKeyDown} onBlur={onUserIdentifierConfirm} />
-            </div>
+            {props.confirmedByUser && (
+              <div className={styles.userIdentifierRow}>
+                <p>User identifier:</p>
+                <PlainTextField id="standard-basic" label="" variant="standard" value={userIdentifier} onChange={onUserIdentifierChange} onKeyDown={onKeyDown} onBlur={onUserIdentifierConfirm} />
+              </div>
+            )}
             <p>
               UID: <strong>{props.uid}</strong>
             </p>
             <p>
               SD type denotation: <strong>{props.sdTypeDenotation}</strong>
             </p>
+            {!props.confirmedByUser && <Button onClick={() => props.confirmSdInstance(props.id)}>Confirm this SD instance</Button>}
           </div>
         </>
       }

@@ -1,10 +1,6 @@
 import React, { useCallback } from 'react'
 import { ApolloError, MutationFunction, MutationTuple, QueryResult, useMutation, useQuery } from '@apollo/client'
-import {
-  CreateSdTypeMutation, CreateSdTypeMutationVariables,
-  DeleteSdTypeMutation, DeleteSdTypeMutationVariables, SdParameterType,
-  SdTypesQuery, SdTypesQueryVariables
-} from '../../generated/graphql'
+import { CreateSdTypeMutation, CreateSdTypeMutationVariables, DeleteSdTypeMutation, DeleteSdTypeMutationVariables, SdParameterType, SdTypesQuery, SdTypesQueryVariables } from '../../generated/graphql'
 import gql from 'graphql-tag'
 import qSDTypes from '../../graphql/queries/sdTypes.graphql'
 import { RefetchFunction } from '@apollo/client/react/hooks/useSuspenseQuery'
@@ -34,7 +30,7 @@ const SDTypesPageController: React.FC = () => {
   }, [sdTypesQueryRefetchFunction])
 
   const createSDType = useCallback(
-    async (denotation: string, parameters: { denotation: string, type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]) => {
+    async (denotation: string, parameters: { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]) => {
       const transformParameterType = (type: 'STRING' | 'NUMBER' | 'BOOLEAN'): SdParameterType => {
         switch (type) {
           case 'STRING':

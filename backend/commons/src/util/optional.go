@@ -30,9 +30,26 @@ func (o Optional[T]) IsPresent() bool {
 	return o.isPresent
 }
 
+func (o Optional[T]) IsEmpty() bool {
+	return !o.isPresent
+}
+
 func (o Optional[T]) GetPayload() T {
-	if !o.isPresent {
-		panic("trying to access Optional[T] payload that is not present")
+	if o.IsEmpty() {
+		panic("trying to access the payload of 'empty' Optional[T]")
 	}
 	return o.payload
+}
+
+func (o Optional[T]) DoIfPresent(payloadConsumerFunction func(T)) {
+	if o.IsPresent() {
+		payloadConsumerFunction(o.GetPayload())
+	}
+}
+
+func (o Optional[T]) GetPayloadOrDefault(def T) T {
+	if o.IsPresent() {
+		return o.GetPayload()
+	}
+	return def
 }

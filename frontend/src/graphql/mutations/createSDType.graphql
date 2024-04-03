@@ -1,7 +1,7 @@
 mutation createSDType($input: SDTypeInput!) {
   createSDType(input: $input) {
-    id,
-    denotation,
+    id
+    denotation
     parameters {
       id
       denotation

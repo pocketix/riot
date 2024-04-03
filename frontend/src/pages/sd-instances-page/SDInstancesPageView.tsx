@@ -8,6 +8,7 @@ interface SDTypesPageViewProps {
   sdInstancesQueryData: SdInstancesQuery
   refetchSDInstances: () => Promise<void>
   updateUserIdentifierOfSdInstance: (id: string, newUserIdentifier: string) => Promise<void>
+  confirmSdInstance: (id: string) => Promise<void>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }
@@ -21,7 +22,14 @@ const SDInstancesPageView: React.FC<SDTypesPageViewProps> = (props) => {
           refresh
         </span>
       </div>
-      <SDInstancesSection sdInstancesQueryData={props.sdInstancesQueryData} updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance}></SDInstancesSection>
+      <div className={styles.sdInstancesSectionTitle}>
+        <h3>SD instances confirmed by user</h3>
+      </div>
+      <SDInstancesSection sdInstancesQueryData={props.sdInstancesQueryData} isSectionOfSDInstancesConfirmedByUser={true} updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance} confirmSdInstance={props.confirmSdInstance}></SDInstancesSection>
+      <div className={styles.sdInstancesSectionTitle}>
+        <h3>SD instances not yet confirmed by user</h3>
+      </div>
+      <SDInstancesSection sdInstancesQueryData={props.sdInstancesQueryData} isSectionOfSDInstancesConfirmedByUser={false} updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance} confirmSdInstance={props.confirmSdInstance}></SDInstancesSection>
     </StandardContentPageTemplate>
   )
 }

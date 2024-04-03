@@ -5,14 +5,14 @@ import { SdTypesQuery } from '../../../../generated/graphql'
 
 interface CreateSDTypeFormProps {
   sdTypesQueryData: SdTypesQuery
-  createSDType: (denotation: string, parameters: { denotation: string, type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]) => Promise<void>
+  createSDType: (denotation: string, parameters: { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]) => Promise<void>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }
 
 const CreateSDTypeForm: React.FC<CreateSDTypeFormProps> = (props) => {
   const [denotation, setDenotation] = useState<string>('shelly1pro')
-  const [parameters, setParameters] = useState<{ denotation: string, type: string }[]>([{ denotation: 'relay_0_temperature', type: 'NUMBER' }])
+  const [parameters, setParameters] = useState<{ denotation: string; type: string }[]>([{ denotation: 'relay_0_temperature', type: 'NUMBER' }])
 
   const isFormDisabled: boolean = useMemo<boolean>(() => props.anyLoadingOccurs || props.anyErrorOccurred, [props.anyLoadingOccurs, props.anyErrorOccurred])
   const denotationFieldError: boolean = useMemo<boolean>(() => denotation.length === 0 || props.sdTypesQueryData?.sdTypes.some((sdType) => sdType.denotation === denotation), [denotation, props.sdTypesQueryData])
@@ -28,7 +28,7 @@ const CreateSDTypeForm: React.FC<CreateSDTypeFormProps> = (props) => {
   const formSubmitButtonDisabled: boolean = useMemo<boolean>(() => isFormDisabled || denotationFieldError || parameters.some((p) => p.denotation.length === 0), [isFormDisabled, denotationFieldError, parameters])
 
   const onSubmitHandler = useCallback(async () => {
-    await props.createSDType(denotation, parameters as { denotation: string, type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[])
+    await props.createSDType(denotation, parameters as { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[])
   }, [denotation, parameters, props.createSDType])
 
   const onDenotationChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {

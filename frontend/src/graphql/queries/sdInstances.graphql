@@ -2,6 +2,7 @@ query SDInstances {
   sdInstances {
     id
     uid
+    confirmedByUser
     userIdentifier
     type {
       id
