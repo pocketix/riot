@@ -14,11 +14,12 @@ func CreateSDType(sdTypeInput model.SDTypeInput) util.Result[*model.SDType] {
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[*model.SDType](persistResult.GetError())
 	}
+	go func() { // TODO: SD type successfully persisted: inform MQTT preprocessor through RabbitMQ
+	}()
 	id := persistResult.GetPayload()
 	sdTypeDTO.ID = util.NewOptionalOf[uint32](id)
 	sdType := dto2api.SDTypeDTOToSDType(sdTypeDTO)
 	return util.NewSuccessResult[*model.SDType](sdType)
-	// TODO: Inform 'MQTT preprocessor' through RabbitMQ
 }
 
 func DeleteSDType(stringID string) error {

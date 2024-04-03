@@ -1,27 +1,23 @@
 package rabbitmq
 
 import (
-	"context"
+	"errors"
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/constants"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	cUtil "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func DeclareStandardRabbitMQQueue(channel *amqp.Channel, queueName string) amqp.Queue {
-	queue, err := channel.QueueDeclare(queueName, false, false, false, false, nil)
-	util.TerminateOnError(err, fmt.Sprintf("Failed to declare the '%s' RabbitMQ queue", queueName))
-	return queue
-}
-
-func EnqueueJSONMessage(ctx context.Context, channel *amqp.Channel, queueName string, messagePayload []byte, customErrorMessage *string) {
-	err := channel.PublishWithContext(ctx, "", queueName, false, false, amqp.Publishing{
-		ContentType: constants.MIMETypeOfJSONData,
-		Body:        messagePayload,
+func ConsumeJSONMessages[T any](r Client, queueName string, messagePayloadConsumerFunction func(messagePayload T) error) error {
+	return r.SetupMessageConsumption(queueName, func(message amqp.Delivery) error {
+		messageContentType := message.ContentType
+		if messageContentType != constants.MIMETypeOfJSONData {
+			return errors.New(fmt.Sprintf("Incorrect message content type: %s", messageContentType))
+		}
+		jsonDeserializationResult := cUtil.DeserializeFromJSON[T](message.Body)
+		if jsonDeserializationResult.IsFailure() {
+			return jsonDeserializationResult.GetError()
+		}
+		return messagePayloadConsumerFunction(jsonDeserializationResult.GetPayload())
 	})
-	errorMessage := "Failed to enqueue a JSON message."
-	if customErrorMessage != nil {
-		errorMessage = *customErrorMessage
-	}
-	util.TerminateOnError(err, errorMessage)
 }

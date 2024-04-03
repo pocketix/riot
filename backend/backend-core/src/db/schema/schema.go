@@ -46,7 +46,7 @@ func (AtomKPINodeEntity) TableName() string {
 
 type SDTypeEntity struct {
 	ID         uint32              `gorm:"column:id;primarykey;not null"`
-	Denotation string              `gorm:"column:denotation;not null"`
+	Denotation string              `gorm:"column:denotation;not null;index"` // Denotation is an indexed field
 	Parameters []SDParameterEntity `gorm:"foreignKey:SDTypeID"`
 }
 
@@ -67,7 +67,7 @@ func (SDParameterEntity) TableName() string {
 
 type SDInstanceEntity struct {
 	ID              uint32       `gorm:"column:id;primarykey;not null"`
-	UID             string       `gorm:"column:uid;not null"`
+	UID             string       `gorm:"column:uid;not null;index"` // UID is an indexed field
 	ConfirmedByUser bool         `gorm:"column:confirmed_by_user;not null"`
 	UserIdentifier  string       `gorm:"column:user_identifier;not null"`
 	SDTypeID        uint32       `gorm:"column:sd_type_id"`

@@ -35,3 +35,10 @@ services:
       - postgres
     ports:
       - "8081:80"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # RabbitMQ itself
+      - "15672:15672" # Management console

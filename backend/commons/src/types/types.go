@@ -15,3 +15,8 @@ type SDInfo struct {
 	UID  string `json:"uid"`
 	Type string `json:"type"`
 }
+
+type SDInstanceInfo struct {
+	UID             string `json:"denotation"`
+	ConfirmedByUser bool   `json:"confirmedByUser"`
+}

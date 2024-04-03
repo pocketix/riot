@@ -26,10 +26,12 @@ type RelationalDatabaseClient interface {
 	DeleteKPIDefinition(id uint32) error
 	PersistSDType(sdTypeDTO types.SDTypeDTO) cUtil.Result[uint32]
 	LoadSDType(id uint32) cUtil.Result[types.SDTypeDTO]
+	LoadSDTypeBasedOnDenotation(denotation string) cUtil.Result[types.SDTypeDTO]
 	LoadSDTypes() cUtil.Result[[]types.SDTypeDTO]
 	DeleteSDType(id uint32) error
 	PersistSDInstance(sdInstanceDTO types.SDInstanceDTO) cUtil.Result[uint32]
 	LoadSDInstance(id uint32) cUtil.Result[types.SDInstanceDTO]
+	DoesSDInstanceExist(uid string) cUtil.Result[bool]
 	LoadSDInstances() cUtil.Result[[]types.SDInstanceDTO]
 	DeleteSDInstance(id uint32) error
 }
@@ -110,6 +112,15 @@ func (r *relationalDatabaseClientImpl) LoadSDType(id uint32) cUtil.Result[types.
 	return cUtil.NewSuccessResult[types.SDTypeDTO](db2dto.SDTypeEntityToSDTypeDTO(sdTypeEntity))
 }
 
+func (r *relationalDatabaseClientImpl) LoadSDTypeBasedOnDenotation(denotation string) cUtil.Result[types.SDTypeDTO] {
+	var sdTypeEntity schema.SDTypeEntity
+	err := r.db.Preload("Parameters").Where("denotation = ?", denotation).First(&sdTypeEntity).Error
+	if err != nil {
+		return cUtil.NewFailureResult[types.SDTypeDTO](err)
+	}
+	return cUtil.NewSuccessResult[types.SDTypeDTO](db2dto.SDTypeEntityToSDTypeDTO(sdTypeEntity))
+}
+
 func (r *relationalDatabaseClientImpl) LoadSDTypes() cUtil.Result[[]types.SDTypeDTO] {
 	var sdTypeEntities []schema.SDTypeEntity
 	err := r.db.Preload("Parameters").Find(&sdTypeEntities).Error
@@ -165,6 +176,15 @@ func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) cUtil.Result[ty
 	}
 	sdInstanceEntity.SDType = getSDTypeEntityByIdMapResult.GetPayload()[sdInstanceEntity.SDTypeID]
 	return cUtil.NewSuccessResult[types.SDInstanceDTO](db2dto.SDInstanceEntityToSDInstanceDTO(sdInstanceEntity))
+}
+
+func (r *relationalDatabaseClientImpl) DoesSDInstanceExist(uid string) cUtil.Result[bool] {
+	var count int64
+	err := r.db.Model(&schema.SDInstanceEntity{}).Where("uid = ?", uid).Count(&count).Error
+	if err != nil {
+		return cUtil.NewFailureResult[bool](err)
+	}
+	return cUtil.NewSuccessResult[bool](count > 0)
 }
 
 func (r *relationalDatabaseClientImpl) LoadSDInstances() cUtil.Result[[]types.SDInstanceDTO] {
