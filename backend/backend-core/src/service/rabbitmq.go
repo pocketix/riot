@@ -8,6 +8,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/constants"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	cTypes "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/types"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 	"log"
 )
 
@@ -50,4 +51,47 @@ func CheckForSDInstanceRegistrationRequests() {
 	if err != nil {
 		log.Printf("Consumption of messages from the '%s' queue has failed", constants.SDInstanceRegistrationRequestsQueueName)
 	}
+}
+
+func EnqueueMessageRepresentingCurrentSDTypes() error {
+	sdTypesLoadResult := (*db.GetRelationalDatabaseClientInstance()).LoadSDTypes()
+	if sdTypesLoadResult.IsFailure() {
+		return sdTypesLoadResult.GetError()
+	}
+	sdTypeDenotations := util.Map[types.SDTypeDTO, string](sdTypesLoadResult.GetPayload(), func(sdTypeDTO types.SDTypeDTO) string {
+		return sdTypeDTO.Denotation
+	})
+	sdTypeDenotationsJSONSerializationResult := util.SerializeToJSON(sdTypeDenotations)
+	if sdTypeDenotationsJSONSerializationResult.IsFailure() {
+		return sdTypeDenotationsJSONSerializationResult.GetError()
+	}
+	return rabbitMQClient.EnqueueJSONMessage(constants.SetOfSDTypesUpdatesQueueName, sdTypeDenotationsJSONSerializationResult.GetPayload())
+}
+
+func EnqueueMessageRepresentingCurrentSDInstances() error {
+	sdInstancesLoadResult := (*db.GetRelationalDatabaseClientInstance()).LoadSDInstances()
+	if sdInstancesLoadResult.IsFailure() {
+		return sdInstancesLoadResult.GetError()
+	}
+	sdInstancesInfo := util.Map[types.SDInstanceDTO, cTypes.SDInstanceInfo](sdInstancesLoadResult.GetPayload(), func(sdInstanceDTO types.SDInstanceDTO) cTypes.SDInstanceInfo {
+		return cTypes.SDInstanceInfo{
+			UID:             sdInstanceDTO.UID,
+			ConfirmedByUser: sdInstanceDTO.ConfirmedByUser,
+		}
+	})
+	sdInstancesInfoJSONSerializationResult := util.SerializeToJSON(sdInstancesInfo)
+	if sdInstancesInfoJSONSerializationResult.IsFailure() {
+		return sdInstancesInfoJSONSerializationResult.GetError()
+	}
+	return rabbitMQClient.EnqueueJSONMessage(constants.SetOfSDInstancesUpdatesQueueName, sdInstancesInfoJSONSerializationResult.GetPayload())
+}
+
+func EnqueueMessagesRepresentingCurrentConfiguration() error {
+	if err := EnqueueMessageRepresentingCurrentSDTypes(); err != nil {
+		return err
+	}
+	if err := EnqueueMessageRepresentingCurrentSDInstances(); err != nil {
+		return err
+	}
+	return nil
 }

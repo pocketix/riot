@@ -7,6 +7,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/service"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -20,6 +21,7 @@ func main() {
 	rabbitmq.SetupRabbitMQ()
 	// Set up RabbitMQ inside the 'Backend core' service
 	service.SetupRabbitMQClient()
+	util.TerminateOnError(service.EnqueueMessagesRepresentingCurrentConfiguration(), "Couldn't enqueue messages representing the system configuration after 'Backend core' restart")
 	go func() {
 		service.CheckForSDInstanceRegistrationRequests()
 	}()

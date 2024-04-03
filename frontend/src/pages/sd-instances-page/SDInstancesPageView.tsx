@@ -6,7 +6,6 @@ import SDInstancesSection from './components/sd-instances-section/SDInstancesSec
 
 interface SDTypesPageViewProps {
   sdInstancesQueryData: SdInstancesQuery
-  refetchSDInstances: () => Promise<void>
   updateUserIdentifierOfSdInstance: (id: string, newUserIdentifier: string) => Promise<void>
   confirmSdInstance: (id: string) => Promise<void>
   anyLoadingOccurs: boolean
@@ -18,9 +17,6 @@ const SDInstancesPageView: React.FC<SDTypesPageViewProps> = (props) => {
     <StandardContentPageTemplate pageTitle="SD instances" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
       <div className={styles.sdInstancesSectionTitle}>
         <h2>Currently registered SD instances</h2>
-        <span onClick={props.refetchSDInstances} className={`material-symbols-outlined ${styles.pointerCursor}`}>
-          refresh
-        </span>
       </div>
       <div className={styles.sdInstancesSectionTitle}>
         <h3>SD instances confirmed by user</h3>

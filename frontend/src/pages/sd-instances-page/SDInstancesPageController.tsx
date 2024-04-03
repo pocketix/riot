@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, {useCallback, useEffect} from 'react'
 import { ApolloError, MutationFunction, MutationTuple, QueryResult, useMutation, useQuery } from '@apollo/client'
 import { ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables, SdInstancesQuery, SdInstancesQueryVariables, UpdateUserIdentifierOfSdInstanceMutation, UpdateUserIdentifierOfSdInstanceMutationVariables } from '../../generated/graphql'
 import gql from 'graphql-tag'
@@ -55,7 +55,14 @@ const SDInstancesPageController: React.FC = () => {
     [confirmSdInstanceMutationFunction]
   )
 
-  return <SDInstancesPageView sdInstancesQueryData={sdInstancesQueryData} refetchSDInstances={refetchSDInstances} updateUserIdentifierOfSdInstance={updateUserIdentifierOfSdInstance} confirmSdInstance={confirmSdInstance} anyLoadingOccurs={anyLoadingOccurs} anyErrorOccurred={anyErrorOccurred} />
+  useEffect(() => { // Replace this polling by GraphQL subscription once feasible
+    const timeout: NodeJS.Timeout = setInterval(() => {
+      refetchSDInstances()
+    }, 500)
+    return () => clearInterval(timeout)
+  }, [refetchSDInstances])
+
+  return <SDInstancesPageView sdInstancesQueryData={sdInstancesQueryData} updateUserIdentifierOfSdInstance={updateUserIdentifierOfSdInstance} confirmSdInstance={confirmSdInstance} anyLoadingOccurs={anyLoadingOccurs} anyErrorOccurred={anyErrorOccurred} />
 }
 
 export default SDInstancesPageController

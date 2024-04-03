@@ -6,6 +6,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/api2dto"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2api"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"log"
 )
 
 func CreateSDType(sdTypeInput model.SDTypeInput) util.Result[*model.SDType] {
@@ -14,7 +15,10 @@ func CreateSDType(sdTypeInput model.SDTypeInput) util.Result[*model.SDType] {
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[*model.SDType](persistResult.GetError())
 	}
-	go func() { // TODO: SD type successfully persisted: inform MQTT preprocessor through RabbitMQ
+	go func() {
+		if err := EnqueueMessageRepresentingCurrentSDTypes(); err != nil {
+			log.Println("Failed to enqueue message representing current SD types in the system")
+		}
 	}()
 	id := persistResult.GetPayload()
 	sdTypeDTO.ID = util.NewOptionalOf[uint32](id)
@@ -27,9 +31,13 @@ func DeleteSDType(stringID string) error {
 	if uint32FromStringResult.IsFailure() {
 		return uint32FromStringResult.GetError()
 	}
+	go func() {
+		if err := EnqueueMessageRepresentingCurrentSDTypes(); err != nil {
+			log.Println("Failed to enqueue message representing current SD types in the system")
+		}
+	}()
 	id := uint32FromStringResult.GetPayload()
 	return (*db.GetRelationalDatabaseClientInstance()).DeleteSDType(id)
-	// TODO: Inform 'MQTT preprocessor' through RabbitMQ
 }
 
 func UpdateSDInstance(stringID string, sdInstanceUpdateInput model.SDInstanceUpdateInput) util.Result[*model.SDInstance] {
@@ -55,6 +63,11 @@ func UpdateSDInstance(stringID string, sdInstanceUpdateInput model.SDInstanceUpd
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[*model.SDInstance](persistResult.GetError())
 	}
+	go func() {
+		if err := EnqueueMessageRepresentingCurrentSDInstances(); err != nil {
+			log.Println("Failed to enqueue message representing current SD instances in the system")
+		}
+	}()
 	sdInstance := dto2api.SDInstanceDTOToSDInstance(sdInstanceDTO)
 	return util.NewSuccessResult[*model.SDInstance](sdInstance)
 }
