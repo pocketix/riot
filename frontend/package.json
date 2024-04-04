@@ -32,7 +32,9 @@
     "graphql": "^16.8.1",
     "graphql-tag": "^2.12.6",
     "react": "^18.2.0",
+    "react-d3-tree": "^3.6.2",
     "react-dom": "^18.2.0",
+    "react-resize-detector": "^10.0.1",
     "react-router-dom": "^6.17.0"
   },
   "parcel": {
