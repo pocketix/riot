@@ -1,92 +1,17 @@
 import React from 'react'
-import EditableTree, { AtomNodeType, EditableTreeNodeDataModel, LogicalOperationNodeType, NodeType } from './components/editable-tree/EditableTree'
+import EditableTree from './components/editable-tree/EditableTree'
 import StandardContentPageTemplate from '../../page-independent-components/standard-content-page-template/StandardContentPageTemplate'
+import {KPIModel} from "./KPIDetailPageController";
 
-const KPIDetailPageView: React.FC = () => {
-  const editableTreeNodeData: EditableTreeNodeDataModel = {
-    name: '',
-    attributes: {
-      nodeType: NodeType.LogicalOperationNode,
-      logicalOperationNodeType: LogicalOperationNodeType.AND
-    },
-    children: [
-      {
-        name: '',
-        attributes: {
-          nodeType: NodeType.AtomNode,
-          atomNodeType: AtomNodeType.NumericGEQ,
-          atomNodeSDParameterSpecification: 'relay_0_temperature',
-          atomNodeReferenceValue: 20
-        },
-        children: []
-      },
-      {
-        name: '',
-        attributes: {
-          nodeType: NodeType.AtomNode,
-          atomNodeType: AtomNodeType.NumericLEQ,
-          atomNodeSDParameterSpecification: 'relay_0_temperature',
-          atomNodeReferenceValue: 24
-        },
-        children: [
-          {
-            name: '',
-            attributes: {
-              nodeType: NodeType.NewNode
-            },
-            children: []
-          }
-        ]
-      },
-      {
-        name: '',
-        attributes: {
-          nodeType: NodeType.NewNode
-        },
-        children: [
-          {
-            name: '',
-            attributes: {
-              nodeType: NodeType.NewNode
-            },
-            children: []
-          },
-          {
-            name: '',
-            attributes: {
-              nodeType: NodeType.NewNode
-            },
-            children: []
-          },
-          {
-            name: '',
-            attributes: {
-              nodeType: NodeType.NewNode
-            },
-            children: [
-              {
-                name: '',
-                attributes: {
-                  nodeType: NodeType.NewNode
-                },
-                children: []
-              },
-              {
-                name: '',
-                attributes: {
-                  nodeType: NodeType.NewNode
-                },
-                children: []
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  }
+interface KPIDetailPageViewProps {
+  kpi: KPIModel
+}
+
+const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
   return (
     <StandardContentPageTemplate pageTitle="KPI detail" anyLoadingOccurs={false} anyErrorOccurred={false}>
-      <EditableTree editableTreeNodeData={editableTreeNodeData} />
+        <h2>{`${props.kpi.userIdentifier} (ID: ${props.kpi.id})`}</h2>
+        <EditableTree editableTreeNodeData={props.kpi} />
     </StandardContentPageTemplate>
   )
 }
