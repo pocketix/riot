@@ -23,3 +23,11 @@ func CreateKPIDefinition(kpiDefinitionInput model.KPIDefinitionInput) util.Resul
 	kpiDefinition := dto2api.KPIDefinitionDTOToKPIDefinition(kpiDefinitionDTO)
 	return util.NewSuccessResult[*model.KPIDefinition](kpiDefinition)
 }
+
+func GetKPIDefinitions() util.Result[[]*model.KPIDefinition] {
+	loadResult := (*db.GetRelationalDatabaseClientInstance()).LoadKPIDefinitions()
+	if loadResult.IsFailure() {
+		return util.NewFailureResult[[]*model.KPIDefinition](loadResult.GetError())
+	}
+	return util.NewSuccessResult[[]*model.KPIDefinition](util.Map(loadResult.GetPayload(), dto2api.KPIDefinitionDTOToKPIDefinition))
+}

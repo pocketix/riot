@@ -6,8 +6,6 @@ package graphql
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/generated"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/service"
@@ -51,7 +49,7 @@ func (r *queryResolver) SdInstances(ctx context.Context) ([]*model.SDInstance, e
 
 // KpiDefinitions is the resolver for the kpiDefinitions field.
 func (r *queryResolver) KpiDefinitions(ctx context.Context) ([]*model.KPIDefinition, error) {
-	panic(fmt.Errorf("not implemented: KpiDefinitions - kpiDefinitions"))
+	return service.GetKPIDefinitions().Unwrap()
 }
 
 // Mutation returns generated.MutationResolver implementation.

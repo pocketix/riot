@@ -117,8 +117,28 @@ func (r *relationalDatabaseClientImpl) LoadKPIDefinition(id uint32) cUtil.Result
 }
 
 func (r *relationalDatabaseClientImpl) LoadKPIDefinitions() cUtil.Result[[]kpi.DefinitionDTO] {
-	// TODO: Implement
-	return cUtil.NewFailureResult[[]kpi.DefinitionDTO](errors.New("[rdb client] not implemented"))
+	var kpiDefinitionEntities []schema.KPIDefinitionEntity
+	if err := r.db.Find(&kpiDefinitionEntities).Error; err != nil {
+		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](err)
+	}
+	var kpiNodeEntities []schema.KPINodeEntity
+	if err := r.db.Find(&kpiNodeEntities).Error; err != nil {
+		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](err)
+	}
+	var logicalOperationKPINodeEntities []schema.LogicalOperationKPINodeEntity
+	if err := r.db.Find(&logicalOperationKPINodeEntities).Error; err != nil {
+		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](err)
+	}
+	var atomKPINodeEntities []schema.AtomKPINodeEntity
+	if err := r.db.Find(&atomKPINodeEntities).Error; err != nil {
+		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](err)
+	}
+	var kpiDefinitionDTOs []kpi.DefinitionDTO
+	for _, kpiDefinitionEntity := range kpiDefinitionEntities {
+		kpiDefinitionDTO := db2dto.ReconstructKPIDefinitionDTO(kpiDefinitionEntity, kpiNodeEntities, logicalOperationKPINodeEntities, atomKPINodeEntities)
+		kpiDefinitionDTOs = append(kpiDefinitionDTOs, kpiDefinitionDTO)
+	}
+	return cUtil.NewSuccessResult[[]kpi.DefinitionDTO](kpiDefinitionDTOs)
 }
 
 func (r *relationalDatabaseClientImpl) DeleteKPIDefinition(id uint32) error {
