@@ -23,3 +23,28 @@ func UINT32FromString(s string) Result[uint32] {
 	}
 	return NewSuccessResult[uint32](uint32(u))
 }
+
+func Float64FromString(s string) Result[float64] {
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return NewFailureResult[float64](err)
+	}
+	return NewSuccessResult[float64](f)
+}
+
+func Float64ToString(f float64) string {
+	return strconv.FormatFloat(f, 'f', -1, 64)
+}
+
+func TypeIs[T any](subject any) bool {
+	_, ok := subject.(T)
+	return ok
+}
+
+func Ternary[T any](cond bool, r1 T, r2 T) T {
+	if cond {
+		return r1
+	} else {
+		return r2
+	}
+}

@@ -7,10 +7,10 @@ type UpstreamMQTTMessageInJSONBasedProprietaryFormatOfLogimic struct {
 	} `json:"ntf"`
 	Data struct {
 		SDArray []struct {
-			Type       string      `json:"devType"`
-			UID        string      `json:"devUid"`
-			Attributes interface{} `json:"devAttrs"`
-			Parameters interface{} `json:"devPars"`
+			Type       string `json:"devType"`
+			UID        string `json:"devUid"`
+			Attributes any    `json:"devAttrs"`
+			Parameters any    `json:"devPars"`
 		} `json:"devs"`
 	} `json:"data"`
 	Topic          string `json:"topic"`

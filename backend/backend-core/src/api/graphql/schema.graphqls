@@ -44,57 +44,110 @@ input SDInstanceUpdateInput {
 # ----- KPIs -----
 
 type KPIDefinition {
+  id: ID!
   sdTypeSpecification: String!
   userIdentifier: String!
-  rootNode: KPINode
+  nodes: [KPINode!]!
 }
 
-union KPINode = StringEQKPIAtomNode | BooleanEQKPIAtomNode | NumericEQKPIAtomNode | NumericGTKPIAtomNode | NumericGEQKPIAtomNode | NumericLTKPIAtomNode | NumericLEQKPIAtomNode | LogicalOperationKPINode
-
-type StringEQKPIAtomNode {
-  sdParameterSpecification: String!
-  referenceValue: String!
+interface KPINode {
+  id: ID!
+  parentNodeID: ID
 }
 
-type BooleanEQKPIAtomNode {
-  sdParameterSpecification: String!
-  referenceValue: Boolean!
-}
-
-type NumericEQKPIAtomNode {
-  sdParameterSpecification: String!
-  referenceValue: Float!
-}
-
-type NumericGTKPIAtomNode {
-  sdParameterSpecification: String!
-  referenceValue: Float!
-}
-
-type NumericGEQKPIAtomNode {
-  sdParameterSpecification: String!
-  referenceValue: Float!
-}
-
-type NumericLTKPIAtomNode {
-  sdParameterSpecification: String!
-  referenceValue: Float!
-}
-
-type NumericLEQKPIAtomNode {
-  sdParameterSpecification: String!
-  referenceValue: Float!
-}
-
-enum LogicalOperationKPINodeType {
+enum LogicalOperationType {
   AND
   OR
   NOR
 }
 
-type LogicalOperationKPINode {
-  type: LogicalOperationKPINodeType!
-  childNodes: [KPINode!]!
+type LogicalOperationKPINode implements KPINode {
+  id: ID!
+  parentNodeID: ID
+  type: LogicalOperationType!
+}
+
+interface AtomKPINode implements KPINode {
+  id: ID!
+  parentNodeID: ID
+  sdParameterSpecification: String!
+}
+
+type StringEQAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  sdParameterSpecification: String!
+  stringReferenceValue: String!
+}
+
+type BooleanEQAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  sdParameterSpecification: String!
+  booleanReferenceValue: Boolean!
+}
+
+type NumericEQAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  sdParameterSpecification: String!
+  numericReferenceValue: Float!
+}
+
+type NumericGTAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  sdParameterSpecification: String!
+  numericReferenceValue: Float!
+}
+
+type NumericGEQAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  sdParameterSpecification: String!
+  numericReferenceValue: Float!
+}
+
+type NumericLTAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  sdParameterSpecification: String!
+  numericReferenceValue: Float!
+}
+
+type NumericLEQAtomKPINode implements KPINode & AtomKPINode {
+  id: ID!
+  parentNodeID: ID
+  sdParameterSpecification: String!
+  numericReferenceValue: Float!
+}
+
+input KPIDefinitionInput {
+  sdTypeSpecification: String!
+  userIdentifier: String!
+  nodes: [KPINodeInput!]!
+}
+
+enum KPINodeInputType {
+  StringEQAtom,
+  BooleanEQAtom,
+  NumericEQAtom,
+  NumericGTAtom,
+  NumericGEQAtom,
+  NumericLTAtom,
+  NumericLEQAtom,
+  LogicalOperation
+}
+
+input KPINodeInput {
+  type: KPINodeInputType!
+  id: ID!
+  parentNodeID: ID
+  sdParameterSpecification: String
+  stringReferenceValue: String
+  booleanReferenceValue: Boolean
+  numericReferenceValue: Float
+  logicalOperationType: LogicalOperationType
 }
 
 # ----- Queries and Mutations -----
@@ -103,10 +156,12 @@ type Query {
   sdType(id: ID!): SDType!
   sdTypes: [SDType!]!
   sdInstances: [SDInstance!]!
+  kpiDefinitions: [KPIDefinition!]!
 }
 
 type Mutation {
   createSDType(input: SDTypeInput!): SDType!
   deleteSDType(id: ID!): Boolean!
   updateSDInstance(id: ID!, input: SDInstanceUpdateInput!): SDInstance!
+  createKPIDefinition(input: KPIDefinitionInput!): KPIDefinition!
 }

@@ -8,67 +8,158 @@ import (
 	"strconv"
 )
 
+type AtomKPINode interface {
+	IsKPINode()
+	IsAtomKPINode()
+	GetID() string
+	GetParentNodeID() *string
+	GetSdParameterSpecification() string
+}
+
 type KPINode interface {
 	IsKPINode()
+	GetID() string
+	GetParentNodeID() *string
 }
 
-type BooleanEQKPIAtomNode struct {
-	SdParameterSpecification string `json:"sdParameterSpecification"`
-	ReferenceValue           bool   `json:"referenceValue"`
+type BooleanEQAtomKPINode struct {
+	ID                       string  `json:"id"`
+	ParentNodeID             *string `json:"parentNodeID,omitempty"`
+	SdParameterSpecification string  `json:"sdParameterSpecification"`
+	BooleanReferenceValue    bool    `json:"booleanReferenceValue"`
 }
 
-func (BooleanEQKPIAtomNode) IsKPINode() {}
+func (BooleanEQAtomKPINode) IsKPINode()                    {}
+func (this BooleanEQAtomKPINode) GetID() string            { return this.ID }
+func (this BooleanEQAtomKPINode) GetParentNodeID() *string { return this.ParentNodeID }
+
+func (BooleanEQAtomKPINode) IsAtomKPINode() {}
+
+func (this BooleanEQAtomKPINode) GetSdParameterSpecification() string {
+	return this.SdParameterSpecification
+}
 
 type KPIDefinition struct {
-	SdTypeSpecification string  `json:"sdTypeSpecification"`
-	UserIdentifier      string  `json:"userIdentifier"`
-	RootNode            KPINode `json:"rootNode,omitempty"`
+	ID                  string    `json:"id"`
+	SdTypeSpecification string    `json:"sdTypeSpecification"`
+	UserIdentifier      string    `json:"userIdentifier"`
+	Nodes               []KPINode `json:"nodes"`
+}
+
+type KPIDefinitionInput struct {
+	SdTypeSpecification string          `json:"sdTypeSpecification"`
+	UserIdentifier      string          `json:"userIdentifier"`
+	Nodes               []*KPINodeInput `json:"nodes"`
+}
+
+type KPINodeInput struct {
+	Type                     KPINodeInputType      `json:"type"`
+	ID                       string                `json:"id"`
+	ParentNodeID             *string               `json:"parentNodeID,omitempty"`
+	SdParameterSpecification *string               `json:"sdParameterSpecification,omitempty"`
+	StringReferenceValue     *string               `json:"stringReferenceValue,omitempty"`
+	BooleanReferenceValue    *bool                 `json:"booleanReferenceValue,omitempty"`
+	NumericReferenceValue    *float64              `json:"numericReferenceValue,omitempty"`
+	LogicalOperationType     *LogicalOperationType `json:"logicalOperationType,omitempty"`
 }
 
 type LogicalOperationKPINode struct {
-	Type       LogicalOperationKPINodeType `json:"type"`
-	ChildNodes []KPINode                   `json:"childNodes"`
+	ID           string               `json:"id"`
+	ParentNodeID *string              `json:"parentNodeID,omitempty"`
+	Type         LogicalOperationType `json:"type"`
 }
 
-func (LogicalOperationKPINode) IsKPINode() {}
+func (LogicalOperationKPINode) IsKPINode()                    {}
+func (this LogicalOperationKPINode) GetID() string            { return this.ID }
+func (this LogicalOperationKPINode) GetParentNodeID() *string { return this.ParentNodeID }
 
 type Mutation struct {
 }
 
-type NumericEQKPIAtomNode struct {
+type NumericEQAtomKPINode struct {
+	ID                       string  `json:"id"`
+	ParentNodeID             *string `json:"parentNodeID,omitempty"`
 	SdParameterSpecification string  `json:"sdParameterSpecification"`
-	ReferenceValue           float64 `json:"referenceValue"`
+	NumericReferenceValue    float64 `json:"numericReferenceValue"`
 }
 
-func (NumericEQKPIAtomNode) IsKPINode() {}
+func (NumericEQAtomKPINode) IsKPINode()                    {}
+func (this NumericEQAtomKPINode) GetID() string            { return this.ID }
+func (this NumericEQAtomKPINode) GetParentNodeID() *string { return this.ParentNodeID }
 
-type NumericGEQKPIAtomNode struct {
-	SdParameterSpecification string  `json:"sdParameterSpecification"`
-	ReferenceValue           float64 `json:"referenceValue"`
+func (NumericEQAtomKPINode) IsAtomKPINode() {}
+
+func (this NumericEQAtomKPINode) GetSdParameterSpecification() string {
+	return this.SdParameterSpecification
 }
 
-func (NumericGEQKPIAtomNode) IsKPINode() {}
-
-type NumericGTKPIAtomNode struct {
+type NumericGEQAtomKPINode struct {
+	ID                       string  `json:"id"`
+	ParentNodeID             *string `json:"parentNodeID,omitempty"`
 	SdParameterSpecification string  `json:"sdParameterSpecification"`
-	ReferenceValue           float64 `json:"referenceValue"`
+	NumericReferenceValue    float64 `json:"numericReferenceValue"`
 }
 
-func (NumericGTKPIAtomNode) IsKPINode() {}
+func (NumericGEQAtomKPINode) IsKPINode()                    {}
+func (this NumericGEQAtomKPINode) GetID() string            { return this.ID }
+func (this NumericGEQAtomKPINode) GetParentNodeID() *string { return this.ParentNodeID }
 
-type NumericLEQKPIAtomNode struct {
-	SdParameterSpecification string  `json:"sdParameterSpecification"`
-	ReferenceValue           float64 `json:"referenceValue"`
+func (NumericGEQAtomKPINode) IsAtomKPINode() {}
+
+func (this NumericGEQAtomKPINode) GetSdParameterSpecification() string {
+	return this.SdParameterSpecification
 }
 
-func (NumericLEQKPIAtomNode) IsKPINode() {}
-
-type NumericLTKPIAtomNode struct {
+type NumericGTAtomKPINode struct {
+	ID                       string  `json:"id"`
+	ParentNodeID             *string `json:"parentNodeID,omitempty"`
 	SdParameterSpecification string  `json:"sdParameterSpecification"`
-	ReferenceValue           float64 `json:"referenceValue"`
+	NumericReferenceValue    float64 `json:"numericReferenceValue"`
 }
 
-func (NumericLTKPIAtomNode) IsKPINode() {}
+func (NumericGTAtomKPINode) IsKPINode()                    {}
+func (this NumericGTAtomKPINode) GetID() string            { return this.ID }
+func (this NumericGTAtomKPINode) GetParentNodeID() *string { return this.ParentNodeID }
+
+func (NumericGTAtomKPINode) IsAtomKPINode() {}
+
+func (this NumericGTAtomKPINode) GetSdParameterSpecification() string {
+	return this.SdParameterSpecification
+}
+
+type NumericLEQAtomKPINode struct {
+	ID                       string  `json:"id"`
+	ParentNodeID             *string `json:"parentNodeID,omitempty"`
+	SdParameterSpecification string  `json:"sdParameterSpecification"`
+	NumericReferenceValue    float64 `json:"numericReferenceValue"`
+}
+
+func (NumericLEQAtomKPINode) IsKPINode()                    {}
+func (this NumericLEQAtomKPINode) GetID() string            { return this.ID }
+func (this NumericLEQAtomKPINode) GetParentNodeID() *string { return this.ParentNodeID }
+
+func (NumericLEQAtomKPINode) IsAtomKPINode() {}
+
+func (this NumericLEQAtomKPINode) GetSdParameterSpecification() string {
+	return this.SdParameterSpecification
+}
+
+type NumericLTAtomKPINode struct {
+	ID                       string  `json:"id"`
+	ParentNodeID             *string `json:"parentNodeID,omitempty"`
+	SdParameterSpecification string  `json:"sdParameterSpecification"`
+	NumericReferenceValue    float64 `json:"numericReferenceValue"`
+}
+
+func (NumericLTAtomKPINode) IsKPINode()                    {}
+func (this NumericLTAtomKPINode) GetID() string            { return this.ID }
+func (this NumericLTAtomKPINode) GetParentNodeID() *string { return this.ParentNodeID }
+
+func (NumericLTAtomKPINode) IsAtomKPINode() {}
+
+func (this NumericLTAtomKPINode) GetSdParameterSpecification() string {
+	return this.SdParameterSpecification
+}
 
 type Query struct {
 }
@@ -108,53 +199,116 @@ type SDTypeInput struct {
 	Parameters []*SDParameterInput `json:"parameters"`
 }
 
-type StringEQKPIAtomNode struct {
-	SdParameterSpecification string `json:"sdParameterSpecification"`
-	ReferenceValue           string `json:"referenceValue"`
+type StringEQAtomKPINode struct {
+	ID                       string  `json:"id"`
+	ParentNodeID             *string `json:"parentNodeID,omitempty"`
+	SdParameterSpecification string  `json:"sdParameterSpecification"`
+	StringReferenceValue     string  `json:"stringReferenceValue"`
 }
 
-func (StringEQKPIAtomNode) IsKPINode() {}
+func (StringEQAtomKPINode) IsKPINode()                    {}
+func (this StringEQAtomKPINode) GetID() string            { return this.ID }
+func (this StringEQAtomKPINode) GetParentNodeID() *string { return this.ParentNodeID }
 
-type LogicalOperationKPINodeType string
+func (StringEQAtomKPINode) IsAtomKPINode() {}
+
+func (this StringEQAtomKPINode) GetSdParameterSpecification() string {
+	return this.SdParameterSpecification
+}
+
+type KPINodeInputType string
 
 const (
-	LogicalOperationKPINodeTypeAnd LogicalOperationKPINodeType = "AND"
-	LogicalOperationKPINodeTypeOr  LogicalOperationKPINodeType = "OR"
-	LogicalOperationKPINodeTypeNor LogicalOperationKPINodeType = "NOR"
+	KPINodeInputTypeStringEQAtom     KPINodeInputType = "StringEQAtom"
+	KPINodeInputTypeBooleanEQAtom    KPINodeInputType = "BooleanEQAtom"
+	KPINodeInputTypeNumericEQAtom    KPINodeInputType = "NumericEQAtom"
+	KPINodeInputTypeNumericGTAtom    KPINodeInputType = "NumericGTAtom"
+	KPINodeInputTypeNumericGEQAtom   KPINodeInputType = "NumericGEQAtom"
+	KPINodeInputTypeNumericLTAtom    KPINodeInputType = "NumericLTAtom"
+	KPINodeInputTypeNumericLEQAtom   KPINodeInputType = "NumericLEQAtom"
+	KPINodeInputTypeLogicalOperation KPINodeInputType = "LogicalOperation"
 )
 
-var AllLogicalOperationKPINodeType = []LogicalOperationKPINodeType{
-	LogicalOperationKPINodeTypeAnd,
-	LogicalOperationKPINodeTypeOr,
-	LogicalOperationKPINodeTypeNor,
+var AllKPINodeInputType = []KPINodeInputType{
+	KPINodeInputTypeStringEQAtom,
+	KPINodeInputTypeBooleanEQAtom,
+	KPINodeInputTypeNumericEQAtom,
+	KPINodeInputTypeNumericGTAtom,
+	KPINodeInputTypeNumericGEQAtom,
+	KPINodeInputTypeNumericLTAtom,
+	KPINodeInputTypeNumericLEQAtom,
+	KPINodeInputTypeLogicalOperation,
 }
 
-func (e LogicalOperationKPINodeType) IsValid() bool {
+func (e KPINodeInputType) IsValid() bool {
 	switch e {
-	case LogicalOperationKPINodeTypeAnd, LogicalOperationKPINodeTypeOr, LogicalOperationKPINodeTypeNor:
+	case KPINodeInputTypeStringEQAtom, KPINodeInputTypeBooleanEQAtom, KPINodeInputTypeNumericEQAtom, KPINodeInputTypeNumericGTAtom, KPINodeInputTypeNumericGEQAtom, KPINodeInputTypeNumericLTAtom, KPINodeInputTypeNumericLEQAtom, KPINodeInputTypeLogicalOperation:
 		return true
 	}
 	return false
 }
 
-func (e LogicalOperationKPINodeType) String() string {
+func (e KPINodeInputType) String() string {
 	return string(e)
 }
 
-func (e *LogicalOperationKPINodeType) UnmarshalGQL(v interface{}) error {
+func (e *KPINodeInputType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = LogicalOperationKPINodeType(str)
+	*e = KPINodeInputType(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid LogicalOperationKPINodeType", str)
+		return fmt.Errorf("%s is not a valid KPINodeInputType", str)
 	}
 	return nil
 }
 
-func (e LogicalOperationKPINodeType) MarshalGQL(w io.Writer) {
+func (e KPINodeInputType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type LogicalOperationType string
+
+const (
+	LogicalOperationTypeAnd LogicalOperationType = "AND"
+	LogicalOperationTypeOr  LogicalOperationType = "OR"
+	LogicalOperationTypeNor LogicalOperationType = "NOR"
+)
+
+var AllLogicalOperationType = []LogicalOperationType{
+	LogicalOperationTypeAnd,
+	LogicalOperationTypeOr,
+	LogicalOperationTypeNor,
+}
+
+func (e LogicalOperationType) IsValid() bool {
+	switch e {
+	case LogicalOperationTypeAnd, LogicalOperationTypeOr, LogicalOperationTypeNor:
+		return true
+	}
+	return false
+}
+
+func (e LogicalOperationType) String() string {
+	return string(e)
+}
+
+func (e *LogicalOperationType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = LogicalOperationType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid LogicalOperationType", str)
+	}
+	return nil
+}
+
+func (e LogicalOperationType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

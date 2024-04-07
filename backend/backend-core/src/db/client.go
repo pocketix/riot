@@ -75,8 +75,40 @@ func (r *relationalDatabaseClientImpl) InitializeDatabase() error {
 }
 
 func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinitionDTO kpi.DefinitionDTO) cUtil.Result[uint32] {
-	// TODO: Implement
-	return cUtil.NewFailureResult[uint32](errors.New("[rdb client] not implemented"))
+	kpiNodeEntity, kpiNodeEntities, logicalOperationNodeEntities, atomNodeEntities := dto2db.TransformKPIDefinitionTree(kpiDefinitionDTO.RootNode, nil, []*schema.KPINodeEntity{}, []schema.LogicalOperationKPINodeEntity{}, []schema.AtomKPINodeEntity{})
+	kpiDefinitionEntity := schema.KPIDefinitionEntity{
+		SDTypeSpecification: kpiDefinitionDTO.SDTypeSpecification,
+		UserIdentifier:      kpiDefinitionDTO.UserIdentifier,
+		RootNode:            kpiNodeEntity,
+	}
+	tx := r.db.Begin()
+	for index, entity := range kpiNodeEntities {
+		if err := tx.Create(&entity).Error; err != nil {
+			tx.Rollback()
+			return cUtil.NewFailureResult[uint32](err)
+		}
+		kpiNodeEntities[index] = entity
+	}
+	if err := tx.Create(&kpiDefinitionEntity).Error; err != nil {
+		tx.Rollback()
+		return cUtil.NewFailureResult[uint32](err)
+	}
+	for index, entity := range logicalOperationNodeEntities {
+		if err := tx.Create(&entity).Error; err != nil {
+			tx.Rollback()
+			return cUtil.NewFailureResult[uint32](err)
+		}
+		logicalOperationNodeEntities[index] = entity
+	}
+	for index, entity := range atomNodeEntities {
+		if err := tx.Create(&entity).Error; err != nil {
+			tx.Rollback()
+			return cUtil.NewFailureResult[uint32](err)
+		}
+		atomNodeEntities[index] = entity
+	}
+	tx.Commit()
+	return cUtil.NewSuccessResult[uint32](kpiDefinitionEntity.ID)
 }
 
 func (r *relationalDatabaseClientImpl) LoadKPIDefinition(id uint32) cUtil.Result[kpi.DefinitionDTO] {

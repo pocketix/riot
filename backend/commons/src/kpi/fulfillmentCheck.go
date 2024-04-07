@@ -5,16 +5,16 @@ import (
 	cUtil "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 )
 
-func CheckKPIFulfillment(definition DefinitionDTO, inputDataMap *interface{}) bool {
+func CheckKPIFulfillment(definition DefinitionDTO, inputDataMap *any) bool {
 	return checkNodeFulfillment(definition.RootNode, inputDataMap)
 }
 
-func checkNodeFulfillment(node NodeDTO, inputDataMap *interface{}) bool {
+func checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
 	return getCheckerForNode(node).checkNodeFulfillment(node, inputDataMap)
 }
 
 type nodeFulfillmentChecker interface {
-	checkNodeFulfillment(node NodeDTO, inputDataMap *interface{}) bool
+	checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool
 }
 
 func getCheckerForNode(node NodeDTO) nodeFulfillmentChecker {
@@ -48,53 +48,53 @@ type numericLTFulfillmentChecker struct{}
 type numericLEQFulfillmentChecker struct{}
 type logicalOperationFulfillmentChecker struct{}
 
-func (_ *stringEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *interface{}) bool {
+func (_ *stringEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
 	eqAtomNode := node.(*EQAtomNodeDTO[string])
 	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(string)
 	return eqAtomNode.ReferenceValue == referenceValue
 }
 
-func (_ *booleanEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *interface{}) bool {
+func (_ *booleanEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
 	eqAtomNode := node.(*EQAtomNodeDTO[bool])
 	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(bool)
 	return eqAtomNode.ReferenceValue == referenceValue
 }
 
-func (_ *numericEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *interface{}) bool {
+func (_ *numericEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
 	eqAtomNode := node.(*EQAtomNodeDTO[float64])
 	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(float64)
 	return eqAtomNode.ReferenceValue == referenceValue
 }
 
-func (_ *numericGTFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *interface{}) bool {
+func (_ *numericGTFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
 	eqAtomNode := node.(*NumericGTAtomNodeDTO)
 	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(float64)
 	return eqAtomNode.ReferenceValue > referenceValue
 }
 
-func (_ *numericGEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *interface{}) bool {
+func (_ *numericGEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
 	eqAtomNode := node.(*NumericGEQAtomNodeDTO)
 	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(float64)
 	return eqAtomNode.ReferenceValue >= referenceValue
 }
 
-func (_ *numericLTFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *interface{}) bool {
+func (_ *numericLTFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
 	eqAtomNode := node.(*NumericGTAtomNodeDTO)
 	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(float64)
 	return eqAtomNode.ReferenceValue < referenceValue
 }
 
-func (_ *numericLEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *interface{}) bool {
+func (_ *numericLEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
 	eqAtomNode := node.(*NumericGEQAtomNodeDTO)
 	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(float64)
 	return eqAtomNode.ReferenceValue <= referenceValue
 }
 
-func getTargetDataItemValue(inputDataMap *interface{}, targetDataItemKey string) interface{} {
-	return (*inputDataMap).(map[string]interface{})[targetDataItemKey]
+func getTargetDataItemValue(inputDataMap *any, targetDataItemKey string) any {
+	return (*inputDataMap).(map[string]any)[targetDataItemKey]
 }
 
-func (_ *logicalOperationFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *interface{}) bool {
+func (_ *logicalOperationFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
 	logicalOperation := node.(LogicalOperationNodeDTO)
 	switch logicalOperation.Type {
 	case AND:

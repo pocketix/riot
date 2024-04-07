@@ -1,5 +1,7 @@
 package kpi
 
+import "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+
 type LogicalOperationNodeType string
 
 const (
@@ -9,12 +11,13 @@ const (
 )
 
 type DefinitionDTO struct {
+	ID                  util.Optional[uint32]
 	SDTypeSpecification string
 	UserIdentifier      string
 	RootNode            NodeDTO
 }
 
-type NodeDTO interface{}
+type NodeDTO any
 
 type EQAtomNodeDTO[T any] struct {
 	SDParameterSpecification string

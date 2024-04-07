@@ -6,6 +6,7 @@ package graphql
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/generated"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
@@ -28,6 +29,11 @@ func (r *mutationResolver) UpdateSDInstance(ctx context.Context, id string, inpu
 	return service.UpdateSDInstance(id, input).Unwrap()
 }
 
+// CreateKPIDefinition is the resolver for the createKPIDefinition field.
+func (r *mutationResolver) CreateKPIDefinition(ctx context.Context, input model.KPIDefinitionInput) (*model.KPIDefinition, error) {
+	return service.CreateKPIDefinition(input).Unwrap()
+}
+
 // SdType is the resolver for the sdType field.
 func (r *queryResolver) SdType(ctx context.Context, id string) (*model.SDType, error) {
 	return service.GetSDType(id).Unwrap()
@@ -41,6 +47,11 @@ func (r *queryResolver) SdTypes(ctx context.Context) ([]*model.SDType, error) {
 // SdInstances is the resolver for the sdInstances field.
 func (r *queryResolver) SdInstances(ctx context.Context) ([]*model.SDInstance, error) {
 	return service.GetSDInstances().Unwrap()
+}
+
+// KpiDefinitions is the resolver for the kpiDefinitions field.
+func (r *queryResolver) KpiDefinitions(ctx context.Context) ([]*model.KPIDefinition, error) {
+	panic(fmt.Errorf("not implemented: KpiDefinitions - kpiDefinitions"))
 }
 
 // Mutation returns generated.MutationResolver implementation.

@@ -37,7 +37,9 @@ type AtomKPINodeEntity struct {
 	Node                     *KPINodeEntity `gorm:"foreignKey:NodeID"`
 	SDParameterSpecification string         `gorm:"column:sd_parameter_specification;not null"`
 	Type                     string         `gorm:"column:type;not null"`
-	ReferenceValue           string         `gorm:"column:reference_value;not null"`
+	StringReferenceValue     *string        `gorm:"column:string_reference_value"`
+	BooleanReferenceValue    *bool          `gorm:"column:boolean_reference_value"`
+	NumericReferenceValue    *float64       `gorm:"column:numeric_reference_value"`
 }
 
 func (AtomKPINodeEntity) TableName() string {

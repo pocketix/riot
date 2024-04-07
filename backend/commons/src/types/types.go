@@ -1,9 +1,9 @@
 package types
 
 type RequestForKPIFulfillmentCheck struct {
-	Timestamp  float32     `json:"timestamp"`
-	SD         SDInfo      `json:"sd"`
-	Parameters interface{} `json:"parameters"`
+	Timestamp  float32 `json:"timestamp"`
+	SD         SDInfo  `json:"sd"`
+	Parameters any     `json:"parameters"`
 }
 
 type RequestForSDInstanceRegistration struct {

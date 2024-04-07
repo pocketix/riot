@@ -14,7 +14,7 @@ const (
 type EclipsePahoBasedMqttClient interface {
 	Connect() error
 	Subscribe(topic string, qos byte, incomingMessageCallbackFunction func([]byte)) error
-	Publish(topic string, qos byte, messagePayload interface{}) error
+	Publish(topic string, qos byte, messagePayload any) error
 }
 
 type eclipsePahoBasedMqttClientImpl struct {
@@ -56,7 +56,7 @@ func (p *eclipsePahoBasedMqttClientImpl) Subscribe(topic string, qos byte, incom
 	return nil
 }
 
-func (p *eclipsePahoBasedMqttClientImpl) Publish(topic string, qos byte, messagePayload interface{}) error {
+func (p *eclipsePahoBasedMqttClientImpl) Publish(topic string, qos byte, messagePayload any) error {
 	token := p.client.Publish(topic, qos, false, messagePayload)
 	token.Wait()
 	err := token.Error()
