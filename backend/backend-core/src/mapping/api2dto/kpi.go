@@ -13,7 +13,7 @@ func kpiNodeInputToKPINode(kpiNodeInput model.KPINodeInput) util.Result[kpi.Node
 		return fmt.Sprintf("couldn't map KPI node input to KPI node DTO: %s", errorMessageBody)
 	}
 	nodeType := kpiNodeInput.Type
-	if nodeType == model.KPINodeInputTypeLogicalOperation {
+	if nodeType == model.KPINodeTypeLogicalOperation {
 		logicalOperationTypeOptional := util.NewOptionalFromPointer[model.LogicalOperationType](kpiNodeInput.LogicalOperationType)
 		if logicalOperationTypeOptional.IsEmpty() {
 			return util.NewFailureResult[kpi.NodeDTO](errors.New(constructErrorMessage("logical operation type is missing")))
@@ -38,7 +38,7 @@ func kpiNodeInputToKPINode(kpiNodeInput model.KPINodeInput) util.Result[kpi.Node
 			return util.NewFailureResult[kpi.NodeDTO](errors.New(constructErrorMessage("SD parameter specification is missing")))
 		}
 		sdParameterSpecification := sdParameterSpecificationOptional.GetPayload()
-		if nodeType == model.KPINodeInputTypeStringEQAtom {
+		if nodeType == model.KPINodeTypeStringEQAtom {
 			referenceValueOptional := util.NewOptionalFromPointer[string](kpiNodeInput.StringReferenceValue)
 			if referenceValueOptional.IsEmpty() {
 				return util.NewFailureResult[kpi.NodeDTO](errors.New(constructErrorMessage("reference value (string) is missing")))
@@ -47,7 +47,7 @@ func kpiNodeInputToKPINode(kpiNodeInput model.KPINodeInput) util.Result[kpi.Node
 				SDParameterSpecification: sdParameterSpecification,
 				ReferenceValue:           referenceValueOptional.GetPayload(),
 			})
-		} else if nodeType == model.KPINodeInputTypeBooleanEQAtom {
+		} else if nodeType == model.KPINodeTypeBooleanEQAtom {
 			referenceValueOptional := util.NewOptionalFromPointer[bool](kpiNodeInput.BooleanReferenceValue)
 			if referenceValueOptional.IsEmpty() {
 				return util.NewFailureResult[kpi.NodeDTO](errors.New(constructErrorMessage("reference value (boolean) is missing")))
@@ -63,27 +63,27 @@ func kpiNodeInputToKPINode(kpiNodeInput model.KPINodeInput) util.Result[kpi.Node
 			}
 			referenceValue := referenceValueOptional.GetPayload()
 			switch nodeType {
-			case model.KPINodeInputTypeNumericEQAtom:
+			case model.KPINodeTypeNumericEQAtom:
 				return util.NewSuccessResult[kpi.NodeDTO](kpi.EQAtomNodeDTO[float64]{
 					SDParameterSpecification: sdParameterSpecification,
 					ReferenceValue:           referenceValue,
 				})
-			case model.KPINodeInputTypeNumericLTAtom:
+			case model.KPINodeTypeNumericLTAtom:
 				return util.NewSuccessResult[kpi.NodeDTO](kpi.NumericLTAtomNodeDTO{
 					SDParameterSpecification: sdParameterSpecification,
 					ReferenceValue:           referenceValue,
 				})
-			case model.KPINodeInputTypeNumericLEQAtom:
+			case model.KPINodeTypeNumericLEQAtom:
 				return util.NewSuccessResult[kpi.NodeDTO](kpi.NumericLEQAtomNodeDTO{
 					SDParameterSpecification: sdParameterSpecification,
 					ReferenceValue:           referenceValue,
 				})
-			case model.KPINodeInputTypeNumericGTAtom:
+			case model.KPINodeTypeNumericGTAtom:
 				return util.NewSuccessResult[kpi.NodeDTO](kpi.NumericGTAtomNodeDTO{
 					SDParameterSpecification: sdParameterSpecification,
 					ReferenceValue:           referenceValue,
 				})
-			case model.KPINodeInputTypeNumericGEQAtom:
+			case model.KPINodeTypeNumericGEQAtom:
 				return util.NewSuccessResult[kpi.NodeDTO](kpi.NumericGEQAtomNodeDTO{
 					SDParameterSpecification: sdParameterSpecification,
 					ReferenceValue:           referenceValue,

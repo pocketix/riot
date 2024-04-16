@@ -53,6 +53,7 @@ type KPIDefinition {
 interface KPINode {
   id: ID!
   parentNodeID: ID
+  nodeType: KPINodeType!
 }
 
 enum LogicalOperationType {
@@ -64,18 +65,21 @@ enum LogicalOperationType {
 type LogicalOperationKPINode implements KPINode {
   id: ID!
   parentNodeID: ID
+  nodeType: KPINodeType!
   type: LogicalOperationType!
 }
 
 interface AtomKPINode implements KPINode {
   id: ID!
   parentNodeID: ID
+  nodeType: KPINodeType!
   sdParameterSpecification: String!
 }
 
 type StringEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
+  nodeType: KPINodeType!
   sdParameterSpecification: String!
   stringReferenceValue: String!
 }
@@ -83,6 +87,7 @@ type StringEQAtomKPINode implements KPINode & AtomKPINode {
 type BooleanEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
+  nodeType: KPINodeType!
   sdParameterSpecification: String!
   booleanReferenceValue: Boolean!
 }
@@ -90,6 +95,7 @@ type BooleanEQAtomKPINode implements KPINode & AtomKPINode {
 type NumericEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
+  nodeType: KPINodeType!
   sdParameterSpecification: String!
   numericReferenceValue: Float!
 }
@@ -97,6 +103,7 @@ type NumericEQAtomKPINode implements KPINode & AtomKPINode {
 type NumericGTAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
+  nodeType: KPINodeType!
   sdParameterSpecification: String!
   numericReferenceValue: Float!
 }
@@ -104,6 +111,7 @@ type NumericGTAtomKPINode implements KPINode & AtomKPINode {
 type NumericGEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
+  nodeType: KPINodeType!
   sdParameterSpecification: String!
   numericReferenceValue: Float!
 }
@@ -111,6 +119,7 @@ type NumericGEQAtomKPINode implements KPINode & AtomKPINode {
 type NumericLTAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
+  nodeType: KPINodeType!
   sdParameterSpecification: String!
   numericReferenceValue: Float!
 }
@@ -118,6 +127,7 @@ type NumericLTAtomKPINode implements KPINode & AtomKPINode {
 type NumericLEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
+  nodeType: KPINodeType!
   sdParameterSpecification: String!
   numericReferenceValue: Float!
 }
@@ -128,7 +138,7 @@ input KPIDefinitionInput {
   nodes: [KPINodeInput!]!
 }
 
-enum KPINodeInputType {
+enum KPINodeType {
   StringEQAtom,
   BooleanEQAtom,
   NumericEQAtom,
@@ -140,7 +150,7 @@ enum KPINodeInputType {
 }
 
 input KPINodeInput {
-  type: KPINodeInputType!
+  type: KPINodeType!
   id: ID!
   parentNodeID: ID
   sdParameterSpecification: String

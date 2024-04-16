@@ -1,0 +1,13 @@
+.section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.addKPIDefinition {
+  cursor: pointer;
+  padding: 37px;
+  span {
+    font-size: 48px;
+  }
+}

@@ -4,6 +4,7 @@ import EditableTreeNodeBase from '../editable-tree-node-base/EditableTreeNodeBas
 
 interface LogicalOperationNodeProps {
   type: LogicalOperationNodeType
+  onClickHandler: () => void
 }
 
 const LogicalOperationNode: React.FC<LogicalOperationNodeProps> = (props) => {
@@ -18,7 +19,7 @@ const LogicalOperationNode: React.FC<LogicalOperationNodeProps> = (props) => {
     }
   }, [props.type])
 
-  return <EditableTreeNodeBase treeNodeContents={<p>{logicalOperationDenotation}</p>} />
+  return <EditableTreeNodeBase treeNodeContents={<p>{logicalOperationDenotation}</p>} onClickHandler={props.onClickHandler} />
 }
 
 export default LogicalOperationNode

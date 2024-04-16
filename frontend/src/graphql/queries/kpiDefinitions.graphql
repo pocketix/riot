@@ -1,0 +1,7 @@
+query KPIDefinitions {
+  kpiDefinitions {
+    id
+    userIdentifier
+    sdTypeSpecification
+  }
+}

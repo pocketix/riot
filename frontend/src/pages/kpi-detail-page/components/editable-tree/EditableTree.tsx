@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { CustomNodeElementProps, Point, RawNodeDatum, Tree, TreeNodeDatum } from 'react-d3-tree'
 import styles from './EditableTree.module.scss'
 import AtomNode from '../atom-node/AtomNode'
@@ -77,30 +77,9 @@ export interface EditableTreeNodeDataModel extends RawNodeDatum {
   children?: EditableTreeNodeDataModel[]
 }
 
-const renderCustomNode = ({ nodeDatum }: CustomNodeElementProps) => {
-  const mindMapNodeDataModel: EditableTreeNodeDataModel = nodeDatum as TreeNodeDatum & EditableTreeNodeDataModel
-  return (
-    <g className="node" strokeWidth={0}>
-      <foreignObject x={editableTreeConfiguration.sizeConfiguration.foreignObjectOffsetOnXAxisInPixels} y={editableTreeConfiguration.sizeConfiguration.foreignObjectOffsetOnYAxisInPixels} width={editableTreeConfiguration.sizeConfiguration.foreignObjectWidthInPixels} height={editableTreeConfiguration.sizeConfiguration.foreignObjectHeightInPixels}>
-        {renderTreeNodeBasedOnType(mindMapNodeDataModel)}
-      </foreignObject>
-    </g>
-  )
-}
-
-const renderTreeNodeBasedOnType = (editableTreeNodeDataModel: EditableTreeNodeDataModel) => {
-  switch (editableTreeNodeDataModel.attributes.nodeType) {
-    case NodeType.NewNode:
-      return <EditableTreeNodeBase treeNodeContents={<p>+</p>} />
-    case NodeType.AtomNode:
-      return <AtomNode type={editableTreeNodeDataModel.attributes.atomNodeType} sdParameterSpecification={editableTreeNodeDataModel.attributes.atomNodeSDParameterSpecification} referenceValue={editableTreeNodeDataModel.attributes.atomNodeReferenceValue} />
-    case NodeType.LogicalOperationNode:
-      return <LogicalOperationNode type={editableTreeNodeDataModel.attributes.logicalOperationNodeType} />
-  }
-}
-
 interface EditableTreeProps {
   editableTreeNodeData: EditableTreeNodeDataModel
+  initiateLogicalOperationNodeModification: (nodeName: string) => void
 }
 
 const calculateTreeDepth = (node: EditableTreeNodeDataModel): number => {
@@ -130,18 +109,58 @@ const calculateTreeWidthInPixels = (node: EditableTreeNodeDataModel): number => 
   }
 }
 
-const EditableTree: React.FC<EditableTreeProps> = ({ editableTreeNodeData }) => {
+const EditableTree: React.FC<EditableTreeProps> = (props) => {
   const [treeTranslate, setTreeTranslate] = useState<Point>({ x: 0, y: 0 })
+
+  const renderTreeNodeBasedOnType = useCallback(
+    (editableTreeNodeDataModel: EditableTreeNodeDataModel) => {
+      switch (editableTreeNodeDataModel.attributes.nodeType) {
+        case NodeType.NewNode:
+          return <EditableTreeNodeBase treeNodeContents={<p>+</p>} />
+        case NodeType.AtomNode:
+          return <AtomNode type={editableTreeNodeDataModel.attributes.atomNodeType} sdParameterSpecification={editableTreeNodeDataModel.attributes.atomNodeSDParameterSpecification} referenceValue={editableTreeNodeDataModel.attributes.atomNodeReferenceValue} />
+        case NodeType.LogicalOperationNode:
+          return (
+            <LogicalOperationNode
+              type={editableTreeNodeDataModel.attributes.logicalOperationNodeType}
+              onClickHandler={() => {
+                props.initiateLogicalOperationNodeModification(editableTreeNodeDataModel.name)
+              }}
+            />
+          )
+      }
+    },
+    [props.initiateLogicalOperationNodeModification]
+  )
+
+  const renderCustomNode = useCallback(
+    ({ nodeDatum }: CustomNodeElementProps) => {
+      const nodeDataModel: EditableTreeNodeDataModel = nodeDatum as TreeNodeDatum & EditableTreeNodeDataModel
+      return (
+        <g className="node" strokeWidth={0}>
+          <foreignObject
+            x={editableTreeConfiguration.sizeConfiguration.foreignObjectOffsetOnXAxisInPixels}
+            y={editableTreeConfiguration.sizeConfiguration.foreignObjectOffsetOnYAxisInPixels}
+            width={editableTreeConfiguration.sizeConfiguration.foreignObjectWidthInPixels}
+            height={editableTreeConfiguration.sizeConfiguration.foreignObjectHeightInPixels}
+          >
+            {renderTreeNodeBasedOnType(nodeDataModel)}
+          </foreignObject>
+        </g>
+      )
+    },
+    [renderTreeNodeBasedOnType]
+  )
 
   const updateTreePositionWithinContainer = useCallback(
     (containerWidth: number, containerHeight: number) => {
-      const treeWidth: number = calculateTreeWidthInPixels(editableTreeNodeData) // TODO: Does not work in all cases...
-      const treeHeight: number = calculateTreeHeightInPixels(editableTreeNodeData)
-      const x: number = (containerWidth - treeWidth) / 2 + (treeWidth / 2) // TODO: (treeWidth / 2) is not precise enough...
-      const y: number = (containerHeight - treeHeight) / 2 + (editableTreeConfiguration.sizeConfiguration.foreignObjectHeightInPixels / 2)
+      const treeWidth: number = calculateTreeWidthInPixels(props.editableTreeNodeData) // TODO: Does not work in all cases...
+      const treeHeight: number = calculateTreeHeightInPixels(props.editableTreeNodeData)
+      const x: number = (containerWidth - treeWidth) / 2 + treeWidth / 2 // TODO: (treeWidth / 2) is not precise enough...
+      const y: number = (containerHeight - treeHeight) / 2 + editableTreeConfiguration.sizeConfiguration.foreignObjectHeightInPixels / 2
       setTreeTranslate({ x: x, y: y })
     },
-    [setTreeTranslate, calculateTreeHeightInPixels, editableTreeNodeData, editableTreeConfiguration.sizeConfiguration.foreignObjectHeightInPixels]
+    [setTreeTranslate, calculateTreeHeightInPixels, props.editableTreeNodeData, editableTreeConfiguration.sizeConfiguration.foreignObjectHeightInPixels]
   )
 
   const { width, height, ref } = useResizeDetector({
@@ -157,7 +176,7 @@ const EditableTree: React.FC<EditableTreeProps> = ({ editableTreeNodeData }) => 
   return (
     <div ref={ref} className={styles.treeWrapper}>
       <Tree
-        data={editableTreeNodeData}
+        data={props.editableTreeNodeData}
         orientation="vertical"
         zoomable={false}
         translate={{
@@ -174,7 +193,7 @@ const EditableTree: React.FC<EditableTreeProps> = ({ editableTreeNodeData }) => 
         }}
         renderCustomNodeElement={renderCustomNode}
         pathClassFunc={() => styles.customNodeLinkStyle}
-        initialDepth={calculateTreeDepth(editableTreeNodeData)}
+        initialDepth={calculateTreeDepth(props.editableTreeNodeData)}
       />
     </div>
   )

@@ -10,6 +10,7 @@ import FallbackPage from './pages/fallback-page/FallbackPage'
 import SDTypesPageController from './pages/sd-types-page/SDTypesPageController'
 import SDInstancesPageController from './pages/sd-instances-page/SDInstancesPageController'
 import KPIDetailPageController from './pages/kpi-detail-page/KPIDetailPageController'
+import KPIPageController from './pages/kpi-page/KPIPageController'
 
 const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   uri: 'http://localhost:9090',
@@ -73,7 +74,9 @@ const ApplicationEntrypoint: React.FC = () => {
               <Route path="sd-instances" element={<SDInstancesPageController />} />
               <Route path="sd-types" element={<SDTypesPageController />} />
               <Route path="apollo-sandbox" element={<ApolloSandboxPage />} />
-              <Route path="kpi-detail" element={<KPIDetailPageController />} />
+              <Route path="kpi-definitions" element={<KPIPageController />} />
+              <Route path="kpi-definitions/create" element={<KPIDetailPageController />} />
+              <Route path="kpi-definitions/:id/edit" element={<KPIDetailPageController />} />
               <Route path="*" element={<FallbackPage />} />
             </Route>
           </Routes>
