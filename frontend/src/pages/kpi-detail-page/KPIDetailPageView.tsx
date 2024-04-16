@@ -3,6 +3,8 @@ import EditableTree, { LogicalOperationNodeType } from './components/editable-tr
 import StandardContentPageTemplate from '../../page-independent-components/standard-content-page-template/StandardContentPageTemplate'
 import { KPIDefinitionModel } from './KPIDetailPageController'
 import ChangeLogicalOperationTypeModal from './components/change-logical-operation-type-modal/ChangeLogicalOperationTypeModal'
+import styles from './styles.module.scss'
+import { Button, Grid } from '@mui/material'
 
 interface KPIDetailPageViewProps {
   kpiDefinitionModel: KPIDefinitionModel
@@ -21,9 +23,20 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
         isOpen={props.isChangeLogicalOperationTypeModalOpen}
         onCloseHandler={props.closeChangeLogicalOperationTypeModal}
         changeLogicalOperationType={props.changeLogicalOperationType}
-      ></ChangeLogicalOperationTypeModal>
-      <h2>{`${props.kpiDefinitionModel.userIdentifier} (ID: ${props.kpiDefinitionModel.id})`}</h2>
+      />
+      <p className={styles.kpiUserIdentifier}>
+        User identifier: <strong>{props.kpiDefinitionModel.userIdentifier}</strong>
+      </p>
       <EditableTree editableTreeNodeData={props.kpiDefinitionModel} initiateLogicalOperationNodeModification={props.initiateLogicalOperationNodeModification} />
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={1}>
+          <Button fullWidth>Submit</Button>
+        </Grid>
+        <Grid item xs={0.1} />
+        <Grid item xs={1}>
+          <Button fullWidth>Cancel</Button>
+        </Grid>
+      </Grid>
     </StandardContentPageTemplate>
   )
 }

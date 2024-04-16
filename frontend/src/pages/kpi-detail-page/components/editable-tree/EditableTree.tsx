@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CustomNodeElementProps, Point, RawNodeDatum, Tree, TreeNodeDatum } from 'react-d3-tree'
 import styles from './styles.module.scss'
 import AtomNode from '../atom-node/AtomNode'
@@ -171,36 +171,52 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
 
   const { width, height, ref } = useResizeDetector({
     handleHeight: false,
-    refreshMode: 'debounce',
+    refreshMode: 'throttle',
     refreshRate: 100
   })
 
+  const [treeShown, setTreeShown] = useState(false)
+  const treeShownTimeoutRef = useRef(null)
+
   useEffect(() => {
     updateTreePositionWithinContainer(width, height)
-  }, [width, height])
+    if (!treeShown) {
+      treeShownTimeoutRef.current = setTimeout(() => {
+        setTreeShown(true)
+      }, 100)
+    }
+    return () => {
+      if (treeShownTimeoutRef.current) {
+        clearTimeout(treeShownTimeoutRef.current)
+        treeShownTimeoutRef.current = null
+      }
+    }
+  }, [width, height, treeShown])
 
   return (
     <div ref={ref} className={styles.treeWrapper}>
-      <Tree
-        data={props.editableTreeNodeData}
-        orientation="vertical"
-        zoomable={false}
-        translate={{
-          x: treeTranslate.x,
-          y: treeTranslate.y
-        }}
-        nodeSize={{
-          x: editableTreeConfiguration.sizeConfiguration.nodeWidthInPixels,
-          y: editableTreeConfiguration.sizeConfiguration.nodeHeightInPixels
-        }}
-        separation={{
-          siblings: editableTreeConfiguration.siblingSeparation,
-          nonSiblings: editableTreeConfiguration.nonSiblingSeparation
-        }}
-        renderCustomNodeElement={renderCustomNode}
-        pathClassFunc={() => styles.customNodeLinkStyle}
-        initialDepth={calculateTreeDepth(props.editableTreeNodeData)}
-      />
+      {treeShown && (
+        <Tree
+          data={props.editableTreeNodeData}
+          orientation="vertical"
+          zoomable={false}
+          translate={{
+            x: treeTranslate.x,
+            y: treeTranslate.y
+          }}
+          nodeSize={{
+            x: editableTreeConfiguration.sizeConfiguration.nodeWidthInPixels,
+            y: editableTreeConfiguration.sizeConfiguration.nodeHeightInPixels
+          }}
+          separation={{
+            siblings: editableTreeConfiguration.siblingSeparation,
+            nonSiblings: editableTreeConfiguration.nonSiblingSeparation
+          }}
+          renderCustomNodeElement={renderCustomNode}
+          pathClassFunc={() => styles.customNodeLinkStyle}
+          initialDepth={calculateTreeDepth(props.editableTreeNodeData)}
+        />
+      )}
     </div>
   )
 }

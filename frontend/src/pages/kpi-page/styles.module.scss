@@ -4,10 +4,18 @@
   gap: 20px;
 }
 
-.addKPIDefinition {
+.pointerCursor {
   cursor: pointer;
-  padding: 37px;
+}
+
+.createDefinitionButton {
+  @extend .pointerCursor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   span {
-    font-size: 48px;
+    padding-left: 20px;
+    padding-right: 20px;
+    font-size: 82px;
   }
 }

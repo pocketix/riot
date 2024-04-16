@@ -26,11 +26,9 @@ const KPIPageView: React.FC<KPIPageViewProps> = (props) => {
             .map((kpiDefinition) => (
               <GenericCardTemplate // TODO: Consider creating a separate component out of this...
                 headerContent={
-                  <>
-                    <div onClick={() => navigate(`${kpiDefinition.id}/edit`)}>
-                      <span className="material-symbols-outlined">edit</span>
-                    </div>
-                  </>
+                  <span onClick={() => navigate(`${kpiDefinition.id}/edit`)} className={`material-symbols-outlined ${styles.pointerCursor}`}>
+                    edit
+                  </span>
                 }
                 bodyContent={
                   <>
@@ -46,11 +44,9 @@ const KPIPageView: React.FC<KPIPageViewProps> = (props) => {
             ))}
         <GenericCardTemplate
           headerContent={<></>}
-          bodyContent={
-            <div className={styles.addKPIDefinition} onClick={() => navigate('create')}>
-              <span className="material-symbols-outlined">add_circle</span>
-            </div>
-          }
+          bodyContent={<span className="material-symbols-outlined">add_circle</span>}
+          onClickHandler={() => navigate('create')}
+          className={styles.createDefinitionButton}
         ></GenericCardTemplate>
       </div>
     </StandardContentPageTemplate>

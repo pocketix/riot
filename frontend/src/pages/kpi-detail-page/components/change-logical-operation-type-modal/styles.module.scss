@@ -1,0 +1,17 @@
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  align-items: center;
+  margin-bottom: 10px;
+
+  span {
+    cursor: pointer;
+    font-size: 36px;
+  }
+
+  p {
+    margin: 0;
+    text-align: center;
+  }
+}
