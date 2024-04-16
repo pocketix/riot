@@ -6,19 +6,19 @@ import MuiModalBase from '../../../../page-independent-components/mui-modal-base
 interface ChangeLogicalOperationTypeModalProps {
   isOpen: boolean
   onCloseHandler: () => void
-  changeLogicalOperationType: (newOperationType: LogicalOperationNodeType) => void
+  selectedLogicalOperationTypeHandler: (logicalOperationType: LogicalOperationNodeType) => void
 }
 
-const ChangeLogicalOperationTypeModal: React.FC<ChangeLogicalOperationTypeModalProps> = (props) => {
+const SelectLogicalOperationTypeModal: React.FC<ChangeLogicalOperationTypeModalProps> = (props) => {
   const handleChange = (event: SelectChangeEvent<LogicalOperationNodeType>) => {
-    props.changeLogicalOperationType(event.target.value as LogicalOperationNodeType)
+    props.selectedLogicalOperationTypeHandler(event.target.value as LogicalOperationNodeType)
     props.onCloseHandler()
   }
   return (
     <MuiModalBase
       isOpen={props.isOpen}
       onCloseHandler={props.onCloseHandler}
-      modalTitle="Change logical operation type"
+      modalTitle="Select logical operation type"
       content={
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={8.8}>
@@ -37,4 +37,4 @@ const ChangeLogicalOperationTypeModal: React.FC<ChangeLogicalOperationTypeModalP
   )
 }
 
-export default ChangeLogicalOperationTypeModal
+export default SelectLogicalOperationTypeModal

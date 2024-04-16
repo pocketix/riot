@@ -80,6 +80,7 @@ export interface EditableTreeNodeDataModel extends RawNodeDatum {
 interface EditableTreeProps {
   editableTreeNodeData: EditableTreeNodeDataModel
   initiateLogicalOperationNodeModification: (nodeName: string) => void
+  initiateNewNodeCreation: (nodeName: string) => void
 }
 
 const calculateTreeDepth = (node: EditableTreeNodeDataModel): number => {
@@ -116,7 +117,14 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
     (editableTreeNodeDataModel: EditableTreeNodeDataModel) => {
       switch (editableTreeNodeDataModel.attributes.nodeType) {
         case NodeType.NewNode:
-          return <EditableTreeNodeBase treeNodeContents={<p>+</p>} />
+          return (
+            <EditableTreeNodeBase
+              treeNodeContents={<p>+</p>}
+              onClickHandler={() => {
+                props.initiateNewNodeCreation(editableTreeNodeDataModel.name)
+              }}
+            />
+          )
         case NodeType.AtomNode:
           return (
             <AtomNode
@@ -191,7 +199,7 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
         treeShownTimeoutRef.current = null
       }
     }
-  }, [width, height, treeShown])
+  }, [width, height, treeShown, props.editableTreeNodeData])
 
   return (
     <div ref={ref} className={styles.treeWrapper}>
