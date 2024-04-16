@@ -1,6 +1,6 @@
 import React from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
-import styles from './CustomLinkButton.module.scss'
+import styles from './styles.module.scss'
 
 interface CustomLinkButtonProps {
   route: string
@@ -12,7 +12,7 @@ export const CustomLinkButton: React.FC<CustomLinkButtonProps> = ({ route, text,
   const navigate: NavigateFunction = useNavigate()
 
   return (
-    <div className={styles.customLink} onClick={() => navigate(route)}>
+    <div className={styles.customLinkButton} onClick={() => navigate(route)}>
       <span className="material-symbols-outlined">{iconIdentifier}</span>
       <span>{text}</span>
     </div>

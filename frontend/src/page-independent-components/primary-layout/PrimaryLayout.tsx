@@ -1,7 +1,7 @@
 import React from 'react'
 import { Outlet } from 'react-router-dom'
 import CustomLinkButton from '../custom-link-button/CustomLinkButton'
-import styles from './PrimaryLayout.module.scss'
+import styles from './styles.module.scss'
 
 const PrimaryLayout: React.FC = () => {
   return (

@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from './FallbackPage.module.scss'
+import styles from './styles.module.scss'
 import CustomLinkButton from '../../page-independent-components/custom-link-button/CustomLinkButton'
 
 const FallbackPage: React.FC = () => {

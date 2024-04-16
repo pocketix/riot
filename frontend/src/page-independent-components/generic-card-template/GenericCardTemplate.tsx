@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react'
-import styles from './GenericCardTemplate.module.scss'
+import styles from './styles.module.scss'
 
 interface GenericCardTemplateProps {
   headerContent: ReactNode

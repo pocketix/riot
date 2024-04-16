@@ -1,7 +1,7 @@
 import React from 'react'
 import StandardContentPageTemplate from '../../page-independent-components/standard-content-page-template/StandardContentPageTemplate'
 import { KpiDefinitionsQuery } from '../../generated/graphql'
-import styles from './KPIPageView.module.scss'
+import styles from './styles.module.scss'
 import GenericCardTemplate from '../../page-independent-components/generic-card-template/GenericCardTemplate'
 import { useNavigate } from 'react-router-dom'
 
@@ -24,7 +24,7 @@ const KPIPageView: React.FC<KPIPageViewProps> = (props) => {
             .slice()
             .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10))
             .map((kpiDefinition) => (
-              <GenericCardTemplate
+              <GenericCardTemplate // TODO: Consider creating a separate component out of this...
                 headerContent={
                   <>
                     <div onClick={() => navigate(`${kpiDefinition.id}/edit`)}>

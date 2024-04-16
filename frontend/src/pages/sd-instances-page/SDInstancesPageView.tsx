@@ -1,11 +1,11 @@
 import React from 'react'
 import { SdInstancesQuery } from '../../generated/graphql'
 import StandardContentPageTemplate from '../../page-independent-components/standard-content-page-template/StandardContentPageTemplate'
-import styles from './SDInstancesPageView.module.scss'
+import styles from './styles.module.scss'
 import SDInstancesSection from './components/sd-instances-section/SDInstancesSection'
 
 interface SDTypesPageViewProps {
-  sdInstancesQueryData: SdInstancesQuery
+  sdInstancesData: SdInstancesQuery
   updateUserIdentifierOfSdInstance: (id: string, newUserIdentifier: string) => Promise<void>
   confirmSdInstance: (id: string) => Promise<void>
   anyLoadingOccurs: boolean
@@ -21,11 +21,21 @@ const SDInstancesPageView: React.FC<SDTypesPageViewProps> = (props) => {
       <div className={styles.sdInstancesSectionTitle}>
         <h3>SD instances confirmed by user</h3>
       </div>
-      <SDInstancesSection sdInstancesQueryData={props.sdInstancesQueryData} isSectionOfSDInstancesConfirmedByUser={true} updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance} confirmSdInstance={props.confirmSdInstance}></SDInstancesSection>
+      <SDInstancesSection
+        sdInstancesData={props.sdInstancesData}
+        confirmedByUserRequirement={true}
+        updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance}
+        confirmSdInstance={props.confirmSdInstance}
+      />
       <div className={styles.sdInstancesSectionTitle}>
         <h3>SD instances not yet confirmed by user</h3>
       </div>
-      <SDInstancesSection sdInstancesQueryData={props.sdInstancesQueryData} isSectionOfSDInstancesConfirmedByUser={false} updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance} confirmSdInstance={props.confirmSdInstance}></SDInstancesSection>
+      <SDInstancesSection
+        sdInstancesData={props.sdInstancesData}
+        confirmedByUserRequirement={false}
+        updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance}
+        confirmSdInstance={props.confirmSdInstance}
+      />
     </StandardContentPageTemplate>
   )
 }

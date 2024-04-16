@@ -18,11 +18,11 @@ const AtomNode: React.FC<AtomNodeProps> = (props) => {
       case AtomNodeType.NumericLT:
         return '<'
       case AtomNodeType.NumericLEQ:
-        return '<='
+        return '≤'
       case AtomNodeType.NumericGT:
         return '>'
       case AtomNodeType.NumericGEQ:
-        return '>='
+        return '≥'
     }
   }, [props.type])
 

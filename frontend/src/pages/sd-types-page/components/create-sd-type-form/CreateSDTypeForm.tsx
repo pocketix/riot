@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, ChangeEvent } from 'react'
 import { Button, FormControl, Grid, InputLabel, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material'
-import styles from './CreateSDTypeForm.module.scss'
+import styles from './styles.module.scss'
 import { SdTypesQuery } from '../../../../generated/graphql'
 
 interface CreateSDTypeFormProps {
@@ -15,7 +15,10 @@ const CreateSDTypeForm: React.FC<CreateSDTypeFormProps> = (props) => {
   const [parameters, setParameters] = useState<{ denotation: string; type: string }[]>([{ denotation: 'relay_0_temperature', type: 'NUMBER' }])
 
   const isFormDisabled: boolean = useMemo<boolean>(() => props.anyLoadingOccurs || props.anyErrorOccurred, [props.anyLoadingOccurs, props.anyErrorOccurred])
-  const denotationFieldError: boolean = useMemo<boolean>(() => denotation.length === 0 || props.sdTypesQueryData?.sdTypes.some((sdType) => sdType.denotation === denotation), [denotation, props.sdTypesQueryData])
+  const denotationFieldError: boolean = useMemo<boolean>(
+    () => denotation.length === 0 || props.sdTypesQueryData?.sdTypes.some((sdType) => sdType.denotation === denotation),
+    [denotation, props.sdTypesQueryData]
+  )
   const denotationFieldHelperText: string = useMemo<string>(() => {
     if (!denotationFieldError) {
       return ''
@@ -25,7 +28,10 @@ const CreateSDTypeForm: React.FC<CreateSDTypeFormProps> = (props) => {
       return 'SD type denotation must be unique'
     }
   }, [denotationFieldError, denotation])
-  const formSubmitButtonDisabled: boolean = useMemo<boolean>(() => isFormDisabled || denotationFieldError || parameters.some((p) => p.denotation.length === 0), [isFormDisabled, denotationFieldError, parameters])
+  const formSubmitButtonDisabled: boolean = useMemo<boolean>(
+    () => isFormDisabled || denotationFieldError || parameters.some((p) => p.denotation.length === 0),
+    [isFormDisabled, denotationFieldError, parameters]
+  )
 
   const onSubmitHandler = useCallback(async () => {
     await props.createSDType(denotation, parameters as { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[])
@@ -73,12 +79,26 @@ const CreateSDTypeForm: React.FC<CreateSDTypeFormProps> = (props) => {
           return (
             <React.Fragment key={index}>
               <Grid item xs={4} style={{ height: 80 }}>
-                <TextField fullWidth error={parameterDenotationFieldError} label={`Parameter ${index + 1} – Denotation`} value={parameter.denotation} disabled={isFormDisabled} onChange={onParameterDenotationChange(index)} helperText={parameterDenotationFieldHelperText} />
+                <TextField
+                  fullWidth
+                  error={parameterDenotationFieldError}
+                  label={`Parameter ${index + 1} – Denotation`}
+                  value={parameter.denotation}
+                  disabled={isFormDisabled}
+                  onChange={onParameterDenotationChange(index)}
+                  helperText={parameterDenotationFieldHelperText}
+                />
               </Grid>
               <Grid item xs={4} style={{ height: 80 }}>
                 <FormControl fullWidth>
                   <InputLabel id={`parameter-type-select-label-${index}`}>{`Parameter ${index + 1} – Type`}</InputLabel>
-                  <Select labelId={`parameter-type-select-label-${index}`} label={`Parameter ${index + 1} – Type`} value={parameter.type} onChange={onParameterTypeChange(index)} disabled={isFormDisabled}>
+                  <Select
+                    labelId={`parameter-type-select-label-${index}`}
+                    label={`Parameter ${index + 1} – Type`}
+                    value={parameter.type}
+                    onChange={onParameterTypeChange(index)}
+                    disabled={isFormDisabled}
+                  >
                     <MenuItem value={'STRING'}>STRING</MenuItem>
                     <MenuItem value={'NUMBER'}>NUMBER</MenuItem>
                     <MenuItem value={'BOOLEAN'}>BOOLEAN</MenuItem>

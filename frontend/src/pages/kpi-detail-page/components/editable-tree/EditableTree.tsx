@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { CustomNodeElementProps, Point, RawNodeDatum, Tree, TreeNodeDatum } from 'react-d3-tree'
-import styles from './EditableTree.module.scss'
+import styles from './styles.module.scss'
 import AtomNode from '../atom-node/AtomNode'
 import LogicalOperationNode from '../logical-operation-node/LogicalOperationNode'
 import EditableTreeNodeBase from '../editable-tree-node-base/EditableTreeNodeBase'
@@ -118,7 +118,13 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
         case NodeType.NewNode:
           return <EditableTreeNodeBase treeNodeContents={<p>+</p>} />
         case NodeType.AtomNode:
-          return <AtomNode type={editableTreeNodeDataModel.attributes.atomNodeType} sdParameterSpecification={editableTreeNodeDataModel.attributes.atomNodeSDParameterSpecification} referenceValue={editableTreeNodeDataModel.attributes.atomNodeReferenceValue} />
+          return (
+            <AtomNode
+              type={editableTreeNodeDataModel.attributes.atomNodeType}
+              sdParameterSpecification={editableTreeNodeDataModel.attributes.atomNodeSDParameterSpecification}
+              referenceValue={editableTreeNodeDataModel.attributes.atomNodeReferenceValue}
+            />
+          )
         case NodeType.LogicalOperationNode:
           return (
             <LogicalOperationNode

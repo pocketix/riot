@@ -1,23 +1,24 @@
 import { SdInstancesQuery } from '../../../../generated/graphql'
 import React, { useMemo } from 'react'
 import SDInstanceCard from '../sd-instance-card/SDInstanceCard'
-import styles from './SDInstanceSection.module.scss'
+import styles from './styles.module.scss'
 
 interface ConfirmedSDInstancesSectionProps {
-  sdInstancesQueryData: SdInstancesQuery
-  isSectionOfSDInstancesConfirmedByUser: boolean
+  sdInstancesData: SdInstancesQuery
+  confirmedByUserRequirement: boolean
   updateUserIdentifierOfSdInstance: (id: string, newUserIdentifier: string) => Promise<void>
   confirmSdInstance: (id: string) => Promise<void>
 }
 
 const SDInstancesSection: React.FC<ConfirmedSDInstancesSectionProps> = (props) => {
+  const confirmedByUserRequirement = props.confirmedByUserRequirement
   const sdInstances = useMemo(() => {
-    if (props.sdInstancesQueryData) {
-      return props.sdInstancesQueryData.sdInstances.filter((sdInstance) => sdInstance.confirmedByUser == props.isSectionOfSDInstancesConfirmedByUser)
+    if (props.sdInstancesData) {
+      return props.sdInstancesData.sdInstances.filter((sdInstance) => sdInstance.confirmedByUser === confirmedByUserRequirement)
     } else {
       return []
     }
-  }, [props.sdInstancesQueryData, props.isSectionOfSDInstancesConfirmedByUser])
+  }, [props.sdInstancesData, props.confirmedByUserRequirement])
   return (
     <div className={styles.section}>
       {sdInstances.length === 0 && <p>No SD instances of this kind...</p>}
@@ -31,7 +32,7 @@ const SDInstancesSection: React.FC<ConfirmedSDInstancesSectionProps> = (props) =
             userIdentifier={sdInstance.userIdentifier}
             uid={sdInstance.uid}
             sdTypeDenotation={sdInstance.type.denotation}
-            confirmedByUser={props.isSectionOfSDInstancesConfirmedByUser}
+            confirmedByUser={confirmedByUserRequirement}
             updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance}
             confirmSdInstance={props.confirmSdInstance}
           />

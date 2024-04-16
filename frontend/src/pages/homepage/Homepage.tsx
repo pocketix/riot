@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from './Homepage.module.scss'
+import styles from './styles.module.scss'
 import HomepageGraphics from '../../../resources/images/homepage-graphics.jpg'
 
 const Homepage: React.FC = () => {

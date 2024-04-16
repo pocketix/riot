@@ -1,7 +1,7 @@
 import React, { ChangeEvent, KeyboardEvent, useCallback, useState } from 'react'
 import GenericCardTemplate from '../../../../page-independent-components/generic-card-template/GenericCardTemplate'
 import { Button, TextField } from '@mui/material'
-import styles from './SDInstanceCard.module.scss'
+import styles from './styles.module.scss'
 import { styled } from '@mui/material/styles'
 
 const PlainTextField = styled(TextField)({

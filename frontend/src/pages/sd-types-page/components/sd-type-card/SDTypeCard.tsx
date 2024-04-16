@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react'
 import { Collapse } from '@mui/material'
-import styles from './SDTypeCard.module.scss'
+import styles from './styles.module.scss'
 import GenericCardTemplate from '../../../../page-independent-components/generic-card-template/GenericCardTemplate'
 
 interface SDTypeParameter {
@@ -30,23 +30,6 @@ const SDTypeCard: React.FC<SDTypeCardProps> = (props) => {
     await props.deleteSDType(props.id)
   }, [deleteButtonDisabled, props.deleteSDType, props.id])
 
-  const parameterElements = (
-    <>
-      <div className={styles.parameterElements}>
-        {props.parameters.map((parameter) => (
-          <div key={parameter.id} className={styles.parameterElement}>
-            <p>
-              Denotation: <strong>{parameter.denotation}</strong>
-            </p>
-            <p>
-              Type: <strong>{parameter.type}</strong>
-            </p>
-          </div>
-        ))}
-      </div>
-    </>
-  )
-
   return (
     <GenericCardTemplate
       headerContent={
@@ -61,7 +44,20 @@ const SDTypeCard: React.FC<SDTypeCardProps> = (props) => {
           <p>
             Denotation: <strong>{props.denotation}</strong>
           </p>
-          <Collapse in={props.areParametersDisplayed}>{parameterElements}</Collapse>
+          <Collapse in={props.areParametersDisplayed}>
+            <div className={styles.parameterElements}>
+              {props.parameters.map((parameter) => (
+                <div key={parameter.id} className={styles.parameterElement}>
+                  <p>
+                    Denotation: <strong>{parameter.denotation}</strong>
+                  </p>
+                  <p>
+                    Type: <strong>{parameter.type}</strong>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Collapse>
         </>
       }
     ></GenericCardTemplate>

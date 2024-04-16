@@ -1,6 +1,6 @@
 import React, { ReactNode, useMemo } from 'react'
 import { editableTreeConfiguration } from '../editable-tree/EditableTree'
-import styles from './EditableNodeTreeBase.module.scss'
+import styles from './styles.module.scss'
 
 interface EditableTreeNodeBaseProps {
   treeNodeContents: ReactNode

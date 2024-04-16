@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from './ApolloSandboxPage.module.scss'
+import styles from './styles.module.scss'
 import { ApolloSandbox } from '@apollo/sandbox/react'
 
 const ApolloSandboxPage: React.FC = () => {

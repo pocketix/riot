@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Box, FormControl, InputLabel, MenuItem, Modal, Select, SelectChangeEvent } from '@mui/material'
 import { LogicalOperationNodeType } from '../editable-tree/EditableTree'
 

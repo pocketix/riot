@@ -1,11 +1,11 @@
 import React from 'react'
 import EditableTree, { LogicalOperationNodeType } from './components/editable-tree/EditableTree'
 import StandardContentPageTemplate from '../../page-independent-components/standard-content-page-template/StandardContentPageTemplate'
-import { KPIModel } from './KPIDetailPageController'
+import { KPIDefinitionModel } from './KPIDetailPageController'
 import ChangeLogicalOperationTypeModal from './components/change-logical-operation-type-modal/ChangeLogicalOperationTypeModal'
 
 interface KPIDetailPageViewProps {
-  kpi: KPIModel
+  kpiDefinitionModel: KPIDefinitionModel
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
   isChangeLogicalOperationTypeModalOpen: boolean
@@ -17,9 +17,13 @@ interface KPIDetailPageViewProps {
 const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
   return (
     <StandardContentPageTemplate pageTitle="KPI detail" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
-      <ChangeLogicalOperationTypeModal isOpen={props.isChangeLogicalOperationTypeModalOpen} onCloseHandler={props.closeChangeLogicalOperationTypeModal} changeLogicalOperationType={props.changeLogicalOperationType}></ChangeLogicalOperationTypeModal>
-      <h2>{`${props.kpi.userIdentifier} (ID: ${props.kpi.id})`}</h2>
-      <EditableTree editableTreeNodeData={props.kpi} initiateLogicalOperationNodeModification={props.initiateLogicalOperationNodeModification} />
+      <ChangeLogicalOperationTypeModal
+        isOpen={props.isChangeLogicalOperationTypeModalOpen}
+        onCloseHandler={props.closeChangeLogicalOperationTypeModal}
+        changeLogicalOperationType={props.changeLogicalOperationType}
+      ></ChangeLogicalOperationTypeModal>
+      <h2>{`${props.kpiDefinitionModel.userIdentifier} (ID: ${props.kpiDefinitionModel.id})`}</h2>
+      <EditableTree editableTreeNodeData={props.kpiDefinitionModel} initiateLogicalOperationNodeModification={props.initiateLogicalOperationNodeModification} />
     </StandardContentPageTemplate>
   )
 }
