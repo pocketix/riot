@@ -8,9 +8,9 @@ interface AtomNodeProps {
   referenceValue: string | boolean | number
 }
 
-const AtomNode: React.FC<AtomNodeProps> = (props) => {
+const AtomNode: React.FC<AtomNodeProps> = ({ type, sdParameterSpecification, referenceValue }) => {
   const binaryRelationSymbol: string = useMemo(() => {
-    switch (props.type) {
+    switch (type) {
       case AtomNodeType.StringEQ:
       case AtomNodeType.BooleanEQ:
       case AtomNodeType.NumericEQ:
@@ -24,9 +24,20 @@ const AtomNode: React.FC<AtomNodeProps> = (props) => {
       case AtomNodeType.NumericGEQ:
         return '≥'
     }
-  }, [props.type])
+  }, [type])
 
-  return <EditableTreeNodeBase treeNodeContents={<p>{`${props.sdParameterSpecification} ${binaryRelationSymbol} ${props.referenceValue}`}</p>} />
+  const referenceValueString: string = useMemo(() => {
+    switch (typeof referenceValue) {
+      case 'string':
+        return `"${referenceValue}"`
+      case 'boolean':
+        return referenceValue ? 'true' : 'false'
+      case 'number':
+        return referenceValue.toString()
+    }
+  }, [referenceValue])
+
+  return <EditableTreeNodeBase treeNodeContents={<p>{`${sdParameterSpecification} ${binaryRelationSymbol} ${referenceValueString}`}</p>} />
 }
 
 export default AtomNode

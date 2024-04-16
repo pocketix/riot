@@ -9,5 +9,8 @@
 
   p {
     font-family: 'Noto Sans Math', sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
