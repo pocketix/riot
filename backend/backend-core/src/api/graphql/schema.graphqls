@@ -166,6 +166,7 @@ type Query {
   sdType(id: ID!): SDType!
   sdTypes: [SDType!]!
   sdInstances: [SDInstance!]!
+  kpiDefinition(id: ID!): KPIDefinition!
   kpiDefinitions: [KPIDefinition!]!
 }
 

@@ -6,7 +6,6 @@ package graphql
 
 import (
 	"context"
-
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/generated"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/service"
@@ -46,6 +45,11 @@ func (r *queryResolver) SdTypes(ctx context.Context) ([]*model.SDType, error) {
 // SdInstances is the resolver for the sdInstances field.
 func (r *queryResolver) SdInstances(ctx context.Context) ([]*model.SDInstance, error) {
 	return service.GetSDInstances().Unwrap()
+}
+
+// KpiDefinition is the resolver for the kpiDefinition field.
+func (r *queryResolver) KpiDefinition(ctx context.Context, id string) (*model.KPIDefinition, error) {
+	return service.GetKPIDefinition(id).Unwrap()
 }
 
 // KpiDefinitions is the resolver for the kpiDefinitions field.

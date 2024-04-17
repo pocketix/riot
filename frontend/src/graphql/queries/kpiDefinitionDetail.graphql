@@ -1,5 +1,5 @@
-query FullKPIDefinitions {
-  kpiDefinitions {
+query KPIDefinitionDetail($id: ID!) {
+  kpiDefinition(id: $id) {
     id
     userIdentifier
     sdTypeSpecification

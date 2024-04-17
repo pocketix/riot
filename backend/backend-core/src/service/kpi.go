@@ -1,10 +1,13 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/api2dto"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2api"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 )
 
@@ -30,4 +33,25 @@ func GetKPIDefinitions() util.Result[[]*model.KPIDefinition] {
 		return util.NewFailureResult[[]*model.KPIDefinition](loadResult.GetError())
 	}
 	return util.NewSuccessResult[[]*model.KPIDefinition](util.Map(loadResult.GetPayload(), dto2api.KPIDefinitionDTOToKPIDefinition))
+}
+
+func GetKPIDefinition(stringID string) util.Result[*model.KPIDefinition] {
+	uint32FromStringResult := util.UINT32FromString(stringID)
+	if uint32FromStringResult.IsFailure() {
+		return util.NewFailureResult[*model.KPIDefinition](uint32FromStringResult.GetError())
+	}
+	id := uint32FromStringResult.GetPayload()
+	// TODO: Searching for target KPI definition on service layer (suboptimal)
+	loadResult := (*db.GetRelationalDatabaseClientInstance()).LoadKPIDefinitions()
+	if loadResult.IsFailure() {
+		return util.NewFailureResult[*model.KPIDefinition](loadResult.GetError())
+	}
+	kpiDefinitionDTOs := loadResult.GetPayload()
+	targetKPIDefinitionDTOOptional := util.FindFirst[kpi.DefinitionDTO](kpiDefinitionDTOs, func(kpiDefinitionDTO kpi.DefinitionDTO) bool {
+		return kpiDefinitionDTO.ID.GetPayload() == id
+	})
+	if targetKPIDefinitionDTOOptional.IsEmpty() {
+		return util.NewFailureResult[*model.KPIDefinition](errors.New(fmt.Sprintf("couldn't find KPI definition for id: %d", id)))
+	}
+	return util.NewSuccessResult[*model.KPIDefinition](dto2api.KPIDefinitionDTOToKPIDefinition(targetKPIDefinitionDTOOptional.GetPayload()))
 }

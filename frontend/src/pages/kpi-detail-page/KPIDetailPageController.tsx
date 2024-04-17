@@ -4,9 +4,9 @@ import KPIDetailPageView from './KPIDetailPageView'
 import { EditableTreeNodeDataModel, LogicalOperationNodeType, NodeType } from './components/editable-tree/EditableTree'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@apollo/client'
-import { FullKpiDefinitionsQuery, FullKpiDefinitionsQueryVariables } from '../../generated/graphql'
+import { KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables } from '../../generated/graphql'
 import gql from 'graphql-tag'
-import qFullKPIDefinitions from '../../graphql/queries/fullKPIDefinitions.graphql'
+import qKPIDefinitionDetail from '../../graphql/queries/kpiDefinitionDetail.graphql'
 import { kpiDefinitionToKPIDefinitionModel, initialKPIDefinitionModel } from './kpiDefinitionModel'
 import { v4 as uuid } from 'uuid'
 
@@ -23,7 +23,12 @@ enum LogicalOperationSelectionMode {
 
 const KPIDetailPageController: React.FC = () => {
   const { id } = useParams()
-  const { data, loading, error } = useQuery<FullKpiDefinitionsQuery, FullKpiDefinitionsQueryVariables>(gql(qFullKPIDefinitions))
+  const { data, loading, error } = useQuery<KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables>(gql(qKPIDefinitionDetail), {
+    skip: !id,
+    variables: {
+      id: id
+    }
+  })
 
   const [definitionModel, setDefinitionModel] = useState<KPIDefinitionModel>(initialKPIDefinitionModel)
   const [isSelectLogicalOperationTypeModalOpen, setIsSelectLogicalOperationTypeModalOpen] = useState<boolean>(false)
@@ -33,14 +38,11 @@ const KPIDetailPageController: React.FC = () => {
   const currentNodeNameRef = useRef('')
 
   useEffect(() => {
-    if (!id || !data) {
+    if (!data) {
       return
     }
-    const targetKPIDefinition = data.kpiDefinitions.find((kpiDefinition) => kpiDefinition.id === id)
-    if (targetKPIDefinition) {
-      setDefinitionModel(kpiDefinitionToKPIDefinitionModel(targetKPIDefinition))
-    }
-  }, [id, data])
+    setDefinitionModel(kpiDefinitionToKPIDefinitionModel(data.kpiDefinition))
+  }, [data])
 
   const closeSelectLogicalOperationTypeModal = () => {
     setIsSelectLogicalOperationTypeModalOpen(false)
