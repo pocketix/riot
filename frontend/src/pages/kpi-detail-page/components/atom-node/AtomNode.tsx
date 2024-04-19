@@ -14,7 +14,7 @@ const AtomNode: React.FC<AtomNodeProps> = ({ type, sdParameterSpecification, ref
       case AtomNodeType.StringEQ:
       case AtomNodeType.BooleanEQ:
       case AtomNodeType.NumericEQ:
-        return '=='
+        return '='
       case AtomNodeType.NumericLT:
         return '<'
       case AtomNodeType.NumericLEQ:

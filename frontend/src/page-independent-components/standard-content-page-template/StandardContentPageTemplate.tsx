@@ -10,7 +10,7 @@ interface StandardContentPageProps {
 }
 
 const genericErrorMessage: string =
-  'The system encountered an error! ' + 'Consider checking browser console and application logs for more information... ' + 'One can also try to refresh the page as it may help in some cases...'
+  'The system encountered an error! ' + 'Consider checking browser console and application logs for more information... ' + 'One can also try refreshing the page (F5) as it may help in some cases...'
 
 const StandardContentPageTemplate: React.FC<StandardContentPageProps> = (props) => {
   const [pageTitleShown, setPageTitleShown] = useState(false)

@@ -1,28 +1,8 @@
 import React, { ChangeEvent, KeyboardEvent, useCallback, useState } from 'react'
 import GenericCardTemplate from '../../../../page-independent-components/generic-card-template/GenericCardTemplate'
-import { Button, TextField } from '@mui/material'
+import { Button } from '@mui/material'
 import styles from './styles.module.scss'
-import { styled } from '@mui/material/styles'
-
-const PlainTextField = styled(TextField)({
-  '& .MuiInputBase-root': {
-    fontSize: 'inherit',
-    fontWeight: '700',
-    color: 'inherit',
-    padding: 0,
-    margin: 0,
-    border: 'none',
-    '&:before': {
-      borderBottom: 'none'
-    },
-    '&:after': {
-      borderBottom: 'none'
-    },
-    '&:hover:not(.Mui-disabled):before': {
-      borderBottom: 'none'
-    }
-  }
-})
+import PlainTextField from '../../../../page-independent-components/plain-text-field/PlainTextField'
 
 interface SDInstanceCardProps {
   id: string

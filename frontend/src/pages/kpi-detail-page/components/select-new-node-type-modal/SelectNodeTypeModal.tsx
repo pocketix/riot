@@ -6,6 +6,7 @@ interface SelectNewNodeTypeModalProps {
   isOpen: boolean
   onCloseHandler: () => void
   initiateNewLogicalOperationNodeCreation: () => void
+  initiateNewAtomNodeCreation: () => void
 }
 
 const SelectNodeTypeModal: React.FC<SelectNewNodeTypeModalProps> = (props) => {
@@ -17,7 +18,9 @@ const SelectNodeTypeModal: React.FC<SelectNewNodeTypeModalProps> = (props) => {
       content={
         <Grid container spacing={1} alignItems="center">
           <Grid item xs={3}>
-            <Button fullWidth>Atom</Button>
+            <Button fullWidth onClick={props.initiateNewAtomNodeCreation}>
+              Atom
+            </Button>
           </Grid>
           <Grid item xs={9}></Grid>
           <Grid item xs={6}>

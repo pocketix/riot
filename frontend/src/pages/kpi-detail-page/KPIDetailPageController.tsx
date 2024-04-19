@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { produce } from 'immer'
 import KPIDetailPageView from './KPIDetailPageView'
-import { EditableTreeNodeDataModel, LogicalOperationNodeType, NodeType } from './components/editable-tree/EditableTree'
+import { AtomNodeType, EditableTreeNodeDataModel, LogicalOperationNodeType } from './components/editable-tree/EditableTree'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@apollo/client'
-import { KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables } from '../../generated/graphql'
+import { KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables, SdType, SdTypesQuery, SdTypesQueryVariables } from '../../generated/graphql'
 import gql from 'graphql-tag'
 import qKPIDefinitionDetail from '../../graphql/queries/kpiDefinitionDetail.graphql'
-import { kpiDefinitionToKPIDefinitionModel, initialKPIDefinitionModel } from './kpiDefinitionModel'
-import { v4 as uuid } from 'uuid'
+import qSDTypes from '../../graphql/queries/sdTypes.graphql'
+import { initialKPIDefinitionModel, changeLogicalOperationTypeOfLogicalOperationNode, crateNewLogicalOperationNode, kpiDefinitionToKPIDefinitionModel, crateNewAtomNode } from './kpiDefinitionModel'
 
 export interface KPIDefinitionModel extends EditableTreeNodeDataModel {
   id: string
@@ -23,34 +23,31 @@ enum LogicalOperationSelectionMode {
 
 const KPIDetailPageController: React.FC = () => {
   const { id } = useParams()
-  const { data, loading, error } = useQuery<KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables>(gql(qKPIDefinitionDetail), {
+  const {
+    data: kpiDefinitionDetailData,
+    loading: kpiDefinitionDetailLoading,
+    error: kpiDefinitionDetailError
+  } = useQuery<KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables>(gql(qKPIDefinitionDetail), {
     skip: !id,
     variables: {
       id: id
     }
   })
+  const { data: sdTypesData, loading: sdTypesLoading, error: sdTypesError } = useQuery<SdTypesQuery, SdTypesQueryVariables>(gql(qSDTypes))
 
   const [definitionModel, setDefinitionModel] = useState<KPIDefinitionModel>(initialKPIDefinitionModel)
+  const [sdTypeData, setSDTypeData] = useState<SdType>(null)
   const [isSelectLogicalOperationTypeModalOpen, setIsSelectLogicalOperationTypeModalOpen] = useState<boolean>(false)
   const [isSelectNewNodeTypeModalOpen, setIsSelectNewNodeTypeModalOpen] = useState<boolean>(false)
+  const [isAtomNodeModalOpen, setIsAtomNodeModalOpen] = useState<boolean>(false)
   const [logicalOperationSelectionMode, setLogicalOperationSelectionMode] = useState<LogicalOperationSelectionMode>(LogicalOperationSelectionMode.Idle)
 
   const currentNodeNameRef = useRef('')
 
+  useEffect(() => kpiDefinitionDetailData && setDefinitionModel(kpiDefinitionToKPIDefinitionModel(kpiDefinitionDetailData.kpiDefinition)), [kpiDefinitionDetailData])
   useEffect(() => {
-    if (!data) {
-      return
-    }
-    setDefinitionModel(kpiDefinitionToKPIDefinitionModel(data.kpiDefinition))
-  }, [data])
-
-  const closeSelectLogicalOperationTypeModal = () => {
-    setIsSelectLogicalOperationTypeModalOpen(false)
-  }
-
-  const closeSelectNewNodeTypeModal = () => {
-    setIsSelectNewNodeTypeModalOpen(false)
-  }
+    sdTypesData && kpiDefinitionDetailData && setSDTypeData(sdTypesData.sdTypes.find((sdType) => sdType.denotation === kpiDefinitionDetailData.kpiDefinition.sdTypeSpecification))
+  }, [sdTypesData, kpiDefinitionDetailData])
 
   const initiateLogicalOperationNodeModification = (nodeName: string) => {
     currentNodeNameRef.current = nodeName
@@ -61,19 +58,7 @@ const KPIDetailPageController: React.FC = () => {
   const changeLogicalOperationType = (newOperationType: LogicalOperationNodeType): void => {
     setDefinitionModel((definitionModel) =>
       produce(definitionModel, (draftDefinitionModel) => {
-        const processNode = (node: EditableTreeNodeDataModel): boolean => {
-          if (node.name === currentNodeNameRef.current && node.attributes.nodeType === NodeType.LogicalOperationNode) {
-            node.attributes.logicalOperationNodeType = newOperationType
-            return true
-          }
-          if (node.children && node.children.length > 0) {
-            return node.children.some((child) => processNode(child))
-          }
-          return false
-        }
-        if (!processNode(draftDefinitionModel)) {
-          console.warn('Target node not found in the tree!')
-        }
+        changeLogicalOperationTypeOfLogicalOperationNode(currentNodeNameRef.current, draftDefinitionModel, newOperationType)
       })
     )
     setLogicalOperationSelectionMode(LogicalOperationSelectionMode.Idle)
@@ -90,35 +75,39 @@ const KPIDetailPageController: React.FC = () => {
     setIsSelectLogicalOperationTypeModalOpen(true)
   }
 
+  const initiateNewAtomNodeCreation = () => {
+    setIsSelectNewNodeTypeModalOpen(false)
+    setIsAtomNodeModalOpen(true)
+  }
+
   const finalizeNewLogicalOperationNodeCreation = (logicalOperationType: LogicalOperationNodeType) => {
     setDefinitionModel((definitionModel) =>
       produce(definitionModel, (draftDefinitionModel) => {
-        const processNode = (node: EditableTreeNodeDataModel): boolean => {
-          if (node.name === currentNodeNameRef.current && node.attributes.nodeType === NodeType.NewNode) {
-            node.attributes.nodeType = NodeType.LogicalOperationNode
-            node.attributes.logicalOperationNodeType = logicalOperationType
-            node.children = [
-              {
-                name: uuid(),
-                attributes: {
-                  nodeType: NodeType.NewNode
-                },
-                children: []
-              }
-            ]
-            return true
-          }
-          if (node.children && node.children.length > 0) {
-            return node.children.some((child) => processNode(child))
-          }
-          return false
-        }
-        if (!processNode(draftDefinitionModel)) {
-          console.warn('Target node not found in the tree!')
-        }
+        crateNewLogicalOperationNode(currentNodeNameRef.current, draftDefinitionModel, logicalOperationType)
       })
     )
     setIsSelectLogicalOperationTypeModalOpen(false)
+  }
+
+  const finalizeNewAtomNodeCreation = (type: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
+    setDefinitionModel((definitionModel) =>
+      produce(definitionModel, (draftDefinitionModel) => {
+        crateNewAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterSpecification, referenceValue)
+      })
+    )
+    setIsAtomNodeModalOpen(false)
+  }
+
+  const handleSDTypeSelection = (sdTypeID: string) => {
+    if (!sdTypesData) {
+      return
+    }
+    const selectedSDType = sdTypesData.sdTypes.find((sdType) => sdType.id === sdTypeID)
+    if (!selectedSDType || (sdTypeData && selectedSDType.id === sdTypeData.id)) {
+      return
+    }
+    setSDTypeData(selectedSDType)
+    setDefinitionModel(initialKPIDefinitionModel)
   }
 
   const selectedLogicalOperationTypeHandler = useMemo(() => {
@@ -135,16 +124,23 @@ const KPIDetailPageController: React.FC = () => {
   return (
     <KPIDetailPageView
       kpiDefinitionModel={definitionModel}
-      anyLoadingOccurs={loading}
-      anyErrorOccurred={!!error}
+      sdTypesData={sdTypesData}
+      sdTypeData={sdTypeData}
+      anyLoadingOccurs={kpiDefinitionDetailLoading || sdTypesLoading}
+      anyErrorOccurred={!!kpiDefinitionDetailError || !!sdTypesError}
       isSelectLogicalOperationTypeModalOpen={isSelectLogicalOperationTypeModalOpen}
       isSelectNewNodeTypeModalOpen={isSelectNewNodeTypeModalOpen}
-      closeSelectLogicalOperationTypeModal={closeSelectLogicalOperationTypeModal}
-      closeSelectNewNodeTypeModal={closeSelectNewNodeTypeModal}
+      isAtomNodeModalOpen={isAtomNodeModalOpen}
+      closeSelectLogicalOperationTypeModal={() => setIsSelectLogicalOperationTypeModalOpen(false)}
+      closeSelectNewNodeTypeModal={() => setIsSelectNewNodeTypeModalOpen(false)}
+      closeAtomNodeModal={() => setIsAtomNodeModalOpen(false)}
       selectedLogicalOperationTypeHandler={selectedLogicalOperationTypeHandler}
       initiateLogicalOperationNodeModification={initiateLogicalOperationNodeModification}
       initiateNewNodeCreation={initiateNewNodeCreation}
       initiateNewLogicalOperationNodeCreation={initiateNewLogicalOperationNodeCreation}
+      initiateNewAtomNodeCreation={initiateNewAtomNodeCreation}
+      finalizeNewAtomNodeCreation={finalizeNewAtomNodeCreation}
+      handleSDTypeSelection={handleSDTypeSelection}
     />
   )
 }
