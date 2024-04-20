@@ -10,6 +10,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.11
 	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.9
+	github.com/davecgh/go-spew v1.1.1
 )
 
 replace github.com/MichalBures-OG/bp-bures-SfPDfSD-commons => ./../commons

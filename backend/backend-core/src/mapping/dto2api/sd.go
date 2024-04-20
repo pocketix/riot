@@ -12,7 +12,7 @@ func SDTypeDTOToSDType(sdTypeDto types.SDTypeDTO) *model.SDType {
 		Denotation: sdTypeDto.Denotation,
 		Parameters: util.Map(sdTypeDto.Parameters, func(sdParameterDto types.SDParameterDTO) *model.SDParameter {
 			return &model.SDParameter{
-				ID:         util.UINT32ToString(sdTypeDto.ID.GetPayload()),
+				ID:         util.UINT32ToString(sdParameterDto.ID.GetPayload()),
 				Denotation: sdParameterDto.Denotation,
 				Type: func(sdParameterType types.SDParameterType) model.SDParameterType {
 					switch sdParameterType {
