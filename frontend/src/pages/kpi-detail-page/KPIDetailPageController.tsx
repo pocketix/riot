@@ -8,7 +8,14 @@ import { KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables, SdType, Sd
 import gql from 'graphql-tag'
 import qKPIDefinitionDetail from '../../graphql/queries/kpiDefinitionDetail.graphql'
 import qSDTypes from '../../graphql/queries/sdTypes.graphql'
-import { initialKPIDefinitionModel, changeLogicalOperationTypeOfLogicalOperationNode, crateNewLogicalOperationNode, kpiDefinitionToKPIDefinitionModel, crateNewAtomNode } from './kpiDefinitionModel'
+import {
+  initialKPIDefinitionModel,
+  changeLogicalOperationTypeOfLogicalOperationNode,
+  crateNewLogicalOperationNode,
+  kpiDefinitionToKPIDefinitionModel,
+  crateNewAtomNode,
+  changeAtomNodeConfiguration
+} from './kpiDefinitionModel'
 
 export interface KPIDefinitionModel extends EditableTreeNodeDataModel {
   id: string
@@ -19,6 +26,12 @@ enum LogicalOperationSelectionMode {
   Idle,
   NodeUpdate,
   NodeCreation
+}
+
+enum AtomNodeMode {
+  Idle,
+  Update,
+  Creation
 }
 
 const KPIDetailPageController: React.FC = () => {
@@ -41,6 +54,7 @@ const KPIDetailPageController: React.FC = () => {
   const [isSelectNewNodeTypeModalOpen, setIsSelectNewNodeTypeModalOpen] = useState<boolean>(false)
   const [isAtomNodeModalOpen, setIsAtomNodeModalOpen] = useState<boolean>(false)
   const [logicalOperationSelectionMode, setLogicalOperationSelectionMode] = useState<LogicalOperationSelectionMode>(LogicalOperationSelectionMode.Idle)
+  const [atomNodeMode, setAtomNodeMode] = useState<AtomNodeMode>(AtomNodeMode.Idle)
 
   const currentNodeNameRef = useRef('')
 
@@ -55,6 +69,12 @@ const KPIDetailPageController: React.FC = () => {
     setIsSelectLogicalOperationTypeModalOpen(true)
   }
 
+  const initiateAtomNodeModification = (nodeName: string) => {
+    currentNodeNameRef.current = nodeName
+    setAtomNodeMode(AtomNodeMode.Update)
+    setIsAtomNodeModalOpen(true)
+  }
+
   const changeLogicalOperationType = (newOperationType: LogicalOperationNodeType): void => {
     setDefinitionModel((definitionModel) =>
       produce(definitionModel, (draftDefinitionModel) => {
@@ -62,6 +82,16 @@ const KPIDetailPageController: React.FC = () => {
       })
     )
     setLogicalOperationSelectionMode(LogicalOperationSelectionMode.Idle)
+  }
+
+  const reconfigureAtomNode = (type: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
+    setDefinitionModel((definitionModel) =>
+      produce(definitionModel, (draftDefinitionModel) => {
+        changeAtomNodeConfiguration(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterSpecification, referenceValue)
+      })
+    )
+    setAtomNodeMode(AtomNodeMode.Idle)
+    setIsAtomNodeModalOpen(false)
   }
 
   const initiateNewNodeCreation = (nodeName: string) => {
@@ -77,6 +107,7 @@ const KPIDetailPageController: React.FC = () => {
 
   const initiateNewAtomNodeCreation = () => {
     setIsSelectNewNodeTypeModalOpen(false)
+    setAtomNodeMode(AtomNodeMode.Creation)
     setIsAtomNodeModalOpen(true)
   }
 
@@ -121,6 +152,17 @@ const KPIDetailPageController: React.FC = () => {
     }
   }, [logicalOperationSelectionMode])
 
+  const atomNodeHandler = useMemo(() => {
+    switch (atomNodeMode) {
+      case AtomNodeMode.Idle:
+        return () => {}
+      case AtomNodeMode.Update:
+        return reconfigureAtomNode
+      case AtomNodeMode.Creation:
+        return finalizeNewAtomNodeCreation
+    }
+  }, [atomNodeMode])
+
   return (
     <KPIDetailPageView
       kpiDefinitionModel={definitionModel}
@@ -139,8 +181,9 @@ const KPIDetailPageController: React.FC = () => {
       initiateNewNodeCreation={initiateNewNodeCreation}
       initiateNewLogicalOperationNodeCreation={initiateNewLogicalOperationNodeCreation}
       initiateNewAtomNodeCreation={initiateNewAtomNodeCreation}
-      finalizeNewAtomNodeCreation={finalizeNewAtomNodeCreation}
+      atomNodeHandler={atomNodeHandler}
       handleSDTypeSelection={handleSDTypeSelection}
+      initiateAtomNodeModification={initiateAtomNodeModification}
     />
   )
 }

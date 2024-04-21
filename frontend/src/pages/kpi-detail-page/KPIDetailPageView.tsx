@@ -29,8 +29,9 @@ interface KPIDetailPageViewProps {
   initiateNewNodeCreation: ConsumerFunction<string>
   initiateNewLogicalOperationNodeCreation: EffectFunction
   initiateNewAtomNodeCreation: EffectFunction
-  finalizeNewAtomNodeCreation: TriConsumerFunction<AtomNodeType, string, string | boolean | number>
+  atomNodeHandler: TriConsumerFunction<AtomNodeType, string, string | boolean | number>
   handleSDTypeSelection: ConsumerFunction<string>
+  initiateAtomNodeModification: ConsumerFunction<string>
 }
 
 const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
@@ -48,7 +49,7 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
         initiateNewLogicalOperationNodeCreation={props.initiateNewLogicalOperationNodeCreation}
         initiateNewAtomNodeCreation={props.initiateNewAtomNodeCreation}
       />
-      <AtomNodeModal isOpen={props.isAtomNodeModalOpen} onCloseHandler={props.closeAtomNodeModal} sdTypeData={props.sdTypeData} onConfirmHandler={props.finalizeNewAtomNodeCreation} />
+      <AtomNodeModal isOpen={props.isAtomNodeModalOpen} onCloseHandler={props.closeAtomNodeModal} sdTypeData={props.sdTypeData} onConfirmHandler={props.atomNodeHandler} />
       <FormControl fullWidth>
         <InputLabel id="sd-type-select-field-label">Select SD type</InputLabel>
         <Select labelId="sd-type-select-field-label" value={props.sdTypeData ? props.sdTypeData.id : ''} label="Select SD type" onChange={(e) => props.handleSDTypeSelection(e.target.value)}>
@@ -70,6 +71,7 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
         editableTreeNodeData={props.kpiDefinitionModel}
         initiateLogicalOperationNodeModification={props.initiateLogicalOperationNodeModification}
         initiateNewNodeCreation={props.initiateNewNodeCreation}
+        initiateAtomNodeModification={props.initiateAtomNodeModification}
       />
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={1}>

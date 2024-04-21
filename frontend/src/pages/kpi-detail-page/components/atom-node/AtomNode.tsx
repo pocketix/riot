@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react'
 import { AtomNodeType } from '../editable-tree/EditableTree'
 import EditableTreeNodeBase from '../editable-tree-node-base/EditableTreeNodeBase'
+import { EffectFunction } from '../../../../util'
 
 interface AtomNodeProps {
   type: AtomNodeType
   sdParameterSpecification: string
   referenceValue: string | boolean | number
+  onClickHandler: EffectFunction
 }
 
 const AtomNode: React.FC<AtomNodeProps> = (props) => {
@@ -39,7 +41,7 @@ const AtomNode: React.FC<AtomNodeProps> = (props) => {
     }
   }, [referenceValue])
 
-  return <EditableTreeNodeBase treeNodeContents={<p>{`${sdParameterSpecification} ${binaryRelationSymbol} ${referenceValueString}`}</p>} />
+  return <EditableTreeNodeBase treeNodeContents={<p>{`${sdParameterSpecification} ${binaryRelationSymbol} ${referenceValueString}`}</p>} onClickHandler={props.onClickHandler} />
 }
 
 export default AtomNode

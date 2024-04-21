@@ -195,6 +195,30 @@ export const crateNewLogicalOperationNode = (currentNodeName: string, node: Edit
   }
 }
 
+export const changeAtomNodeConfiguration = (
+  currentNodeName: string,
+  node: EditableTreeNodeDataModel,
+  type: AtomNodeType,
+  sdParameterSpecification: string,
+  referenceValue: string | boolean | number
+) => {
+  const processNode = (node: EditableTreeNodeDataModel): boolean => {
+    if (node.name === currentNodeName && node.attributes.nodeType === NodeType.AtomNode) {
+      node.attributes.atomNodeType = type
+      node.attributes.atomNodeSDParameterSpecification = sdParameterSpecification
+      node.attributes.atomNodeReferenceValue = referenceValue
+      return true
+    }
+    if (node.children && node.children.length > 0) {
+      return node.children.some((child) => processNode(child))
+    }
+    return false
+  }
+  if (!processNode(node)) {
+    console.warn('Target node not found in the tree!')
+  }
+}
+
 export const crateNewAtomNode = (currentNodeName: string, node: EditableTreeNodeDataModel, type: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
   const processNode = (node: EditableTreeNodeDataModel): boolean => {
     if (node.children.some((child) => child.name === currentNodeName)) {

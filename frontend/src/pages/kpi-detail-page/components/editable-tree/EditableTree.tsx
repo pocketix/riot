@@ -81,6 +81,7 @@ export interface EditableTreeNodeDataModel extends RawNodeDatum {
 interface EditableTreeProps {
   editableTreeNodeData: EditableTreeNodeDataModel
   initiateLogicalOperationNodeModification: ConsumerFunction<string>
+  initiateAtomNodeModification: ConsumerFunction<string>
   initiateNewNodeCreation: ConsumerFunction<string>
 }
 
@@ -132,6 +133,9 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
               type={editableTreeNodeDataModel.attributes.atomNodeType}
               sdParameterSpecification={editableTreeNodeDataModel.attributes.atomNodeSDParameterSpecification}
               referenceValue={editableTreeNodeDataModel.attributes.atomNodeReferenceValue}
+              onClickHandler={() => {
+                props.initiateAtomNodeModification(editableTreeNodeDataModel.name)
+              }}
             />
           )
         case NodeType.LogicalOperationNode:
