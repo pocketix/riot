@@ -8,14 +8,7 @@ import { KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables, SdType, Sd
 import gql from 'graphql-tag'
 import qKPIDefinitionDetail from '../../graphql/queries/kpiDefinitionDetail.graphql'
 import qSDTypes from '../../graphql/queries/sdTypes.graphql'
-import {
-  initialKPIDefinitionModel,
-  changeLogicalOperationTypeOfLogicalOperationNode,
-  crateNewLogicalOperationNode,
-  kpiDefinitionToKPIDefinitionModel,
-  crateNewAtomNode,
-  changeAtomNodeConfiguration
-} from './kpiDefinitionModel'
+import { initialKPIDefinitionModel, changeTypeOfLogicalOperationNode, crateNewLogicalOperationNode, kpiDefinitionToKPIDefinitionModel, crateNewAtomNode, modifyAtomNode } from './kpiDefinitionModel'
 
 export interface KPIDefinitionModel extends EditableTreeNodeDataModel {
   id: string
@@ -78,7 +71,7 @@ const KPIDetailPageController: React.FC = () => {
   const changeLogicalOperationType = (newOperationType: LogicalOperationNodeType): void => {
     setDefinitionModel((definitionModel) =>
       produce(definitionModel, (draftDefinitionModel) => {
-        changeLogicalOperationTypeOfLogicalOperationNode(currentNodeNameRef.current, draftDefinitionModel, newOperationType)
+        changeTypeOfLogicalOperationNode(currentNodeNameRef.current, draftDefinitionModel, newOperationType)
       })
     )
     setLogicalOperationSelectionMode(LogicalOperationSelectionMode.Idle)
@@ -87,7 +80,7 @@ const KPIDetailPageController: React.FC = () => {
   const reconfigureAtomNode = (type: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
     setDefinitionModel((definitionModel) =>
       produce(definitionModel, (draftDefinitionModel) => {
-        changeAtomNodeConfiguration(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterSpecification, referenceValue)
+        modifyAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterSpecification, referenceValue)
       })
     )
     setAtomNodeMode(AtomNodeMode.Idle)

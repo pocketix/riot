@@ -15,112 +15,70 @@ import {
 import { AtomNodeType, EditableTreeNodeDataModel, LogicalOperationNodeType, NodeType } from './components/editable-tree/EditableTree'
 import { v4 as uuid } from 'uuid'
 import { KPIDefinitionModel } from './KPIDetailPageController'
+import { ConsumerFunction } from '../../util'
+
+const newNode = (): EditableTreeNodeDataModel => {
+  return {
+    name: uuid(),
+    attributes: {
+      nodeType: NodeType.NewNode
+    },
+    children: []
+  }
+}
+
+const newAtomNode = (atomNodeType: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number): EditableTreeNodeDataModel => {
+  const node = newNode()
+  node.attributes.nodeType = NodeType.AtomNode
+  node.attributes.atomNodeType = atomNodeType
+  node.attributes.atomNodeSDParameterSpecification = sdParameterSpecification
+  node.attributes.atomNodeReferenceValue = referenceValue
+  return node
+}
+
+const newLogicalOperationNode = (logicalOperationNodeType: LogicalOperationNodeType): EditableTreeNodeDataModel => {
+  const node = newNode()
+  node.attributes.nodeType = NodeType.LogicalOperationNode
+  node.attributes.logicalOperationNodeType = logicalOperationNodeType
+  node.children = [newNode()]
+  return node
+}
 
 const kpiNodeToEditableTreeNodeDataModel = (kpiNode: KpiNode): EditableTreeNodeDataModel => {
   switch (kpiNode.nodeType) {
     case KpiNodeType.StringEqAtom:
-      return {
-        name: uuid(),
-        attributes: {
-          nodeType: NodeType.AtomNode,
-          atomNodeType: AtomNodeType.StringEQ,
-          atomNodeSDParameterSpecification: (kpiNode as StringEqAtomKpiNode).sdParameterSpecification,
-          atomNodeReferenceValue: (kpiNode as StringEqAtomKpiNode).stringReferenceValue
-        },
-        children: []
-      }
+      const stringEQ = kpiNode as StringEqAtomKpiNode
+      return newAtomNode(AtomNodeType.StringEQ, stringEQ.sdParameterSpecification, stringEQ.stringReferenceValue)
     case KpiNodeType.BooleanEqAtom:
-      return {
-        name: uuid(),
-        attributes: {
-          nodeType: NodeType.AtomNode,
-          atomNodeType: AtomNodeType.BooleanEQ,
-          atomNodeSDParameterSpecification: (kpiNode as BooleanEqAtomKpiNode).sdParameterSpecification,
-          atomNodeReferenceValue: (kpiNode as BooleanEqAtomKpiNode).booleanReferenceValue
-        },
-        children: []
-      }
+      const booleanEQ = kpiNode as BooleanEqAtomKpiNode
+      return newAtomNode(AtomNodeType.BooleanEQ, booleanEQ.sdParameterSpecification, booleanEQ.booleanReferenceValue)
     case KpiNodeType.NumericEqAtom:
-      return {
-        name: uuid(),
-        attributes: {
-          nodeType: NodeType.AtomNode,
-          atomNodeType: AtomNodeType.NumericEQ,
-          atomNodeSDParameterSpecification: (kpiNode as NumericEqAtomKpiNode).sdParameterSpecification,
-          atomNodeReferenceValue: (kpiNode as NumericEqAtomKpiNode).numericReferenceValue
-        },
-        children: []
-      }
+      const numericEQ = kpiNode as NumericEqAtomKpiNode
+      return newAtomNode(AtomNodeType.NumericEQ, numericEQ.sdParameterSpecification, numericEQ.numericReferenceValue)
     case KpiNodeType.NumericGtAtom:
-      return {
-        name: uuid(),
-        attributes: {
-          nodeType: NodeType.AtomNode,
-          atomNodeType: AtomNodeType.NumericGT,
-          atomNodeSDParameterSpecification: (kpiNode as NumericGtAtomKpiNode).sdParameterSpecification,
-          atomNodeReferenceValue: (kpiNode as NumericGtAtomKpiNode).numericReferenceValue
-        },
-        children: []
-      }
+      const numericGT = kpiNode as NumericGtAtomKpiNode
+      return newAtomNode(AtomNodeType.NumericGT, numericGT.sdParameterSpecification, numericGT.numericReferenceValue)
     case KpiNodeType.NumericGeqAtom:
-      return {
-        name: uuid(),
-        attributes: {
-          nodeType: NodeType.AtomNode,
-          atomNodeType: AtomNodeType.NumericGEQ,
-          atomNodeSDParameterSpecification: (kpiNode as NumericGeqAtomKpiNode).sdParameterSpecification,
-          atomNodeReferenceValue: (kpiNode as NumericGeqAtomKpiNode).numericReferenceValue
-        },
-        children: []
-      }
+      const numericGEQ = kpiNode as NumericGeqAtomKpiNode
+      return newAtomNode(AtomNodeType.NumericGEQ, numericGEQ.sdParameterSpecification, numericGEQ.numericReferenceValue)
     case KpiNodeType.NumericLtAtom:
-      return {
-        name: uuid(),
-        attributes: {
-          nodeType: NodeType.AtomNode,
-          atomNodeType: AtomNodeType.NumericLT,
-          atomNodeSDParameterSpecification: (kpiNode as NumericLtAtomKpiNode).sdParameterSpecification,
-          atomNodeReferenceValue: (kpiNode as NumericLtAtomKpiNode).numericReferenceValue
-        },
-        children: []
-      }
+      const numericLT = kpiNode as NumericLtAtomKpiNode
+      return newAtomNode(AtomNodeType.NumericLT, numericLT.sdParameterSpecification, numericLT.numericReferenceValue)
     case KpiNodeType.NumericLeqAtom:
-      return {
-        name: uuid(),
-        attributes: {
-          nodeType: NodeType.AtomNode,
-          atomNodeType: AtomNodeType.NumericLEQ,
-          atomNodeSDParameterSpecification: (kpiNode as NumericLeqAtomKpiNode).sdParameterSpecification,
-          atomNodeReferenceValue: (kpiNode as NumericLeqAtomKpiNode).numericReferenceValue
-        },
-        children: []
-      }
+      const numericLEQ = kpiNode as NumericLeqAtomKpiNode
+      return newAtomNode(AtomNodeType.NumericLEQ, numericLEQ.sdParameterSpecification, numericLEQ.numericReferenceValue)
     case KpiNodeType.LogicalOperation:
-      return {
-        name: uuid(),
-        attributes: {
-          nodeType: NodeType.LogicalOperationNode,
-          logicalOperationNodeType: ((type: LogicalOperationType): LogicalOperationNodeType => {
-            switch (type) {
-              case LogicalOperationType.And:
-                return LogicalOperationNodeType.AND
-              case LogicalOperationType.Or:
-                return LogicalOperationNodeType.OR
-              case LogicalOperationType.Nor:
-                return LogicalOperationNodeType.NOR
-            }
-          })((kpiNode as LogicalOperationKpiNode).type)
-        },
-        children: [
-          {
-            name: uuid(),
-            attributes: {
-              nodeType: NodeType.NewNode
-            },
-            children: []
-          }
-        ]
-      }
+      const logicalOperationNodeType = ((logicalOperationType: LogicalOperationType): LogicalOperationNodeType => {
+        switch (logicalOperationType) {
+          case LogicalOperationType.And:
+            return LogicalOperationNodeType.AND
+          case LogicalOperationType.Or:
+            return LogicalOperationNodeType.OR
+          case LogicalOperationType.Nor:
+            return LogicalOperationNodeType.NOR
+        }
+      })((kpiNode as LogicalOperationKpiNode).type)
+      return newLogicalOperationNode(logicalOperationNodeType)
   }
 }
 
@@ -144,124 +102,68 @@ export const kpiDefinitionToKPIDefinitionModel = (kpiDefinition: KpiDefinition):
   }
 }
 
-export const changeLogicalOperationTypeOfLogicalOperationNode = (currentNodeName: string, node: EditableTreeNodeDataModel, newOperationType: LogicalOperationNodeType) => {
-  const processNode = (node: EditableTreeNodeDataModel): boolean => {
-    if (node.name === currentNodeName && node.attributes.nodeType === NodeType.LogicalOperationNode) {
-      node.attributes.logicalOperationNodeType = newOperationType
+const processTree = (currentNodeName: string, node: EditableTreeNodeDataModel, processNode: ConsumerFunction<EditableTreeNodeDataModel>, appendNewNode: boolean) => {
+  const handleNode = (node: EditableTreeNodeDataModel): boolean => {
+    if (appendNewNode && node.children.some((child) => child.name === currentNodeName)) {
+      node.children.push(newNode())
+    }
+    if (node.name === currentNodeName) {
+      processNode(node)
       return true
     }
     if (node.children && node.children.length > 0) {
-      return node.children.some((child) => processNode(child))
+      return node.children.some((child) => handleNode(child))
     }
     return false
   }
-  if (!processNode(node)) {
-    console.warn('Target node not found in the tree!')
+  if (!handleNode(node)) {
+    console.warn(`Node ${currentNodeName} not found in the tree!`)
   }
 }
 
-export const crateNewLogicalOperationNode = (currentNodeName: string, node: EditableTreeNodeDataModel, logicalOperationType: LogicalOperationNodeType) => {
-  const processNode = (node: EditableTreeNodeDataModel): boolean => {
-    if (node.children.some((child) => child.name === currentNodeName)) {
-      node.children.push({
-        name: uuid(),
-        attributes: {
-          nodeType: NodeType.NewNode
-        },
-        children: []
-      })
-    }
-    if (node.name === currentNodeName && node.attributes.nodeType === NodeType.NewNode) {
-      node.attributes.nodeType = NodeType.LogicalOperationNode
-      node.attributes.logicalOperationNodeType = logicalOperationType
-      node.children = [
-        {
-          name: uuid(),
-          attributes: {
-            nodeType: NodeType.NewNode
-          },
-          children: []
-        }
-      ]
-      return true
-    }
-    if (node.children && node.children.length > 0) {
-      return node.children.some((child) => processNode(child))
-    }
-    return false
+export const changeTypeOfLogicalOperationNode = (currentNodeName: string, node: EditableTreeNodeDataModel, newLogicalOperationNodeType: LogicalOperationNodeType) => {
+  const processNode = (node: EditableTreeNodeDataModel) => {
+    node.attributes.logicalOperationNodeType = newLogicalOperationNodeType
   }
-  if (!processNode(node)) {
-    console.warn('Target node not found in the tree!')
-  }
+  processTree(currentNodeName, node, processNode, false)
 }
 
-export const changeAtomNodeConfiguration = (
+export const crateNewLogicalOperationNode = (currentNodeName: string, node: EditableTreeNodeDataModel, logicalOperationNodeType: LogicalOperationNodeType) => {
+  const processNode = (node: EditableTreeNodeDataModel) => {
+    node.attributes.nodeType = NodeType.LogicalOperationNode
+    node.attributes.logicalOperationNodeType = logicalOperationNodeType
+    node.children = [newNode()]
+  }
+  processTree(currentNodeName, node, processNode, true)
+}
+
+export const modifyAtomNode = (
   currentNodeName: string,
   node: EditableTreeNodeDataModel,
-  type: AtomNodeType,
-  sdParameterSpecification: string,
-  referenceValue: string | boolean | number
+  atomNodeType?: AtomNodeType,
+  sdParameterSpecification?: string,
+  referenceValue?: string | boolean | number
 ) => {
-  const processNode = (node: EditableTreeNodeDataModel): boolean => {
-    if (node.name === currentNodeName && node.attributes.nodeType === NodeType.AtomNode) {
-      node.attributes.atomNodeType = type
-      node.attributes.atomNodeSDParameterSpecification = sdParameterSpecification
-      node.attributes.atomNodeReferenceValue = referenceValue
-      return true
-    }
-    if (node.children && node.children.length > 0) {
-      return node.children.some((child) => processNode(child))
-    }
-    return false
+  const processNode = (node: EditableTreeNodeDataModel) => {
+    node.attributes.atomNodeType = atomNodeType ?? node.attributes.atomNodeType
+    node.attributes.atomNodeSDParameterSpecification = sdParameterSpecification ?? node.attributes.atomNodeSDParameterSpecification
+    node.attributes.atomNodeReferenceValue = referenceValue ?? node.attributes.atomNodeReferenceValue
   }
-  if (!processNode(node)) {
-    console.warn('Target node not found in the tree!')
-  }
+  processTree(currentNodeName, node, processNode, false)
 }
 
-export const crateNewAtomNode = (currentNodeName: string, node: EditableTreeNodeDataModel, type: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
-  const processNode = (node: EditableTreeNodeDataModel): boolean => {
-    if (node.children.some((child) => child.name === currentNodeName)) {
-      node.children.push({
-        name: uuid(),
-        attributes: {
-          nodeType: NodeType.NewNode
-        },
-        children: []
-      })
-    }
-    if (node.name === currentNodeName && node.attributes.nodeType === NodeType.NewNode) {
-      node.attributes.nodeType = NodeType.AtomNode
-      node.attributes.atomNodeType = type
-      node.attributes.atomNodeSDParameterSpecification = sdParameterSpecification
-      node.attributes.atomNodeReferenceValue = referenceValue
-      return true
-    }
-    if (node.children && node.children.length > 0) {
-      return node.children.some((child) => processNode(child))
-    }
-    return false
+export const crateNewAtomNode = (currentNodeName: string, node: EditableTreeNodeDataModel, atomNodeType: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
+  const processNode = (node: EditableTreeNodeDataModel) => {
+    node.attributes.nodeType = NodeType.AtomNode
+    node.attributes.atomNodeType = atomNodeType
+    node.attributes.atomNodeSDParameterSpecification = sdParameterSpecification
+    node.attributes.atomNodeReferenceValue = referenceValue
   }
-  if (!processNode(node)) {
-    console.warn('Target node not found in the tree!')
-  }
+  processTree(currentNodeName, node, processNode, true)
 }
 
 export const initialKPIDefinitionModel: KPIDefinitionModel = {
   id: '---',
   userIdentifier: 'Feel free to change the user identifier of this KPI definition',
-  name: uuid(),
-  attributes: {
-    nodeType: NodeType.LogicalOperationNode,
-    logicalOperationNodeType: LogicalOperationNodeType.AND
-  },
-  children: [
-    {
-      name: uuid(),
-      attributes: {
-        nodeType: NodeType.NewNode
-      },
-      children: []
-    }
-  ]
+  ...newLogicalOperationNode(LogicalOperationNodeType.AND)
 }
