@@ -1,10 +1,11 @@
 import React, { ReactNode, useMemo } from 'react'
 import { editableTreeConfiguration } from '../editable-tree/EditableTree'
 import styles from './styles.module.scss'
+import { EffectFunction } from '../../../../util'
 
 interface EditableTreeNodeBaseProps {
   treeNodeContents: ReactNode
-  onClickHandler?: () => void
+  onClickHandler?: EffectFunction
 }
 
 const EditableTreeNodeBase: React.FC<EditableTreeNodeBaseProps> = (props) => {

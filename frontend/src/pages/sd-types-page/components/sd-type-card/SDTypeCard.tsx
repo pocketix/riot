@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react'
 import { Collapse } from '@mui/material'
 import styles from './styles.module.scss'
 import GenericCardTemplate from '../../../../page-independent-components/generic-card-template/GenericCardTemplate'
+import { AsynchronousConsumerFunction } from '../../../../util'
 
 interface SDTypeParameter {
   id: string
@@ -14,7 +15,7 @@ interface SDTypeCardProps {
   denotation: string
   areParametersDisplayed: boolean
   parameters: SDTypeParameter[]
-  deleteSDType: (id: string) => Promise<void>
+  deleteSDType: AsynchronousConsumerFunction<string>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
   isDeleteButtonDisabled: boolean

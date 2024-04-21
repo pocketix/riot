@@ -3,10 +3,11 @@ import { SdTypesQuery } from '../../../../generated/graphql'
 import { FormControlLabel, Switch } from '@mui/material'
 import SDTypeCard from '../sd-type-card/SDTypeCard'
 import styles from './styles.module.scss'
+import { AsynchronousConsumerFunction } from '../../../../util'
 
 interface SDTypesSectionProps {
   sdTypesQueryData: SdTypesQuery
-  deleteSDType: (id: string) => Promise<void>
+  deleteSDType: AsynchronousConsumerFunction<string>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }

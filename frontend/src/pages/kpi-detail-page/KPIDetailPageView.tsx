@@ -9,6 +9,8 @@ import { useNavigate } from 'react-router-dom'
 import SelectNodeTypeModal from './components/select-new-node-type-modal/SelectNodeTypeModal'
 import AtomNodeModal from './components/atom-node-modal/AtomNodeModal'
 import { SdType, SdTypesQuery } from '../../generated/graphql'
+import CustomLinkButton from '../../page-independent-components/custom-link-button/CustomLinkButton'
+import { ConsumerFunction, EffectFunction, TriConsumerFunction } from '../../util'
 
 interface KPIDetailPageViewProps {
   kpiDefinitionModel: KPIDefinitionModel
@@ -19,16 +21,16 @@ interface KPIDetailPageViewProps {
   isSelectLogicalOperationTypeModalOpen: boolean
   isSelectNewNodeTypeModalOpen: boolean
   isAtomNodeModalOpen: boolean
-  closeSelectLogicalOperationTypeModal: () => void
-  closeSelectNewNodeTypeModal: () => void
-  closeAtomNodeModal: () => void
-  selectedLogicalOperationTypeHandler: (logicalOperationType: LogicalOperationNodeType) => void
-  initiateLogicalOperationNodeModification: (nodeName: string) => void
-  initiateNewNodeCreation: (nodeName: string) => void
-  initiateNewLogicalOperationNodeCreation: () => void
-  initiateNewAtomNodeCreation: () => void
-  finalizeNewAtomNodeCreation: (type: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => void
-  handleSDTypeSelection: (sdTypeID: string) => void
+  closeSelectLogicalOperationTypeModal: EffectFunction
+  closeSelectNewNodeTypeModal: EffectFunction
+  closeAtomNodeModal: EffectFunction
+  selectedLogicalOperationTypeHandler: ConsumerFunction<LogicalOperationNodeType>
+  initiateLogicalOperationNodeModification: ConsumerFunction<string>
+  initiateNewNodeCreation: ConsumerFunction<string>
+  initiateNewLogicalOperationNodeCreation: EffectFunction
+  initiateNewAtomNodeCreation: EffectFunction
+  finalizeNewAtomNodeCreation: TriConsumerFunction<AtomNodeType, string, string | boolean | number>
+  handleSDTypeSelection: ConsumerFunction<string>
 }
 
 const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {

@@ -1,15 +1,9 @@
-import React, { useEffect, useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import React from 'react'
+import { Outlet } from 'react-router-dom'
 import CustomLinkButton from '../custom-link-button/CustomLinkButton'
 import styles from './styles.module.scss'
 
 const PrimaryLayout: React.FC = () => {
-  const location = useLocation()
-
-  useEffect(() => {
-    // TODO: Consider doing something when location changes...
-  }, [location])
-
   return (
     <div className={styles.outerContainer}>
       <div className={styles.sidePanel}>

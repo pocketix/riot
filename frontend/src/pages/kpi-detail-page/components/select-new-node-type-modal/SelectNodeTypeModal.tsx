@@ -1,12 +1,13 @@
 import React from 'react'
 import { Button, Grid } from '@mui/material'
-import MuiModalBase from '../../../../page-independent-components/mui-modal-base/MuiModalBase'
+import MuiModalBase from '../../../../page-independent-components/mui-based/mui-modal-base/MuiModalBase'
+import { EffectFunction } from '../../../../util'
 
 interface SelectNewNodeTypeModalProps {
   isOpen: boolean
-  onCloseHandler: () => void
-  initiateNewLogicalOperationNodeCreation: () => void
-  initiateNewAtomNodeCreation: () => void
+  onCloseHandler: EffectFunction
+  initiateNewLogicalOperationNodeCreation: EffectFunction
+  initiateNewAtomNodeCreation: EffectFunction
 }
 
 const SelectNodeTypeModal: React.FC<SelectNewNodeTypeModalProps> = (props) => {

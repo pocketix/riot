@@ -2,7 +2,8 @@ import React, { ChangeEvent, KeyboardEvent, useCallback, useState } from 'react'
 import GenericCardTemplate from '../../../../page-independent-components/generic-card-template/GenericCardTemplate'
 import { Button } from '@mui/material'
 import styles from './styles.module.scss'
-import PlainTextField from '../../../../page-independent-components/plain-text-field/PlainTextField'
+import CustomDesignTextField from '../../../../page-independent-components/mui-based/plain-text-field/CustomDesignTextField'
+import { AsynchronousBiConsumerFunction, AsynchronousConsumerFunction } from '../../../../util'
 
 interface SDInstanceCardProps {
   id: string
@@ -10,8 +11,8 @@ interface SDInstanceCardProps {
   uid: string
   sdTypeDenotation: string
   confirmedByUser: boolean
-  updateUserIdentifierOfSdInstance: (id: string, newUserIdentifier: string) => Promise<void>
-  confirmSdInstance: (id: string) => Promise<void>
+  updateUserIdentifierOfSdInstance: AsynchronousBiConsumerFunction<string, string>
+  confirmSdInstance: AsynchronousConsumerFunction<string>
 }
 
 const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
@@ -44,7 +45,15 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
             {props.confirmedByUser && (
               <div className={styles.userIdentifierRow}>
                 <p>User identifier:</p>
-                <PlainTextField id="standard-basic" label="" variant="standard" value={userIdentifier} onChange={onUserIdentifierChange} onKeyDown={onKeyDown} onBlur={onUserIdentifierConfirm} />
+                <CustomDesignTextField
+                  id="standard-basic"
+                  label=""
+                  variant="standard"
+                  value={userIdentifier}
+                  onChange={onUserIdentifierChange}
+                  onKeyDown={onKeyDown}
+                  onBlur={onUserIdentifierConfirm}
+                />
               </div>
             )}
             <p>

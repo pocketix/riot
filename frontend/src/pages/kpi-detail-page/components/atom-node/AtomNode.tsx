@@ -8,7 +8,9 @@ interface AtomNodeProps {
   referenceValue: string | boolean | number
 }
 
-const AtomNode: React.FC<AtomNodeProps> = ({ type, sdParameterSpecification, referenceValue }) => {
+const AtomNode: React.FC<AtomNodeProps> = (props) => {
+  const { type, sdParameterSpecification, referenceValue } = props
+
   const binaryRelationSymbol: string = useMemo(() => {
     switch (type) {
       case AtomNodeType.StringEQ:

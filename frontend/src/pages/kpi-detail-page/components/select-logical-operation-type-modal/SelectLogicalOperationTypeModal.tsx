@@ -1,12 +1,13 @@
 import React from 'react'
 import { FormControl, Grid, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material'
 import { LogicalOperationNodeType } from '../editable-tree/EditableTree'
-import MuiModalBase from '../../../../page-independent-components/mui-modal-base/MuiModalBase'
+import MuiModalBase from '../../../../page-independent-components/mui-based/mui-modal-base/MuiModalBase'
+import { ConsumerFunction, EffectFunction } from '../../../../util'
 
 interface ChangeLogicalOperationTypeModalProps {
   isOpen: boolean
-  onCloseHandler: () => void
-  selectedLogicalOperationTypeHandler: (logicalOperationType: LogicalOperationNodeType) => void
+  onCloseHandler: EffectFunction
+  selectedLogicalOperationTypeHandler: ConsumerFunction<LogicalOperationNodeType>
 }
 
 const SelectLogicalOperationTypeModal: React.FC<ChangeLogicalOperationTypeModalProps> = (props) => {

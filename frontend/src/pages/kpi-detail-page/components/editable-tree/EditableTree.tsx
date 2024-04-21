@@ -5,6 +5,7 @@ import AtomNode from '../atom-node/AtomNode'
 import LogicalOperationNode from '../logical-operation-node/LogicalOperationNode'
 import EditableTreeNodeBase from '../editable-tree-node-base/EditableTreeNodeBase'
 import { useResizeDetector } from 'react-resize-detector'
+import { ConsumerFunction } from '../../../../util'
 
 export type EditableTreeSizeConfiguration = {
   graphOffsetOnXAxisInPixels: number
@@ -79,8 +80,8 @@ export interface EditableTreeNodeDataModel extends RawNodeDatum {
 
 interface EditableTreeProps {
   editableTreeNodeData: EditableTreeNodeDataModel
-  initiateLogicalOperationNodeModification: (nodeName: string) => void
-  initiateNewNodeCreation: (nodeName: string) => void
+  initiateLogicalOperationNodeModification: ConsumerFunction<string>
+  initiateNewNodeCreation: ConsumerFunction<string>
 }
 
 const calculateTreeDepth = (node: EditableTreeNodeDataModel): number => {

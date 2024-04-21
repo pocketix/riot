@@ -1,6 +1,6 @@
 import React from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
-import styles from './styles.module.scss'
+import CustomActionButton from '../custom-action-button/CustomActionButton'
 
 interface CustomLinkButtonProps {
   route: string
@@ -10,13 +10,7 @@ interface CustomLinkButtonProps {
 
 export const CustomLinkButton: React.FC<CustomLinkButtonProps> = ({ route, text, iconIdentifier }) => {
   const navigate: NavigateFunction = useNavigate()
-
-  return (
-    <div className={styles.customLinkButton} onClick={() => navigate(route)}>
-      <span className="material-symbols-outlined">{iconIdentifier}</span>
-      <span>{text}</span>
-    </div>
-  )
+  return <CustomActionButton action={() => navigate(route)} text={text} iconIdentifier={iconIdentifier} />
 }
 
 export default CustomLinkButton

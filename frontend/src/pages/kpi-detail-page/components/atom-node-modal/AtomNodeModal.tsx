@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { Button, FormControl, Grid, InputLabel, MenuItem, Select, TextField } from '@mui/material'
-import MuiModalBase from '../../../../page-independent-components/mui-modal-base/MuiModalBase'
+import MuiModalBase from '../../../../page-independent-components/mui-based/mui-modal-base/MuiModalBase'
 import { SdParameter, SdParameterType, SdType } from '../../../../generated/graphql'
 import { AtomNodeType } from '../editable-tree/EditableTree'
+import { EffectFunction, TriConsumerFunction } from '../../../../util'
 
 interface AtomNodeModalProps {
   isOpen: boolean
-  onCloseHandler: () => void
+  onCloseHandler: EffectFunction
   sdTypeData: SdType
-  onConfirmHandler: (type: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => void
+  onConfirmHandler: TriConsumerFunction<AtomNodeType, string, string | boolean | number>
 }
 
 enum BinaryRelation {
@@ -42,6 +43,14 @@ const AtomNodeModal: React.FC<AtomNodeModalProps> = (props) => {
       setCurrentBinaryRelationOptions([BinaryRelation.EQ])
     }
   }, [sdParameter])
+
+  const clearModal = () => {
+    setReferenceValueString('')
+    setIncorrectReferenceValueStringFlag(false)
+    setSDParameter(null)
+    setBinaryRelation(null)
+    setCurrentBinaryRelationOptions([BinaryRelation.EQ, BinaryRelation.LT, BinaryRelation.LEQ, BinaryRelation.GT, BinaryRelation.GEQ])
+  }
 
   const onConfirm = () => {
     const referenceValue = ((referenceValueString: string, sdParameterType: SdParameterType): string | boolean | number | undefined => {
@@ -90,13 +99,17 @@ const AtomNodeModal: React.FC<AtomNodeModalProps> = (props) => {
           }
       }
     })(sdParameter.type, binaryRelation)
+    clearModal()
     props.onConfirmHandler(atomNodeType, sdParameter.denotation, referenceValue)
   }
 
   return (
     <MuiModalBase
       isOpen={props.isOpen}
-      onCloseHandler={props.onCloseHandler}
+      onCloseHandler={() => {
+        clearModal()
+        props.onCloseHandler()
+      }}
       modalTitle="Atom node configuration"
       content={
         <Grid container spacing={2} alignItems="center">

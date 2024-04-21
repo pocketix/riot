@@ -2,10 +2,11 @@ import React, { useState, useCallback, useMemo, ChangeEvent } from 'react'
 import { Button, FormControl, Grid, InputLabel, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material'
 import styles from './styles.module.scss'
 import { SdTypesQuery } from '../../../../generated/graphql'
+import { AsynchronousBiConsumerFunction } from '../../../../util'
 
 interface CreateSDTypeFormProps {
   sdTypesQueryData: SdTypesQuery
-  createSDType: (denotation: string, parameters: { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]) => Promise<void>
+  createSDType: AsynchronousBiConsumerFunction<string, { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }

@@ -4,10 +4,11 @@ import { KpiDefinitionsQuery } from '../../generated/graphql'
 import styles from './styles.module.scss'
 import GenericCardTemplate from '../../page-independent-components/generic-card-template/GenericCardTemplate'
 import { useNavigate } from 'react-router-dom'
+import { AsynchronousEffectFunction } from '../../util'
 
 interface KPIPageViewProps {
   kpiDefinitionsData: KpiDefinitionsQuery
-  refetchKPIDefinitions: () => Promise<void>
+  refetchKPIDefinitions: AsynchronousEffectFunction
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }

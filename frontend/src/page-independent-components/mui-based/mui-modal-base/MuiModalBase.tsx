@@ -1,10 +1,11 @@
 import React, { ReactNode } from 'react'
 import { Box, Modal } from '@mui/material'
 import styles from './styles.module.scss'
+import { EffectFunction } from '../../../util'
 
 interface MuiModalBaseProps {
   isOpen: boolean
-  onCloseHandler: () => void
+  onCloseHandler: EffectFunction
   modalTitle: string
   content: ReactNode
 }

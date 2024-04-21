@@ -1,10 +1,11 @@
 import React, { ReactNode } from 'react'
 import styles from './styles.module.scss'
+import { EffectFunction } from '../../util'
 
 interface GenericCardTemplateProps {
   headerContent: ReactNode
   bodyContent: ReactNode
-  onClickHandler?: () => void
+  onClickHandler?: EffectFunction
   className?: string
 }
 

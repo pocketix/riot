@@ -3,11 +3,12 @@ import { SdInstancesQuery } from '../../generated/graphql'
 import StandardContentPageTemplate from '../../page-independent-components/standard-content-page-template/StandardContentPageTemplate'
 import styles from './styles.module.scss'
 import SDInstancesSection from './components/sd-instances-section/SDInstancesSection'
+import { AsynchronousBiConsumerFunction, AsynchronousConsumerFunction } from '../../util'
 
 interface SDTypesPageViewProps {
   sdInstancesData: SdInstancesQuery
-  updateUserIdentifierOfSdInstance: (id: string, newUserIdentifier: string) => Promise<void>
-  confirmSdInstance: (id: string) => Promise<void>
+  updateUserIdentifierOfSdInstance: AsynchronousBiConsumerFunction<string, string>
+  confirmSdInstance: AsynchronousConsumerFunction<string>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }

@@ -1,7 +1,7 @@
 import { styled } from '@mui/material/styles'
 import { TextField } from '@mui/material'
 
-const PlainTextField = styled(TextField)({
+const CustomDesignTextField = styled(TextField)({
   '& .MuiInputBase-root': {
     fontSize: 'inherit',
     fontWeight: '700',
@@ -21,4 +21,4 @@ const PlainTextField = styled(TextField)({
   }
 })
 
-export default PlainTextField
+export default CustomDesignTextField

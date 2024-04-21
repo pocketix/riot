@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react'
 import { LogicalOperationNodeType } from '../editable-tree/EditableTree'
 import EditableTreeNodeBase from '../editable-tree-node-base/EditableTreeNodeBase'
+import { EffectFunction } from '../../../../util'
 
 interface LogicalOperationNodeProps {
   type: LogicalOperationNodeType
-  onClickHandler: () => void
+  onClickHandler: EffectFunction
 }
 
 const LogicalOperationNode: React.FC<LogicalOperationNodeProps> = (props) => {

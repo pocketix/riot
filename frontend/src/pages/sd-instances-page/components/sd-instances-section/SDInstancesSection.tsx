@@ -2,12 +2,13 @@ import { SdInstancesQuery } from '../../../../generated/graphql'
 import React, { useMemo } from 'react'
 import SDInstanceCard from '../sd-instance-card/SDInstanceCard'
 import styles from './styles.module.scss'
+import { AsynchronousBiConsumerFunction, AsynchronousConsumerFunction } from '../../../../util'
 
 interface ConfirmedSDInstancesSectionProps {
   sdInstancesData: SdInstancesQuery
   confirmedByUserRequirement: boolean
-  updateUserIdentifierOfSdInstance: (id: string, newUserIdentifier: string) => Promise<void>
-  confirmSdInstance: (id: string) => Promise<void>
+  updateUserIdentifierOfSdInstance: AsynchronousBiConsumerFunction<string, string>
+  confirmSdInstance: AsynchronousConsumerFunction<string>
 }
 
 const SDInstancesSection: React.FC<ConfirmedSDInstancesSectionProps> = (props) => {
