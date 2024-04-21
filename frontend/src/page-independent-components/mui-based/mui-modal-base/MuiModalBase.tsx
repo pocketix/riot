@@ -11,6 +11,7 @@ interface MuiModalBaseProps {
 }
 
 const style = {
+  width: '20vw',
   position: 'absolute' as 'absolute',
   top: '50%',
   left: '50%',
