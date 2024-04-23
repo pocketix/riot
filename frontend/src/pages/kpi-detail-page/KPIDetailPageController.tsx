@@ -2,13 +2,30 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { produce } from 'immer'
 import KPIDetailPageView from './KPIDetailPageView'
 import { AtomNodeType, EditableTreeNodeDataModel, LogicalOperationNodeType } from './components/editable-tree/EditableTree'
-import { useParams } from 'react-router-dom'
-import { useQuery } from '@apollo/client'
-import { KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables, SdType, SdTypesQuery, SdTypesQueryVariables } from '../../generated/graphql'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useMutation, useQuery } from '@apollo/client'
+import {
+  CreateKpiDefinitionMutation,
+  CreateKpiDefinitionMutationVariables,
+  KpiDefinitionDetailQuery,
+  KpiDefinitionDetailQueryVariables,
+  SdType,
+  SdTypesQuery,
+  SdTypesQueryVariables
+} from '../../generated/graphql'
 import gql from 'graphql-tag'
 import qKPIDefinitionDetail from '../../graphql/queries/kpiDefinitionDetail.graphql'
 import qSDTypes from '../../graphql/queries/sdTypes.graphql'
-import { initialKPIDefinitionModel, changeTypeOfLogicalOperationNode, crateNewLogicalOperationNode, kpiDefinitionToKPIDefinitionModel, crateNewAtomNode, modifyAtomNode } from './kpiDefinitionModel'
+import {
+  initialKPIDefinitionModel,
+  changeTypeOfLogicalOperationNode,
+  crateNewLogicalOperationNode,
+  kpiDefinitionToKPIDefinitionModel,
+  crateNewAtomNode,
+  modifyAtomNode,
+  kpiDefinitionModelToKPIDefinitionInput
+} from './kpiDefinitionModel'
+import mCreateKPIDefinition from '../../graphql/mutations/createKPIDefinition.graphql'
 
 export interface KPIDefinitionModel extends EditableTreeNodeDataModel {
   id: string
@@ -28,6 +45,7 @@ enum AtomNodeMode {
 }
 
 const KPIDetailPageController: React.FC = () => {
+  const navigate = useNavigate()
   const { id } = useParams()
   const {
     data: kpiDefinitionDetailData,
@@ -40,6 +58,9 @@ const KPIDetailPageController: React.FC = () => {
     }
   })
   const { data: sdTypesData, loading: sdTypesLoading, error: sdTypesError } = useQuery<SdTypesQuery, SdTypesQueryVariables>(gql(qSDTypes))
+  const [createKPIDefinitionMutation, { loading: createKPIDefinitionLoading, error: createKPIDefinitionError }] = useMutation<CreateKpiDefinitionMutation, CreateKpiDefinitionMutationVariables>(
+    gql(mCreateKPIDefinition)
+  )
 
   const [definitionModel, setDefinitionModel] = useState<KPIDefinitionModel>(initialKPIDefinitionModel)
   const [sdTypeData, setSDTypeData] = useState<SdType>(null)
@@ -156,13 +177,26 @@ const KPIDetailPageController: React.FC = () => {
     }
   }, [atomNodeMode])
 
+  const onSubmitHandler = async () => {
+    await createKPIDefinitionMutation({
+      variables: {
+        input: kpiDefinitionModelToKPIDefinitionInput(definitionModel, sdTypeData.denotation)
+      }
+    })
+    navigate('/kpi-definitions')
+  }
+
+  const onCancelHandler = () => {
+    navigate('/kpi-definitions')
+  }
+
   return (
     <KPIDetailPageView
       kpiDefinitionModel={definitionModel}
       sdTypesData={sdTypesData}
       sdTypeData={sdTypeData}
-      anyLoadingOccurs={kpiDefinitionDetailLoading || sdTypesLoading}
-      anyErrorOccurred={!!kpiDefinitionDetailError || !!sdTypesError}
+      anyLoadingOccurs={kpiDefinitionDetailLoading || sdTypesLoading || createKPIDefinitionLoading}
+      anyErrorOccurred={!!kpiDefinitionDetailError || !!sdTypesError || !!createKPIDefinitionError}
       isSelectLogicalOperationTypeModalOpen={isSelectLogicalOperationTypeModalOpen}
       isSelectNewNodeTypeModalOpen={isSelectNewNodeTypeModalOpen}
       isAtomNodeModalOpen={isAtomNodeModalOpen}
@@ -177,6 +211,8 @@ const KPIDetailPageController: React.FC = () => {
       atomNodeHandler={atomNodeHandler}
       handleSDTypeSelection={handleSDTypeSelection}
       initiateAtomNodeModification={initiateAtomNodeModification}
+      onSubmitHandler={onSubmitHandler}
+      onCancelHandler={onCancelHandler}
     />
   )
 }

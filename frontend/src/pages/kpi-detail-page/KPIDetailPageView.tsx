@@ -5,12 +5,10 @@ import { KPIDefinitionModel } from './KPIDetailPageController'
 import SelectLogicalOperationTypeModal from './components/select-logical-operation-type-modal/SelectLogicalOperationTypeModal'
 import styles from './styles.module.scss'
 import { Button, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material'
-import { useNavigate } from 'react-router-dom'
 import SelectNodeTypeModal from './components/select-new-node-type-modal/SelectNodeTypeModal'
 import AtomNodeModal from './components/atom-node-modal/AtomNodeModal'
 import { SdType, SdTypesQuery } from '../../generated/graphql'
-import CustomLinkButton from '../../page-independent-components/custom-link-button/CustomLinkButton'
-import { ConsumerFunction, EffectFunction, TriConsumerFunction } from '../../util'
+import { AsynchronousEffectFunction, ConsumerFunction, EffectFunction, TriConsumerFunction } from '../../util'
 
 interface KPIDetailPageViewProps {
   kpiDefinitionModel: KPIDefinitionModel
@@ -32,10 +30,11 @@ interface KPIDetailPageViewProps {
   atomNodeHandler: TriConsumerFunction<AtomNodeType, string, string | boolean | number>
   handleSDTypeSelection: ConsumerFunction<string>
   initiateAtomNodeModification: ConsumerFunction<string>
+  onSubmitHandler: AsynchronousEffectFunction
+  onCancelHandler: EffectFunction
 }
 
 const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
-  const navigate = useNavigate()
   return (
     <StandardContentPageTemplate pageTitle="KPI detail" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
       <SelectLogicalOperationTypeModal
@@ -75,11 +74,13 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
       />
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={1}>
-          <Button fullWidth>Submit</Button>
+          <Button fullWidth onClick={props.onSubmitHandler}>
+            Submit
+          </Button>
         </Grid>
         <Grid item xs={0.1} />
         <Grid item xs={1}>
-          <Button fullWidth onClick={() => navigate('/kpi-definitions')}>
+          <Button fullWidth onClick={props.onCancelHandler}>
             Cancel
           </Button>
         </Grid>

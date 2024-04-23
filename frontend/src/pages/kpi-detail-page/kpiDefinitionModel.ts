@@ -1,7 +1,9 @@
 import {
   BooleanEqAtomKpiNode,
   KpiDefinition,
+  KpiDefinitionInput,
   KpiNode,
+  KpiNodeInput,
   KpiNodeType,
   LogicalOperationKpiNode,
   LogicalOperationType,
@@ -162,8 +164,101 @@ export const crateNewAtomNode = (currentNodeName: string, node: EditableTreeNode
   processTree(currentNodeName, node, processNode, true)
 }
 
+const editableTreeNodeDataModelToKpiNodeInput = (editableTreeNodeDataModel: EditableTreeNodeDataModel, parentNodeId?: string): KpiNodeInput | null => {
+  const kpiNodeInputBase = {
+    id: uuid(),
+    parentNodeID: parentNodeId
+  }
+  const nodeType = editableTreeNodeDataModel.attributes.nodeType
+  if (nodeType === NodeType.AtomNode) {
+    const kpiAtomNodeInputBase = {
+      ...kpiNodeInputBase,
+      sdParameterSpecification: editableTreeNodeDataModel.attributes.atomNodeSDParameterSpecification
+    }
+    switch (editableTreeNodeDataModel.attributes.atomNodeType) {
+      case AtomNodeType.StringEQ:
+        return {
+          ...kpiAtomNodeInputBase,
+          type: KpiNodeType.StringEqAtom,
+          stringReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as string
+        }
+      case AtomNodeType.BooleanEQ:
+        return {
+          ...kpiAtomNodeInputBase,
+          type: KpiNodeType.BooleanEqAtom,
+          booleanReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as boolean
+        }
+      case AtomNodeType.NumericEQ:
+        return {
+          ...kpiAtomNodeInputBase,
+          type: KpiNodeType.NumericEqAtom,
+          numericReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as number
+        }
+      case AtomNodeType.NumericGT:
+        return {
+          ...kpiAtomNodeInputBase,
+          type: KpiNodeType.NumericGtAtom,
+          numericReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as number
+        }
+      case AtomNodeType.NumericGEQ:
+        return {
+          ...kpiAtomNodeInputBase,
+          type: KpiNodeType.NumericGeqAtom,
+          numericReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as number
+        }
+      case AtomNodeType.NumericLT:
+        return {
+          ...kpiAtomNodeInputBase,
+          type: KpiNodeType.NumericLtAtom,
+          numericReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as number
+        }
+      case AtomNodeType.NumericLEQ:
+        return {
+          ...kpiAtomNodeInputBase,
+          type: KpiNodeType.NumericLeqAtom,
+          numericReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as number
+        }
+    }
+  } else if (nodeType === NodeType.LogicalOperationNode) {
+    return {
+      ...kpiNodeInputBase,
+      type: KpiNodeType.LogicalOperation,
+      logicalOperationType: ((logicalOperationNodeType: LogicalOperationNodeType): LogicalOperationType => {
+        switch (logicalOperationNodeType) {
+          case LogicalOperationNodeType.AND:
+            return LogicalOperationType.And
+          case LogicalOperationNodeType.OR:
+            return LogicalOperationType.Or
+          case LogicalOperationNodeType.NOR:
+            return LogicalOperationType.Nor
+        }
+      })(editableTreeNodeDataModel.attributes.logicalOperationNodeType)
+    }
+  }
+  return null
+}
+
+const editableTreeNodeDataModelToKpiNodeInputs = (editableTreeNodeDataModel: EditableTreeNodeDataModel): KpiNodeInput[] => {
+  const rootKPINodeInput: KpiNodeInput | null = editableTreeNodeDataModelToKpiNodeInput(editableTreeNodeDataModel)
+  if (!rootKPINodeInput) {
+    return []
+  }
+  const kpiNodeInputs: KpiNodeInput[] = [rootKPINodeInput]
+  const rootKPINodeInputID = rootKPINodeInput.id
+  const childKPINodeInputs = editableTreeNodeDataModel.children.map((child) => editableTreeNodeDataModelToKpiNodeInput(child, rootKPINodeInputID)).filter((kpiNodeInput) => !!kpiNodeInput)
+  return kpiNodeInputs.concat(childKPINodeInputs)
+}
+
+export const kpiDefinitionModelToKPIDefinitionInput = (kpiDefinitionModel: KPIDefinitionModel, sdTypeSpecification: string): KpiDefinitionInput => {
+  return {
+    sdTypeSpecification: sdTypeSpecification,
+    userIdentifier: kpiDefinitionModel.userIdentifier,
+    nodes: editableTreeNodeDataModelToKpiNodeInputs(kpiDefinitionModel)
+  }
+}
+
 export const initialKPIDefinitionModel: KPIDefinitionModel = {
   id: '---',
   userIdentifier: 'Feel free to change the user identifier of this KPI definition',
-  ...newLogicalOperationNode(LogicalOperationNodeType.AND)
+  ...newNode()
 }
