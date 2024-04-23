@@ -13,7 +13,7 @@ interface MuiModalBaseProps {
 const MuiModalBase: React.FC<MuiModalBaseProps> = (props) => {
   return (
     <Dialog open={props.isOpen} onClose={props.onCloseHandler}>
-      <DialogContent>
+      <DialogContent sx={{ width: '20vw' }}>
         <div className={styles.headerRow}>
           <p>{props.modalTitle}</p>
           <span onClick={props.onCloseHandler} className="material-symbols-outlined">
