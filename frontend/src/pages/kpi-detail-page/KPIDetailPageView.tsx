@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import EditableTree from './components/editable-tree/EditableTree'
+import EditableTree, { AtomNodeType } from './components/editable-tree/EditableTree'
 import StandardContentPageTemplate from '../../page-independent-components/standard-content-page-template/StandardContentPageTemplate'
 import { KPIDefinitionModel } from './KPIDetailPageController'
 import styles from './styles.module.scss'
 import { Button, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material'
 import { SdType, SdTypesQuery } from '../../generated/graphql'
-import { AsynchronousEffectFunction, ConsumerFunction, EffectFunction } from '../../util'
+import { AsynchronousEffectFunction, ConsumerFunction, EffectFunction, TetraConsumerFunction } from '../../util'
 import { PlainTextField } from '../../page-independent-components/mui-based/styled/Styled'
 
 interface KPIDetailPageViewProps {
@@ -19,7 +19,7 @@ interface KPIDetailPageViewProps {
   initiateNewLogicalOperationNodeCreation: EffectFunction
   initiateNewAtomNodeCreation: EffectFunction
   handleSDTypeSelection: ConsumerFunction<string>
-  initiateAtomNodeModification: ConsumerFunction<string>
+  initiateAtomNodeModification: TetraConsumerFunction<string, string, AtomNodeType, string | number | boolean>
   onSubmitHandler: AsynchronousEffectFunction
   onCancelHandler: EffectFunction
   updateUserIdentifier: ConsumerFunction<string>

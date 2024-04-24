@@ -5,7 +5,7 @@ import AtomNode from '../atom-node/AtomNode'
 import LogicalOperationNode from '../logical-operation-node/LogicalOperationNode'
 import EditableTreeNodeBase from '../editable-tree-node-base/EditableTreeNodeBase'
 import { useResizeDetector } from 'react-resize-detector'
-import { ConsumerFunction } from '../../../../util'
+import { ConsumerFunction, TetraConsumerFunction } from '../../../../util'
 
 export type EditableTreeSizeConfiguration = {
   graphOffsetOnXAxisInPixels: number
@@ -81,7 +81,7 @@ export interface EditableTreeNodeDataModel extends RawNodeDatum {
 interface EditableTreeProps {
   editableTreeNodeData: EditableTreeNodeDataModel
   initiateLogicalOperationNodeModification: ConsumerFunction<string>
-  initiateAtomNodeModification: ConsumerFunction<string>
+  initiateAtomNodeModification: TetraConsumerFunction<string, string, AtomNodeType, string | number | boolean>
   initiateNewNodeCreation: ConsumerFunction<string>
 }
 
@@ -128,13 +128,16 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
             />
           )
         case NodeType.AtomNode:
+          const atomNodeType = editableTreeNodeDataModel.attributes.atomNodeType
+          const sdParameterSpecification = editableTreeNodeDataModel.attributes.atomNodeSDParameterSpecification
+          const referenceValue = editableTreeNodeDataModel.attributes.atomNodeReferenceValue
           return (
             <AtomNode
-              type={editableTreeNodeDataModel.attributes.atomNodeType}
-              sdParameterSpecification={editableTreeNodeDataModel.attributes.atomNodeSDParameterSpecification}
-              referenceValue={editableTreeNodeDataModel.attributes.atomNodeReferenceValue}
+              type={atomNodeType}
+              sdParameterSpecification={sdParameterSpecification}
+              referenceValue={referenceValue}
               onClickHandler={() => {
-                props.initiateAtomNodeModification(editableTreeNodeDataModel.name)
+                props.initiateAtomNodeModification(editableTreeNodeDataModel.name, sdParameterSpecification, atomNodeType, referenceValue)
               }}
             />
           )

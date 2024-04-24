@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { produce } from 'immer'
 import KPIDetailPageView from './KPIDetailPageView'
 import { AtomNodeType, EditableTreeNodeDataModel, LogicalOperationNodeType } from './components/editable-tree/EditableTree'
@@ -17,19 +17,19 @@ import gql from 'graphql-tag'
 import qKPIDefinitionDetail from '../../graphql/queries/kpiDefinitionDetail.graphql'
 import qSDTypes from '../../graphql/queries/sdTypes.graphql'
 import {
-  initialKPIDefinitionModel,
   changeTypeOfLogicalOperationNode,
-  crateNewLogicalOperationNode,
-  kpiDefinitionToKPIDefinitionModel,
   crateNewAtomNode,
-  modifyAtomNode,
-  kpiDefinitionModelToKPIDefinitionInput
+  crateNewLogicalOperationNode,
+  initialKPIDefinitionModel,
+  kpiDefinitionModelToKPIDefinitionInput,
+  kpiDefinitionToKPIDefinitionModel,
+  modifyAtomNode
 } from './kpiDefinitionModel'
 import mCreateKPIDefinition from '../../graphql/mutations/createKPIDefinition.graphql'
 import { useModal } from '@ebay/nice-modal-react'
 import SelectNewNodeTypeModal from './components/select-new-node-type-modal/SelectNewNodeTypeModal'
 import SelectLogicalOperationTypeModal from './components/select-logical-operation-type-modal/SelectLogicalOperationTypeModal'
-import AtomNodeModal from './components/atom-node-modal/AtomNodeModal'
+import AtomNodeModal, { BinaryRelation } from './components/atom-node-modal/AtomNodeModal'
 
 export interface KPIDefinitionModel extends EditableTreeNodeDataModel {
   id: string
@@ -75,11 +75,41 @@ const KPIDetailPageController: React.FC = () => {
     })
   }
 
-  const initiateAtomNodeModification = (nodeName: string) => {
+  const initiateAtomNodeModification = (nodeName: string, sdParameterSpecification: string, atomNodeType: AtomNodeType, referenceValue: string | number | boolean) => {
     currentNodeNameRef.current = nodeName
+    const sdParameter = sdTypeData.parameters.find((sdParameter) => sdParameter.denotation === sdParameterSpecification)
+    const binaryRelation = ((atomNodeType: AtomNodeType): BinaryRelation => {
+      switch (atomNodeType) {
+        case AtomNodeType.StringEQ:
+        case AtomNodeType.BooleanEQ:
+        case AtomNodeType.NumericEQ:
+          return BinaryRelation.EQ
+        case AtomNodeType.NumericGT:
+          return BinaryRelation.GT
+        case AtomNodeType.NumericGEQ:
+          return BinaryRelation.GEQ
+        case AtomNodeType.NumericLT:
+          return BinaryRelation.LT
+        case AtomNodeType.NumericLEQ:
+          return BinaryRelation.LEQ
+      }
+    })(atomNodeType)
+    const referenceValueString = ((referenceValue: string | number | boolean): string => {
+      switch (typeof referenceValue) {
+        case 'string':
+          return referenceValue
+        case 'boolean':
+          return referenceValue ? 'true' : 'false'
+        case 'number':
+          return referenceValue.toString()
+      }
+    })(referenceValue)
     showAtomNodeModal({
       sdTypeData: sdTypeData,
-      onConfirm: reconfigureAtomNode
+      onConfirm: reconfigureAtomNode,
+      sdParameter: sdParameter,
+      binaryRelation: binaryRelation,
+      referenceValueString: referenceValueString
     })
   }
 

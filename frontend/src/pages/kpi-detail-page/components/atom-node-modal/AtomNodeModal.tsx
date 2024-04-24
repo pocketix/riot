@@ -9,9 +9,12 @@ import NiceModal, { useModal } from '@ebay/nice-modal-react'
 interface AtomNodeModalProps {
   sdTypeData: SdType
   onConfirm: TriConsumerFunction<AtomNodeType, string, string | boolean | number>
+  sdParameter?: SdParameter
+  binaryRelation?: BinaryRelation
+  referenceValueString?: string
 }
 
-enum BinaryRelation {
+export enum BinaryRelation {
   EQ = '=',
   LT = '<',
   LEQ = '≤',
@@ -31,6 +34,13 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
   const [currentBinaryRelationOptions, setCurrentBinaryRelationOptions] = useState<BinaryRelation[]>(allBinaryRelationOptions)
 
   useEffect(() => {
+    clearModal()
+    setSDParameter(props.sdParameter ?? null)
+    setBinaryRelation(props.binaryRelation ?? null)
+    setReferenceValueString(props.referenceValueString ?? '')
+  }, [props])
+
+  useEffect(() => {
     setIncorrectReferenceValueStringFlag(false)
   }, [referenceValueString])
 
@@ -39,7 +49,6 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
       return
     }
     if (sdParameter.type === SdParameterType.Number) {
-      setBinaryRelation(null)
       setCurrentBinaryRelationOptions(allBinaryRelationOptions)
     } else {
       setBinaryRelation(BinaryRelation.EQ)
