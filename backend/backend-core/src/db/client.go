@@ -20,16 +20,16 @@ const (
 type RelationalDatabaseClient interface {
 	ConnectToDatabase() error
 	InitializeDatabase() error
-	PersistKPIDefinition(kpiDefinitionDTO kpi.DefinitionDTO) cUtil.Result[uint32]
+	PersistKPIDefinition(kpiDefinitionDTO kpi.DefinitionDTO) cUtil.Result[uint32] // TODO: Is ID enough?
 	LoadKPIDefinition(id uint32) cUtil.Result[kpi.DefinitionDTO]
 	LoadKPIDefinitions() cUtil.Result[[]kpi.DefinitionDTO]
 	DeleteKPIDefinition(id uint32) error
-	PersistSDType(sdTypeDTO types.SDTypeDTO) cUtil.Result[uint32]
+	PersistSDType(sdTypeDTO types.SDTypeDTO) cUtil.Result[types.SDTypeDTO]
 	LoadSDType(id uint32) cUtil.Result[types.SDTypeDTO]
 	LoadSDTypeBasedOnDenotation(denotation string) cUtil.Result[types.SDTypeDTO]
 	LoadSDTypes() cUtil.Result[[]types.SDTypeDTO]
 	DeleteSDType(id uint32) error
-	PersistSDInstance(sdInstanceDTO types.SDInstanceDTO) cUtil.Result[uint32]
+	PersistSDInstance(sdInstanceDTO types.SDInstanceDTO) cUtil.Result[uint32] // TODO: Is ID enough?
 	LoadSDInstance(id uint32) cUtil.Result[types.SDInstanceDTO]
 	DoesSDInstanceExist(uid string) cUtil.Result[bool]
 	LoadSDInstances() cUtil.Result[[]types.SDInstanceDTO]
@@ -146,13 +146,13 @@ func (r *relationalDatabaseClientImpl) DeleteKPIDefinition(id uint32) error {
 	return errors.New("[rdb client] not implemented")
 }
 
-func (r *relationalDatabaseClientImpl) PersistSDType(sdTypeDTO types.SDTypeDTO) cUtil.Result[uint32] {
+func (r *relationalDatabaseClientImpl) PersistSDType(sdTypeDTO types.SDTypeDTO) cUtil.Result[types.SDTypeDTO] {
 	sdTypeEntity := dto2db.SDTypeDTOToSDTypeEntity(sdTypeDTO)
 	err := r.db.Save(&sdTypeEntity).Error
 	if err != nil {
-		return cUtil.NewFailureResult[uint32](err)
+		return cUtil.NewFailureResult[types.SDTypeDTO](err)
 	}
-	return cUtil.NewSuccessResult[uint32](sdTypeEntity.ID)
+	return cUtil.NewSuccessResult[types.SDTypeDTO](db2dto.SDTypeEntityToSDTypeDTO(sdTypeEntity))
 }
 
 func (r *relationalDatabaseClientImpl) LoadSDType(id uint32) cUtil.Result[types.SDTypeDTO] {

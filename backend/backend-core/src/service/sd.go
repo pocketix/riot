@@ -20,9 +20,7 @@ func CreateSDType(sdTypeInput model.SDTypeInput) util.Result[*model.SDType] {
 			log.Println("Failed to enqueue message representing current SD types in the system")
 		}
 	}()
-	id := persistResult.GetPayload()
-	sdTypeDTO.ID = util.NewOptionalOf[uint32](id)
-	sdType := dto2api.SDTypeDTOToSDType(sdTypeDTO)
+	sdType := dto2api.SDTypeDTOToSDType(persistResult.GetPayload())
 	return util.NewSuccessResult[*model.SDType](sdType)
 }
 
