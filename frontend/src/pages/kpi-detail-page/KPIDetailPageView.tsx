@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import EditableTree, { AtomNodeType, LogicalOperationNodeType } from './components/editable-tree/EditableTree'
+import EditableTree from './components/editable-tree/EditableTree'
 import StandardContentPageTemplate from '../../page-independent-components/standard-content-page-template/StandardContentPageTemplate'
 import { KPIDefinitionModel } from './KPIDetailPageController'
-import SelectLogicalOperationTypeModal from './components/select-logical-operation-type-modal/SelectLogicalOperationTypeModal'
 import styles from './styles.module.scss'
 import { Button, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material'
-import SelectNodeTypeModal from './components/select-new-node-type-modal/SelectNodeTypeModal'
-import AtomNodeModal from './components/atom-node-modal/AtomNodeModal'
 import { SdType, SdTypesQuery } from '../../generated/graphql'
-import { AsynchronousEffectFunction, ConsumerFunction, EffectFunction, TriConsumerFunction } from '../../util'
+import { AsynchronousEffectFunction, ConsumerFunction, EffectFunction } from '../../util'
 import { PlainTextField } from '../../page-independent-components/mui-based/styled/Styled'
 
 interface KPIDetailPageViewProps {
@@ -17,18 +14,10 @@ interface KPIDetailPageViewProps {
   sdTypeData: SdType
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
-  isSelectLogicalOperationTypeModalOpen: boolean
-  isSelectNewNodeTypeModalOpen: boolean
-  isAtomNodeModalOpen: boolean
-  closeSelectLogicalOperationTypeModal: EffectFunction
-  closeSelectNewNodeTypeModal: EffectFunction
-  closeAtomNodeModal: EffectFunction
-  selectedLogicalOperationTypeHandler: ConsumerFunction<LogicalOperationNodeType>
   initiateLogicalOperationNodeModification: ConsumerFunction<string>
   initiateNewNodeCreation: ConsumerFunction<string>
   initiateNewLogicalOperationNodeCreation: EffectFunction
   initiateNewAtomNodeCreation: EffectFunction
-  atomNodeHandler: TriConsumerFunction<AtomNodeType, string, string | boolean | number>
   handleSDTypeSelection: ConsumerFunction<string>
   initiateAtomNodeModification: ConsumerFunction<string>
   onSubmitHandler: AsynchronousEffectFunction
@@ -43,18 +32,6 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
   }, [props.kpiDefinitionModel.userIdentifier])
   return (
     <StandardContentPageTemplate pageTitle="KPI detail" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
-      <SelectLogicalOperationTypeModal
-        isOpen={props.isSelectLogicalOperationTypeModalOpen}
-        onCloseHandler={props.closeSelectLogicalOperationTypeModal}
-        selectedLogicalOperationTypeHandler={props.selectedLogicalOperationTypeHandler}
-      />
-      <SelectNodeTypeModal
-        isOpen={props.isSelectNewNodeTypeModalOpen}
-        onCloseHandler={props.closeSelectNewNodeTypeModal}
-        initiateNewLogicalOperationNodeCreation={props.initiateNewLogicalOperationNodeCreation}
-        initiateNewAtomNodeCreation={props.initiateNewAtomNodeCreation}
-      />
-      <AtomNodeModal isOpen={props.isAtomNodeModalOpen} onCloseHandler={props.closeAtomNodeModal} sdTypeData={props.sdTypeData} onConfirmHandler={props.atomNodeHandler} />
       <div className={styles.kpiUserIdentifierSection}>
         <p>User identifier:</p>
         <PlainTextField

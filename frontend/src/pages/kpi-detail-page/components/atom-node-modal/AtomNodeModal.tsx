@@ -3,13 +3,12 @@ import { Button, FormControl, Grid, InputLabel, MenuItem, Select, TextField } fr
 import MuiModalBase from '../../../../page-independent-components/mui-based/mui-modal-base/MuiModalBase'
 import { SdParameter, SdParameterType, SdType } from '../../../../generated/graphql'
 import { AtomNodeType } from '../editable-tree/EditableTree'
-import { EffectFunction, TriConsumerFunction } from '../../../../util'
+import { TriConsumerFunction } from '../../../../util'
+import NiceModal, { useModal } from '@ebay/nice-modal-react'
 
 interface AtomNodeModalProps {
-  isOpen: boolean
-  onCloseHandler: EffectFunction
   sdTypeData: SdType
-  onConfirmHandler: TriConsumerFunction<AtomNodeType, string, string | boolean | number>
+  onConfirm: TriConsumerFunction<AtomNodeType, string, string | boolean | number>
 }
 
 enum BinaryRelation {
@@ -20,12 +19,16 @@ enum BinaryRelation {
   GEQ = '≥'
 }
 
-const AtomNodeModal: React.FC<AtomNodeModalProps> = (props) => {
+const allBinaryRelationOptions = [BinaryRelation.EQ, BinaryRelation.LT, BinaryRelation.LEQ, BinaryRelation.GT, BinaryRelation.GEQ]
+
+export default NiceModal.create<AtomNodeModalProps>((props) => {
+  const { visible, hide } = useModal()
+
   const [referenceValueString, setReferenceValueString] = useState<string>('')
   const [incorrectReferenceValueStringFlag, setIncorrectReferenceValueStringFlag] = useState(false)
   const [sdParameter, setSDParameter] = useState<SdParameter | null>(null)
   const [binaryRelation, setBinaryRelation] = useState<BinaryRelation | null>(null)
-  const [currentBinaryRelationOptions, setCurrentBinaryRelationOptions] = useState<BinaryRelation[]>([BinaryRelation.EQ, BinaryRelation.LT, BinaryRelation.LEQ, BinaryRelation.GT, BinaryRelation.GEQ])
+  const [currentBinaryRelationOptions, setCurrentBinaryRelationOptions] = useState<BinaryRelation[]>(allBinaryRelationOptions)
 
   useEffect(() => {
     setIncorrectReferenceValueStringFlag(false)
@@ -37,7 +40,7 @@ const AtomNodeModal: React.FC<AtomNodeModalProps> = (props) => {
     }
     if (sdParameter.type === SdParameterType.Number) {
       setBinaryRelation(null)
-      setCurrentBinaryRelationOptions([BinaryRelation.EQ, BinaryRelation.LT, BinaryRelation.LEQ, BinaryRelation.GT, BinaryRelation.GEQ])
+      setCurrentBinaryRelationOptions(allBinaryRelationOptions)
     } else {
       setBinaryRelation(BinaryRelation.EQ)
       setCurrentBinaryRelationOptions([BinaryRelation.EQ])
@@ -49,10 +52,10 @@ const AtomNodeModal: React.FC<AtomNodeModalProps> = (props) => {
     setIncorrectReferenceValueStringFlag(false)
     setSDParameter(null)
     setBinaryRelation(null)
-    setCurrentBinaryRelationOptions([BinaryRelation.EQ, BinaryRelation.LT, BinaryRelation.LEQ, BinaryRelation.GT, BinaryRelation.GEQ])
+    setCurrentBinaryRelationOptions(allBinaryRelationOptions)
   }
 
-  const onConfirm = () => {
+  const checkThenConfirm = () => {
     const referenceValue = ((referenceValueString: string, sdParameterType: SdParameterType): string | boolean | number | undefined => {
       switch (sdParameterType) {
         case SdParameterType.String:
@@ -100,92 +103,89 @@ const AtomNodeModal: React.FC<AtomNodeModalProps> = (props) => {
       }
     })(sdParameter.type, binaryRelation)
     clearModal()
-    props.onConfirmHandler(atomNodeType, sdParameter.denotation, referenceValue)
+    props.onConfirm(atomNodeType, sdParameter.denotation, referenceValue)
   }
 
   return (
     <MuiModalBase
-      isOpen={props.isOpen}
-      onCloseHandler={() => {
+      isOpen={visible}
+      onClose={() => {
         clearModal()
-        props.onCloseHandler()
+        hide()
       }}
       modalTitle="Atom node configuration"
-      content={
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel id="sd-type-parameter-select-field-label">Select SD type parameter</InputLabel>
-              <Select
-                labelId="sd-type-parameter-select-field-label"
-                value={sdParameter ? sdParameter.id : ''}
-                label="Select SD type parameter"
-                onChange={(e) => setSDParameter(props.sdTypeData.parameters.find((p) => p.id === e.target.value))}
-              >
-                {props.sdTypeData &&
-                  props.sdTypeData.parameters.map((parameter) => (
-                    <MenuItem key={parameter.id} value={parameter.id}>
-                      {`${parameter.denotation} (of type ${parameter.type})`}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel id="binary-relation-select-field-label">Select binary relation</InputLabel>
-              <Select
-                labelId="binary-relation-select-field-label"
-                value={binaryRelation ? binaryRelation : ''}
-                label="Select binary relation"
-                disabled={currentBinaryRelationOptions.length === 1}
-                onChange={(e) => {
-                  switch (e.target.value) {
-                    case BinaryRelation.EQ:
-                      setBinaryRelation(BinaryRelation.EQ)
-                      break
-                    case BinaryRelation.LT:
-                      setBinaryRelation(BinaryRelation.LT)
-                      break
-                    case BinaryRelation.LEQ:
-                      setBinaryRelation(BinaryRelation.LEQ)
-                      break
-                    case BinaryRelation.GT:
-                      setBinaryRelation(BinaryRelation.GT)
-                      break
-                    case BinaryRelation.GEQ:
-                      setBinaryRelation(BinaryRelation.GEQ)
-                      break
-                  }
-                }}
-              >
-                {currentBinaryRelationOptions.map((currentBinaryRelationOption) => {
-                  return <MenuItem value={currentBinaryRelationOption}>{currentBinaryRelationOption}</MenuItem>
-                })}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              id="standard-basic"
-              label="Reference value"
-              variant="outlined"
-              value={referenceValueString}
-              error={incorrectReferenceValueStringFlag}
-              onChange={(e) => setReferenceValueString(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-            />
-          </Grid>
-          <Grid item xs={6}>
-            <Button fullWidth onClick={onConfirm}>
-              Confirm
-            </Button>
-          </Grid>
+    >
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12}>
+          <FormControl fullWidth>
+            <InputLabel id="sd-type-parameter-select-field-label">Select SD type parameter</InputLabel>
+            <Select
+              labelId="sd-type-parameter-select-field-label"
+              value={sdParameter ? sdParameter.id : ''}
+              label="Select SD type parameter"
+              onChange={(e) => setSDParameter(props.sdTypeData.parameters.find((p) => p.id === e.target.value))}
+            >
+              {props.sdTypeData &&
+                props.sdTypeData.parameters.map((parameter) => (
+                  <MenuItem key={parameter.id} value={parameter.id}>
+                    {`${parameter.denotation} (of type ${parameter.type})`}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
         </Grid>
-      }
-    ></MuiModalBase>
+        <Grid item xs={12}>
+          <FormControl fullWidth>
+            <InputLabel id="binary-relation-select-field-label">Select binary relation</InputLabel>
+            <Select
+              labelId="binary-relation-select-field-label"
+              value={binaryRelation ? binaryRelation : ''}
+              label="Select binary relation"
+              disabled={currentBinaryRelationOptions.length === 1}
+              onChange={(e) => {
+                switch (e.target.value) {
+                  case BinaryRelation.EQ:
+                    setBinaryRelation(BinaryRelation.EQ)
+                    break
+                  case BinaryRelation.LT:
+                    setBinaryRelation(BinaryRelation.LT)
+                    break
+                  case BinaryRelation.LEQ:
+                    setBinaryRelation(BinaryRelation.LEQ)
+                    break
+                  case BinaryRelation.GT:
+                    setBinaryRelation(BinaryRelation.GT)
+                    break
+                  case BinaryRelation.GEQ:
+                    setBinaryRelation(BinaryRelation.GEQ)
+                    break
+                }
+              }}
+            >
+              {currentBinaryRelationOptions.map((currentBinaryRelationOption) => {
+                return <MenuItem value={currentBinaryRelationOption}>{currentBinaryRelationOption}</MenuItem>
+              })}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            id="standard-basic"
+            label="Reference value"
+            variant="outlined"
+            value={referenceValueString}
+            error={incorrectReferenceValueStringFlag}
+            onChange={(e) => setReferenceValueString(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <Button fullWidth onClick={checkThenConfirm}>
+            Confirm
+          </Button>
+        </Grid>
+      </Grid>
+    </MuiModalBase>
   )
-}
-
-export default AtomNodeModal
+})

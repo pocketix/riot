@@ -23,6 +23,7 @@
   "dependencies": {
     "@apollo/client": "^3.8.7",
     "@apollo/sandbox": "^2.5.1",
+    "@ebay/nice-modal-react": "^1.2.13",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@graphql-codegen/cli": "^5.0.0",

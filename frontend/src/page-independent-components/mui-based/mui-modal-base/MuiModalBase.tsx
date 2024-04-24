@@ -5,22 +5,22 @@ import { EffectFunction } from '../../../util'
 
 interface MuiModalBaseProps {
   isOpen: boolean
-  onCloseHandler: EffectFunction
+  onClose: EffectFunction
   modalTitle: string
-  content: ReactNode
+  children: ReactNode
 }
 
 const MuiModalBase: React.FC<MuiModalBaseProps> = (props) => {
   return (
-    <Dialog open={props.isOpen} onClose={props.onCloseHandler}>
+    <Dialog open={props.isOpen} onClose={props.onClose}>
       <DialogContent sx={{ width: '20vw' }}>
         <div className={styles.headerRow}>
           <p>{props.modalTitle}</p>
-          <span onClick={props.onCloseHandler} className="material-symbols-outlined">
+          <span onClick={props.onClose} className="material-symbols-outlined">
             close
           </span>
         </div>
-        {props.content}
+        {props.children}
       </DialogContent>
     </Dialog>
   )

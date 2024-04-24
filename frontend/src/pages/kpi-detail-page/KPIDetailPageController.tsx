@@ -26,25 +26,21 @@ import {
   kpiDefinitionModelToKPIDefinitionInput
 } from './kpiDefinitionModel'
 import mCreateKPIDefinition from '../../graphql/mutations/createKPIDefinition.graphql'
+import { useModal } from '@ebay/nice-modal-react'
+import SelectNewNodeTypeModal from './components/select-new-node-type-modal/SelectNewNodeTypeModal'
+import SelectLogicalOperationTypeModal from './components/select-logical-operation-type-modal/SelectLogicalOperationTypeModal'
+import AtomNodeModal from './components/atom-node-modal/AtomNodeModal'
 
 export interface KPIDefinitionModel extends EditableTreeNodeDataModel {
   id: string
   userIdentifier: string
 }
 
-enum LogicalOperationSelectionMode {
-  Idle,
-  NodeUpdate,
-  NodeCreation
-}
-
-enum AtomNodeMode {
-  Idle,
-  Update,
-  Creation
-}
-
 const KPIDetailPageController: React.FC = () => {
+  const { show: showSelectNewNodeTypeModal, hide: hideSelectNewNodeTypeModal } = useModal(SelectNewNodeTypeModal)
+  const { show: showSelectLogicalOperationTypeModal, hide: hideSelectLogicalOperationTypeModal } = useModal(SelectLogicalOperationTypeModal)
+  const { show: showAtomNodeModal, hide: hideAtomNodeModal } = useModal(AtomNodeModal)
+
   const navigate = useNavigate()
   const { id } = useParams()
   const {
@@ -64,11 +60,6 @@ const KPIDetailPageController: React.FC = () => {
 
   const [definitionModel, setDefinitionModel] = useState<KPIDefinitionModel>(initialKPIDefinitionModel)
   const [sdTypeData, setSDTypeData] = useState<SdType>(null)
-  const [isSelectLogicalOperationTypeModalOpen, setIsSelectLogicalOperationTypeModalOpen] = useState<boolean>(false)
-  const [isSelectNewNodeTypeModalOpen, setIsSelectNewNodeTypeModalOpen] = useState<boolean>(false)
-  const [isAtomNodeModalOpen, setIsAtomNodeModalOpen] = useState<boolean>(false)
-  const [logicalOperationSelectionMode, setLogicalOperationSelectionMode] = useState<LogicalOperationSelectionMode>(LogicalOperationSelectionMode.Idle)
-  const [atomNodeMode, setAtomNodeMode] = useState<AtomNodeMode>(AtomNodeMode.Idle)
 
   const currentNodeNameRef = useRef('')
 
@@ -79,14 +70,17 @@ const KPIDetailPageController: React.FC = () => {
 
   const initiateLogicalOperationNodeModification = (nodeName: string) => {
     currentNodeNameRef.current = nodeName
-    setLogicalOperationSelectionMode(LogicalOperationSelectionMode.NodeUpdate)
-    setIsSelectLogicalOperationTypeModalOpen(true)
+    showSelectLogicalOperationTypeModal({
+      onLogicalOperationTypeSelection: changeLogicalOperationType
+    })
   }
 
   const initiateAtomNodeModification = (nodeName: string) => {
     currentNodeNameRef.current = nodeName
-    setAtomNodeMode(AtomNodeMode.Update)
-    setIsAtomNodeModalOpen(true)
+    showAtomNodeModal({
+      sdTypeData: sdTypeData,
+      onConfirm: reconfigureAtomNode
+    })
   }
 
   const changeLogicalOperationType = (newOperationType: LogicalOperationNodeType): void => {
@@ -95,7 +89,6 @@ const KPIDetailPageController: React.FC = () => {
         changeTypeOfLogicalOperationNode(currentNodeNameRef.current, draftDefinitionModel, newOperationType)
       })
     )
-    setLogicalOperationSelectionMode(LogicalOperationSelectionMode.Idle)
   }
 
   const reconfigureAtomNode = (type: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
@@ -104,25 +97,30 @@ const KPIDetailPageController: React.FC = () => {
         modifyAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterSpecification, referenceValue)
       })
     )
-    setAtomNodeMode(AtomNodeMode.Idle)
-    setIsAtomNodeModalOpen(false)
+    hideAtomNodeModal()
   }
 
-  const initiateNewNodeCreation = (nodeName: string) => {
+  const initiateNewNodeCreation = async (nodeName: string) => {
     currentNodeNameRef.current = nodeName
-    setIsSelectNewNodeTypeModalOpen(true)
+    await showSelectNewNodeTypeModal({
+      initiateNewLogicalOperationNodeCreation: initiateNewLogicalOperationNodeCreation,
+      initiateNewAtomNodeCreation: initiateNewAtomNodeCreation
+    })
   }
 
   const initiateNewLogicalOperationNodeCreation = () => {
-    setIsSelectNewNodeTypeModalOpen(false)
-    setLogicalOperationSelectionMode(LogicalOperationSelectionMode.NodeCreation)
-    setIsSelectLogicalOperationTypeModalOpen(true)
+    hideSelectNewNodeTypeModal()
+    showSelectLogicalOperationTypeModal({
+      onLogicalOperationTypeSelection: finalizeNewLogicalOperationNodeCreation
+    })
   }
 
   const initiateNewAtomNodeCreation = () => {
-    setIsSelectNewNodeTypeModalOpen(false)
-    setAtomNodeMode(AtomNodeMode.Creation)
-    setIsAtomNodeModalOpen(true)
+    hideSelectNewNodeTypeModal()
+    showAtomNodeModal({
+      sdTypeData: sdTypeData,
+      onConfirm: finalizeNewAtomNodeCreation
+    })
   }
 
   const finalizeNewLogicalOperationNodeCreation = (logicalOperationType: LogicalOperationNodeType) => {
@@ -131,7 +129,7 @@ const KPIDetailPageController: React.FC = () => {
         crateNewLogicalOperationNode(currentNodeNameRef.current, draftDefinitionModel, logicalOperationType)
       })
     )
-    setIsSelectLogicalOperationTypeModalOpen(false)
+    hideSelectLogicalOperationTypeModal()
   }
 
   const finalizeNewAtomNodeCreation = (type: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
@@ -140,7 +138,7 @@ const KPIDetailPageController: React.FC = () => {
         crateNewAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterSpecification, referenceValue)
       })
     )
-    setIsAtomNodeModalOpen(false)
+    hideAtomNodeModal()
   }
 
   const handleSDTypeSelection = (sdTypeID: string) => {
@@ -154,28 +152,6 @@ const KPIDetailPageController: React.FC = () => {
     setSDTypeData(selectedSDType)
     setDefinitionModel(initialKPIDefinitionModel)
   }
-
-  const selectedLogicalOperationTypeHandler = useMemo(() => {
-    switch (logicalOperationSelectionMode) {
-      case LogicalOperationSelectionMode.Idle:
-        return () => {}
-      case LogicalOperationSelectionMode.NodeUpdate:
-        return changeLogicalOperationType
-      case LogicalOperationSelectionMode.NodeCreation:
-        return finalizeNewLogicalOperationNodeCreation
-    }
-  }, [logicalOperationSelectionMode])
-
-  const atomNodeHandler = useMemo(() => {
-    switch (atomNodeMode) {
-      case AtomNodeMode.Idle:
-        return () => {}
-      case AtomNodeMode.Update:
-        return reconfigureAtomNode
-      case AtomNodeMode.Creation:
-        return finalizeNewAtomNodeCreation
-    }
-  }, [atomNodeMode])
 
   const onSubmitHandler = async () => {
     await createKPIDefinitionMutation({
@@ -205,18 +181,10 @@ const KPIDetailPageController: React.FC = () => {
       sdTypeData={sdTypeData}
       anyLoadingOccurs={kpiDefinitionDetailLoading || sdTypesLoading || createKPIDefinitionLoading}
       anyErrorOccurred={!!kpiDefinitionDetailError || !!sdTypesError || !!createKPIDefinitionError}
-      isSelectLogicalOperationTypeModalOpen={isSelectLogicalOperationTypeModalOpen}
-      isSelectNewNodeTypeModalOpen={isSelectNewNodeTypeModalOpen}
-      isAtomNodeModalOpen={isAtomNodeModalOpen}
-      closeSelectLogicalOperationTypeModal={() => setIsSelectLogicalOperationTypeModalOpen(false)}
-      closeSelectNewNodeTypeModal={() => setIsSelectNewNodeTypeModalOpen(false)}
-      closeAtomNodeModal={() => setIsAtomNodeModalOpen(false)}
-      selectedLogicalOperationTypeHandler={selectedLogicalOperationTypeHandler}
       initiateLogicalOperationNodeModification={initiateLogicalOperationNodeModification}
       initiateNewNodeCreation={initiateNewNodeCreation}
       initiateNewLogicalOperationNodeCreation={initiateNewLogicalOperationNodeCreation}
       initiateNewAtomNodeCreation={initiateNewAtomNodeCreation}
-      atomNodeHandler={atomNodeHandler}
       handleSDTypeSelection={handleSDTypeSelection}
       initiateAtomNodeModification={initiateAtomNodeModification}
       onSubmitHandler={onSubmitHandler}

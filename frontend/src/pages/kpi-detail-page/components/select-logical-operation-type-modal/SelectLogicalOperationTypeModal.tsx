@@ -2,40 +2,37 @@ import React from 'react'
 import { FormControl, Grid, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material'
 import { LogicalOperationNodeType } from '../editable-tree/EditableTree'
 import MuiModalBase from '../../../../page-independent-components/mui-based/mui-modal-base/MuiModalBase'
-import { ConsumerFunction, EffectFunction } from '../../../../util'
+import { ConsumerFunction } from '../../../../util'
+import NiceModal, { useModal } from '@ebay/nice-modal-react'
 
-interface ChangeLogicalOperationTypeModalProps {
-  isOpen: boolean
-  onCloseHandler: EffectFunction
-  selectedLogicalOperationTypeHandler: ConsumerFunction<LogicalOperationNodeType>
+interface SelectLogicalOperationTypeModalProps {
+  onLogicalOperationTypeSelection: ConsumerFunction<LogicalOperationNodeType>
 }
 
-const SelectLogicalOperationTypeModal: React.FC<ChangeLogicalOperationTypeModalProps> = (props) => {
-  const handleChange = (event: SelectChangeEvent<LogicalOperationNodeType>) => {
-    props.selectedLogicalOperationTypeHandler(event.target.value as LogicalOperationNodeType)
-    props.onCloseHandler()
-  }
+export default NiceModal.create<SelectLogicalOperationTypeModalProps>((props) => {
+  const { visible, hide } = useModal()
   return (
-    <MuiModalBase
-      isOpen={props.isOpen}
-      onCloseHandler={props.onCloseHandler}
-      modalTitle="Select logical operation type"
-      content={
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={8.8}>
-            <FormControl fullWidth>
-              <InputLabel id="select-field-label">Logical operation type</InputLabel>
-              <Select labelId="select-field-label" value="" label="Logical operation type" onChange={handleChange}>
-                <MenuItem value={LogicalOperationNodeType.AND}>AND</MenuItem>
-                <MenuItem value={LogicalOperationNodeType.OR}>OR</MenuItem>
-                <MenuItem value={LogicalOperationNodeType.NOR}>NOR</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+    <MuiModalBase isOpen={visible} onClose={hide} modalTitle="Select logical operation type">
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={8.8}>
+          <FormControl fullWidth>
+            <InputLabel id="select-field-label">Logical operation type</InputLabel>
+            <Select
+              labelId="select-field-label"
+              value=""
+              label="Logical operation type"
+              onChange={(e: SelectChangeEvent<LogicalOperationNodeType>) => {
+                props.onLogicalOperationTypeSelection(e.target.value as LogicalOperationNodeType)
+                hide()
+              }}
+            >
+              <MenuItem value={LogicalOperationNodeType.AND}>AND</MenuItem>
+              <MenuItem value={LogicalOperationNodeType.OR}>OR</MenuItem>
+              <MenuItem value={LogicalOperationNodeType.NOR}>NOR</MenuItem>
+            </Select>
+          </FormControl>
         </Grid>
-      }
-    ></MuiModalBase>
+      </Grid>
+    </MuiModalBase>
   )
-}
-
-export default SelectLogicalOperationTypeModal
+})

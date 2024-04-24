@@ -2,6 +2,7 @@ import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { ApolloClient, InMemoryCache, ApolloProvider, NormalizedCacheObject } from '@apollo/client'
 import { createTheme, Theme, ThemeProvider } from '@mui/material'
+import NiceModal from '@ebay/nice-modal-react'
 
 import PrimaryLayout from './page-independent-components/primary-layout/PrimaryLayout'
 import Homepage from './pages/homepage/Homepage'
@@ -67,20 +68,22 @@ const ApplicationEntrypoint: React.FC = () => {
   return (
     <ApolloProvider client={apolloClient}>
       <ThemeProvider theme={customMuiTheme}>
-        <>
-          <Routes>
-            <Route path="/" element={<PrimaryLayout />}>
-              <Route index element={<Homepage />} />
-              <Route path="sd-instances" element={<SDInstancesPageController />} />
-              <Route path="sd-types" element={<SDTypesPageController />} />
-              <Route path="apollo-sandbox" element={<ApolloSandboxPage />} />
-              <Route path="kpi-definitions" element={<KPIPageController />} />
-              <Route path="kpi-definitions/create" element={<KPIDetailPageController />} />
-              <Route path="kpi-definitions/:id/edit" element={<KPIDetailPageController />} />
-              <Route path="*" element={<FallbackPage />} />
-            </Route>
-          </Routes>
-        </>
+        <NiceModal.Provider>
+          <>
+            <Routes>
+              <Route path="/" element={<PrimaryLayout />}>
+                <Route index element={<Homepage />} />
+                <Route path="sd-instances" element={<SDInstancesPageController />} />
+                <Route path="sd-types" element={<SDTypesPageController />} />
+                <Route path="apollo-sandbox" element={<ApolloSandboxPage />} />
+                <Route path="kpi-definitions" element={<KPIPageController />} />
+                <Route path="kpi-definitions/create" element={<KPIDetailPageController />} />
+                <Route path="kpi-definitions/:id/edit" element={<KPIDetailPageController />} />
+                <Route path="*" element={<FallbackPage />} />
+              </Route>
+            </Routes>
+          </>
+        </NiceModal.Provider>
       </ThemeProvider>
     </ApolloProvider>
   )
