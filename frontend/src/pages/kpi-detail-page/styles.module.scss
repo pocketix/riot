@@ -1,11 +1,24 @@
-.kpiUserIdentifier {
+.kpiUserIdentifierSection {
+  display: flex;
+  gap: 20px;
+  align-items: center;
   font-size: 40px;
-  margin-top: 0;
-  margin-bottom: -20px;
+
+  p {
+    font-size: 40px;
+    margin: 0;
+  }
 }
 
-.kpiSDTypeSpecification {
-  font-size: 32px;
-  margin-top: 0;
-  margin-bottom: -10px;
+.kpiSDTypeSpecificationSection {
+  margin-top: -30px;
+  padding-top: 10px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+
+  p {
+    font-size: 32px;
+    margin: 0;
+  }
 }

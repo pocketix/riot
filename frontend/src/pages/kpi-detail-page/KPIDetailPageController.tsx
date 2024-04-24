@@ -190,6 +190,14 @@ const KPIDetailPageController: React.FC = () => {
     navigate('/kpi-definitions')
   }
 
+  const updateUserIdentifier = (newUserIdentifier: string) => {
+    setDefinitionModel((definitionModel) =>
+      produce(definitionModel, (draftDefinitionModel) => {
+        draftDefinitionModel.userIdentifier = newUserIdentifier
+      })
+    )
+  }
+
   return (
     <KPIDetailPageView
       kpiDefinitionModel={definitionModel}
@@ -213,6 +221,7 @@ const KPIDetailPageController: React.FC = () => {
       initiateAtomNodeModification={initiateAtomNodeModification}
       onSubmitHandler={onSubmitHandler}
       onCancelHandler={onCancelHandler}
+      updateUserIdentifier={updateUserIdentifier}
     />
   )
 }
