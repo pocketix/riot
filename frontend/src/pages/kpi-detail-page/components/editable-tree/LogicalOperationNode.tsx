@@ -5,22 +5,22 @@ import { EffectFunction } from '../../../../util'
 
 interface LogicalOperationNodeProps {
   type: LogicalOperationNodeType
-  onClickHandler: EffectFunction
+  onClick: EffectFunction
 }
 
 const LogicalOperationNode: React.FC<LogicalOperationNodeProps> = (props) => {
   const logicalOperationDenotation: string = useMemo(() => {
     switch (props.type) {
       case LogicalOperationNodeType.AND:
-        return '∧ (AND)'
+        return 'AND'
       case LogicalOperationNodeType.OR:
-        return '∨ (OR)'
+        return 'OR'
       case LogicalOperationNodeType.NOR:
-        return '↓ (NOR)'
+        return 'NOR'
     }
   }, [props.type])
 
-  return <EditableTreeNodeBase treeNodeContents={<p>{logicalOperationDenotation}</p>} onClickHandler={props.onClickHandler} />
+  return <EditableTreeNodeBase treeNodeContents={<p className="font-math text-[40px]">{logicalOperationDenotation}</p>} onClick={props.onClick} />
 }
 
 export default LogicalOperationNode

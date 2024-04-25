@@ -4,22 +4,20 @@ import { EffectFunction } from '../../../../util'
 
 interface EditableTreeNodeBaseProps {
   treeNodeContents: ReactNode
-  onClickHandler?: EffectFunction
+  onClick?: EffectFunction
 }
 
 const EditableTreeNodeBase: React.FC<EditableTreeNodeBaseProps> = (props) => {
   const styleObject = useMemo(() => {
-    const padding: number = 10
-    const borderWidth: number = 2
     return {
-      padding: padding,
-      borderWidth: borderWidth,
-      width: editableTreeConfiguration.sizeConfiguration.foreignObjectWidthInPixels - 2 * padding - 2 * borderWidth,
-      height: editableTreeConfiguration.sizeConfiguration.foreignObjectHeightInPixels - 2 * padding - 2 * borderWidth
+      padding: 10,
+      borderWidth: 2,
+      width: editableTreeConfiguration.sizeConfiguration.foreignObjectWidthInPixels,
+      height: editableTreeConfiguration.sizeConfiguration.foreignObjectHeightInPixels
     }
   }, [])
   return (
-    <div className="flex items-center justify-center rounded-[10px] border-[#5d5d5d] bg-gray-100" style={styleObject} onClick={props.onClickHandler}>
+    <div className="flex items-center justify-center rounded-[20px] border-[#5d5d5d] bg-gray-100" style={styleObject} onClick={props.onClick}>
       {props.treeNodeContents}
     </div>
   )

@@ -120,8 +120,8 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
         case NodeType.NewNode:
           return (
             <EditableTreeNodeBase
-              treeNodeContents={<p>+</p>}
-              onClickHandler={() => {
+              treeNodeContents={<p className="font-math text-[32px]">+</p>}
+              onClick={() => {
                 props.initiateNewNodeCreation(editableTreeNodeDataModel.name)
               }}
             />
@@ -144,7 +144,7 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
           return (
             <LogicalOperationNode
               type={editableTreeNodeDataModel.attributes.logicalOperationNodeType}
-              onClickHandler={() => {
+              onClick={() => {
                 props.initiateLogicalOperationNodeModification(editableTreeNodeDataModel.name)
               }}
             />
@@ -209,7 +209,7 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
   }, [width, height, treeShown, props.editableTreeNodeData])
 
   return (
-    <div ref={ref} className="h-[600px] w-full border-2 border-gray-400">
+    <div ref={ref} className="h-[600px] w-full border-2 border-[#8f8f8f]">
       {treeShown && (
         <Tree
           data={props.editableTreeNodeData}

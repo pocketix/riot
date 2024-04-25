@@ -4,7 +4,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        math: ['Noto Sans Math']
+        math: ['Noto Sans Math', 'sans-serif']
       }
     }
   },

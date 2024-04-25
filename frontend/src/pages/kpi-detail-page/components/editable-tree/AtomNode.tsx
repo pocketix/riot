@@ -41,7 +41,9 @@ const AtomNode: React.FC<AtomNodeProps> = (props) => {
     }
   }, [referenceValue])
 
-  return <EditableTreeNodeBase treeNodeContents={<p className="font-math">{`${sdParameterSpecification} ${binaryRelationSymbol} ${referenceValueString}`}</p>} onClickHandler={props.onClickHandler} />
+  return (
+    <EditableTreeNodeBase treeNodeContents={<p className="font-math truncate">{`${sdParameterSpecification} ${binaryRelationSymbol} ${referenceValueString}`}</p>} onClick={props.onClickHandler} />
+  )
 }
 
 export default AtomNode
