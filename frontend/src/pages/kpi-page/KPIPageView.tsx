@@ -1,14 +1,12 @@
 import React from 'react'
-import StandardContentPageTemplate from '../../page-independent-components/standard-content-page-template/StandardContentPageTemplate'
+import StandardContentPageTemplate from '../../page-independent-components/StandardContentPageTemplate'
 import { KpiDefinitionsQuery } from '../../generated/graphql'
-import styles from './styles.module.scss'
-import GenericCardTemplate from '../../page-independent-components/generic-card-template/GenericCardTemplate'
+import GenericCardTemplate from '../../page-independent-components/GenericCardTemplate'
 import { useNavigate } from 'react-router-dom'
-import { AsynchronousEffectFunction } from '../../util'
+import AddNewCardButton from '../../page-independent-components/AddNewCardButton'
 
 interface KPIPageViewProps {
   kpiDefinitionsData: KpiDefinitionsQuery
-  refetchKPIDefinitions: AsynchronousEffectFunction
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }
@@ -18,7 +16,7 @@ const KPIPageView: React.FC<KPIPageViewProps> = (props) => {
   return (
     <StandardContentPageTemplate pageTitle="KPI definitions" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
       <h2>Current KPI definitions</h2>
-      <div className={styles.section}>
+      <div className="flex flex-wrap gap-5">
         {props.kpiDefinitionsData && props.kpiDefinitionsData.kpiDefinitions.length === 0 && <p>No KPI definitions yet...</p>}
         {props.kpiDefinitionsData &&
           props.kpiDefinitionsData.kpiDefinitions
@@ -27,7 +25,7 @@ const KPIPageView: React.FC<KPIPageViewProps> = (props) => {
             .map((kpiDefinition) => (
               <GenericCardTemplate // TODO: Consider creating a separate component out of this...
                 headerContent={
-                  <span onClick={() => navigate(`${kpiDefinition.id}/edit`)} className={`material-symbols-outlined ${styles.pointerCursor}`}>
+                  <span onClick={() => navigate(`${kpiDefinition.id}/edit`)} className="material-symbols-outlined cursor-pointer">
                     edit
                   </span>
                 }
@@ -43,12 +41,7 @@ const KPIPageView: React.FC<KPIPageViewProps> = (props) => {
                 }
               ></GenericCardTemplate>
             ))}
-        <GenericCardTemplate
-          headerContent={<></>}
-          bodyContent={<span className="material-symbols-outlined">add_circle</span>}
-          onClickHandler={() => navigate('create')}
-          className={styles.createDefinitionButton}
-        ></GenericCardTemplate>
+        <AddNewCardButton onClick={() => navigate('create')} />
       </div>
     </StandardContentPageTemplate>
   )

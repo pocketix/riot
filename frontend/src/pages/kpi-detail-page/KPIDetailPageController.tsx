@@ -27,9 +27,9 @@ import {
 } from './kpiDefinitionModel'
 import mCreateKPIDefinition from '../../graphql/mutations/createKPIDefinition.graphql'
 import { useModal } from '@ebay/nice-modal-react'
-import SelectNewNodeTypeModal from './components/select-new-node-type-modal/SelectNewNodeTypeModal'
-import SelectLogicalOperationTypeModal from './components/select-logical-operation-type-modal/SelectLogicalOperationTypeModal'
-import AtomNodeModal, { BinaryRelation } from './components/atom-node-modal/AtomNodeModal'
+import SelectNewNodeTypeModal from './components/modals/SelectNewNodeTypeModal'
+import SelectLogicalOperationTypeModal from './components/modals/SelectLogicalOperationTypeModal'
+import AtomNodeModal, { BinaryRelation } from './components/modals/AtomNodeModal'
 
 export interface KPIDefinitionModel extends EditableTreeNodeDataModel {
   id: string

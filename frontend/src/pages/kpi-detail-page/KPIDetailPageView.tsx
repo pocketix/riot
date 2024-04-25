@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import EditableTree, { AtomNodeType } from './components/editable-tree/EditableTree'
-import StandardContentPageTemplate from '../../page-independent-components/standard-content-page-template/StandardContentPageTemplate'
+import StandardContentPageTemplate from '../../page-independent-components/StandardContentPageTemplate'
 import { KPIDefinitionModel } from './KPIDetailPageController'
 import styles from './styles.module.scss'
 import { Button, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material'
 import { SdType, SdTypesQuery } from '../../generated/graphql'
 import { AsynchronousEffectFunction, ConsumerFunction, EffectFunction, TetraConsumerFunction } from '../../util'
-import { PlainTextField } from '../../page-independent-components/mui-based/styled/Styled'
+import { PlainTextField } from '../../page-independent-components/mui-based/Styled'
 
 interface KPIDetailPageViewProps {
   kpiDefinitionModel: KPIDefinitionModel
@@ -32,11 +32,12 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
   }, [props.kpiDefinitionModel.userIdentifier])
   return (
     <StandardContentPageTemplate pageTitle="KPI detail" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
-      <div className={styles.kpiUserIdentifierSection}>
-        <p>User identifier:</p>
+      <div className="flex items-center gap-5">
+        <p className="m-0 text-[40px]">User identifier:</p>
         <PlainTextField
           sx={{
-            width: '50%'
+            width: '60%',
+            fontSize: 40
           }}
           id="standard-basic"
           label=""
@@ -53,8 +54,8 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
           }}
         />
       </div>
-      <div className={styles.kpiSDTypeSpecificationSection}>
-        <p className={styles.kpiSDTypeSpecification}>Defined for SD type:</p>
+      <div className="mt-[-16px] flex items-center gap-5 pt-2.5">
+        <p className="m-0 text-[32px]">Defined for SD type:</p>
         <FormControl sx={{ width: '20%' }}>
           <InputLabel id="sd-type-select-field-label">Select SD type</InputLabel>
           <Select labelId="sd-type-select-field-label" value={props.sdTypeData ? props.sdTypeData.id : ''} label="Select SD type" onChange={(e) => props.handleSDTypeSelection(e.target.value)}>

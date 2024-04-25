@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CustomNodeElementProps, Point, RawNodeDatum, Tree, TreeNodeDatum } from 'react-d3-tree'
-import styles from './styles.module.scss'
-import AtomNode from '../atom-node/AtomNode'
-import LogicalOperationNode from '../logical-operation-node/LogicalOperationNode'
-import EditableTreeNodeBase from '../editable-tree-node-base/EditableTreeNodeBase'
+import AtomNode from './AtomNode'
+import LogicalOperationNode from './LogicalOperationNode'
+import EditableTreeNodeBase from './EditableTreeNodeBase'
 import { useResizeDetector } from 'react-resize-detector'
 import { ConsumerFunction, TetraConsumerFunction } from '../../../../util'
 
@@ -210,7 +209,7 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
   }, [width, height, treeShown, props.editableTreeNodeData])
 
   return (
-    <div ref={ref} className={styles.treeWrapper}>
+    <div ref={ref} className="h-[600px] w-full border-2 border-gray-400">
       {treeShown && (
         <Tree
           data={props.editableTreeNodeData}
@@ -229,7 +228,7 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
             nonSiblings: editableTreeConfiguration.nonSiblingSeparation
           }}
           renderCustomNodeElement={renderCustomNode}
-          pathClassFunc={() => styles.customNodeLinkStyle}
+          pathClassFunc={() => '!text-[#5d5d5d] !stroke-current !stroke-2'}
           initialDepth={calculateTreeDepth(props.editableTreeNodeData)}
         />
       )}
