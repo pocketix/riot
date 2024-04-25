@@ -3,7 +3,9 @@ module.exports = {
   content: ['./src/**/*.{html,js,ts,jsx,tsx}'],
   theme: {
     extend: {
-      math: ['Noto Sans']
+      fontFamily: {
+        math: ['Noto Sans Math']
+      }
     }
   },
   plugins: []
