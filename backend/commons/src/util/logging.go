@@ -15,3 +15,9 @@ func LogPossibleErrorThenProceed(err error, errorMessage string) {
 		log.Printf("%s: %s", errorMessage, err)
 	}
 }
+
+func TerminateIfFalse(cond bool, errorMessage string) {
+	if !cond {
+		log.Panicf(errorMessage)
+	}
+}

@@ -13,6 +13,16 @@ services:
       - "9090:9090"
     restart: unless-stopped
 
+  sfpdfsd-mqtt-preprocessor:
+    build:
+      context: ./backend
+      dockerfile: mqtt-preprocessor/Dockerfile
+    depends_on:
+      - rabbitmq
+      - mosquitto # TODO: Consider getting rid of this 'dependency' (by adding a full-fledged MQTT configuration)
+      - sfpdfsd-backend-core # 'Backend-core' has to set up the 'RabbitMQ infrastructure'
+    restart: unless-stopped
+
   mosquitto:
     image: eclipse-mosquitto:latest
     ports:
@@ -42,8 +52,6 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com # Not a real e-mail address...
       PGADMIN_DEFAULT_PASSWORD: password
-    depends_on:
-      - postgres
     ports:
       - "8081:80"
 

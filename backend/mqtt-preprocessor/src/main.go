@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	mqttBrokerURI      = "mqtt://localhost:1883"
+	mqttBrokerURI      = "mqtt://mosquitto:1883"
 	mqttClientID       = "bp-bures-SfPDfSD-MQTT-preprocessor"
 	mqttTopic          = "topic"
 	mqttBrokerUsername = "admin"
@@ -177,24 +177,39 @@ func addIncomingMQTTMessageToFIFO(incomingMQTTMessagePayload []byte) {
 }
 
 func main() {
-	rabbitMQClient = rabbitmq.NewClient()
-	var wg sync.WaitGroup
-	wg.Add(3)
+	var wg1 sync.WaitGroup
+	wg1.Add(3)
 	go func() {
-		defer wg.Done()
+		defer wg1.Done()
+		cUtil.TerminateIfFalse(cUtil.IsDSReady("rabbitmq", 5672, 10*time.Second), "Couldn't access the RabbitMQ messaging and streaming broker...")
+	}()
+	go func() {
+		defer wg1.Done()
+		cUtil.TerminateIfFalse(cUtil.IsDSReady("mosquitto", 1883, 10*time.Second), "Couldn't access the Mosquitto MQTT broker...")
+	}()
+	go func() {
+		defer wg1.Done()
+		cUtil.TerminateIfFalse(cUtil.IsDSReady("sfpdfsd-backend-core", 9090, 10*time.Second), "Couldn't access the 'Backend core' service of SfPDfSD...")
+	}()
+	wg1.Wait()
+	rabbitMQClient = rabbitmq.NewClient()
+	var wg2 sync.WaitGroup
+	wg2.Add(3)
+	go func() {
+		defer wg2.Done()
 		checkForSetOfSDTypesUpdates()
 	}()
 	go func() {
-		defer wg.Done()
+		defer wg2.Done()
 		checkForSetOfSDInstancesUpdates()
 	}()
 	mqttClient := mqtt.NewEclipsePahoBasedMqttClient(mqttBrokerURI, mqttClientID, mqttBrokerUsername, mqttBrokerPassword)
 	cUtil.TerminateOnError(mqttClient.Connect(), fmt.Sprintf("Failed to connect to the MQTT broker [%s]", mqttBrokerURI))
 	cUtil.TerminateOnError(mqttClient.Subscribe(mqttTopic, mqtt.QosAtLeastOnce, addIncomingMQTTMessageToFIFO), fmt.Sprintf("Failed to subscribe to the MQTT topic [%s]", mqttTopic))
 	go func() {
-		defer wg.Done()
+		defer wg2.Done()
 		checkMQTTMessageFIFO()
 	}()
-	wg.Wait()
+	wg2.Wait()
 	rabbitMQClient.Dispose()
 }
