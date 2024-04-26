@@ -25,26 +25,31 @@ a Bachelor thesis project of Michal Bureš
 - The root directory contains the following files and directories:
   - README.md (file)
   - docker-compose.yml (file)
+  - .gitingore (file)
+  - .gitattributes (file)
   - docker (directory)
   - backend (directory)
   - frontend (directory)
 - Without the complementary services running the system will either not work as expected or not at all
-  - The pgAdmin service is optional – it is used mainly for debug purposes
-- Without at least one instance of all backend services ('Backend core', 'Message processing unit', 'MQTT preprocessor') running, the frontend of the system will not work as expected
+  - The pgAdmin service is optional – it is useful mainly for debugging purposes
+- Without at least one instance of all backend services ('**Backend core**', '**Message processing unit**', '**MQTT preprocessor**') running, the frontend of the system will not work as expected
 - Check that the ports required by the system, and it's complementary services are free on your system:
   - Mosquitto MQTT broker
     - 9001
     - 1883
   - PostgreSQL database
     - 5432
-  - pgAdmin (optional)
+  - RabbitMQ messaging and streaming broker
+    - 5672
+    - 15672
+  - pgAdmin database administration tool (optional)
     - 8081
-  - GraphQL API of the 'Backend core' service
+  - GraphQL API of the '**Backend core**' service
     - 9090
   - Frontend of the system
     - 1234
 
-## Run the complementary services (PostgreSQL database, pgAdmin, Mosquitto MQTT broker, ...)
+## Run the complementary services (Mosquitto MQTT broker, PostgreSQL database, RabbitMQ messaging and streaming broker and pgAdmin database administration tool)
 - To run all complementary services, run:
 ```shell
 docker-compose up
@@ -92,6 +97,6 @@ Upon completing all previously mentioned steps, the system should be fully opera
 You can access the system through its [frontend](http://localhost:1234).
 Remember that running the provided commands leads to running a single instance of all backend services along with the complementary services
 and frontend on a single machine. This is fine for functionality testing. However, the system is not actually supposed to be
-deployed this way and so running it like this can lead to suboptimal performance (throughput, capacity, ...) characteristics.
+deployed this way and so running it like this can lead to suboptimal performance characteristics.
 
 ![](frontend/resources/images/homepage-graphics.jpg)
