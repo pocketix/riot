@@ -7,7 +7,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/constants"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	cTypes "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/types"
-	cUtil "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 	"log"
 	"sync"
 	"time"
@@ -23,9 +23,9 @@ const (
 
 var (
 	rabbitMQClient       rabbitmq.Client
-	sdTypes              = cUtil.NewSet[string]()
+	sdTypes              = util.NewSet[string]()
 	sdTypesMutex         sync.Mutex
-	sdInstances          = cUtil.NewSet[cTypes.SDInstanceInfo]()
+	sdInstances          = util.NewSet[cTypes.SDInstanceInfo]()
 	sdInstancesMutex     sync.Mutex
 	mqttMessageFIFO      = make([][]byte, 0)
 	mqttMessageFIFOMutex sync.Mutex
@@ -33,7 +33,7 @@ var (
 
 func checkForSetOfSDTypesUpdates() {
 	err := rabbitmq.ConsumeJSONMessages[[]string](rabbitMQClient, constants.SetOfSDTypesUpdatesQueueName, func(messagePayload []string) error {
-		updatedSDTypes := cUtil.SliceToSet(messagePayload)
+		updatedSDTypes := util.SliceToSet(messagePayload)
 		sdTypesMutex.Lock()
 		sdTypes = updatedSDTypes
 		sdTypesMutex.Unlock()
@@ -46,7 +46,7 @@ func checkForSetOfSDTypesUpdates() {
 
 func checkForSetOfSDInstancesUpdates() {
 	err := rabbitmq.ConsumeJSONMessages[[]cTypes.SDInstanceInfo](rabbitMQClient, constants.SetOfSDInstancesUpdatesQueueName, func(messagePayload []cTypes.SDInstanceInfo) error {
-		updatedSDInstances := cUtil.SliceToSet(messagePayload)
+		updatedSDInstances := util.SliceToSet(messagePayload)
 		sdInstancesMutex.Lock()
 		sdInstances = updatedSDInstances
 		sdInstancesMutex.Unlock()
@@ -95,7 +95,7 @@ func generateKPIFulfillmentCheckRequest(uid string, sdType string, parameters an
 		},
 		Parameters: parameters,
 	}
-	jsonSerializationResult := cUtil.SerializeToJSON(requestForKPIFulfillmentCheck)
+	jsonSerializationResult := util.SerializeToJSON(requestForKPIFulfillmentCheck)
 	if jsonSerializationResult.IsFailure() {
 		log.Println("Failed to serialize the object representing a KPI fulfillment check request into JSON")
 	}
@@ -115,7 +115,7 @@ func generateSDInstanceRegistrationRequest(uid string, sdType string, timestamp 
 			Type: sdType,
 		},
 	}
-	jsonSerializationResult := cUtil.SerializeToJSON(requestForSDInstanceRegistration)
+	jsonSerializationResult := util.SerializeToJSON(requestForSDInstanceRegistration)
 	if jsonSerializationResult.IsFailure() {
 		log.Println("Failed to serialize the object representing a SD instance registration request into JSON")
 	}
@@ -134,7 +134,7 @@ func generateSDInstanceRegistrationRequest(uid string, sdType string, timestamp 
 }
 
 func processMQTTMessagePayload(mqttMessagePayload []byte) {
-	jsonDeserializationResult := cUtil.DeserializeFromJSON[types.UpstreamMQTTMessageInJSONBasedProprietaryFormatOfLogimic](mqttMessagePayload)
+	jsonDeserializationResult := util.DeserializeFromJSON[types.UpstreamMQTTMessageInJSONBasedProprietaryFormatOfLogimic](mqttMessagePayload)
 	if jsonDeserializationResult.IsFailure() {
 		log.Println("Failed to deserialize the JSON payload of MQTT message")
 		return
@@ -181,15 +181,15 @@ func main() {
 	wg1.Add(3)
 	go func() {
 		defer wg1.Done()
-		cUtil.TerminateIfFalse(cUtil.IsDSReady("rabbitmq", 5672, 10*time.Second), "Couldn't access the RabbitMQ messaging and streaming broker...")
+		util.TerminateIfFalse(util.IsDSReady("rabbitmq", 5672, 10*time.Second), "Couldn't access the RabbitMQ messaging and streaming broker...")
 	}()
 	go func() {
 		defer wg1.Done()
-		cUtil.TerminateIfFalse(cUtil.IsDSReady("mosquitto", 1883, 10*time.Second), "Couldn't access the Mosquitto MQTT broker...")
+		util.TerminateIfFalse(util.IsDSReady("mosquitto", 1883, 10*time.Second), "Couldn't access the Mosquitto MQTT broker...")
 	}()
 	go func() {
 		defer wg1.Done()
-		cUtil.TerminateIfFalse(cUtil.IsDSReady("sfpdfsd-backend-core", 9090, 10*time.Second), "Couldn't access the 'Backend core' service of SfPDfSD...")
+		util.TerminateIfFalse(util.IsDSReady("sfpdfsd-backend-core", 9090, 10*time.Second), "Couldn't access the 'Backend core' service of SfPDfSD...")
 	}()
 	wg1.Wait()
 	rabbitMQClient = rabbitmq.NewClient()
@@ -204,8 +204,8 @@ func main() {
 		checkForSetOfSDInstancesUpdates()
 	}()
 	mqttClient := mqtt.NewEclipsePahoBasedMqttClient(mqttBrokerURI, mqttClientID, mqttBrokerUsername, mqttBrokerPassword)
-	cUtil.TerminateOnError(mqttClient.Connect(), fmt.Sprintf("Failed to connect to the MQTT broker [%s]", mqttBrokerURI))
-	cUtil.TerminateOnError(mqttClient.Subscribe(mqttTopic, mqtt.QosAtLeastOnce, addIncomingMQTTMessageToFIFO), fmt.Sprintf("Failed to subscribe to the MQTT topic [%s]", mqttTopic))
+	util.TerminateOnError(mqttClient.Connect(), fmt.Sprintf("Failed to connect to the MQTT broker [%s]", mqttBrokerURI))
+	util.TerminateOnError(mqttClient.Subscribe(mqttTopic, mqtt.QosAtLeastOnce, addIncomingMQTTMessageToFIFO), fmt.Sprintf("Failed to subscribe to the MQTT topic [%s]", mqttTopic))
 	go func() {
 		defer wg2.Done()
 		checkMQTTMessageFIFO()
