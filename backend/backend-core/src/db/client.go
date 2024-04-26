@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	dsn = "host=host.docker.internal user=admin password=password dbname=postgres-db port=5432"
+	dsn = "host=postgres user=admin password=password dbname=postgres-db port=5432"
 )
 
 type RelationalDatabaseClient interface {

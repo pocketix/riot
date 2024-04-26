@@ -2,6 +2,17 @@ version: '3'
 
 services:
 
+  sfpdfsd-backend-core:
+    build:
+      context: ./backend
+      dockerfile: backend-core/Dockerfile
+    depends_on:
+      - rabbitmq
+      - postgres
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
   mosquitto:
     image: eclipse-mosquitto:latest
     ports:
@@ -38,7 +49,6 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: rabbitmq
     ports:
       - "5672:5672" # RabbitMQ itself
       - "15672:15672" # Management console
