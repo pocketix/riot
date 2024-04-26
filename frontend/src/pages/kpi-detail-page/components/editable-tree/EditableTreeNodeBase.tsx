@@ -11,7 +11,7 @@ const EditableTreeNodeBase: React.FC<EditableTreeNodeBaseProps> = (props) => {
   const styleObject = useMemo(() => {
     return {
       padding: 10,
-      borderWidth: 2,
+      borderWidth: 3,
       width: editableTreeConfiguration.sizeConfiguration.foreignObjectWidthInPixels,
       height: editableTreeConfiguration.sizeConfiguration.foreignObjectHeightInPixels
     }

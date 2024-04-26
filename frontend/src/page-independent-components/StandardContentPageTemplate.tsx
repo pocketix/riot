@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { Alert, LinearProgress } from '@mui/material'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Alert, CircularProgress } from '@mui/material'
 
 interface StandardContentPageProps {
   pageTitle: string
@@ -9,31 +9,40 @@ interface StandardContentPageProps {
 }
 
 const StandardContentPageTemplate: React.FC<StandardContentPageProps> = (props) => {
-  const [pageTitleShown, setPageTitleShown] = useState(false)
-  const [statusBarContentsShown, setStatusBarContentsShown] = useState(false)
-  const [mainContentsShown, setMainContentsShown] = useState(false)
+  const [contentShown, setContentShown] = useState(false)
 
   useEffect(() => {
-    const pageTitleTimeout = setTimeout(() => setPageTitleShown(true), 100)
-    const statusBarContentsTimeout = setTimeout(() => setStatusBarContentsShown(true), 200)
-    const mainContentsTimeout = setTimeout(() => setMainContentsShown(true), 100)
-    return () => {
-      clearTimeout(pageTitleTimeout)
-      clearTimeout(statusBarContentsTimeout)
-      clearTimeout(mainContentsTimeout)
-    }
+    const contentShownTimeout = setTimeout(() => setContentShown(true), 50)
+    return () => clearTimeout(contentShownTimeout)
   }, [])
+
+  const content = useMemo(() => {
+    if (!contentShown) {
+      return <></>
+    }
+    if (props.anyLoadingOccurs) {
+      return (
+        <div className="mt-[100px] self-center">
+          <CircularProgress size={100} />
+        </div>
+      )
+    }
+    if (props.anyErrorOccurred) {
+      return (
+        <div className="mt-[100px] self-center">
+          <Alert severity="error" sx={{ fontSize: 20, alignItems: 'center' }}>
+            The system encountered an error! Consider checking the console and application logs for more information...
+          </Alert>
+        </div>
+      )
+    }
+    return props.children
+  }, [contentShown, props.anyLoadingOccurs, props.anyErrorOccurred, props.children])
 
   return (
     <div className="flex flex-col gap-4 p-5">
-      <h1 className="self-center">{pageTitleShown ? props.pageTitle : ''}</h1>
-      <div className="flex h-20 flex-col justify-center">
-        {statusBarContentsShown && props.anyLoadingOccurs && <LinearProgress />}
-        {statusBarContentsShown && props.anyErrorOccurred && (
-          <Alert severity="error">The system encountered an error! Consider checking browser console and application logs for more information...</Alert>
-        )}
-      </div>
-      {mainContentsShown && props.children}
+      <h1 className="self-center">{props.pageTitle}</h1>
+      {content}
     </div>
   )
 }
