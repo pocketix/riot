@@ -1,0 +1,13 @@
+query KPIFulfillmentCheckResults {
+  kpiFulfillmentCheckResults {
+    id
+    kpiDefinition {
+      id
+      userIdentifier
+    }
+    sdInstance {
+      id
+    }
+    fulfilled
+  }
+}

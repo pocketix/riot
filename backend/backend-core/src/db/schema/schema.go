@@ -79,3 +79,16 @@ type SDInstanceEntity struct {
 func (SDInstanceEntity) TableName() string {
 	return "sd_instances"
 }
+
+type KPIFulfillmentCheckResultEntity struct {
+	ID              uint32               `gorm:"column:id;primarykey;not null"`
+	KPIDefinitionID *uint32              `gorm:"column:kpi_definition_id;not null"`
+	KPIDefinition   *KPIDefinitionEntity `gorm:"foreignKey:KPIDefinitionID"`
+	SDInstanceID    *uint32              `gorm:"column:sd_instance_id;not null"`
+	SDInstance      *SDInstanceEntity    `gorm:"foreignKey:SDInstanceID"`
+	Fulfilled       bool                 `gorm:"column:fulfilled;not null"`
+}
+
+func (KPIFulfillmentCheckResultEntity) TableName() string {
+	return "kpi_fulfillment_check_results"
+}

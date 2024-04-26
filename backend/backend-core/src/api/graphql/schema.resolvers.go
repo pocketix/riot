@@ -6,6 +6,7 @@ package graphql
 
 import (
 	"context"
+
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/generated"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/service"
@@ -55,6 +56,11 @@ func (r *queryResolver) KpiDefinition(ctx context.Context, id string) (*model.KP
 // KpiDefinitions is the resolver for the kpiDefinitions field.
 func (r *queryResolver) KpiDefinitions(ctx context.Context) ([]*model.KPIDefinition, error) {
 	return service.GetKPIDefinitions().Unwrap()
+}
+
+// KpiFulfillmentCheckResults is the resolver for the kpiFulfillmentCheckResults field.
+func (r *queryResolver) KpiFulfillmentCheckResults(ctx context.Context) ([]*model.KPIFulfillmentCheckResult, error) {
+	return service.GetKPIFulfillmentCheckResults().Unwrap()
 }
 
 // Mutation returns generated.MutationResolver implementation.

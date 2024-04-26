@@ -61,6 +61,13 @@ type ComplexityRoot struct {
 		UserIdentifier      func(childComplexity int) int
 	}
 
+	KPIFulfillmentCheckResult struct {
+		Fulfilled     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		KpiDefinition func(childComplexity int) int
+		SdInstance    func(childComplexity int) int
+	}
+
 	LogicalOperationKPINode struct {
 		ID           func(childComplexity int) int
 		NodeType     func(childComplexity int) int
@@ -116,11 +123,12 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		KpiDefinition  func(childComplexity int, id string) int
-		KpiDefinitions func(childComplexity int) int
-		SdInstances    func(childComplexity int) int
-		SdType         func(childComplexity int, id string) int
-		SdTypes        func(childComplexity int) int
+		KpiDefinition              func(childComplexity int, id string) int
+		KpiDefinitions             func(childComplexity int) int
+		KpiFulfillmentCheckResults func(childComplexity int) int
+		SdInstances                func(childComplexity int) int
+		SdType                     func(childComplexity int, id string) int
+		SdTypes                    func(childComplexity int) int
 	}
 
 	SDInstance struct {
@@ -164,6 +172,7 @@ type QueryResolver interface {
 	SdInstances(ctx context.Context) ([]*model.SDInstance, error)
 	KpiDefinition(ctx context.Context, id string) (*model.KPIDefinition, error)
 	KpiDefinitions(ctx context.Context) ([]*model.KPIDefinition, error)
+	KpiFulfillmentCheckResults(ctx context.Context) ([]*model.KPIFulfillmentCheckResult, error)
 }
 
 type executableSchema struct {
@@ -247,6 +256,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.KPIDefinition.UserIdentifier(childComplexity), true
+
+	case "KPIFulfillmentCheckResult.fulfilled":
+		if e.complexity.KPIFulfillmentCheckResult.Fulfilled == nil {
+			break
+		}
+
+		return e.complexity.KPIFulfillmentCheckResult.Fulfilled(childComplexity), true
+
+	case "KPIFulfillmentCheckResult.id":
+		if e.complexity.KPIFulfillmentCheckResult.ID == nil {
+			break
+		}
+
+		return e.complexity.KPIFulfillmentCheckResult.ID(childComplexity), true
+
+	case "KPIFulfillmentCheckResult.kpiDefinition":
+		if e.complexity.KPIFulfillmentCheckResult.KpiDefinition == nil {
+			break
+		}
+
+		return e.complexity.KPIFulfillmentCheckResult.KpiDefinition(childComplexity), true
+
+	case "KPIFulfillmentCheckResult.sdInstance":
+		if e.complexity.KPIFulfillmentCheckResult.SdInstance == nil {
+			break
+		}
+
+		return e.complexity.KPIFulfillmentCheckResult.SdInstance(childComplexity), true
 
 	case "LogicalOperationKPINode.id":
 		if e.complexity.LogicalOperationKPINode.ID == nil {
@@ -517,6 +554,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.KpiDefinitions(childComplexity), true
+
+	case "Query.kpiFulfillmentCheckResults":
+		if e.complexity.Query.KpiFulfillmentCheckResults == nil {
+			break
+		}
+
+		return e.complexity.Query.KpiFulfillmentCheckResults(childComplexity), true
 
 	case "Query.sdInstances":
 		if e.complexity.Query.SdInstances == nil {
@@ -928,6 +972,15 @@ input KPINodeInput {
   logicalOperationType: LogicalOperationType
 }
 
+# ----- KPI fulfillment check results -----
+
+type KPIFulfillmentCheckResult {
+  id: ID!
+  kpiDefinition: KPIDefinition!
+  sdInstance: SDInstance!
+  fulfilled: Boolean!
+}
+
 # ----- Queries and Mutations -----
 
 type Query {
@@ -936,6 +989,7 @@ type Query {
   sdInstances: [SDInstance!]!
   kpiDefinition(id: ID!): KPIDefinition!
   kpiDefinitions: [KPIDefinition!]!
+  kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!
 }
 
 type Mutation {
@@ -1492,6 +1546,204 @@ func (ec *executionContext) fieldContext_KPIDefinition_nodes(ctx context.Context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("FieldContext.Child cannot be called on type INTERFACE")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KPIFulfillmentCheckResult_id(ctx context.Context, field graphql.CollectedField, obj *model.KPIFulfillmentCheckResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KPIFulfillmentCheckResult_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KPIFulfillmentCheckResult_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KPIFulfillmentCheckResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KPIFulfillmentCheckResult_kpiDefinition(ctx context.Context, field graphql.CollectedField, obj *model.KPIFulfillmentCheckResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KPIFulfillmentCheckResult_kpiDefinition(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.KpiDefinition, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.KPIDefinition)
+	fc.Result = res
+	return ec.marshalNKPIDefinition2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIDefinition(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KPIFulfillmentCheckResult_kpiDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KPIFulfillmentCheckResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KPIDefinition_id(ctx, field)
+			case "sdTypeSpecification":
+				return ec.fieldContext_KPIDefinition_sdTypeSpecification(ctx, field)
+			case "userIdentifier":
+				return ec.fieldContext_KPIDefinition_userIdentifier(ctx, field)
+			case "nodes":
+				return ec.fieldContext_KPIDefinition_nodes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KPIDefinition", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KPIFulfillmentCheckResult_sdInstance(ctx context.Context, field graphql.CollectedField, obj *model.KPIFulfillmentCheckResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KPIFulfillmentCheckResult_sdInstance(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SdInstance, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SDInstance)
+	fc.Result = res
+	return ec.marshalNSDInstance2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstance(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KPIFulfillmentCheckResult_sdInstance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KPIFulfillmentCheckResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SDInstance_id(ctx, field)
+			case "uid":
+				return ec.fieldContext_SDInstance_uid(ctx, field)
+			case "confirmedByUser":
+				return ec.fieldContext_SDInstance_confirmedByUser(ctx, field)
+			case "userIdentifier":
+				return ec.fieldContext_SDInstance_userIdentifier(ctx, field)
+			case "type":
+				return ec.fieldContext_SDInstance_type(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SDInstance", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KPIFulfillmentCheckResult_fulfilled(ctx context.Context, field graphql.CollectedField, obj *model.KPIFulfillmentCheckResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KPIFulfillmentCheckResult_fulfilled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Fulfilled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KPIFulfillmentCheckResult_fulfilled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KPIFulfillmentCheckResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3290,6 +3542,60 @@ func (ec *executionContext) fieldContext_Query_kpiDefinitions(ctx context.Contex
 				return ec.fieldContext_KPIDefinition_nodes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type KPIDefinition", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_kpiFulfillmentCheckResults(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_kpiFulfillmentCheckResults(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().KpiFulfillmentCheckResults(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.KPIFulfillmentCheckResult)
+	fc.Result = res
+	return ec.marshalNKPIFulfillmentCheckResult2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIFulfillmentCheckResultᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_kpiFulfillmentCheckResults(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_KPIFulfillmentCheckResult_id(ctx, field)
+			case "kpiDefinition":
+				return ec.fieldContext_KPIFulfillmentCheckResult_kpiDefinition(ctx, field)
+			case "sdInstance":
+				return ec.fieldContext_KPIFulfillmentCheckResult_sdInstance(ctx, field)
+			case "fulfilled":
+				return ec.fieldContext_KPIFulfillmentCheckResult_fulfilled(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KPIFulfillmentCheckResult", field.Name)
 		},
 	}
 	return fc, nil
@@ -6379,6 +6685,60 @@ func (ec *executionContext) _KPIDefinition(ctx context.Context, sel ast.Selectio
 	return out
 }
 
+var kPIFulfillmentCheckResultImplementors = []string{"KPIFulfillmentCheckResult"}
+
+func (ec *executionContext) _KPIFulfillmentCheckResult(ctx context.Context, sel ast.SelectionSet, obj *model.KPIFulfillmentCheckResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, kPIFulfillmentCheckResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("KPIFulfillmentCheckResult")
+		case "id":
+			out.Values[i] = ec._KPIFulfillmentCheckResult_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "kpiDefinition":
+			out.Values[i] = ec._KPIFulfillmentCheckResult_kpiDefinition(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sdInstance":
+			out.Values[i] = ec._KPIFulfillmentCheckResult_sdInstance(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fulfilled":
+			out.Values[i] = ec._KPIFulfillmentCheckResult_fulfilled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var logicalOperationKPINodeImplementors = []string{"LogicalOperationKPINode", "KPINode"}
 
 func (ec *executionContext) _LogicalOperationKPINode(ctx context.Context, sel ast.SelectionSet, obj *model.LogicalOperationKPINode) graphql.Marshaler {
@@ -6897,6 +7257,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_kpiDefinitions(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "kpiFulfillmentCheckResults":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_kpiFulfillmentCheckResults(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -7585,6 +7967,60 @@ func (ec *executionContext) marshalNKPIDefinition2ᚖgithubᚗcomᚋMichalBures�
 func (ec *executionContext) unmarshalNKPIDefinitionInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIDefinitionInput(ctx context.Context, v interface{}) (model.KPIDefinitionInput, error) {
 	res, err := ec.unmarshalInputKPIDefinitionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNKPIFulfillmentCheckResult2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIFulfillmentCheckResultᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.KPIFulfillmentCheckResult) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNKPIFulfillmentCheckResult2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIFulfillmentCheckResult(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNKPIFulfillmentCheckResult2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIFulfillmentCheckResult(ctx context.Context, sel ast.SelectionSet, v *model.KPIFulfillmentCheckResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._KPIFulfillmentCheckResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNKPINode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINode(ctx context.Context, sel ast.SelectionSet, v model.KPINode) graphql.Marshaler {

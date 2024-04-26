@@ -1,11 +1,12 @@
 import React from 'react'
-import { SdInstancesQuery } from '../../generated/graphql'
+import { KpiFulfillmentCheckResultsQuery, SdInstancesQuery } from '../../generated/graphql'
 import StandardContentPageTemplate from '../../page-independent-components/StandardContentPageTemplate'
 import SDInstancesSection from './components/SDInstancesSection'
 import { AsynchronousBiConsumerFunction, AsynchronousConsumerFunction } from '../../util'
 
 interface SDTypesPageViewProps {
   sdInstancesData: SdInstancesQuery
+  kpiFulfillmentCheckResultsData: KpiFulfillmentCheckResultsQuery
   updateUserIdentifierOfSdInstance: AsynchronousBiConsumerFunction<string, string>
   confirmSdInstance: AsynchronousConsumerFunction<string>
   anyLoadingOccurs: boolean
@@ -19,6 +20,7 @@ const SDInstancesPageView: React.FC<SDTypesPageViewProps> = (props) => {
       <h3>SD instances confirmed by user</h3>
       <SDInstancesSection
         sdInstancesData={props.sdInstancesData}
+        kpiFulfillmentCheckResultsData={props.kpiFulfillmentCheckResultsData}
         confirmedByUserRequirement={true}
         updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance}
         confirmSdInstance={props.confirmSdInstance}
@@ -26,6 +28,7 @@ const SDInstancesPageView: React.FC<SDTypesPageViewProps> = (props) => {
       <h3>SD instances not yet confirmed by user</h3>
       <SDInstancesSection
         sdInstancesData={props.sdInstancesData}
+        kpiFulfillmentCheckResultsData={props.kpiFulfillmentCheckResultsData}
         confirmedByUserRequirement={false}
         updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance}
         confirmSdInstance={props.confirmSdInstance}

@@ -1,10 +1,11 @@
-import { SdInstancesQuery } from '../../../generated/graphql'
+import { KpiFulfillmentCheckResultsQuery, SdInstancesQuery } from '../../../generated/graphql'
 import React, { useMemo } from 'react'
 import SDInstanceCard from './SDInstanceCard'
 import { AsynchronousBiConsumerFunction, AsynchronousConsumerFunction } from '../../../util'
 
 interface ConfirmedSDInstancesSectionProps {
   sdInstancesData: SdInstancesQuery
+  kpiFulfillmentCheckResultsData: KpiFulfillmentCheckResultsQuery
   confirmedByUserRequirement: boolean
   updateUserIdentifierOfSdInstance: AsynchronousBiConsumerFunction<string, string>
   confirmSdInstance: AsynchronousConsumerFunction<string>
@@ -25,18 +26,21 @@ const SDInstancesSection: React.FC<ConfirmedSDInstancesSectionProps> = (props) =
       {sdInstances
         .slice()
         .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10))
-        .map((sdInstance) => (
-          <SDInstanceCard
-            key={sdInstance.id}
-            id={sdInstance.id}
-            userIdentifier={sdInstance.userIdentifier}
-            uid={sdInstance.uid}
-            sdTypeDenotation={sdInstance.type.denotation}
-            confirmedByUser={confirmedByUserRequirement}
-            updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance}
-            confirmSdInstance={props.confirmSdInstance}
-          />
-        ))}
+        .map((sdInstance) => {
+          return (
+            <SDInstanceCard
+              key={sdInstance.id}
+              id={sdInstance.id}
+              userIdentifier={sdInstance.userIdentifier}
+              uid={sdInstance.uid}
+              sdTypeDenotation={sdInstance.type.denotation}
+              confirmedByUser={confirmedByUserRequirement}
+              kpiFulfillmentCheckResultsData={props.kpiFulfillmentCheckResultsData}
+              updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance}
+              confirmSdInstance={props.confirmSdInstance}
+            />
+          )
+        })}
     </div>
   )
 }

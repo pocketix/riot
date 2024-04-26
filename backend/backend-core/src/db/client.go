@@ -34,6 +34,10 @@ type RelationalDatabaseClient interface {
 	DoesSDInstanceExist(uid string) cUtil.Result[bool]
 	LoadSDInstances() cUtil.Result[[]types.SDInstanceDTO]
 	DeleteSDInstance(id uint32) error
+	PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResultDTO types.KPIFulfillmentCheckResultDTO) cUtil.Result[uint32] // TODO: Is ID enough?
+	LoadKPIFulFulfillmentCheckResult(id uint32) cUtil.Result[types.KPIFulfillmentCheckResultDTO]
+	LoadKPIFulFulfillmentCheckResults() cUtil.Result[[]types.KPIFulfillmentCheckResultDTO]
+	DeleteKPIFulFulfillmentCheckResult(id uint32) error
 }
 
 type relationalDatabaseClientImpl struct {
@@ -71,6 +75,7 @@ func (r *relationalDatabaseClientImpl) InitializeDatabase() error {
 		&schema.SDTypeEntity{},
 		&schema.SDParameterEntity{},
 		&schema.SDInstanceEntity{},
+		&schema.KPIFulfillmentCheckResultEntity{},
 	)
 }
 
@@ -258,6 +263,43 @@ func (r *relationalDatabaseClientImpl) LoadSDInstances() cUtil.Result[[]types.SD
 }
 
 func (r *relationalDatabaseClientImpl) DeleteSDInstance(id uint32) error {
+	// TODO: Implement
+	return errors.New("[rdb client] not implemented")
+}
+
+func (r *relationalDatabaseClientImpl) PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResultDTO types.KPIFulfillmentCheckResultDTO) cUtil.Result[uint32] {
+	// TODO: Implement
+	return cUtil.NewFailureResult[uint32](errors.New("[rdb client] not implemented"))
+}
+
+func (r *relationalDatabaseClientImpl) LoadKPIFulFulfillmentCheckResult(id uint32) cUtil.Result[types.KPIFulfillmentCheckResultDTO] {
+	// TODO: Implement
+	return cUtil.NewFailureResult[types.KPIFulfillmentCheckResultDTO](errors.New("[rdb client] not implemented"))
+}
+
+func (r *relationalDatabaseClientImpl) LoadKPIFulFulfillmentCheckResults() cUtil.Result[[]types.KPIFulfillmentCheckResultDTO] {
+	var kpiFulFulfillmentCheckResultEntities []schema.KPIFulfillmentCheckResultEntity
+	if err := r.db.Preload("SDInstance.SDType.Parameters").Preload("KPIDefinition").Find(&kpiFulFulfillmentCheckResultEntities).Error; err != nil {
+		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](err)
+	}
+	var kpiNodeEntities []schema.KPINodeEntity
+	if err := r.db.Find(&kpiNodeEntities).Error; err != nil {
+		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](err)
+	}
+	var logicalOperationKPINodeEntities []schema.LogicalOperationKPINodeEntity
+	if err := r.db.Find(&logicalOperationKPINodeEntities).Error; err != nil {
+		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](err)
+	}
+	var atomKPINodeEntities []schema.AtomKPINodeEntity
+	if err := r.db.Find(&atomKPINodeEntities).Error; err != nil {
+		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](err)
+	}
+	return cUtil.NewSuccessResult[[]types.KPIFulfillmentCheckResultDTO](cUtil.Map(kpiFulFulfillmentCheckResultEntities, func(kpiFulfillmentCheckResultEntity schema.KPIFulfillmentCheckResultEntity) types.KPIFulfillmentCheckResultDTO {
+		return db2dto.KPIFulfillmentCheckResultEntityToKPIFulfillmentCheckResultDTO(kpiFulfillmentCheckResultEntity, kpiNodeEntities, logicalOperationKPINodeEntities, atomKPINodeEntities)
+	}))
+}
+
+func (r *relationalDatabaseClientImpl) DeleteKPIFulFulfillmentCheckResult(id uint32) error {
 	// TODO: Implement
 	return errors.New("[rdb client] not implemented")
 }

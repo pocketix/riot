@@ -44,6 +44,14 @@ export type KpiDefinitionInput = {
   userIdentifier: Scalars['String']['input'];
 };
 
+export type KpiFulfillmentCheckResult = {
+  __typename?: 'KPIFulfillmentCheckResult';
+  fulfilled: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  kpiDefinition: KpiDefinition;
+  sdInstance: SdInstance;
+};
+
 export type KpiNode = {
   id: Scalars['ID']['output'];
   nodeType: KpiNodeType;
@@ -164,6 +172,7 @@ export type Query = {
   __typename?: 'Query';
   kpiDefinition: KpiDefinition;
   kpiDefinitions: Array<KpiDefinition>;
+  kpiFulfillmentCheckResults: Array<KpiFulfillmentCheckResult>;
   sdInstances: Array<SdInstance>;
   sdType: SdType;
   sdTypes: Array<SdType>;
@@ -279,6 +288,11 @@ export type KpiDefinitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type KpiDefinitionsQuery = { __typename?: 'Query', kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeSpecification: string }> };
+
+export type KpiFulfillmentCheckResultsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type KpiFulfillmentCheckResultsQuery = { __typename?: 'Query', kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', id: string, fulfilled: boolean, kpiDefinition: { __typename?: 'KPIDefinition', id: string, userIdentifier: string }, sdInstance: { __typename?: 'SDInstance', id: string } }> };
 
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
