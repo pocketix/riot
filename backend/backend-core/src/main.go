@@ -30,7 +30,7 @@ func main() {
 	}()
 	// Set up the Fiber web application and GraphQL API
 	app := fiber.New()
-	app.Use(cors.New(cors.Config{AllowOrigins: "http://localhost:8080"}))
+	app.Use(cors.New(cors.Config{AllowOrigins: "http://localhost:1234, http://localhost:8080"}))
 	app.Use("/", adaptor.HTTPHandler(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graphql.Resolver{}}))))
 	log.Fatal(app.Listen(":9090"))
 }
