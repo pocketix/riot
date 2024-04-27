@@ -2,6 +2,15 @@ version: '3'
 
 services:
 
+  sfpdfsd-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+        - sfpdfsd-backend-core
+    ports:
+        - "8080:80"
+
   sfpdfsd-backend-core:
     build:
       context: ./backend

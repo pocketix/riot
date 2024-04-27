@@ -12,22 +12,12 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"log"
-	"sync"
 	"time"
 )
 
 func main() {
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		util.TerminateIfFalse(util.IsDSReady("rabbitmq", 5672, 10*time.Second), "Couldn't access the RabbitMQ messaging and streaming broker...")
-	}()
-	go func() {
-		defer wg.Done()
-		util.TerminateIfFalse(util.IsDSReady("postgres", 5432, 10*time.Second), "Couldn't access the PostgreSQL relational database...")
-	}()
-	wg.Wait()
+	util.TerminateIfFalse(util.IsDSReady("rabbitmq", 5672, 30*time.Second), "Couldn't access the RabbitMQ messaging and streaming broker...")
+	util.TerminateIfFalse(util.IsDSReady("postgres", 5432, 30*time.Second), "Couldn't access the PostgreSQL relational database...")
 	// Set up PostgreSQL database and its client
 	db.SetupRelationalDatabaseClient()
 	// Set up RabbitMQ "infrastructure"
@@ -40,7 +30,7 @@ func main() {
 	}()
 	// Set up the Fiber web application and GraphQL API
 	app := fiber.New()
-	app.Use(cors.New(cors.Config{AllowOrigins: "http://localhost:1234"})) // TODO: Replace 'localhost' by 'sfpdfsd-frontend' once frontend is Dockerized
+	app.Use(cors.New(cors.Config{AllowOrigins: "http://localhost:8080"}))
 	app.Use("/", adaptor.HTTPHandler(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graphql.Resolver{}}))))
 	log.Fatal(app.Listen(":9090"))
 }
