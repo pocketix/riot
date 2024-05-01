@@ -6,12 +6,14 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	cTypes "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/google/uuid"
 	"log"
 	"sync"
 	"time"
 )
 
 var (
+	dsInstanceID                             uuid.UUID
 	rabbitMQClient                           rabbitmq.Client
 	kpiDefinitionsBySDTypeDenotationMap      map[string][]kpi.DefinitionDTO
 	kpiDefinitionsBySDTypeDenotationMapMutex sync.Mutex
@@ -35,6 +37,7 @@ func checkKPIFulfilmentThenEnqueueResult(sdUniqueIdentifier string, sdParameters
 
 func checkForKPIFulfilmentCheckRequests() {
 	err := rabbitmq.ConsumeJSONMessages[cTypes.RequestForKPIFulfillmentCheck](rabbitMQClient, constants.KPIFulfillmentCheckRequestsQueueName, func(messagePayload cTypes.RequestForKPIFulfillmentCheck) error {
+		log.Printf("KPI fulfillment check request accepted by message processing unit with UUID = %s\n", dsInstanceID.String()) // TODO: Get rid of this line once it's unnecessary
 		sdInfo := messagePayload.SD
 		kpiDefinitionsBySDTypeDenotationMapMutex.Lock()
 		kpiDefinitions := kpiDefinitionsBySDTypeDenotationMap[sdInfo.Type]
@@ -78,6 +81,7 @@ func checkForKPIDefinitionsBySDTypeDenotationMapUpdates() {
 }
 
 func main() {
+	dsInstanceID = uuid.New()
 	util.TerminateOnError(util.WaitForDSs(time.Minute, util.NewPairOf("sfpdfsd-backend-core", 9090)), "Some dependencies of this application are inaccessible")
 	rabbitMQClient = rabbitmq.NewClient()
 	util.WaitForAll(checkForKPIDefinitionsBySDTypeDenotationMapUpdates, checkForKPIFulfilmentCheckRequests)
