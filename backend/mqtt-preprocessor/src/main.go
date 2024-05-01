@@ -177,8 +177,7 @@ func addIncomingMQTTMessageToFIFO(incomingMQTTMessagePayload []byte) {
 }
 
 func main() {
-	util.TerminateIfFalse(util.IsDSReady("mosquitto", 1883, 30*time.Second), "Couldn't access the Mosquitto MQTT broker...")
-	util.TerminateIfFalse(util.IsDSReady("sfpdfsd-backend-core", 9090, 30*time.Second), "Couldn't access the 'Backend core' service of SfPDfSD...")
+	util.TerminateOnError(util.WaitForDSs(time.Minute, util.NewPairOf("mosquitto", 1883), util.NewPairOf("sfpdfsd-backend-core", 9090)), "Some dependencies of this application are inaccessible")
 	rabbitMQClient = rabbitmq.NewClient()
 	var wg sync.WaitGroup
 	wg.Add(3)

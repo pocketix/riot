@@ -1,5 +1,11 @@
 package types
 
+type KPIFulfillmentCheckResultInfo struct {
+	UID             string `json:"uid"`
+	KPIDefinitionID uint32 `json:"kpiDefinitionId"`
+	Fulfilled       bool   `json:"fulfilled"`
+}
+
 type RequestForKPIFulfillmentCheck struct {
 	Timestamp  float32 `json:"timestamp"`
 	SD         SDInfo  `json:"sd"`

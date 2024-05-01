@@ -6,6 +6,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/constants"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	cTypes "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
@@ -42,14 +43,63 @@ func CheckForSDInstanceRegistrationRequests() {
 			UserIdentifier:  uid,
 			SDType:          sdTypeLoadResult.GetPayload(),
 		}
-		persistResult := (*db.GetRelationalDatabaseClientInstance()).PersistSDInstance(sdInstanceDTO)
-		if persistResult.IsFailure() {
+		if (*db.GetRelationalDatabaseClientInstance()).PersistSDInstance(sdInstanceDTO).IsFailure() {
 			return errors.New("couldn't persist the SD instance")
 		}
 		return nil
 	})
 	if err != nil {
 		log.Printf("Consumption of messages from the '%s' queue has failed", constants.SDInstanceRegistrationRequestsQueueName)
+	}
+}
+
+func CheckForKPIFulfillmentCheckResults() {
+	err := rabbitmq.ConsumeJSONMessages(rabbitMQClient, constants.KPIFulfillmentCheckResultsQueueName, func(messagePayload cTypes.KPIFulfillmentCheckResultInfo) error {
+		targetKPIDefinitionID := messagePayload.KPIDefinitionID
+		targetSDInstanceUID := messagePayload.UID
+		fulfilled := messagePayload.Fulfilled
+		kpiFulfillmentCheckResultOptional := util.FindFirst((*db.GetRelationalDatabaseClientInstance()).LoadKPIFulFulfillmentCheckResults().GetPayload(), func(k types.KPIFulfillmentCheckResultDTO) bool {
+			return k.KPIDefinition.ID.GetPayload() == targetKPIDefinitionID && k.SDInstance.UID == targetSDInstanceUID
+		})
+		if kpiFulfillmentCheckResultOptional.IsPresent() {
+			kpiFulfillmentCheckResult := kpiFulfillmentCheckResultOptional.GetPayload()
+			kpiFulfillmentCheckResult.Fulfilled = fulfilled
+			if (*db.GetRelationalDatabaseClientInstance()).PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResult).IsFailure() {
+				return fmt.Errorf("couldn't update KPI fulfillment check result with ID = %d", kpiFulfillmentCheckResult.ID.GetPayload())
+			}
+			return nil
+		}
+		// TODO: Searching for target KPI definition on service layer (suboptimal)
+		kpiDefinitionsLoadResult := (*db.GetRelationalDatabaseClientInstance()).LoadKPIDefinitions()
+		if kpiDefinitionsLoadResult.IsFailure() {
+			return errors.New("couldn't load KPI definitions")
+		}
+		targetKPIDefinitionOptional := util.FindFirst(kpiDefinitionsLoadResult.GetPayload(), func(k kpi.DefinitionDTO) bool { return k.ID.GetPayload() == targetKPIDefinitionID })
+		if targetKPIDefinitionOptional.IsEmpty() {
+			return fmt.Errorf("couldn't load database record of KPI definition with ID = %d", targetKPIDefinitionID)
+		}
+		// TODO: Searching for target SD instance on service layer (suboptimal)
+		sdInstancesLoadResult := (*db.GetRelationalDatabaseClientInstance()).LoadSDInstances()
+		if sdInstancesLoadResult.IsFailure() {
+			return errors.New("couldn't load SD instances")
+		}
+		targetSDInstanceOptional := util.FindFirst(sdInstancesLoadResult.GetPayload(), func(s types.SDInstanceDTO) bool { return s.UID == targetSDInstanceUID })
+		if targetSDInstanceOptional.IsEmpty() {
+			return fmt.Errorf("couldn't load database record of SD instance with UID = %d", targetSDInstanceUID)
+		}
+		kpiFulfillmentCheckResultDTO := types.KPIFulfillmentCheckResultDTO{
+			ID:            util.NewEmptyOptional[uint32](),
+			KPIDefinition: targetKPIDefinitionOptional.GetPayload(),
+			SDInstance:    targetSDInstanceOptional.GetPayload(),
+			Fulfilled:     fulfilled,
+		}
+		if (*db.GetRelationalDatabaseClientInstance()).PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResultDTO).IsFailure() {
+			return errors.New("couldn't persist the KPI fulfillment check result")
+		}
+		return nil
+	})
+	if err != nil {
+		log.Printf("Consumption of messages from the '%s' queue has failed", constants.KPIFulfillmentCheckResultsQueueName)
 	}
 }
 
@@ -86,11 +136,35 @@ func EnqueueMessageRepresentingCurrentSDInstances() error {
 	return rabbitMQClient.EnqueueJSONMessage(constants.SetOfSDInstancesUpdatesQueueName, sdInstancesInfoJSONSerializationResult.GetPayload())
 }
 
+func EnqueueMessageRepresentingCurrentKPIDefinitions() error {
+	kpiDefinitionsLoadResult := (*db.GetRelationalDatabaseClientInstance()).LoadKPIDefinitions()
+	if kpiDefinitionsLoadResult.IsFailure() {
+		return kpiDefinitionsLoadResult.GetError()
+	}
+	kpiDefinitionsBySDTypeDenotationMapTF := make(map[string][]cTypes.KPIDefinitionTF)
+	kpiDefinitionDTOs := kpiDefinitionsLoadResult.GetPayload()
+	for _, kpiDefinitionDTO := range kpiDefinitionDTOs {
+		sdTypeSpecification := kpiDefinitionDTO.SDTypeSpecification
+		if _, exists := kpiDefinitionsBySDTypeDenotationMapTF[sdTypeSpecification]; !exists {
+			kpiDefinitionsBySDTypeDenotationMapTF[sdTypeSpecification] = make([]cTypes.KPIDefinitionTF, 0)
+		}
+		kpiDefinitionsBySDTypeDenotationMapTF[sdTypeSpecification] = append(kpiDefinitionsBySDTypeDenotationMapTF[sdTypeSpecification], cTypes.KPIDefinitionDTOToKPIDefinitionTF(kpiDefinitionDTO))
+	}
+	kpiDefinitionsBySDTypeDenotationMapTFJSONSerializationResult := util.SerializeToJSON(kpiDefinitionsBySDTypeDenotationMapTF)
+	if kpiDefinitionsBySDTypeDenotationMapTFJSONSerializationResult.IsFailure() {
+		return kpiDefinitionsBySDTypeDenotationMapTFJSONSerializationResult.GetError()
+	}
+	return rabbitMQClient.EnqueueJSONMessage(constants.KPIDefinitionsBySDTypeDenotationMapUpdates, kpiDefinitionsBySDTypeDenotationMapTFJSONSerializationResult.GetPayload())
+}
+
 func EnqueueMessagesRepresentingCurrentConfiguration() error {
 	if err := EnqueueMessageRepresentingCurrentSDTypes(); err != nil {
 		return err
 	}
 	if err := EnqueueMessageRepresentingCurrentSDInstances(); err != nil {
+		return err
+	}
+	if err := EnqueueMessageRepresentingCurrentKPIDefinitions(); err != nil {
 		return err
 	}
 	return nil

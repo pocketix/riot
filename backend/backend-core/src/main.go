@@ -16,8 +16,7 @@ import (
 )
 
 func main() {
-	util.TerminateIfFalse(util.IsDSReady("rabbitmq", 5672, 30*time.Second), "Couldn't access the RabbitMQ messaging and streaming broker...")
-	util.TerminateIfFalse(util.IsDSReady("postgres", 5432, 30*time.Second), "Couldn't access the PostgreSQL relational database...")
+	util.TerminateOnError(util.WaitForDSs(time.Minute, util.NewPairOf("rabbitmq", 5672), util.NewPairOf("postgres", 5432)), "Some dependencies of this application are inaccessible")
 	// Set up PostgreSQL database and its client
 	db.SetupRelationalDatabaseClient()
 	// Set up RabbitMQ "infrastructure"
@@ -25,9 +24,8 @@ func main() {
 	// Set up RabbitMQ inside the 'Backend core' service
 	service.SetupRabbitMQClient()
 	util.TerminateOnError(service.EnqueueMessagesRepresentingCurrentConfiguration(), "Couldn't enqueue messages representing the system configuration after 'Backend core' restart")
-	go func() {
-		service.CheckForSDInstanceRegistrationRequests()
-	}()
+	go service.CheckForSDInstanceRegistrationRequests()
+	go service.CheckForKPIFulfillmentCheckResults()
 	// Set up the Fiber web application and GraphQL API
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{AllowOrigins: "http://localhost:1234, http://localhost:8080"}))

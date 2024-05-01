@@ -268,8 +268,12 @@ func (r *relationalDatabaseClientImpl) DeleteSDInstance(id uint32) error {
 }
 
 func (r *relationalDatabaseClientImpl) PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResultDTO types.KPIFulfillmentCheckResultDTO) cUtil.Result[uint32] {
-	// TODO: Implement
-	return cUtil.NewFailureResult[uint32](errors.New("[rdb client] not implemented"))
+	kpiFulfillmentCheckEntity := dto2db.KPIFulfillmentCheckResultDTOToKPIFulfillmentCheckResultEntity(kpiFulfillmentCheckResultDTO)
+	err := r.db.Save(&kpiFulfillmentCheckEntity).Error
+	if err != nil {
+		return cUtil.NewFailureResult[uint32](err)
+	}
+	return cUtil.NewSuccessResult[uint32](kpiFulfillmentCheckEntity.ID)
 }
 
 func (r *relationalDatabaseClientImpl) LoadKPIFulFulfillmentCheckResult(id uint32) cUtil.Result[types.KPIFulfillmentCheckResultDTO] {

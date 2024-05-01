@@ -9,6 +9,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2api"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"log"
 )
 
 func CreateKPIDefinition(kpiDefinitionInput model.KPIDefinitionInput) util.Result[*model.KPIDefinition] {
@@ -21,6 +22,11 @@ func CreateKPIDefinition(kpiDefinitionInput model.KPIDefinitionInput) util.Resul
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[*model.KPIDefinition](persistResult.GetError())
 	}
+	go func() {
+		if err := EnqueueMessageRepresentingCurrentKPIDefinitions(); err != nil {
+			log.Println("Failed to enqueue message representing current KPI definitions in the system")
+		}
+	}()
 	id := persistResult.GetPayload()
 	kpiDefinitionDTO.ID = util.NewOptionalOf[uint32](id)
 	kpiDefinition := dto2api.KPIDefinitionDTOToKPIDefinition(kpiDefinitionDTO)

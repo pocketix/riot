@@ -49,45 +49,45 @@ type numericLEQFulfillmentChecker struct{}
 type logicalOperationFulfillmentChecker struct{}
 
 func (_ *stringEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
-	eqAtomNode := node.(*EQAtomNodeDTO[string])
-	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(string)
-	return eqAtomNode.ReferenceValue == referenceValue
+	stringEQAtomNode := node.(EQAtomNodeDTO[string])
+	actualSDParameterValue := getTargetDataItemValue(inputDataMap, stringEQAtomNode.SDParameterSpecification).(string)
+	return actualSDParameterValue == stringEQAtomNode.ReferenceValue
 }
 
 func (_ *booleanEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
-	eqAtomNode := node.(*EQAtomNodeDTO[bool])
-	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(bool)
-	return eqAtomNode.ReferenceValue == referenceValue
+	booleanEQAtomNode := node.(EQAtomNodeDTO[bool])
+	actualSDParameterValue := getTargetDataItemValue(inputDataMap, booleanEQAtomNode.SDParameterSpecification).(bool)
+	return actualSDParameterValue == booleanEQAtomNode.ReferenceValue
 }
 
 func (_ *numericEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
-	eqAtomNode := node.(*EQAtomNodeDTO[float64])
-	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(float64)
-	return eqAtomNode.ReferenceValue == referenceValue
+	numericEQAtomNode := node.(EQAtomNodeDTO[float64])
+	actualSDParameterValue := getTargetDataItemValue(inputDataMap, numericEQAtomNode.SDParameterSpecification).(float64)
+	return actualSDParameterValue == numericEQAtomNode.ReferenceValue
 }
 
 func (_ *numericGTFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
-	eqAtomNode := node.(*NumericGTAtomNodeDTO)
-	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(float64)
-	return eqAtomNode.ReferenceValue > referenceValue
+	numericGTAtomNode := node.(NumericGTAtomNodeDTO)
+	actualSDParameterValue := getTargetDataItemValue(inputDataMap, numericGTAtomNode.SDParameterSpecification).(float64)
+	return actualSDParameterValue > numericGTAtomNode.ReferenceValue
 }
 
 func (_ *numericGEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
-	eqAtomNode := node.(*NumericGEQAtomNodeDTO)
-	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(float64)
-	return eqAtomNode.ReferenceValue >= referenceValue
+	numericGEQAtomNode := node.(NumericGEQAtomNodeDTO)
+	actualSDParameterValue := getTargetDataItemValue(inputDataMap, numericGEQAtomNode.SDParameterSpecification).(float64)
+	return actualSDParameterValue >= numericGEQAtomNode.ReferenceValue
 }
 
 func (_ *numericLTFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
-	eqAtomNode := node.(*NumericGTAtomNodeDTO)
-	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(float64)
-	return eqAtomNode.ReferenceValue < referenceValue
+	numericLTAtomNode := node.(NumericLTAtomNodeDTO)
+	actualSDParameterValue := getTargetDataItemValue(inputDataMap, numericLTAtomNode.SDParameterSpecification).(float64)
+	return actualSDParameterValue < numericLTAtomNode.ReferenceValue
 }
 
 func (_ *numericLEQFulfillmentChecker) checkNodeFulfillment(node NodeDTO, inputDataMap *any) bool {
-	eqAtomNode := node.(*NumericGEQAtomNodeDTO)
-	referenceValue := getTargetDataItemValue(inputDataMap, eqAtomNode.SDParameterSpecification).(float64)
-	return eqAtomNode.ReferenceValue <= referenceValue
+	numericLEQAtomNode := node.(NumericLEQAtomNodeDTO)
+	actualSDParameterValue := getTargetDataItemValue(inputDataMap, numericLEQAtomNode.SDParameterSpecification).(float64)
+	return actualSDParameterValue <= numericLEQAtomNode.ReferenceValue
 }
 
 func getTargetDataItemValue(inputDataMap *any, targetDataItemKey string) any {

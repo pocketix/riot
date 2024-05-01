@@ -1,6 +1,8 @@
 package util
 
 import (
+	"github.com/davecgh/go-spew/spew"
+	"log"
 	"strconv"
 )
 
@@ -47,4 +49,13 @@ func Ternary[T any](cond bool, r1 T, r2 T) T {
 	} else {
 		return r2
 	}
+}
+
+func Dump(a ...any) {
+	spew.Dump(a)
+}
+
+func DumpWithAnnotation(annotation string, a ...any) {
+	log.Println(annotation)
+	spew.Dump(a)
 }

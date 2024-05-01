@@ -11,6 +11,8 @@ func SetupRabbitMQ() {
 		return fmt.Sprintf("[RabbitMQ setup] Failed to declare the '%s' queue", queueName)
 	}
 	client := NewClient()
+	util.TerminateOnError(client.DeclareStandardQueue(constants.KPIDefinitionsBySDTypeDenotationMapUpdates), getQueueDeclarationErrorMessage(constants.KPIDefinitionsBySDTypeDenotationMapUpdates))
+	util.TerminateOnError(client.DeclareStandardQueue(constants.KPIFulfillmentCheckResultsQueueName), getQueueDeclarationErrorMessage(constants.KPIFulfillmentCheckResultsQueueName))
 	util.TerminateOnError(client.DeclareStandardQueue(constants.KPIFulfillmentCheckRequestsQueueName), getQueueDeclarationErrorMessage(constants.KPIFulfillmentCheckRequestsQueueName))
 	util.TerminateOnError(client.DeclareStandardQueue(constants.SDInstanceRegistrationRequestsQueueName), getQueueDeclarationErrorMessage(constants.SDInstanceRegistrationRequestsQueueName))
 	util.TerminateOnError(client.DeclareStandardQueue(constants.SetOfSDTypesUpdatesQueueName), getQueueDeclarationErrorMessage(constants.SetOfSDTypesUpdatesQueueName))

@@ -22,6 +22,15 @@ services:
       - "9090:9090"
     restart: unless-stopped
 
+  sfpdfsd-message-processing-unit:
+    build:
+      context: ./backend
+      dockerfile: message-processing-unit/Dockerfile
+    depends_on:
+      - rabbitmq
+      - sfpdfsd-backend-core # 'Backend-core' has to set up the 'RabbitMQ infrastructure'
+    restart: unless-stopped
+
   sfpdfsd-mqtt-preprocessor:
     build:
       context: ./backend
