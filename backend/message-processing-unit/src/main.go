@@ -80,16 +80,6 @@ func checkForKPIDefinitionsBySDTypeDenotationMapUpdates() {
 func main() {
 	util.TerminateOnError(util.WaitForDSs(time.Minute, util.NewPairOf("sfpdfsd-backend-core", 9090)), "Some dependencies of this application are inaccessible")
 	rabbitMQClient = rabbitmq.NewClient()
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		checkForKPIDefinitionsBySDTypeDenotationMapUpdates()
-	}()
-	go func() {
-		defer wg.Done()
-		checkForKPIFulfilmentCheckRequests()
-	}()
-	wg.Wait()
+	util.WaitForAll(checkForKPIDefinitionsBySDTypeDenotationMapUpdates, checkForKPIFulfilmentCheckRequests)
 	rabbitMQClient.Dispose()
 }

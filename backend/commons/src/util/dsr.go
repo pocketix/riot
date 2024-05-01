@@ -11,7 +11,7 @@ import (
 func WaitForDSs(timeout time.Duration, dsIdentifierPortNumberPairs ...Pair[string, int]) error {
 	inaccessibleDSIdentifiers := make([]string, 0)
 	var inaccessibleDSIdentifiersMutex sync.Mutex
-	var wg sync.WaitGroup
+	wg := new(sync.WaitGroup)
 	wg.Add(len(dsIdentifierPortNumberPairs))
 	for _, dsIdentifierPortNumberPair := range dsIdentifierPortNumberPairs {
 		go func(dsIdentifierPortNumberPair Pair[string, int]) {

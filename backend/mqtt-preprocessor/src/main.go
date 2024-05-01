@@ -179,23 +179,9 @@ func addIncomingMQTTMessageToFIFO(incomingMQTTMessagePayload []byte) {
 func main() {
 	util.TerminateOnError(util.WaitForDSs(time.Minute, util.NewPairOf("mosquitto", 1883), util.NewPairOf("sfpdfsd-backend-core", 9090)), "Some dependencies of this application are inaccessible")
 	rabbitMQClient = rabbitmq.NewClient()
-	var wg sync.WaitGroup
-	wg.Add(3)
-	go func() {
-		defer wg.Done()
-		checkForSetOfSDTypesUpdates()
-	}()
-	go func() {
-		defer wg.Done()
-		checkForSetOfSDInstancesUpdates()
-	}()
 	mqttClient := mqtt.NewEclipsePahoBasedMqttClient(mqttBrokerURI, mqttClientID, mqttBrokerUsername, mqttBrokerPassword)
 	util.TerminateOnError(mqttClient.Connect(), fmt.Sprintf("Failed to connect to the MQTT broker [%s]", mqttBrokerURI))
 	util.TerminateOnError(mqttClient.Subscribe(mqttTopic, mqtt.QosAtLeastOnce, addIncomingMQTTMessageToFIFO), fmt.Sprintf("Failed to subscribe to the MQTT topic [%s]", mqttTopic))
-	go func() {
-		defer wg.Done()
-		checkMQTTMessageFIFO()
-	}()
-	wg.Wait()
+	util.WaitForAll(checkForSetOfSDTypesUpdates, checkForSetOfSDInstancesUpdates, checkMQTTMessageFIFO)
 	rabbitMQClient.Dispose()
 }
