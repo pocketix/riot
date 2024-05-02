@@ -14,6 +14,7 @@ import KPIDetailPageController from './pages/kpi-detail-page/KPIDetailPageContro
 import KPIPageController from './pages/kpi-page/KPIPageController'
 import CustomLinkButton from './page-independent-components/CustomLinkButton'
 import { ApolloSandbox } from '@apollo/sandbox/react'
+import ConfigurationPage from './pages/ConfigurationPage'
 
 const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   uri: 'http://localhost:9090',
@@ -69,6 +70,7 @@ const customTheme: Theme = createTheme({
 const sdInstances = 'sd-instances'
 const sdTypes = 'sd-types'
 const kpiDefinitions = 'kpi-definitions'
+const configuration = 'configuration'
 const apolloSandbox = 'apollo-sandbox'
 
 const ApplicationLayout: React.FC = () => {
@@ -79,7 +81,8 @@ const ApplicationLayout: React.FC = () => {
         <CustomLinkButton route={`/${sdInstances}`} text="SD instances" iconIdentifier="lightbulb" />
         <CustomLinkButton route={`/${sdTypes}`} text="SD type definitions" iconIdentifier="home_iot_device" />
         <CustomLinkButton route={`/${kpiDefinitions}`} text="KPI definitions" iconIdentifier="rule" />
-        <div className="mt-auto">
+        <div className="mt-auto flex flex-col gap-4">
+          <CustomLinkButton route={`/${configuration}`} text="System configuration" iconIdentifier="settings" />
           <CustomLinkButton route={`/${apolloSandbox}`} text="Apollo Sandbox" iconIdentifier="labs" />
         </div>
       </div>
@@ -104,6 +107,7 @@ const Application: React.FC = () => {
                 <Route path={kpiDefinitions} element={<KPIPageController />} />
                 <Route path={`${kpiDefinitions}/create`} element={<KPIDetailPageController />} />
                 <Route path={`${kpiDefinitions}/:id/edit`} element={<KPIDetailPageController />} />
+                <Route path={configuration} element={<ConfigurationPage />} />
                 <Route path={apolloSandbox} element={<ApolloSandbox initialEndpoint="http://localhost:9090" allowDynamicStyles className="h-full w-full" />} />
                 <Route path="*" element={<FallbackPage />} />
               </Route>
