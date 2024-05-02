@@ -302,4 +302,4 @@ export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __ty
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdTypesQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: string, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: string, denotation: string, type: SdParameterType }> }>, sdInstances: Array<{ __typename?: 'SDInstance', type: { __typename?: 'SDType', id: string } }> };
+export type SdTypesQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: string, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: string, denotation: string, type: SdParameterType }> }> };

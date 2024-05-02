@@ -8,9 +8,4 @@ query SDTypes {
       type
     }
   }
-  sdInstances {
-    type {
-      id
-    }
-  }
 }

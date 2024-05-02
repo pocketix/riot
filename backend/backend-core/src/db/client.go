@@ -188,23 +188,28 @@ func (r *relationalDatabaseClientImpl) LoadSDTypes() cUtil.Result[[]types.SDType
 }
 
 func (r *relationalDatabaseClientImpl) DeleteSDType(id uint32) error {
-	var err error
-	var sdInstanceEntities []schema.SDInstanceEntity
-	err = r.db.Find(&sdInstanceEntities).Error
-	if err != nil {
-		return err
-	}
-	if cUtil.Any(sdInstanceEntities, func(sdInstanceEntity schema.SDInstanceEntity) bool { return sdInstanceEntity.SDTypeID == id }) {
-		return errors.New("cannot delete SD type with existing SD instances tied to it")
-	}
 	tx := r.db.Begin()
-	err = tx.Where("sd_type_id = ?", id).Delete(&schema.SDParameterEntity{}).Error
-	if err != nil {
+	var sdInstanceEntities []schema.SDInstanceEntity
+	if err := tx.Where("sd_type_id = ?", id).Find(&sdInstanceEntities).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
-	err = tx.Delete(&schema.SDTypeEntity{}, id).Error
-	if err != nil {
+	for _, sdInstanceEntity := range sdInstanceEntities {
+		sdInstanceID := sdInstanceEntity.ID
+		if err := tx.Where("sd_instance_id = ?", sdInstanceID).Delete(new(schema.KPIFulfillmentCheckResultEntity)).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+		if err := tx.Delete(new(schema.SDInstanceEntity), sdInstanceID).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	if err := tx.Where("sd_type_id = ?", id).Delete(new(schema.SDParameterEntity)).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Delete(new(schema.SDTypeEntity), id).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -269,8 +274,7 @@ func (r *relationalDatabaseClientImpl) DeleteSDInstance(id uint32) error {
 
 func (r *relationalDatabaseClientImpl) PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResultDTO types.KPIFulfillmentCheckResultDTO) cUtil.Result[uint32] {
 	kpiFulfillmentCheckEntity := dto2db.KPIFulfillmentCheckResultDTOToKPIFulfillmentCheckResultEntity(kpiFulfillmentCheckResultDTO)
-	err := r.db.Save(&kpiFulfillmentCheckEntity).Error
-	if err != nil {
+	if err := PersistEntityIntoDB(r, &kpiFulfillmentCheckEntity); err != nil {
 		return cUtil.NewFailureResult[uint32](err)
 	}
 	return cUtil.NewSuccessResult[uint32](kpiFulfillmentCheckEntity.ID)
@@ -282,22 +286,26 @@ func (r *relationalDatabaseClientImpl) LoadKPIFulFulfillmentCheckResult(id uint3
 }
 
 func (r *relationalDatabaseClientImpl) LoadKPIFulFulfillmentCheckResults() cUtil.Result[[]types.KPIFulfillmentCheckResultDTO] {
-	var kpiFulFulfillmentCheckResultEntities []schema.KPIFulfillmentCheckResultEntity
-	if err := r.db.Preload("SDInstance.SDType.Parameters").Preload("KPIDefinition").Find(&kpiFulFulfillmentCheckResultEntities).Error; err != nil {
-		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](err)
+	kpiFulFulfillmentCheckResultEntitiesLoadResult := LoadEntitiesFromDB[schema.KPIFulfillmentCheckResultEntity](r, "SDInstance.SDType.Parameters", "KPIDefinition")
+	if kpiFulFulfillmentCheckResultEntitiesLoadResult.IsFailure() {
+		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](kpiFulFulfillmentCheckResultEntitiesLoadResult.GetError())
 	}
-	var kpiNodeEntities []schema.KPINodeEntity
-	if err := r.db.Find(&kpiNodeEntities).Error; err != nil {
-		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](err)
+	kpiFulFulfillmentCheckResultEntities := kpiFulFulfillmentCheckResultEntitiesLoadResult.GetPayload()
+	kpiNodeEntitiesLoadResult := LoadEntitiesFromDB[schema.KPINodeEntity](r)
+	if kpiNodeEntitiesLoadResult.IsFailure() {
+		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](kpiNodeEntitiesLoadResult.GetError())
 	}
-	var logicalOperationKPINodeEntities []schema.LogicalOperationKPINodeEntity
-	if err := r.db.Find(&logicalOperationKPINodeEntities).Error; err != nil {
-		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](err)
+	kpiNodeEntities := kpiNodeEntitiesLoadResult.GetPayload()
+	logicalOperationKPINodeEntitiesLoadResult := LoadEntitiesFromDB[schema.LogicalOperationKPINodeEntity](r)
+	if logicalOperationKPINodeEntitiesLoadResult.IsFailure() {
+		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](logicalOperationKPINodeEntitiesLoadResult.GetError())
 	}
-	var atomKPINodeEntities []schema.AtomKPINodeEntity
-	if err := r.db.Find(&atomKPINodeEntities).Error; err != nil {
-		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](err)
+	logicalOperationKPINodeEntities := logicalOperationKPINodeEntitiesLoadResult.GetPayload()
+	atomKPINodeEntitiesLoadResult := LoadEntitiesFromDB[schema.AtomKPINodeEntity](r)
+	if atomKPINodeEntitiesLoadResult.IsFailure() {
+		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](atomKPINodeEntitiesLoadResult.GetError())
 	}
+	atomKPINodeEntities := atomKPINodeEntitiesLoadResult.GetPayload()
 	return cUtil.NewSuccessResult[[]types.KPIFulfillmentCheckResultDTO](cUtil.Map(kpiFulFulfillmentCheckResultEntities, func(kpiFulfillmentCheckResultEntity schema.KPIFulfillmentCheckResultEntity) types.KPIFulfillmentCheckResultDTO {
 		return db2dto.KPIFulfillmentCheckResultEntityToKPIFulfillmentCheckResultDTO(kpiFulfillmentCheckResultEntity, kpiNodeEntities, logicalOperationKPINodeEntities, atomKPINodeEntities)
 	}))

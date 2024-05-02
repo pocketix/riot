@@ -29,13 +29,13 @@ func DeleteSDType(stringID string) error {
 	if uint32FromStringResult.IsFailure() {
 		return uint32FromStringResult.GetError()
 	}
+	if deletionResult := util.WrapInNPResult((*db.GetRelationalDatabaseClientInstance()).DeleteSDType(uint32FromStringResult.GetPayload())); deletionResult.IsFailure() {
+		return deletionResult.GetError()
+	}
 	go func() {
-		if err := EnqueueMessageRepresentingCurrentSDTypes(); err != nil {
-			log.Println("Failed to enqueue message representing current SD types in the system")
-		}
+		util.LogPossibleErrorThenProceed(EnqueueMessageRepresentingCurrentSDTypes(), "Failed to enqueue message representing current SD types in the system")
 	}()
-	id := uint32FromStringResult.GetPayload()
-	return (*db.GetRelationalDatabaseClientInstance()).DeleteSDType(id)
+	return nil
 }
 
 func UpdateSDInstance(stringID string, sdInstanceUpdateInput model.SDInstanceUpdateInput) util.Result[*model.SDInstance] {

@@ -62,3 +62,9 @@ func Filter[T any](sourceSlice []T, predicate func(T) bool) []T {
 	}
 	return targetSlice
 }
+
+func ForEach[T any](sourceSlice []T, consumerFunction func(T)) {
+	for _, sourceSliceItem := range sourceSlice {
+		consumerFunction(sourceSliceItem)
+	}
+}

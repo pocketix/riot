@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react'
+import React from 'react'
 import { Collapse } from '@mui/material'
 import GenericCardTemplate from '../../../page-independent-components/GenericCardTemplate'
 import { AsynchronousConsumerFunction } from '../../../util'
@@ -10,26 +10,14 @@ interface SDTypeCardProps {
   areParametersDisplayed: boolean
   parameters: SdParameter[]
   deleteSDType: AsynchronousConsumerFunction<string>
-  anyLoadingOccurs: boolean
-  anyErrorOccurred: boolean
-  isDeleteButtonDisabled: boolean
 }
 
 const SDTypeCard: React.FC<SDTypeCardProps> = (props) => {
-  const deleteButtonDisabled: boolean = useMemo<boolean>(() => props.isDeleteButtonDisabled || props.anyErrorOccurred, [props.isDeleteButtonDisabled, props.anyErrorOccurred])
-
-  const onDeleteHandler = useCallback(async () => {
-    if (deleteButtonDisabled) {
-      return
-    }
-    await props.deleteSDType(props.id)
-  }, [deleteButtonDisabled, props.deleteSDType, props.id])
-
   return (
     <GenericCardTemplate
       headerContent={
         <>
-          <div className={`${deleteButtonDisabled ? 'cursor-default text-[#a9a9a9ff]' : 'cursor-pointer'}`} onClick={() => onDeleteHandler()}>
+          <div className="cursor-pointer" onClick={() => props.deleteSDType(props.id)}>
             <span className="material-symbols-outlined">delete</span>
           </div>
         </>
