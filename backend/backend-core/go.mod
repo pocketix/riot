@@ -4,6 +4,7 @@ go 1.22
 
 require (
 	github.com/99designs/gqlgen v0.17.45
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/MichalBures-OG/bp-bures-SfPDfSD-commons v0.0.0-00010101000000-000000000000
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/google/uuid v1.6.0
@@ -18,6 +19,7 @@ require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

@@ -85,7 +85,7 @@ func CheckForKPIFulfillmentCheckResults() {
 		}
 		targetSDInstanceOptional := util.FindFirst(sdInstancesLoadResult.GetPayload(), func(s types.SDInstanceDTO) bool { return s.UID == targetSDInstanceUID })
 		if targetSDInstanceOptional.IsEmpty() {
-			return fmt.Errorf("couldn't load database record of SD instance with UID = %d", targetSDInstanceUID)
+			return fmt.Errorf("couldn't load database record of SD instance with UID = %s", targetSDInstanceUID)
 		}
 		kpiFulfillmentCheckResultDTO := types.KPIFulfillmentCheckResultDTO{
 			ID:            util.NewEmptyOptional[uint32](),
