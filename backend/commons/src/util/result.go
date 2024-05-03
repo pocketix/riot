@@ -46,11 +46,3 @@ func (r Result[T]) GetError() error {
 func (r Result[T]) Unwrap() (T, error) {
 	return r.payload, r.err
 }
-
-func WrapInResult[T any](payload T, err error) Result[T] {
-	return Ternary(err == nil, NewSuccessResult[T](payload), NewFailureResult[T](err))
-}
-
-func WrapInNPResult(err error) Result[any] {
-	return Ternary(err == nil, NewSuccessResult[any](nil), NewFailureResult[any](err))
-}

@@ -29,8 +29,8 @@ func DeleteSDType(stringID string) error {
 	if uint32FromStringResult.IsFailure() {
 		return uint32FromStringResult.GetError()
 	}
-	if deletionResult := util.WrapInNPResult((*db.GetRelationalDatabaseClientInstance()).DeleteSDType(uint32FromStringResult.GetPayload())); deletionResult.IsFailure() {
-		return deletionResult.GetError()
+	if err := (*db.GetRelationalDatabaseClientInstance()).DeleteSDType(uint32FromStringResult.GetPayload()); err != nil {
+		return err
 	}
 	go func() {
 		util.LogPossibleErrorThenProceed(EnqueueMessageRepresentingCurrentSDTypes(), "Failed to enqueue message representing current SD types in the system")

@@ -12,10 +12,10 @@ func NewPairOf[T any, U any](e1 T, e2 U) Pair[T, U] {
 	}
 }
 
-func (p Pair[T, U]) getFirst() T {
+func (p Pair[T, U]) GetFirst() T {
 	return p.e1
 }
 
-func (p Pair[T, U]) getSecond() U {
+func (p Pair[T, U]) GetSecond() U {
 	return p.e2
 }

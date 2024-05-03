@@ -16,8 +16,8 @@ func WaitForDSs(timeout time.Duration, dsIdentifierPortNumberPairs ...Pair[strin
 	for _, dsIdentifierPortNumberPair := range dsIdentifierPortNumberPairs {
 		go func(dsIdentifierPortNumberPair Pair[string, int]) {
 			defer wg.Done()
-			dsIdentifier := dsIdentifierPortNumberPair.getFirst()
-			if !isDSReady(dsIdentifier, dsIdentifierPortNumberPair.getSecond(), timeout) {
+			dsIdentifier := dsIdentifierPortNumberPair.GetFirst()
+			if !isDSReady(dsIdentifier, dsIdentifierPortNumberPair.GetSecond(), timeout) {
 				inaccessibleDSIdentifiersMutex.Lock()
 				inaccessibleDSIdentifiers = append(inaccessibleDSIdentifiers, dsIdentifier)
 				inaccessibleDSIdentifiersMutex.Unlock()
