@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { produce } from 'immer'
 import KPIDetailPageView from './KPIDetailPageView'
-import { AtomNodeType, EditableTreeNodeDataModel, LogicalOperationNodeType } from './components/editable-tree/EditableTree'
+import { AtomNodeType, EditableTreeNodeDataModel, LogicalOperationNodeType, NodeType } from './components/editable-tree/EditableTree'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery } from '@apollo/client'
 import {
@@ -59,7 +59,7 @@ const KPIDetailPageController: React.FC = () => {
   )
 
   const [definitionModel, setDefinitionModel] = useState<KPIDefinitionModel>(initialKPIDefinitionModel)
-  const [sdTypeData, setSDTypeData] = useState<SdType>(null)
+  const [sdTypeData, setSDTypeData] = useState<SdType | null>(null)
 
   const currentNodeNameRef = useRef('')
 
@@ -204,11 +204,16 @@ const KPIDetailPageController: React.FC = () => {
     )
   }
 
+  const canSubmit: boolean = useMemo(() => {
+    return !!sdTypeData && definitionModel.attributes.nodeType !== NodeType.NewNode
+  }, [sdTypeData, definitionModel])
+
   return (
     <KPIDetailPageView
       kpiDefinitionModel={definitionModel}
       sdTypesData={sdTypesData}
       sdTypeData={sdTypeData}
+      canSubmit={canSubmit}
       anyLoadingOccurs={kpiDefinitionDetailLoading || sdTypesLoading || createKPIDefinitionLoading}
       anyErrorOccurred={!!kpiDefinitionDetailError || !!sdTypesError || !!createKPIDefinitionError}
       initiateLogicalOperationNodeModification={initiateLogicalOperationNodeModification}

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import EditableTree, { AtomNodeType } from './components/editable-tree/EditableTree'
 import StandardContentPageTemplate from '../../page-independent-components/StandardContentPageTemplate'
 import { KPIDefinitionModel } from './KPIDetailPageController'
-import styles from './styles.module.scss'
 import { Button, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material'
 import { SdType, SdTypesQuery } from '../../generated/graphql'
 import { AsynchronousEffectFunction, ConsumerFunction, EffectFunction, TetraConsumerFunction } from '../../util'
@@ -12,6 +11,7 @@ interface KPIDetailPageViewProps {
   kpiDefinitionModel: KPIDefinitionModel
   sdTypesData: SdTypesQuery
   sdTypeData: SdType
+  canSubmit: boolean
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
   initiateLogicalOperationNodeModification: ConsumerFunction<string>
@@ -76,7 +76,7 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
       />
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={1}>
-          <Button fullWidth onClick={props.onSubmitHandler}>
+          <Button fullWidth disabled={!props.canSubmit} onClick={props.onSubmitHandler}>
             Submit
           </Button>
         </Grid>

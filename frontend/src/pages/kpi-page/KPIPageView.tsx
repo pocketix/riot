@@ -17,7 +17,6 @@ const KPIPageView: React.FC<KPIPageViewProps> = (props) => {
     <StandardContentPageTemplate pageTitle="KPI definitions" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
       <h2>Current KPI definitions</h2>
       <div className="flex flex-wrap gap-5">
-        {props.kpiDefinitionsData && props.kpiDefinitionsData.kpiDefinitions.length === 0 && <p>No KPI definitions yet...</p>}
         {props.kpiDefinitionsData &&
           props.kpiDefinitionsData.kpiDefinitions
             .slice()
