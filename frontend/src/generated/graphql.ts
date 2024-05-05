@@ -98,6 +98,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   createKPIDefinition: KpiDefinition;
   createSDType: SdType;
+  deleteKPIDefinition: Scalars['Boolean']['output'];
   deleteSDType: Scalars['Boolean']['output'];
   updateKPIDefinition: KpiDefinition;
   updateSDInstance: SdInstance;
@@ -111,6 +112,11 @@ export type MutationCreateKpiDefinitionArgs = {
 
 export type MutationCreateSdTypeArgs = {
   input: SdTypeInput;
+};
+
+
+export type MutationDeleteKpiDefinitionArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -268,6 +274,13 @@ export type CreateSdTypeMutationVariables = Exact<{
 
 
 export type CreateSdTypeMutation = { __typename?: 'Mutation', createSDType: { __typename?: 'SDType', id: string, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: string, denotation: string, type: SdParameterType }> } };
+
+export type DeleteKpiDefinitionMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteKpiDefinitionMutation = { __typename?: 'Mutation', deleteKPIDefinition: boolean };
 
 export type DeleteSdTypeMutationVariables = Exact<{
   id: Scalars['ID']['input'];

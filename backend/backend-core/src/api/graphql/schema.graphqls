@@ -186,4 +186,5 @@ type Mutation {
   updateSDInstance(id: ID!, input: SDInstanceUpdateInput!): SDInstance!
   createKPIDefinition(input: KPIDefinitionInput!): KPIDefinition!
   updateKPIDefinition(id: ID!, input: KPIDefinitionInput!): KPIDefinition!
+  deleteKPIDefinition(id: ID!): Boolean!
 }

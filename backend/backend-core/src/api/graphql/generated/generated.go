@@ -78,6 +78,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateKPIDefinition func(childComplexity int, input model.KPIDefinitionInput) int
 		CreateSDType        func(childComplexity int, input model.SDTypeInput) int
+		DeleteKPIDefinition func(childComplexity int, id string) int
 		DeleteSDType        func(childComplexity int, id string) int
 		UpdateKPIDefinition func(childComplexity int, id string, input model.KPIDefinitionInput) int
 		UpdateSDInstance    func(childComplexity int, id string, input model.SDInstanceUpdateInput) int
@@ -167,6 +168,7 @@ type MutationResolver interface {
 	UpdateSDInstance(ctx context.Context, id string, input model.SDInstanceUpdateInput) (*model.SDInstance, error)
 	CreateKPIDefinition(ctx context.Context, input model.KPIDefinitionInput) (*model.KPIDefinition, error)
 	UpdateKPIDefinition(ctx context.Context, id string, input model.KPIDefinitionInput) (*model.KPIDefinition, error)
+	DeleteKPIDefinition(ctx context.Context, id string) (bool, error)
 }
 type QueryResolver interface {
 	SdType(ctx context.Context, id string) (*model.SDType, error)
@@ -338,6 +340,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateSDType(childComplexity, args["input"].(model.SDTypeInput)), true
+
+	case "Mutation.deleteKPIDefinition":
+		if e.complexity.Mutation.DeleteKPIDefinition == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteKPIDefinition_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteKPIDefinition(childComplexity, args["id"].(string)), true
 
 	case "Mutation.deleteSDType":
 		if e.complexity.Mutation.DeleteSDType == nil {
@@ -1012,6 +1026,7 @@ type Mutation {
   updateSDInstance(id: ID!, input: SDInstanceUpdateInput!): SDInstance!
   createKPIDefinition(input: KPIDefinitionInput!): KPIDefinition!
   updateKPIDefinition(id: ID!, input: KPIDefinitionInput!): KPIDefinition!
+  deleteKPIDefinition(id: ID!): Boolean!
 }
 `, BuiltIn: false},
 }
@@ -1048,6 +1063,21 @@ func (ec *executionContext) field_Mutation_createSDType_args(ctx context.Context
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteKPIDefinition_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -2270,6 +2300,61 @@ func (ec *executionContext) fieldContext_Mutation_updateKPIDefinition(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateKPIDefinition_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteKPIDefinition(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteKPIDefinition(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteKPIDefinition(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteKPIDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteKPIDefinition_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -6944,6 +7029,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateKPIDefinition":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateKPIDefinition(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteKPIDefinition":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteKPIDefinition(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

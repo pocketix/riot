@@ -1,0 +1,3 @@
+mutation DeleteKPIDefinition($id: ID!) {
+  deleteKPIDefinition(id: $id)
+}

@@ -4,9 +4,11 @@ import { KpiDefinitionsQuery } from '../../generated/graphql'
 import GenericCardTemplate from '../../page-independent-components/GenericCardTemplate'
 import { useNavigate } from 'react-router-dom'
 import AddNewCardButton from '../../page-independent-components/AddNewCardButton'
+import { ConsumerFunction } from '../../util'
 
 interface KPIPageViewProps {
   kpiDefinitionsData: KpiDefinitionsQuery
+  initiateKPIDefinitionDeletion: ConsumerFunction<string>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }
@@ -24,9 +26,14 @@ const KPIPageView: React.FC<KPIPageViewProps> = (props) => {
             .map((kpiDefinition) => (
               <GenericCardTemplate // TODO: Consider creating a separate component out of this...
                 headerContent={
-                  <span onClick={() => navigate(`${kpiDefinition.id}/edit`)} className="material-symbols-outlined cursor-pointer">
-                    edit
-                  </span>
+                  <>
+                    <span onClick={() => navigate(`${kpiDefinition.id}/edit`)} className="material-symbols-outlined cursor-pointer">
+                      edit
+                    </span>
+                    <span onClick={() => props.initiateKPIDefinitionDeletion(kpiDefinition.id)} className="material-symbols-outlined cursor-pointer">
+                      delete
+                    </span>
+                  </>
                 }
                 bodyContent={
                   <>

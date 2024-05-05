@@ -57,6 +57,17 @@ func UpdateKPIDefinition(stringID string, kpiDefinitionInput model.KPIDefinition
 	return util.NewSuccessResult[*model.KPIDefinition](kpiDefinition)
 }
 
+func DeleteKPIDefinition(stringID string) error {
+	uint32FromStringResult := util.UINT32FromString(stringID)
+	if uint32FromStringResult.IsFailure() {
+		return uint32FromStringResult.GetError()
+	}
+	if err := (*db.GetRelationalDatabaseClientInstance()).DeleteKPIDefinition(uint32FromStringResult.GetPayload()); err != nil {
+		return err
+	}
+	return nil
+}
+
 func GetKPIDefinitions() util.Result[[]*model.KPIDefinition] {
 	loadResult := (*db.GetRelationalDatabaseClientInstance()).LoadKPIDefinitions()
 	if loadResult.IsFailure() {

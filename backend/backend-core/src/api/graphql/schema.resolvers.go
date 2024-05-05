@@ -37,6 +37,12 @@ func (r *mutationResolver) UpdateKPIDefinition(ctx context.Context, id string, i
 	return service.UpdateKPIDefinition(id, input).Unwrap()
 }
 
+// DeleteKPIDefinition is the resolver for the deleteKPIDefinition field.
+func (r *mutationResolver) DeleteKPIDefinition(ctx context.Context, id string) (bool, error) {
+	err := service.DeleteKPIDefinition(id)
+	return err == nil, err
+}
+
 // SdType is the resolver for the sdType field.
 func (r *queryResolver) SdType(ctx context.Context, id string) (*model.SDType, error) {
 	return service.GetSDType(id).Unwrap()
