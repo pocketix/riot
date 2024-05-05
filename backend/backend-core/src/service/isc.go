@@ -49,7 +49,7 @@ func CheckForSDInstanceRegistrationRequests() {
 		return nil
 	})
 	if err != nil {
-		log.Printf("Consumption of messages from the '%s' queue has failed", constants.SDInstanceRegistrationRequestsQueueName)
+		log.Printf("Consumption of messages from the '%s' queue has failed: %s", constants.SDInstanceRegistrationRequestsQueueName, err.Error())
 	}
 }
 
@@ -99,7 +99,7 @@ func CheckForKPIFulfillmentCheckResults() {
 		return nil
 	})
 	if err != nil {
-		log.Printf("Consumption of messages from the '%s' queue has failed", constants.KPIFulfillmentCheckResultsQueueName)
+		log.Printf("Consumption of messages from the '%s' queue has failed: %s", constants.KPIFulfillmentCheckResultsQueueName, err.Error())
 	}
 }
 
