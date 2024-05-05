@@ -25,6 +25,14 @@ func (s *Set[T]) Size() int {
 	return len(s.items)
 }
 
+func (s *Set[T]) ToSlice() []T {
+	slice := make([]T, 0, s.Size())
+	for item, _ := range s.items {
+		slice = append(slice, item)
+	}
+	return slice
+}
+
 func SliceToSet[T comparable](slice []T) *Set[T] {
 	set := NewSet[T]()
 	for _, sliceItem := range slice {
