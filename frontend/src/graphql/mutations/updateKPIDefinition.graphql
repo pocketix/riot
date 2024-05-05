@@ -1,0 +1,5 @@
+mutation updateKPIDefinition($id: ID!, $input: KPIDefinitionInput!) {
+    updateKPIDefinition(id: $id, input: $input) {
+        id
+    }
+}

@@ -5,7 +5,7 @@ type KPIDefinitionEntity struct {
 	SDTypeSpecification string         `gorm:"column:sd_type_specification;not null"`
 	UserIdentifier      string         `gorm:"column:user_identifier;not null"`
 	RootNodeID          *uint32        `gorm:"column:root_node_id;not null"`
-	RootNode            *KPINodeEntity `gorm:"foreignKey:RootNodeID"`
+	RootNode            *KPINodeEntity `gorm:"foreignKey:RootNodeID;constraint:OnDelete:CASCADE"`
 }
 
 func (KPIDefinitionEntity) TableName() string {
@@ -15,7 +15,7 @@ func (KPIDefinitionEntity) TableName() string {
 type KPINodeEntity struct {
 	ID           uint32         `gorm:"column:id;primarykey;not null"`
 	ParentNodeID *uint32        `gorm:"column:parent_node_id"`
-	ParentNode   *KPINodeEntity `gorm:"foreignKey:ParentNodeID"`
+	ParentNode   *KPINodeEntity `gorm:"foreignKey:ParentNodeID;constraint:OnDelete:CASCADE"`
 }
 
 func (KPINodeEntity) TableName() string {
@@ -24,7 +24,7 @@ func (KPINodeEntity) TableName() string {
 
 type LogicalOperationKPINodeEntity struct {
 	NodeID *uint32        `gorm:"column:node_id;primarykey;not null"`
-	Node   *KPINodeEntity `gorm:"foreignKey:NodeID"`
+	Node   *KPINodeEntity `gorm:"foreignKey:NodeID;constraint:OnDelete:CASCADE"`
 	Type   string         `gorm:"column:type;not null"`
 }
 
@@ -34,7 +34,7 @@ func (LogicalOperationKPINodeEntity) TableName() string {
 
 type AtomKPINodeEntity struct {
 	NodeID                   *uint32        `gorm:"column:node_id;primarykey;not null"`
-	Node                     *KPINodeEntity `gorm:"foreignKey:NodeID"`
+	Node                     *KPINodeEntity `gorm:"foreignKey:NodeID;constraint:OnDelete:CASCADE"`
 	SDParameterSpecification string         `gorm:"column:sd_parameter_specification;not null"`
 	Type                     string         `gorm:"column:type;not null"`
 	StringReferenceValue     *string        `gorm:"column:string_reference_value"`
@@ -83,9 +83,9 @@ func (SDInstanceEntity) TableName() string {
 type KPIFulfillmentCheckResultEntity struct {
 	ID              uint32               `gorm:"column:id;primarykey;not null"`
 	KPIDefinitionID *uint32              `gorm:"column:kpi_definition_id;not null"`
-	KPIDefinition   *KPIDefinitionEntity `gorm:"foreignKey:KPIDefinitionID"`
+	KPIDefinition   *KPIDefinitionEntity `gorm:"foreignKey:KPIDefinitionID;constraint:OnDelete:CASCADE"`
 	SDInstanceID    *uint32              `gorm:"column:sd_instance_id;not null"`
-	SDInstance      *SDInstanceEntity    `gorm:"foreignKey:SDInstanceID"`
+	SDInstance      *SDInstanceEntity    `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 	Fulfilled       bool                 `gorm:"column:fulfilled;not null"`
 }
 

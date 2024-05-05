@@ -55,11 +55,11 @@ func PersistEntityIntoDB[T any](g *gorm.DB, entityReference *T) error {
 	return g.Save(entityReference).Error
 }
 
-func DoesSuchEntityExist[T any](g *gorm.DB, whereClausePairs ...WhereClausePair) cUtil.Result[bool] {
+func DoesSuchEntityExist[T any](g *gorm.DB, whereClauses ...WhereClausePair) cUtil.Result[bool] {
 	entityCount := int64(0)
 	query := g.Model(new(T))
-	cUtil.ForEach(whereClausePairs, func(whereClausePair WhereClausePair) {
-		query = query.Where(whereClausePair.GetFirst(), whereClausePair.GetSecond())
+	cUtil.ForEach(whereClauses, func(whereClause WhereClausePair) {
+		query = query.Where(whereClause.GetFirst(), whereClause.GetSecond())
 	})
 	if err := query.Count(&entityCount).Error; err != nil {
 		return cUtil.NewFailureResult[bool](err)
@@ -67,14 +67,18 @@ func DoesSuchEntityExist[T any](g *gorm.DB, whereClausePairs ...WhereClausePair)
 	return cUtil.NewSuccessResult[bool](entityCount > 0)
 }
 
-func DeleteCertainEntity[T any](g *gorm.DB, id uint32) error {
+func DeleteCertainEntityBasedOnId[T any](g *gorm.DB, id uint32) error {
 	return g.Delete(new(T), id).Error
 }
 
-func DeleteEntities[T any](g *gorm.DB, whereClausePairs ...WhereClausePair) error {
+func DeleteEntitiesBasedOnSliceOfIds[T any](g *gorm.DB, ids []uint32) error {
+	return g.Delete(new(T), ids).Error
+}
+
+func DeleteEntitiesBasedOnWhereClauses[T any](g *gorm.DB, whereClauses ...WhereClausePair) error {
 	query := g
-	cUtil.ForEach(whereClausePairs, func(whereClausePair WhereClausePair) {
-		query = query.Where(whereClausePair.GetFirst(), whereClausePair.GetSecond())
+	cUtil.ForEach(whereClauses, func(whereClause WhereClausePair) {
+		query = query.Where(whereClause.GetFirst(), whereClause.GetSecond())
 	})
 	return query.Delete(new(T)).Error
 }

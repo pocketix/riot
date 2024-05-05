@@ -3,28 +3,24 @@ import { useMutation, useQuery } from '@apollo/client'
 import {
   ConfirmSdInstanceMutation,
   ConfirmSdInstanceMutationVariables,
-  KpiFulfillmentCheckResultsQuery,
-  KpiFulfillmentCheckResultsQueryVariables,
-  SdInstancesQuery,
-  SdInstancesQueryVariables,
+  SdInstancesPageDataQuery,
+  SdInstancesPageDataQueryVariables,
   UpdateUserIdentifierOfSdInstanceMutation,
   UpdateUserIdentifierOfSdInstanceMutationVariables
 } from '../../generated/graphql'
 import gql from 'graphql-tag'
-import qSDInstances from '../../graphql/queries/sdInstances.graphql'
-import qKPIFulfillmentCheckResults from '../../graphql/queries/kpiFulfillmentCheckResults.graphql'
+import qSDInstancesPageData from '../../graphql/queries/sdInstancesPageData.graphql'
 import SDInstancesPageView from './SDInstancesPageView'
 import mUpdateUserIdentifierOfSDInstance from '../../graphql/mutations/updateUserIdentifierOfSDInstance.graphql'
 import mConfirmSDInstance from '../../graphql/mutations/confirmSDInstance.graphql'
 
 const SDInstancesPageController: React.FC = () => {
-  const { data: sdInstancesData, loading: sdInstancesLoading, error: sdInstancesError, refetch: sdInstancesRefetch } = useQuery<SdInstancesQuery, SdInstancesQueryVariables>(gql(qSDInstances))
   const {
-    data: kpiFulfillmentCheckResultsData,
-    loading: kpiFulfillmentCheckResultsLoading,
-    error: kpiFulfillmentCheckResultsError,
-    refetch: kpiFulfillmentCheckResultsRefetch
-  } = useQuery<KpiFulfillmentCheckResultsQuery, KpiFulfillmentCheckResultsQueryVariables>(gql(qKPIFulfillmentCheckResults))
+    data: sdInstancesPageData,
+    loading: sdInstancesPageDataLoading,
+    error: sdInstancesPageDataError,
+    refetch: sdInstancesPageDataRefetch
+  } = useQuery<SdInstancesPageDataQuery, SdInstancesPageDataQueryVariables>(gql(qSDInstancesPageData))
   const [updateUserIdentifierOfSdInstanceMutation, { loading: updateUserIdentifierOfSdInstanceLoading, error: updateUserIdentifierOfSdInstanceError }] = useMutation<
     UpdateUserIdentifierOfSdInstanceMutation,
     UpdateUserIdentifierOfSdInstanceMutationVariables
@@ -34,13 +30,13 @@ const SDInstancesPageController: React.FC = () => {
   )
 
   const anyLoadingOccurs = useMemo(
-    () => sdInstancesLoading || kpiFulfillmentCheckResultsLoading || updateUserIdentifierOfSdInstanceLoading || confirmSdInstanceLoading,
-    [sdInstancesLoading, kpiFulfillmentCheckResultsLoading, updateUserIdentifierOfSdInstanceLoading, confirmSdInstanceLoading]
+    () => sdInstancesPageDataLoading || updateUserIdentifierOfSdInstanceLoading || confirmSdInstanceLoading,
+    [sdInstancesPageDataLoading, updateUserIdentifierOfSdInstanceLoading, confirmSdInstanceLoading]
   )
 
   const anyErrorOccurred = useMemo(
-    () => !!sdInstancesError || !!kpiFulfillmentCheckResultsError || !!updateUserIdentifierOfSdInstanceError || !!confirmSdInstanceError,
-    [sdInstancesError, kpiFulfillmentCheckResultsError, updateUserIdentifierOfSdInstanceError, confirmSdInstanceError]
+    () => !!sdInstancesPageDataError || !!updateUserIdentifierOfSdInstanceError || !!confirmSdInstanceError,
+    [sdInstancesPageDataError, updateUserIdentifierOfSdInstanceError, confirmSdInstanceError]
   )
 
   const updateUserIdentifierOfSdInstance = useCallback(
@@ -69,20 +65,16 @@ const SDInstancesPageController: React.FC = () => {
   useEffect(() => {
     // TODO: Replace this polling by GraphQL subscription once feasible
     const timeout = setInterval(() => {
-      sdInstancesRefetch().catch((error) => {
-        console.error('Failed to refetch SD instances:', error)
-      })
-      kpiFulfillmentCheckResultsRefetch().catch((error) => {
-        console.error('Failed to refetch KPI fulfillment check results:', error)
+      sdInstancesPageDataRefetch().catch((error) => {
+        console.error('Failed to refetch SD instances page data:', error)
       })
     }, 500)
     return () => clearInterval(timeout)
-  }, [sdInstancesRefetch])
+  }, [sdInstancesPageDataRefetch])
 
   return (
     <SDInstancesPageView
-      sdInstancesData={sdInstancesData}
-      kpiFulfillmentCheckResultsData={kpiFulfillmentCheckResultsData}
+      sdInstancesPageData={sdInstancesPageData}
       updateUserIdentifierOfSdInstance={updateUserIdentifierOfSdInstance}
       confirmSdInstance={confirmSdInstance}
       anyLoadingOccurs={anyLoadingOccurs}

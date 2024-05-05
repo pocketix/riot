@@ -11,7 +11,9 @@ import {
   KpiDefinitionDetailQueryVariables,
   SdType,
   SdTypesQuery,
-  SdTypesQueryVariables
+  SdTypesQueryVariables,
+  UpdateKpiDefinitionMutation,
+  UpdateKpiDefinitionMutationVariables
 } from '../../generated/graphql'
 import gql from 'graphql-tag'
 import qKPIDefinitionDetail from '../../graphql/queries/kpiDefinitionDetail.graphql'
@@ -26,6 +28,7 @@ import {
   modifyAtomNode
 } from './kpiDefinitionModel'
 import mCreateKPIDefinition from '../../graphql/mutations/createKPIDefinition.graphql'
+import mUpdateKPIDefinition from '../../graphql/mutations/updateKPIDefinition.graphql'
 import { useModal } from '@ebay/nice-modal-react'
 import SelectNewNodeTypeModal from './components/modals/SelectNewNodeTypeModal'
 import SelectLogicalOperationTypeModal from './components/modals/SelectLogicalOperationTypeModal'
@@ -56,6 +59,9 @@ const KPIDetailPageController: React.FC = () => {
   const { data: sdTypesData, loading: sdTypesLoading, error: sdTypesError } = useQuery<SdTypesQuery, SdTypesQueryVariables>(gql(qSDTypes))
   const [createKPIDefinitionMutation, { loading: createKPIDefinitionLoading, error: createKPIDefinitionError }] = useMutation<CreateKpiDefinitionMutation, CreateKpiDefinitionMutationVariables>(
     gql(mCreateKPIDefinition)
+  )
+  const [updateKPIDefinitionMutation, { loading: updateKPIDefinitionLoading, error: updateKPIDefinitionError }] = useMutation<UpdateKpiDefinitionMutation, UpdateKpiDefinitionMutationVariables>(
+    gql(mUpdateKPIDefinition)
   )
 
   const [definitionModel, setDefinitionModel] = useState<KPIDefinitionModel>(initialKPIDefinitionModel)
@@ -184,11 +190,21 @@ const KPIDetailPageController: React.FC = () => {
   }
 
   const onSubmitHandler = async () => {
-    await createKPIDefinitionMutation({
-      variables: {
-        input: kpiDefinitionModelToKPIDefinitionInput(definitionModel, sdTypeData.denotation)
-      }
-    })
+    const kpiDefinitionInput = kpiDefinitionModelToKPIDefinitionInput(definitionModel, sdTypeData.denotation)
+    if (id) {
+      await updateKPIDefinitionMutation({
+        variables: {
+          id: id,
+          input: kpiDefinitionInput
+        }
+      })
+    } else {
+      await createKPIDefinitionMutation({
+        variables: {
+          input: kpiDefinitionInput
+        }
+      })
+    }
     navigate('/kpi-definitions')
   }
 
@@ -214,8 +230,8 @@ const KPIDetailPageController: React.FC = () => {
       sdTypesData={sdTypesData}
       sdTypeData={sdTypeData}
       canSubmit={canSubmit}
-      anyLoadingOccurs={kpiDefinitionDetailLoading || sdTypesLoading || createKPIDefinitionLoading}
-      anyErrorOccurred={!!kpiDefinitionDetailError || !!sdTypesError || !!createKPIDefinitionError}
+      anyLoadingOccurs={kpiDefinitionDetailLoading || sdTypesLoading || createKPIDefinitionLoading || updateKPIDefinitionLoading}
+      anyErrorOccurred={!!kpiDefinitionDetailError || !!sdTypesError || !!createKPIDefinitionError || !!updateKPIDefinitionError}
       initiateLogicalOperationNodeModification={initiateLogicalOperationNodeModification}
       initiateNewNodeCreation={initiateNewNodeCreation}
       initiateNewLogicalOperationNodeCreation={initiateNewLogicalOperationNodeCreation}

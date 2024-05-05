@@ -3,8 +3,8 @@ import GenericCardTemplate from '../../../page-independent-components/GenericCar
 import { Button } from '@mui/material'
 import { PlainTextField } from '../../../page-independent-components/mui-based/Styled'
 import { AsynchronousBiConsumerFunction, AsynchronousConsumerFunction } from '../../../util'
-import { KpiFulfillmentCheckResultsQuery } from '../../../generated/graphql'
-import KPIFulfillmentCheckResultLabel from './KPIFulfillmentCheckResultLabel'
+import KPIFulfillmentCheckResultLabel, { KPIFulfillmentCheckResultLabelState } from './KPIFulfillmentCheckResultLabel'
+import { SdInstancesPageDataQuery } from '../../../generated/graphql'
 
 interface SDInstanceCardProps {
   id: string
@@ -12,19 +12,31 @@ interface SDInstanceCardProps {
   uid: string
   sdTypeDenotation: string
   confirmedByUser: boolean
-  kpiFulfillmentCheckResultsData: KpiFulfillmentCheckResultsQuery
   updateUserIdentifierOfSdInstance: AsynchronousBiConsumerFunction<string, string>
   confirmSdInstance: AsynchronousConsumerFunction<string>
+  sdInstancePageData: SdInstancesPageDataQuery
 }
 
 const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
   const [userIdentifier, setUserIdentifier] = useState<string>(props.userIdentifier)
 
   const fulfillmentCheckResults = useMemo(() => {
-    return props.kpiFulfillmentCheckResultsData.kpiFulfillmentCheckResults.filter((kpiFulfillmentCheckResult) => kpiFulfillmentCheckResult.sdInstance.id === props.id)
-  }, [props.kpiFulfillmentCheckResultsData.kpiFulfillmentCheckResults, props.id])
+    return props.sdInstancePageData.kpiFulfillmentCheckResults.filter((kpiFulfillmentCheckResult) => kpiFulfillmentCheckResult.sdInstance.id === props.id)
+  }, [props.sdInstancePageData.kpiFulfillmentCheckResults, props.id])
 
-  const displayFulfillmentCheckResultSection = useMemo(() => fulfillmentCheckResults.length > 0, [fulfillmentCheckResults])
+  const kpiDefinitions = useMemo(() => {
+    return props.sdInstancePageData.kpiDefinitions.filter((kpiDefinition) => kpiDefinition.sdTypeSpecification === props.sdTypeDenotation)
+  }, [props.sdInstancePageData.kpiDefinitions, props.sdTypeDenotation])
+
+  const displayFulfillmentCheckResultSection = useMemo(() => props.confirmedByUser && kpiDefinitions.length > 0, [props.confirmedByUser, kpiDefinitions])
+
+  const kpiDefinitionFulfillmentMap: { [key: string]: boolean | null } = useMemo(() => {
+    return kpiDefinitions.reduce((map, kpiDefinition) => {
+      const result = fulfillmentCheckResults.find((result) => result.kpiDefinition.id === kpiDefinition.id)
+      map[kpiDefinition.id] = result?.fulfilled ?? null
+      return map
+    }, {})
+  }, [kpiDefinitions, fulfillmentCheckResults])
 
   return (
     <GenericCardTemplate
@@ -66,13 +78,19 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
           </div>
           {displayFulfillmentCheckResultSection && (
             <div className="mt-2 flex flex-col gap-1 rounded-[5px] border-2 border-gray-500 bg-[#dcdcdc] px-3 py-1">
-              {fulfillmentCheckResults
+              {kpiDefinitions
                 .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10))
-                .map((kpiFulfillmentCheckResult) => (
+                .map((kpiDefinition) => (
                   <KPIFulfillmentCheckResultLabel
-                    id={kpiFulfillmentCheckResult.id}
-                    kpiUserIdentifier={kpiFulfillmentCheckResult.kpiDefinition.userIdentifier}
-                    fulfilled={kpiFulfillmentCheckResult.fulfilled}
+                    id={kpiDefinition.id}
+                    kpiUserIdentifier={kpiDefinition.userIdentifier}
+                    kpiFulfillmentCheckResultLabelState={((fulfilled: boolean | null): KPIFulfillmentCheckResultLabelState => {
+                      return fulfilled === null
+                        ? KPIFulfillmentCheckResultLabelState.Unknown
+                        : fulfilled
+                        ? KPIFulfillmentCheckResultLabelState.Fulfilled
+                        : KPIFulfillmentCheckResultLabelState.Unfulfilled
+                    })(kpiDefinitionFulfillmentMap[kpiDefinition.id])}
                   />
                 ))}
             </div>

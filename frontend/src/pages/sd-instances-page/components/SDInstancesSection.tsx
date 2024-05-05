@@ -1,11 +1,10 @@
-import { KpiFulfillmentCheckResultsQuery, SdInstancesQuery } from '../../../generated/graphql'
+import { SdInstancesPageDataQuery } from '../../../generated/graphql'
 import React, { useMemo } from 'react'
 import SDInstanceCard from './SDInstanceCard'
 import { AsynchronousBiConsumerFunction, AsynchronousConsumerFunction } from '../../../util'
 
 interface ConfirmedSDInstancesSectionProps {
-  sdInstancesData: SdInstancesQuery
-  kpiFulfillmentCheckResultsData: KpiFulfillmentCheckResultsQuery
+  sdInstancePageData: SdInstancesPageDataQuery
   confirmedByUserRequirement: boolean
   updateUserIdentifierOfSdInstance: AsynchronousBiConsumerFunction<string, string>
   confirmSdInstance: AsynchronousConsumerFunction<string>
@@ -14,12 +13,12 @@ interface ConfirmedSDInstancesSectionProps {
 const SDInstancesSection: React.FC<ConfirmedSDInstancesSectionProps> = (props) => {
   const confirmedByUserRequirement = props.confirmedByUserRequirement
   const sdInstances = useMemo(() => {
-    if (props.sdInstancesData) {
-      return props.sdInstancesData.sdInstances.filter((sdInstance) => sdInstance.confirmedByUser === confirmedByUserRequirement)
+    if (props.sdInstancePageData) {
+      return props.sdInstancePageData.sdInstances.filter((sdInstance) => sdInstance.confirmedByUser === confirmedByUserRequirement)
     } else {
       return []
     }
-  }, [props.sdInstancesData, props.confirmedByUserRequirement])
+  }, [props.sdInstancePageData, props.confirmedByUserRequirement])
   return (
     <div className="flex flex-wrap gap-5">
       {sdInstances.length === 0 && <p>No SD instances of this kind...</p>}
@@ -35,9 +34,9 @@ const SDInstancesSection: React.FC<ConfirmedSDInstancesSectionProps> = (props) =
               uid={sdInstance.uid}
               sdTypeDenotation={sdInstance.type.denotation}
               confirmedByUser={confirmedByUserRequirement}
-              kpiFulfillmentCheckResultsData={props.kpiFulfillmentCheckResultsData}
               updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance}
               confirmSdInstance={props.confirmSdInstance}
+              sdInstancePageData={props.sdInstancePageData}
             />
           )
         })}

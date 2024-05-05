@@ -99,6 +99,7 @@ export type Mutation = {
   createKPIDefinition: KpiDefinition;
   createSDType: SdType;
   deleteSDType: Scalars['Boolean']['output'];
+  updateKPIDefinition: KpiDefinition;
   updateSDInstance: SdInstance;
 };
 
@@ -115,6 +116,12 @@ export type MutationCreateSdTypeArgs = {
 
 export type MutationDeleteSdTypeArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateKpiDefinitionArgs = {
+  id: Scalars['ID']['input'];
+  input: KpiDefinitionInput;
 };
 
 
@@ -253,7 +260,7 @@ export type CreateKpiDefinitionMutationVariables = Exact<{
 }>;
 
 
-export type CreateKpiDefinitionMutation = { __typename?: 'Mutation', createKPIDefinition: { __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeSpecification: string, nodes: Array<{ __typename?: 'BooleanEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterSpecification: string, booleanReferenceValue: boolean } | { __typename?: 'LogicalOperationKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, type: LogicalOperationType } | { __typename?: 'NumericEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericGEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericGTAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericLEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericLTAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'StringEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterSpecification: string, stringReferenceValue: string }> } };
+export type CreateKpiDefinitionMutation = { __typename?: 'Mutation', createKPIDefinition: { __typename?: 'KPIDefinition', id: string } };
 
 export type CreateSdTypeMutationVariables = Exact<{
   input: SdTypeInput;
@@ -268,6 +275,14 @@ export type DeleteSdTypeMutationVariables = Exact<{
 
 
 export type DeleteSdTypeMutation = { __typename?: 'Mutation', deleteSDType: boolean };
+
+export type UpdateKpiDefinitionMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: KpiDefinitionInput;
+}>;
+
+
+export type UpdateKpiDefinitionMutation = { __typename?: 'Mutation', updateKPIDefinition: { __typename?: 'KPIDefinition', id: string } };
 
 export type UpdateUserIdentifierOfSdInstanceMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -294,10 +309,10 @@ export type KpiFulfillmentCheckResultsQueryVariables = Exact<{ [key: string]: ne
 
 export type KpiFulfillmentCheckResultsQuery = { __typename?: 'Query', kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', id: string, fulfilled: boolean, kpiDefinition: { __typename?: 'KPIDefinition', id: string, userIdentifier: string }, sdInstance: { __typename?: 'SDInstance', id: string } }> };
 
-export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
+export type SdInstancesPageDataQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }> };
+export type SdInstancesPageDataQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }>, kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', id: string, fulfilled: boolean, kpiDefinition: { __typename?: 'KPIDefinition', id: string }, sdInstance: { __typename?: 'SDInstance', id: string } }>, kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeSpecification: string }> };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 

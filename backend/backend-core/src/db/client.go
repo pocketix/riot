@@ -148,9 +148,48 @@ func (r *relationalDatabaseClientImpl) LoadKPIDefinitions() cUtil.Result[[]kpi.D
 	return cUtil.NewSuccessResult[[]kpi.DefinitionDTO](kpiDefinitionDTOs)
 }
 
+func getIDsOfKPINodeEntitiesFormingTheKPIDefinition(g *gorm.DB, kpiDefinitionID uint32) cUtil.Result[[]uint32] {
+	kpiDefinitionEntityLoadResult := LoadEntityFromDB[schema.KPIDefinitionEntity](g, WhereClause("id = ?", kpiDefinitionID))
+	if kpiDefinitionEntityLoadResult.IsFailure() {
+		return cUtil.NewFailureResult[[]uint32](kpiDefinitionEntityLoadResult.GetError())
+	}
+	kpiDefinitionEntity := kpiDefinitionEntityLoadResult.GetPayload()
+	kpiNodeEntitiesLoadResult := LoadEntitiesFromDB[schema.KPINodeEntity](g)
+	if kpiNodeEntitiesLoadResult.IsFailure() {
+		return cUtil.NewFailureResult[[]uint32](kpiNodeEntitiesLoadResult.GetError())
+	}
+	kpiNodeEntities := kpiNodeEntitiesLoadResult.GetPayload()
+	kpiDefinitionRootNodeID := cUtil.NewOptionalFromPointer(kpiDefinitionEntity.RootNodeID).GetPayload()
+	setOfIDsOfKPINodeEntitiesFormingTheDefinition := cUtil.SliceToSet(cUtil.SliceOf(kpiDefinitionRootNodeID))
+	setOfRemainingKPINodeEntities := cUtil.SliceToSet(kpiNodeEntities)
+	for {
+		nextLayerOfKPINodeEntities := cUtil.Filter(setOfRemainingKPINodeEntities.ToSlice(), func(kpiNodeEntity schema.KPINodeEntity) bool {
+			parentNodeIDOptional := cUtil.NewOptionalFromPointer(kpiNodeEntity.ParentNodeID)
+			if parentNodeIDOptional.IsEmpty() {
+				return false
+			}
+			return setOfIDsOfKPINodeEntitiesFormingTheDefinition.Contains(parentNodeIDOptional.GetPayload())
+		})
+		if len(nextLayerOfKPINodeEntities) == 0 {
+			break
+		}
+		cUtil.ForEach(nextLayerOfKPINodeEntities, func(kpiNodeEntity schema.KPINodeEntity) {
+			setOfIDsOfKPINodeEntitiesFormingTheDefinition.Add(kpiNodeEntity.ID)
+			setOfRemainingKPINodeEntities.Delete(kpiNodeEntity)
+		})
+	}
+	return cUtil.NewSuccessResult[[]uint32](setOfIDsOfKPINodeEntitiesFormingTheDefinition.ToSlice())
+}
+
 func (r *relationalDatabaseClientImpl) DeleteKPIDefinition(id uint32) error {
-	// TODO: Implement
-	return errors.New("[rdb client] not implemented")
+	idsOfKPINodeEntitiesFormingTheDefinitionResult := getIDsOfKPINodeEntitiesFormingTheKPIDefinition(r.db, id)
+	if idsOfKPINodeEntitiesFormingTheDefinitionResult.IsFailure() {
+		return idsOfKPINodeEntitiesFormingTheDefinitionResult.GetError()
+	}
+	if err := DeleteEntitiesBasedOnSliceOfIds[schema.KPINodeEntity](r.db, idsOfKPINodeEntitiesFormingTheDefinitionResult.GetPayload()); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *relationalDatabaseClientImpl) PersistSDType(sdTypeDTO types.SDTypeDTO) cUtil.Result[types.SDTypeDTO] {
@@ -193,20 +232,20 @@ func (r *relationalDatabaseClientImpl) DeleteSDType(id uint32) error {
 	tx := r.db.Begin()
 	for _, sdInstanceEntity := range sdInstanceEntitiesLoadResult.GetPayload() {
 		sdInstanceID := sdInstanceEntity.ID
-		if err := DeleteEntities[schema.KPIFulfillmentCheckResultEntity](tx, WhereClause("sd_instance_id = ?", sdInstanceID)); err != nil {
+		if err := DeleteEntitiesBasedOnWhereClauses[schema.KPIFulfillmentCheckResultEntity](tx, WhereClause("sd_instance_id = ?", sdInstanceID)); err != nil {
 			tx.Rollback()
 			return err
 		}
-		if err := DeleteCertainEntity[schema.SDInstanceEntity](tx, sdInstanceID); err != nil {
+		if err := DeleteCertainEntityBasedOnId[schema.SDInstanceEntity](tx, sdInstanceID); err != nil {
 			tx.Rollback()
 			return err
 		}
 	}
-	if err := DeleteEntities[schema.SDParameterEntity](tx, WhereClause("sd_type_id = ?", id)); err != nil {
+	if err := DeleteEntitiesBasedOnWhereClauses[schema.SDParameterEntity](tx, WhereClause("sd_type_id = ?", id)); err != nil {
 		tx.Rollback()
 		return err
 	}
-	if err := DeleteCertainEntity[schema.SDTypeEntity](tx, id); err != nil {
+	if err := DeleteCertainEntityBasedOnId[schema.SDTypeEntity](tx, id); err != nil {
 		tx.Rollback()
 		return err
 	}

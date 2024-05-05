@@ -6,7 +6,6 @@ package graphql
 
 import (
 	"context"
-
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/generated"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/service"
@@ -31,6 +30,11 @@ func (r *mutationResolver) UpdateSDInstance(ctx context.Context, id string, inpu
 // CreateKPIDefinition is the resolver for the createKPIDefinition field.
 func (r *mutationResolver) CreateKPIDefinition(ctx context.Context, input model.KPIDefinitionInput) (*model.KPIDefinition, error) {
 	return service.CreateKPIDefinition(input).Unwrap()
+}
+
+// UpdateKPIDefinition is the resolver for the updateKPIDefinition field.
+func (r *mutationResolver) UpdateKPIDefinition(ctx context.Context, id string, input model.KPIDefinitionInput) (*model.KPIDefinition, error) {
+	return service.UpdateKPIDefinition(id, input).Unwrap()
 }
 
 // SdType is the resolver for the sdType field.

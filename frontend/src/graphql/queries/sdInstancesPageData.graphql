@@ -1,0 +1,27 @@
+query SDInstancesPageData {
+  sdInstances {
+    id
+    uid
+    confirmedByUser
+    userIdentifier
+    type {
+      id
+      denotation
+    }
+  }
+  kpiFulfillmentCheckResults {
+    id
+    kpiDefinition {
+      id
+    }
+    sdInstance {
+      id
+    }
+    fulfilled
+  }
+  kpiDefinitions {
+    id
+    userIdentifier
+    sdTypeSpecification
+  }
+}
