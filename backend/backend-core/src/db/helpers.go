@@ -38,7 +38,7 @@ func prepareLoadQuery(g *gorm.DB, args ...any) *gorm.DB {
 func LoadEntitiesFromDB[T any](g *gorm.DB, args ...any) cUtil.Result[[]T] {
 	entities := make([]T, 0)
 	if err := prepareLoadQuery(g, args...).Find(&entities).Error; err != nil {
-		return cUtil.NewFailureResult[[]T](nil)
+		return cUtil.NewFailureResult[[]T](err)
 	}
 	return cUtil.NewSuccessResult(entities)
 }
@@ -46,7 +46,7 @@ func LoadEntitiesFromDB[T any](g *gorm.DB, args ...any) cUtil.Result[[]T] {
 func LoadEntityFromDB[T any](g *gorm.DB, args ...any) cUtil.Result[T] {
 	var entity T
 	if err := prepareLoadQuery(g, args...).First(&entity).Error; err != nil {
-		return cUtil.NewFailureResult[T](nil)
+		return cUtil.NewFailureResult[T](err)
 	}
 	return cUtil.NewSuccessResult(entity)
 }
