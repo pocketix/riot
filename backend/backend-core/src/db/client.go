@@ -230,32 +230,23 @@ func (r *relationalDatabaseClientImpl) LoadSDTypes() cUtil.Result[[]types.SDType
 }
 
 func (r *relationalDatabaseClientImpl) DeleteSDType(id uint32) error {
-	sdInstanceEntitiesLoadResult := LoadEntitiesFromDB[schema.SDInstanceEntity](r.db, WhereClause("sd_type_id = ?", id))
-	if sdInstanceEntitiesLoadResult.IsFailure() {
-		return sdInstanceEntitiesLoadResult.GetError()
-	}
-	tx := r.db.Begin()
-	for _, sdInstanceEntity := range sdInstanceEntitiesLoadResult.GetPayload() {
-		sdInstanceID := sdInstanceEntity.ID
-		if err := DeleteEntitiesBasedOnWhereClauses[schema.KPIFulfillmentCheckResultEntity](tx, WhereClause("sd_instance_id = ?", sdInstanceID)); err != nil {
-			tx.Rollback()
-			return err
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		relatedKPIDefinitionEntitiesLoadResult := LoadEntitiesFromDB[schema.KPIDefinitionEntity](tx, WhereClause("sd_type_id = ?", id))
+		if relatedKPIDefinitionEntitiesLoadResult.IsFailure() {
+			return fmt.Errorf("failed to load KPI definition entities related to the SD type with ID = %d from the database: %w", id, relatedKPIDefinitionEntitiesLoadResult.GetError())
 		}
-		if err := DeleteCertainEntityBasedOnId[schema.SDInstanceEntity](tx, sdInstanceID); err != nil {
-			tx.Rollback()
-			return err
+		if err := DeleteCertainEntityBasedOnId[schema.SDTypeEntity](tx, id); err != nil {
+			return fmt.Errorf("failed to delete SD type entity with ID = %d from the database: %w", id, err)
 		}
-	}
-	if err := DeleteEntitiesBasedOnWhereClauses[schema.SDParameterEntity](tx, WhereClause("sd_type_id = ?", id)); err != nil {
-		tx.Rollback()
-		return err
-	}
-	if err := DeleteCertainEntityBasedOnId[schema.SDTypeEntity](tx, id); err != nil {
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
-	return nil
+		relatedKPIDefinitionEntities := relatedKPIDefinitionEntitiesLoadResult.GetPayload()
+		for _, relatedKPIDefinitionEntity := range relatedKPIDefinitionEntities {
+			rootNodeID := cUtil.NewOptionalFromPointer(relatedKPIDefinitionEntity.RootNodeID).GetPayload()
+			if err := DeleteCertainEntityBasedOnId[schema.KPINodeEntity](tx, rootNodeID); err != nil {
+				return fmt.Errorf("failed to delete KPI node entity with ID = %d from the database: %w", rootNodeID, err)
+			}
+		}
+		return nil
+	})
 }
 
 func (r *relationalDatabaseClientImpl) PersistSDInstance(sdInstanceDTO types.SDInstanceDTO) cUtil.Result[uint32] {

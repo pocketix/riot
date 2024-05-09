@@ -33,8 +33,7 @@ func DeleteSDType(stringID string) error {
 		return err
 	}
 	go func() {
-		util.LogPossibleErrorThenProceed(EnqueueMessageRepresentingCurrentSDTypes(), "Failed to enqueue message representing current SD types in the system")
-		util.LogPossibleErrorThenProceed(EnqueueMessageRepresentingCurrentSDInstances(), "Failed to enqueue message representing current SD instances in the system")
+		util.LogPossibleErrorThenProceed(EnqueueMessagesRepresentingCurrentConfiguration(), "failed to enqueue messages representing the current system configuration (SD types, SD instances and KPI definitions)")
 	}()
 	return nil
 }
