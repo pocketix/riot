@@ -26,6 +26,6 @@ func SDInstanceDTOToSDInstanceEntity(sdInstanceDTO types.SDInstanceDTO) schema.S
 		UID:             sdInstanceDTO.UID,
 		ConfirmedByUser: sdInstanceDTO.ConfirmedByUser,
 		UserIdentifier:  sdInstanceDTO.UserIdentifier,
-		SDType:          SDTypeDTOToSDTypeEntity(sdInstanceDTO.SDType),
+		SDTypeID:        sdInstanceDTO.SDType.ID.GetPayloadOrDefault(0),
 	}
 }

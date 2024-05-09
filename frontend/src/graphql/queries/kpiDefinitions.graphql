@@ -2,6 +2,7 @@ query KPIDefinitions {
   kpiDefinitions {
     id
     userIdentifier
+    sdTypeID
     sdTypeSpecification
   }
 }

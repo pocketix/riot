@@ -15,6 +15,7 @@ func kpiNodeDTOToKPINode(kpiNodeDTO kpi.NodeDTO, id string, parentNodeID *string
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 model.KPINodeTypeStringEQAtom,
+			SdParameterID:            util.UINT32ToString(stringEQAtomNodeDTO.SDParameterID),
 			SdParameterSpecification: stringEQAtomNodeDTO.SDParameterSpecification,
 			StringReferenceValue:     stringEQAtomNodeDTO.ReferenceValue,
 		}
@@ -24,6 +25,7 @@ func kpiNodeDTOToKPINode(kpiNodeDTO kpi.NodeDTO, id string, parentNodeID *string
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 model.KPINodeTypeBooleanEQAtom,
+			SdParameterID:            util.UINT32ToString(booleanEQAtomNodeDTO.SDParameterID),
 			SdParameterSpecification: booleanEQAtomNodeDTO.SDParameterSpecification,
 			BooleanReferenceValue:    booleanEQAtomNodeDTO.ReferenceValue,
 		}
@@ -33,6 +35,7 @@ func kpiNodeDTOToKPINode(kpiNodeDTO kpi.NodeDTO, id string, parentNodeID *string
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 model.KPINodeTypeNumericEQAtom,
+			SdParameterID:            util.UINT32ToString(numericEQAtomNodeDTO.SDParameterID),
 			SdParameterSpecification: numericEQAtomNodeDTO.SDParameterSpecification,
 			NumericReferenceValue:    numericEQAtomNodeDTO.ReferenceValue,
 		}
@@ -42,6 +45,7 @@ func kpiNodeDTOToKPINode(kpiNodeDTO kpi.NodeDTO, id string, parentNodeID *string
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 model.KPINodeTypeNumericLTAtom,
+			SdParameterID:            util.UINT32ToString(numericLTAtomNodeDTO.SDParameterID),
 			SdParameterSpecification: numericLTAtomNodeDTO.SDParameterSpecification,
 			NumericReferenceValue:    numericLTAtomNodeDTO.ReferenceValue,
 		}
@@ -51,6 +55,7 @@ func kpiNodeDTOToKPINode(kpiNodeDTO kpi.NodeDTO, id string, parentNodeID *string
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 model.KPINodeTypeNumericLEQAtom,
+			SdParameterID:            util.UINT32ToString(numericLEQAtomNodeDTO.SDParameterID),
 			SdParameterSpecification: numericLEQAtomNodeDTO.SDParameterSpecification,
 			NumericReferenceValue:    numericLEQAtomNodeDTO.ReferenceValue,
 		}
@@ -60,6 +65,7 @@ func kpiNodeDTOToKPINode(kpiNodeDTO kpi.NodeDTO, id string, parentNodeID *string
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 model.KPINodeTypeNumericGTAtom,
+			SdParameterID:            util.UINT32ToString(numericGTAtomNodeDTO.SDParameterID),
 			SdParameterSpecification: numericGTAtomNodeDTO.SDParameterSpecification,
 			NumericReferenceValue:    numericGTAtomNodeDTO.ReferenceValue,
 		}
@@ -69,6 +75,7 @@ func kpiNodeDTOToKPINode(kpiNodeDTO kpi.NodeDTO, id string, parentNodeID *string
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
 			NodeType:                 model.KPINodeTypeNumericGEQAtom,
+			SdParameterID:            util.UINT32ToString(numericGEQAtomNodeDTO.SDParameterID),
 			SdParameterSpecification: numericGEQAtomNodeDTO.SDParameterSpecification,
 			NumericReferenceValue:    numericGEQAtomNodeDTO.ReferenceValue,
 		}
@@ -110,6 +117,7 @@ func KPIDefinitionDTOToKPIDefinition(kpiDefinitionDTO kpi.DefinitionDTO) *model.
 	nodes := processKPINodeDTO(kpiDefinitionDTO.RootNode, nil)
 	return &model.KPIDefinition{
 		ID:                  util.UINT32ToString(kpiDefinitionDTO.ID.GetPayload()),
+		SdTypeID:            util.UINT32ToString(kpiDefinitionDTO.SDTypeID),
 		SdTypeSpecification: kpiDefinitionDTO.SDTypeSpecification,
 		UserIdentifier:      kpiDefinitionDTO.UserIdentifier,
 		Nodes:               nodes,

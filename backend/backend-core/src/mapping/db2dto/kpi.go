@@ -1,95 +1,107 @@
 package db2dto
 
 import (
+	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/schema"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 )
 
-func reconstructNodeTree(kpiNodeEntity schema.KPINodeEntity, nodeChildrenMap map[uint32][]schema.KPINodeEntity, logicalOperationKPINodeEntities []schema.LogicalOperationKPINodeEntity, atomKPINodeEntities []schema.AtomKPINodeEntity) kpi.NodeDTO {
-	for _, logicalOperationKPINodeEntity := range logicalOperationKPINodeEntities {
-		logicalOperationKPINodeEntityNodeId := *logicalOperationKPINodeEntity.NodeID
-		if logicalOperationKPINodeEntityNodeId == kpiNodeEntity.ID {
-			childKPINodeEntities := nodeChildrenMap[logicalOperationKPINodeEntityNodeId]
-			var childNodes []kpi.NodeDTO
-			for _, childGenericKPINodeEntity := range childKPINodeEntities {
-				childNode := reconstructNodeTree(childGenericKPINodeEntity, nodeChildrenMap, logicalOperationKPINodeEntities, atomKPINodeEntities)
-				childNodes = append(childNodes, childNode)
+func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap map[uint32][]uint32, logicalOperationKPINodeEntities []schema.LogicalOperationKPINodeEntity, atomKPINodeEntities []schema.AtomKPINodeEntity) kpi.NodeDTO {
+	logicalOperationKPINodeEntityOptional := util.FindFirst(logicalOperationKPINodeEntities, func(logicalOperationKPINodeEntity schema.LogicalOperationKPINodeEntity) bool {
+		return *logicalOperationKPINodeEntity.NodeID == currentKPINodeID
+	})
+	currentNodeIsLogicalOperationNode := logicalOperationKPINodeEntityOptional.IsPresent()
+	if currentNodeIsLogicalOperationNode {
+		logicalOperationKPINodeEntity := logicalOperationKPINodeEntityOptional.GetPayload()
+		childNodeIDs := kpiNodeParentChildrenMap[*logicalOperationKPINodeEntity.NodeID]
+		childNodes := make([]kpi.NodeDTO, 0)
+		util.ForEach(childNodeIDs, func(childNodeID uint32) {
+			childNodes = append(childNodes, reconstructKPINodeTree(childNodeID, kpiNodeParentChildrenMap, logicalOperationKPINodeEntities, atomKPINodeEntities))
+		})
+		return kpi.LogicalOperationNodeDTO{
+			Type:       kpi.LogicalOperationNodeType(logicalOperationKPINodeEntity.Type),
+			ChildNodes: childNodes,
+		}
+	}
+	atomKPINodeEntityOptional := util.FindFirst(atomKPINodeEntities, func(atomKPINodeEntity schema.AtomKPINodeEntity) bool {
+		return *atomKPINodeEntity.NodeID == currentKPINodeID
+	})
+	currentNodeIsAtomNode := atomKPINodeEntityOptional.IsPresent()
+	if currentNodeIsAtomNode {
+		atomKPINodeEntity := atomKPINodeEntityOptional.GetPayload()
+		sdParameterID := atomKPINodeEntity.SDParameter.ID
+		sdParameterDenotation := atomKPINodeEntity.SDParameter.Denotation
+		switch atomKPINodeEntity.Type {
+		case "string_eq":
+			return kpi.EQAtomNodeDTO[string]{
+				SDParameterID:            sdParameterID,
+				SDParameterSpecification: sdParameterDenotation,
+				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.StringReferenceValue).GetPayload(),
 			}
-			return kpi.LogicalOperationNodeDTO{
-				Type:       kpi.LogicalOperationNodeType(logicalOperationKPINodeEntity.Type),
-				ChildNodes: childNodes,
+		case "boolean_eq":
+			return kpi.EQAtomNodeDTO[bool]{
+				SDParameterID:            sdParameterID,
+				SDParameterSpecification: sdParameterDenotation,
+				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.BooleanReferenceValue).GetPayload(),
+			}
+		case "numeric_eq":
+			return kpi.EQAtomNodeDTO[float64]{
+				SDParameterID:            sdParameterID,
+				SDParameterSpecification: sdParameterDenotation,
+				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+			}
+		case "numeric_lt":
+			return kpi.NumericLTAtomNodeDTO{
+				SDParameterID:            sdParameterID,
+				SDParameterSpecification: sdParameterDenotation,
+				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+			}
+		case "numeric_leq":
+			return kpi.NumericLEQAtomNodeDTO{
+				SDParameterID:            sdParameterID,
+				SDParameterSpecification: sdParameterDenotation,
+				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+			}
+		case "numeric_gt":
+			return kpi.NumericGTAtomNodeDTO{
+				SDParameterID:            sdParameterID,
+				SDParameterSpecification: sdParameterDenotation,
+				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
+			}
+		case "numeric_geq":
+			return kpi.NumericGEQAtomNodeDTO{
+				SDParameterID:            sdParameterID,
+				SDParameterSpecification: sdParameterDenotation,
+				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
 			}
 		}
 	}
-	for _, atomKPINodeEntity := range atomKPINodeEntities {
-		if *atomKPINodeEntity.NodeID == kpiNodeEntity.ID {
-			switch atomKPINodeEntity.Type {
-			case "string_eq":
-				return kpi.EQAtomNodeDTO[string]{
-					SDParameterSpecification: atomKPINodeEntity.SDParameterSpecification,
-					ReferenceValue:           *atomKPINodeEntity.StringReferenceValue,
-				}
-			case "boolean_eq":
-				return kpi.EQAtomNodeDTO[bool]{
-					SDParameterSpecification: atomKPINodeEntity.SDParameterSpecification,
-					ReferenceValue:           *atomKPINodeEntity.BooleanReferenceValue,
-				}
-			case "numeric_eq":
-				return kpi.EQAtomNodeDTO[float64]{
-					SDParameterSpecification: atomKPINodeEntity.SDParameterSpecification,
-					ReferenceValue:           *atomKPINodeEntity.NumericReferenceValue,
-				}
-			case "numeric_lt":
-				return kpi.NumericLTAtomNodeDTO{
-					SDParameterSpecification: atomKPINodeEntity.SDParameterSpecification,
-					ReferenceValue:           *atomKPINodeEntity.NumericReferenceValue,
-				}
-			case "numeric_leq":
-				return kpi.NumericLEQAtomNodeDTO{
-					SDParameterSpecification: atomKPINodeEntity.SDParameterSpecification,
-					ReferenceValue:           *atomKPINodeEntity.NumericReferenceValue,
-				}
-			case "numeric_gt":
-				return kpi.NumericGTAtomNodeDTO{
-					SDParameterSpecification: atomKPINodeEntity.SDParameterSpecification,
-					ReferenceValue:           *atomKPINodeEntity.NumericReferenceValue,
-				}
-			case "numeric_geq":
-				return kpi.NumericGEQAtomNodeDTO{
-					SDParameterSpecification: atomKPINodeEntity.SDParameterSpecification,
-					ReferenceValue:           *atomKPINodeEntity.NumericReferenceValue,
-				}
-			}
-		}
+	if currentNodeIsLogicalOperationNode {
+		panic(fmt.Sprintf("current node (ID: %d) found among logical operation KPI node entities, but the KPI node tree reconstruction still failed", currentKPINodeID))
+	} else if currentNodeIsAtomNode {
+		panic(fmt.Sprintf("current node (ID: %d) found among atom KPI node entities, but the KPI node tree reconstruction still failed", currentKPINodeID))
+	} else {
+		panic(fmt.Sprintf("current node (ID: %d) not found among logical operation KPI node entities, nor atom KPI node entities", currentKPINodeID))
 	}
-	panic("Failed trying to transform KPI definition(s) from DB format do DTO format... shouldn't happen")
 }
 
-func prepareNodeChildrenMap(kpiNodeEntities []schema.KPINodeEntity) map[uint32][]schema.KPINodeEntity {
-	nodeChildrenMap := make(map[uint32][]schema.KPINodeEntity)
+func prepareKPINodeParentChildrenMap(kpiNodeEntities []schema.KPINodeEntity) map[uint32][]uint32 {
+	kpiNodeParentChildrenMap := make(map[uint32][]uint32)
 	for _, kpiNodeEntity := range kpiNodeEntities {
-		if kpiNodeEntity.ParentNodeID != nil {
-			parentNodeID := *kpiNodeEntity.ParentNodeID
-			nodeChildrenMap[parentNodeID] = append(nodeChildrenMap[parentNodeID], kpiNodeEntity)
-		}
+		util.NewOptionalFromPointer(kpiNodeEntity.ParentNodeID).DoIfPresent(func(parentNodeID uint32) {
+			kpiNodeParentChildrenMap[parentNodeID] = append(kpiNodeParentChildrenMap[parentNodeID], kpiNodeEntity.ID)
+		})
 	}
-	return nodeChildrenMap
+	return kpiNodeParentChildrenMap
 }
 
 func ReconstructKPIDefinitionDTO(kpiDefinitionEntity schema.KPIDefinitionEntity, kpiNodeEntities []schema.KPINodeEntity, logicalOperationKPINodeEntities []schema.LogicalOperationKPINodeEntity, atomKPINodeEntities []schema.AtomKPINodeEntity) kpi.DefinitionDTO {
-	var definitionRoot kpi.NodeDTO
-	nodeChildrenMap := prepareNodeChildrenMap(kpiNodeEntities)
-	for _, kpiNodeEntity := range kpiNodeEntities {
-		if kpiNodeEntity.ID == *kpiDefinitionEntity.RootNodeID {
-			definitionRoot = reconstructNodeTree(kpiNodeEntity, nodeChildrenMap, logicalOperationKPINodeEntities, atomKPINodeEntities)
-			break
-		}
-	}
+	kpiDefinitionRootOptional := util.NewOptionalOf(reconstructKPINodeTree(*kpiDefinitionEntity.RootNodeID, prepareKPINodeParentChildrenMap(kpiNodeEntities), logicalOperationKPINodeEntities, atomKPINodeEntities))
 	return kpi.DefinitionDTO{
 		ID:                  util.NewOptionalOf[uint32](kpiDefinitionEntity.ID),
-		SDTypeSpecification: kpiDefinitionEntity.SDTypeSpecification,
+		SDTypeSpecification: kpiDefinitionEntity.SDType.Denotation,
 		UserIdentifier:      kpiDefinitionEntity.UserIdentifier,
-		RootNode:            definitionRoot,
+		RootNode:            kpiDefinitionRootOptional.GetPayload(),
 	}
 }

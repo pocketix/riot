@@ -7,12 +7,10 @@ import (
 )
 
 func KPIFulfillmentCheckResultEntityToKPIFulfillmentCheckResultDTO(kpiFulfillmentCheckResultEntity schema.KPIFulfillmentCheckResultEntity, kpiNodeEntities []schema.KPINodeEntity, logicalOperationKPINodeEntities []schema.LogicalOperationKPINodeEntity, atomKPINodeEntities []schema.AtomKPINodeEntity) types.KPIFulfillmentCheckResultDTO {
-	kpiDefinitionEntity := util.NewOptionalFromPointer(kpiFulfillmentCheckResultEntity.KPIDefinition).GetPayload()
-	sdInstanceEntity := util.NewOptionalFromPointer(kpiFulfillmentCheckResultEntity.SDInstance).GetPayload()
 	return types.KPIFulfillmentCheckResultDTO{
 		ID:            util.NewOptionalOf(kpiFulfillmentCheckResultEntity.ID),
-		KPIDefinition: ReconstructKPIDefinitionDTO(kpiDefinitionEntity, kpiNodeEntities, logicalOperationKPINodeEntities, atomKPINodeEntities),
-		SDInstance:    SDInstanceEntityToSDInstanceDTO(sdInstanceEntity),
+		KPIDefinition: ReconstructKPIDefinitionDTO(kpiFulfillmentCheckResultEntity.KPIDefinition, kpiNodeEntities, logicalOperationKPINodeEntities, atomKPINodeEntities),
+		SDInstance:    SDInstanceEntityToSDInstanceDTO(kpiFulfillmentCheckResultEntity.SDInstance),
 		Fulfilled:     kpiFulfillmentCheckResultEntity.Fulfilled,
 	}
 }

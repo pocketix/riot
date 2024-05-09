@@ -2,25 +2,28 @@ query KPIDefinitionDetail($id: ID!) {
   kpiDefinition(id: $id) {
     id
     userIdentifier
+    sdTypeID
     sdTypeSpecification
     nodes {
-      ... on BooleanEQAtomKPINode {
-        id
-        parentNodeID
-        nodeType
-        sdParameterSpecification
-        booleanReferenceValue
-      }
       ... on LogicalOperationKPINode {
         id
         parentNodeID
         nodeType
         type
       }
+      ... on BooleanEQAtomKPINode {
+        id
+        parentNodeID
+        nodeType
+        sdParameterID
+        sdParameterSpecification
+        booleanReferenceValue
+      }
       ... on NumericEQAtomKPINode {
         id
         parentNodeID
         nodeType
+        sdParameterID
         sdParameterSpecification
         numericReferenceValue
       }
@@ -28,6 +31,7 @@ query KPIDefinitionDetail($id: ID!) {
         id
         parentNodeID
         nodeType
+        sdParameterID
         sdParameterSpecification
         numericReferenceValue
       }
@@ -35,6 +39,7 @@ query KPIDefinitionDetail($id: ID!) {
         id
         parentNodeID
         nodeType
+        sdParameterID
         sdParameterSpecification
         numericReferenceValue
       }
@@ -42,6 +47,7 @@ query KPIDefinitionDetail($id: ID!) {
         id
         parentNodeID
         nodeType
+        sdParameterID
         sdParameterSpecification
         numericReferenceValue
       }
@@ -49,6 +55,7 @@ query KPIDefinitionDetail($id: ID!) {
         id
         parentNodeID
         nodeType
+        sdParameterID
         sdParameterSpecification
         numericReferenceValue
       }
@@ -56,6 +63,7 @@ query KPIDefinitionDetail($id: ID!) {
         id
         parentNodeID
         nodeType
+        sdParameterID
         sdParameterSpecification
         stringReferenceValue
       }

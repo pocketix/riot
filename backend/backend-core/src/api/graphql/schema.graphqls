@@ -45,6 +45,7 @@ input SDInstanceUpdateInput {
 
 type KPIDefinition {
   id: ID!
+  sdTypeID: ID!
   sdTypeSpecification: String!
   userIdentifier: String!
   nodes: [KPINode!]!
@@ -73,6 +74,7 @@ interface AtomKPINode implements KPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
+  sdParameterID: ID!
   sdParameterSpecification: String!
 }
 
@@ -80,6 +82,7 @@ type StringEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
+  sdParameterID: ID!
   sdParameterSpecification: String!
   stringReferenceValue: String!
 }
@@ -88,6 +91,7 @@ type BooleanEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
+  sdParameterID: ID!
   sdParameterSpecification: String!
   booleanReferenceValue: Boolean!
 }
@@ -96,6 +100,7 @@ type NumericEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
+  sdParameterID: ID!
   sdParameterSpecification: String!
   numericReferenceValue: Float!
 }
@@ -104,6 +109,7 @@ type NumericGTAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
+  sdParameterID: ID!
   sdParameterSpecification: String!
   numericReferenceValue: Float!
 }
@@ -112,6 +118,7 @@ type NumericGEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
+  sdParameterID: ID!
   sdParameterSpecification: String!
   numericReferenceValue: Float!
 }
@@ -120,6 +127,7 @@ type NumericLTAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
+  sdParameterID: ID!
   sdParameterSpecification: String!
   numericReferenceValue: Float!
 }
@@ -128,11 +136,13 @@ type NumericLEQAtomKPINode implements KPINode & AtomKPINode {
   id: ID!
   parentNodeID: ID
   nodeType: KPINodeType!
+  sdParameterID: ID!
   sdParameterSpecification: String!
   numericReferenceValue: Float!
 }
 
 input KPIDefinitionInput {
+  sdTypeID: ID!
   sdTypeSpecification: String!
   userIdentifier: String!
   nodes: [KPINodeInput!]!
@@ -153,6 +163,7 @@ input KPINodeInput {
   type: KPINodeType!
   id: ID!
   parentNodeID: ID
+  sdParameterID: ID
   sdParameterSpecification: String
   stringReferenceValue: String
   booleanReferenceValue: Boolean

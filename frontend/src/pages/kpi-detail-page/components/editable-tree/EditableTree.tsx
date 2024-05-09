@@ -54,11 +54,6 @@ export enum AtomNodeType {
   NumericGEQ
 }
 
-export interface AtomNodeAttributes {
-  type: AtomNodeType
-  referenceValue: string | boolean | number
-}
-
 export enum LogicalOperationNodeType {
   AND,
   OR,
@@ -70,6 +65,7 @@ export interface EditableTreeNodeDataModel extends RawNodeDatum {
   attributes?: {
     nodeType: NodeType
     atomNodeType?: AtomNodeType
+    atomNodeSDParameterID?: string
     atomNodeSDParameterSpecification?: string
     atomNodeReferenceValue?: string | boolean | number
     logicalOperationNodeType?: LogicalOperationNodeType

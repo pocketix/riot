@@ -127,10 +127,10 @@ const KPIDetailPageController: React.FC = () => {
     )
   }
 
-  const reconfigureAtomNode = (type: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
+  const reconfigureAtomNode = (type: AtomNodeType, sdParameterID: string, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
     setDefinitionModel((definitionModel) =>
       produce(definitionModel, (draftDefinitionModel) => {
-        modifyAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterSpecification, referenceValue)
+        modifyAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterID, sdParameterSpecification, referenceValue)
       })
     )
     hideAtomNodeModal()
@@ -168,10 +168,10 @@ const KPIDetailPageController: React.FC = () => {
     hideSelectLogicalOperationTypeModal()
   }
 
-  const finalizeNewAtomNodeCreation = (type: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
+  const finalizeNewAtomNodeCreation = (type: AtomNodeType, sdParameterID: string, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
     setDefinitionModel((definitionModel) =>
       produce(definitionModel, (draftDefinitionModel) => {
-        crateNewAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterSpecification, referenceValue)
+        crateNewAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterID, sdParameterSpecification, referenceValue)
       })
     )
     hideAtomNodeModal()
@@ -190,7 +190,7 @@ const KPIDetailPageController: React.FC = () => {
   }
 
   const onSubmitHandler = async () => {
-    const kpiDefinitionInput = kpiDefinitionModelToKPIDefinitionInput(definitionModel, sdTypeData.denotation)
+    const kpiDefinitionInput = kpiDefinitionModelToKPIDefinitionInput(definitionModel, sdTypeData.id, sdTypeData.denotation)
     if (id) {
       await updateKPIDefinitionMutation({
         variables: {

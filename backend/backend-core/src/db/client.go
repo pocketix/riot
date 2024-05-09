@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/schema"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/db2dto"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2db"
@@ -83,9 +84,9 @@ func (r *relationalDatabaseClientImpl) InitializeDatabase() error {
 func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinitionDTO kpi.DefinitionDTO) cUtil.Result[uint32] {
 	kpiNodeEntity, kpiNodeEntities, logicalOperationNodeEntities, atomNodeEntities := dto2db.TransformKPIDefinitionTree(kpiDefinitionDTO.RootNode, nil, []*schema.KPINodeEntity{}, []schema.LogicalOperationKPINodeEntity{}, []schema.AtomKPINodeEntity{})
 	kpiDefinitionEntity := schema.KPIDefinitionEntity{
-		SDTypeSpecification: kpiDefinitionDTO.SDTypeSpecification,
-		UserIdentifier:      kpiDefinitionDTO.UserIdentifier,
-		RootNode:            kpiNodeEntity,
+		SDTypeID:       kpiDefinitionDTO.SDTypeID,
+		UserIdentifier: kpiDefinitionDTO.UserIdentifier,
+		RootNode:       kpiNodeEntity,
 	}
 	tx := r.db.Begin()
 	for _, entity := range kpiNodeEntities {
@@ -120,24 +121,28 @@ func (r *relationalDatabaseClientImpl) LoadKPIDefinition(id uint32) cUtil.Result
 }
 
 func (r *relationalDatabaseClientImpl) LoadKPIDefinitions() cUtil.Result[[]kpi.DefinitionDTO] {
-	kpiDefinitionEntitiesLoadResult := LoadEntitiesFromDB[schema.KPIDefinitionEntity](r.db)
+	kpiDefinitionEntitiesLoadResult := LoadEntitiesFromDB[schema.KPIDefinitionEntity](r.db, PreloadPath("SDType"))
 	if kpiDefinitionEntitiesLoadResult.IsFailure() {
-		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](kpiDefinitionEntitiesLoadResult.GetError())
+		err := fmt.Errorf("failed to load KPI definition entities from the database: %w", kpiDefinitionEntitiesLoadResult.GetError())
+		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](err)
 	}
 	kpiDefinitionEntities := kpiDefinitionEntitiesLoadResult.GetPayload()
 	kpiNodeEntitiesLoadResult := LoadEntitiesFromDB[schema.KPINodeEntity](r.db)
 	if kpiNodeEntitiesLoadResult.IsFailure() {
-		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](kpiNodeEntitiesLoadResult.GetError())
+		err := fmt.Errorf("failed to load KPI node entities from the database: %w", kpiNodeEntitiesLoadResult.GetError())
+		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](err)
 	}
 	kpiNodeEntities := kpiNodeEntitiesLoadResult.GetPayload()
 	logicalOperationKPINodeEntitiesLoadResult := LoadEntitiesFromDB[schema.LogicalOperationKPINodeEntity](r.db)
 	if logicalOperationKPINodeEntitiesLoadResult.IsFailure() {
-		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](logicalOperationKPINodeEntitiesLoadResult.GetError())
+		err := fmt.Errorf("failed to load logical operation KPI node entities from the database: %w", logicalOperationKPINodeEntitiesLoadResult.GetError())
+		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](err)
 	}
 	logicalOperationKPINodeEntities := logicalOperationKPINodeEntitiesLoadResult.GetPayload()
-	atomKPINodeEntitiesLoadResult := LoadEntitiesFromDB[schema.AtomKPINodeEntity](r.db)
+	atomKPINodeEntitiesLoadResult := LoadEntitiesFromDB[schema.AtomKPINodeEntity](r.db, PreloadPath("SDParameter"))
 	if atomKPINodeEntitiesLoadResult.IsFailure() {
-		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](atomKPINodeEntitiesLoadResult.GetError())
+		err := fmt.Errorf("failed to load atom KPI node entities from the database: %w", atomKPINodeEntitiesLoadResult.GetError())
+		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](err)
 	}
 	atomKPINodeEntities := atomKPINodeEntitiesLoadResult.GetPayload()
 	kpiDefinitionDTOs := make([]kpi.DefinitionDTO, 0, len(kpiDefinitionEntities))
@@ -151,17 +156,17 @@ func (r *relationalDatabaseClientImpl) LoadKPIDefinitions() cUtil.Result[[]kpi.D
 func getIDsOfKPINodeEntitiesFormingTheKPIDefinition(g *gorm.DB, kpiDefinitionID uint32) cUtil.Result[[]uint32] {
 	kpiDefinitionEntityLoadResult := LoadEntityFromDB[schema.KPIDefinitionEntity](g, WhereClause("id = ?", kpiDefinitionID))
 	if kpiDefinitionEntityLoadResult.IsFailure() {
-		return cUtil.NewFailureResult[[]uint32](kpiDefinitionEntityLoadResult.GetError())
+		err := fmt.Errorf("failed to load KPI definition entity with ID = %d from the database: %w", kpiDefinitionID, kpiDefinitionEntityLoadResult.GetError())
+		return cUtil.NewFailureResult[[]uint32](err)
 	}
 	kpiDefinitionEntity := kpiDefinitionEntityLoadResult.GetPayload()
 	kpiNodeEntitiesLoadResult := LoadEntitiesFromDB[schema.KPINodeEntity](g)
 	if kpiNodeEntitiesLoadResult.IsFailure() {
-		return cUtil.NewFailureResult[[]uint32](kpiNodeEntitiesLoadResult.GetError())
+		err := fmt.Errorf("failed to load KPI node entities from the database: %w", kpiNodeEntitiesLoadResult.GetError())
+		return cUtil.NewFailureResult[[]uint32](err)
 	}
-	kpiNodeEntities := kpiNodeEntitiesLoadResult.GetPayload()
-	kpiDefinitionRootNodeID := cUtil.NewOptionalFromPointer(kpiDefinitionEntity.RootNodeID).GetPayload()
-	setOfIDsOfKPINodeEntitiesFormingTheDefinition := cUtil.SliceToSet(cUtil.SliceOf(kpiDefinitionRootNodeID))
-	setOfRemainingKPINodeEntities := cUtil.SliceToSet(kpiNodeEntities)
+	setOfIDsOfKPINodeEntitiesFormingTheDefinition := cUtil.SliceToSet(cUtil.SliceOf(*kpiDefinitionEntity.RootNodeID))
+	setOfRemainingKPINodeEntities := cUtil.SliceToSet(kpiNodeEntitiesLoadResult.GetPayload())
 	for {
 		nextLayerOfKPINodeEntities := cUtil.Filter(setOfRemainingKPINodeEntities.ToSlice(), func(kpiNodeEntity schema.KPINodeEntity) bool {
 			parentNodeIDOptional := cUtil.NewOptionalFromPointer(kpiNodeEntity.ParentNodeID)

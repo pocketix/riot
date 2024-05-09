@@ -37,6 +37,15 @@ func kpiNodeInputToKPINode(kpiNodeInput model.KPINodeInput) util.Result[kpi.Node
 		if sdParameterSpecificationOptional.IsEmpty() {
 			return util.NewFailureResult[kpi.NodeDTO](errors.New(constructErrorMessage("SD parameter specification is missing")))
 		}
+		sdParameterIDOptional := util.NewOptionalFromPointer[string](kpiNodeInput.SdParameterID)
+		if sdParameterIDOptional.IsEmpty() {
+			return util.NewFailureResult[kpi.NodeDTO](errors.New(constructErrorMessage("SD parameter ID is missing")))
+		}
+		uint32FromStringResult := util.UINT32FromString(sdParameterIDOptional.GetPayload())
+		if uint32FromStringResult.IsFailure() {
+			return util.NewFailureResult[kpi.NodeDTO](uint32FromStringResult.GetError())
+		}
+		sdParameterID := uint32FromStringResult.GetPayload()
 		sdParameterSpecification := sdParameterSpecificationOptional.GetPayload()
 		if nodeType == model.KPINodeTypeStringEQAtom {
 			referenceValueOptional := util.NewOptionalFromPointer[string](kpiNodeInput.StringReferenceValue)
@@ -44,6 +53,7 @@ func kpiNodeInputToKPINode(kpiNodeInput model.KPINodeInput) util.Result[kpi.Node
 				return util.NewFailureResult[kpi.NodeDTO](errors.New(constructErrorMessage("reference value (string) is missing")))
 			}
 			return util.NewSuccessResult[kpi.NodeDTO](kpi.EQAtomNodeDTO[string]{
+				SDParameterID:            sdParameterID,
 				SDParameterSpecification: sdParameterSpecification,
 				ReferenceValue:           referenceValueOptional.GetPayload(),
 			})
@@ -53,6 +63,7 @@ func kpiNodeInputToKPINode(kpiNodeInput model.KPINodeInput) util.Result[kpi.Node
 				return util.NewFailureResult[kpi.NodeDTO](errors.New(constructErrorMessage("reference value (boolean) is missing")))
 			}
 			return util.NewSuccessResult[kpi.NodeDTO](kpi.EQAtomNodeDTO[bool]{
+				SDParameterID:            sdParameterID,
 				SDParameterSpecification: util.NewOptionalFromPointer[string](kpiNodeInput.SdParameterSpecification).GetPayload(),
 				ReferenceValue:           referenceValueOptional.GetPayload(),
 			})
@@ -65,26 +76,31 @@ func kpiNodeInputToKPINode(kpiNodeInput model.KPINodeInput) util.Result[kpi.Node
 			switch nodeType {
 			case model.KPINodeTypeNumericEQAtom:
 				return util.NewSuccessResult[kpi.NodeDTO](kpi.EQAtomNodeDTO[float64]{
+					SDParameterID:            sdParameterID,
 					SDParameterSpecification: sdParameterSpecification,
 					ReferenceValue:           referenceValue,
 				})
 			case model.KPINodeTypeNumericLTAtom:
 				return util.NewSuccessResult[kpi.NodeDTO](kpi.NumericLTAtomNodeDTO{
+					SDParameterID:            sdParameterID,
 					SDParameterSpecification: sdParameterSpecification,
 					ReferenceValue:           referenceValue,
 				})
 			case model.KPINodeTypeNumericLEQAtom:
 				return util.NewSuccessResult[kpi.NodeDTO](kpi.NumericLEQAtomNodeDTO{
+					SDParameterID:            sdParameterID,
 					SDParameterSpecification: sdParameterSpecification,
 					ReferenceValue:           referenceValue,
 				})
 			case model.KPINodeTypeNumericGTAtom:
 				return util.NewSuccessResult[kpi.NodeDTO](kpi.NumericGTAtomNodeDTO{
+					SDParameterID:            sdParameterID,
 					SDParameterSpecification: sdParameterSpecification,
 					ReferenceValue:           referenceValue,
 				})
 			case model.KPINodeTypeNumericGEQAtom:
 				return util.NewSuccessResult[kpi.NodeDTO](kpi.NumericGEQAtomNodeDTO{
+					SDParameterID:            sdParameterID,
 					SDParameterSpecification: sdParameterSpecification,
 					ReferenceValue:           referenceValue,
 				})
@@ -128,8 +144,13 @@ func KPIDefinitionInputToKPIDefinitionDTO(kpiDefinitionInput model.KPIDefinition
 			kpiNodeByIDMap[*parentNodeID] = logicalOperationNode
 		}
 	}
+	uint32FromStringResult := util.UINT32FromString(kpiDefinitionInput.SdTypeID)
+	if uint32FromStringResult.IsFailure() {
+		return util.NewFailureResult[kpi.DefinitionDTO](uint32FromStringResult.GetError())
+	}
 	return util.NewSuccessResult[kpi.DefinitionDTO](kpi.DefinitionDTO{
 		ID:                  util.NewEmptyOptional[uint32](),
+		SDTypeID:            uint32FromStringResult.GetPayload(),
 		SDTypeSpecification: kpiDefinitionInput.SdTypeSpecification,
 		UserIdentifier:      kpiDefinitionInput.UserIdentifier,
 		RootNode:            kpiNodeByIDMap[rootNodeID],

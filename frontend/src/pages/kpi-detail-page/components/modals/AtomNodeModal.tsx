@@ -3,12 +3,12 @@ import { Button, FormControl, Grid, InputLabel, MenuItem, Select, TextField } fr
 import ModalBase from '../../../../page-independent-components/mui-based/ModalBase'
 import { SdParameter, SdParameterType, SdType } from '../../../../generated/graphql'
 import { AtomNodeType } from '../editable-tree/EditableTree'
-import { TriConsumerFunction } from '../../../../util'
+import { TetraConsumerFunction } from '../../../../util'
 import NiceModal, { useModal } from '@ebay/nice-modal-react'
 
 interface AtomNodeModalProps {
   sdTypeData: SdType
-  onConfirm: TriConsumerFunction<AtomNodeType, string, string | boolean | number>
+  onConfirm: TetraConsumerFunction<AtomNodeType, string, string, string | boolean | number>
   sdParameter?: SdParameter
   binaryRelation?: BinaryRelation
   referenceValueString?: string
@@ -112,7 +112,7 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
       }
     })(sdParameter.type, binaryRelation)
     clearModal()
-    props.onConfirm(atomNodeType, sdParameter.denotation, referenceValue)
+    props.onConfirm(atomNodeType, sdParameter.id, sdParameter.denotation, referenceValue)
   }
 
   return (

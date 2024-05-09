@@ -29,10 +29,11 @@ const newNode = (): EditableTreeNodeDataModel => {
   }
 }
 
-const newAtomNode = (atomNodeType: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number): EditableTreeNodeDataModel => {
+const newAtomNode = (atomNodeType: AtomNodeType, sdParameterId: string, sdParameterSpecification: string, referenceValue: string | boolean | number): EditableTreeNodeDataModel => {
   const node = newNode()
   node.attributes.nodeType = NodeType.AtomNode
   node.attributes.atomNodeType = atomNodeType
+  node.attributes.atomNodeSDParameterID = sdParameterId
   node.attributes.atomNodeSDParameterSpecification = sdParameterSpecification
   node.attributes.atomNodeReferenceValue = referenceValue
   return node
@@ -50,25 +51,25 @@ const kpiNodeToEditableTreeNodeDataModel = (kpiNode: KpiNode): EditableTreeNodeD
   switch (kpiNode.nodeType) {
     case KpiNodeType.StringEqAtom:
       const stringEQ = kpiNode as StringEqAtomKpiNode
-      return newAtomNode(AtomNodeType.StringEQ, stringEQ.sdParameterSpecification, stringEQ.stringReferenceValue)
+      return newAtomNode(AtomNodeType.StringEQ, stringEQ.sdParameterID, stringEQ.sdParameterSpecification, stringEQ.stringReferenceValue)
     case KpiNodeType.BooleanEqAtom:
       const booleanEQ = kpiNode as BooleanEqAtomKpiNode
-      return newAtomNode(AtomNodeType.BooleanEQ, booleanEQ.sdParameterSpecification, booleanEQ.booleanReferenceValue)
+      return newAtomNode(AtomNodeType.BooleanEQ, booleanEQ.sdParameterID, booleanEQ.sdParameterSpecification, booleanEQ.booleanReferenceValue)
     case KpiNodeType.NumericEqAtom:
       const numericEQ = kpiNode as NumericEqAtomKpiNode
-      return newAtomNode(AtomNodeType.NumericEQ, numericEQ.sdParameterSpecification, numericEQ.numericReferenceValue)
+      return newAtomNode(AtomNodeType.NumericEQ, numericEQ.sdParameterID, numericEQ.sdParameterSpecification, numericEQ.numericReferenceValue)
     case KpiNodeType.NumericGtAtom:
       const numericGT = kpiNode as NumericGtAtomKpiNode
-      return newAtomNode(AtomNodeType.NumericGT, numericGT.sdParameterSpecification, numericGT.numericReferenceValue)
+      return newAtomNode(AtomNodeType.NumericGT, numericGT.sdParameterID, numericGT.sdParameterSpecification, numericGT.numericReferenceValue)
     case KpiNodeType.NumericGeqAtom:
       const numericGEQ = kpiNode as NumericGeqAtomKpiNode
-      return newAtomNode(AtomNodeType.NumericGEQ, numericGEQ.sdParameterSpecification, numericGEQ.numericReferenceValue)
+      return newAtomNode(AtomNodeType.NumericGEQ, numericGEQ.sdParameterID, numericGEQ.sdParameterSpecification, numericGEQ.numericReferenceValue)
     case KpiNodeType.NumericLtAtom:
       const numericLT = kpiNode as NumericLtAtomKpiNode
-      return newAtomNode(AtomNodeType.NumericLT, numericLT.sdParameterSpecification, numericLT.numericReferenceValue)
+      return newAtomNode(AtomNodeType.NumericLT, numericLT.sdParameterID, numericLT.sdParameterSpecification, numericLT.numericReferenceValue)
     case KpiNodeType.NumericLeqAtom:
       const numericLEQ = kpiNode as NumericLeqAtomKpiNode
-      return newAtomNode(AtomNodeType.NumericLEQ, numericLEQ.sdParameterSpecification, numericLEQ.numericReferenceValue)
+      return newAtomNode(AtomNodeType.NumericLEQ, numericLEQ.sdParameterID, numericLEQ.sdParameterSpecification, numericLEQ.numericReferenceValue)
     case KpiNodeType.LogicalOperation:
       const logicalOperationNodeType = ((logicalOperationType: LogicalOperationType): LogicalOperationNodeType => {
         switch (logicalOperationType) {
@@ -143,21 +144,31 @@ export const modifyAtomNode = (
   currentNodeName: string,
   node: EditableTreeNodeDataModel,
   atomNodeType?: AtomNodeType,
+  sdParameterID?: string,
   sdParameterSpecification?: string,
   referenceValue?: string | boolean | number
 ) => {
   const processNode = (node: EditableTreeNodeDataModel) => {
     node.attributes.atomNodeType = atomNodeType ?? node.attributes.atomNodeType
+    node.attributes.atomNodeSDParameterID = sdParameterID ?? node.attributes.atomNodeSDParameterID
     node.attributes.atomNodeSDParameterSpecification = sdParameterSpecification ?? node.attributes.atomNodeSDParameterSpecification
     node.attributes.atomNodeReferenceValue = referenceValue ?? node.attributes.atomNodeReferenceValue
   }
   processTree(currentNodeName, node, processNode, false)
 }
 
-export const crateNewAtomNode = (currentNodeName: string, node: EditableTreeNodeDataModel, atomNodeType: AtomNodeType, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
+export const crateNewAtomNode = (
+  currentNodeName: string,
+  node: EditableTreeNodeDataModel,
+  atomNodeType: AtomNodeType,
+  sdParameterID: string,
+  sdParameterSpecification: string,
+  referenceValue: string | boolean | number
+) => {
   const processNode = (node: EditableTreeNodeDataModel) => {
     node.attributes.nodeType = NodeType.AtomNode
     node.attributes.atomNodeType = atomNodeType
+    node.attributes.atomNodeSDParameterID = sdParameterID
     node.attributes.atomNodeSDParameterSpecification = sdParameterSpecification
     node.attributes.atomNodeReferenceValue = referenceValue
   }
@@ -173,6 +184,7 @@ const editableTreeNodeDataModelToKpiNodeInput = (editableTreeNodeDataModel: Edit
   if (nodeType === NodeType.AtomNode) {
     const kpiAtomNodeInputBase = {
       ...kpiNodeInputBase,
+      sdParameterID: editableTreeNodeDataModel.attributes.atomNodeSDParameterID,
       sdParameterSpecification: editableTreeNodeDataModel.attributes.atomNodeSDParameterSpecification
     }
     switch (editableTreeNodeDataModel.attributes.atomNodeType) {
@@ -249,12 +261,15 @@ const editableTreeNodeDataModelToKpiNodeInputs = (editableTreeNodeDataModel: Edi
   return kpiNodeInputs.concat(childKPINodeInputs)
 }
 
-export const kpiDefinitionModelToKPIDefinitionInput = (kpiDefinitionModel: KPIDefinitionModel, sdTypeSpecification: string): KpiDefinitionInput => {
-  return {
+export const kpiDefinitionModelToKPIDefinitionInput = (kpiDefinitionModel: KPIDefinitionModel, sdTypeID: string, sdTypeSpecification: string): KpiDefinitionInput => {
+  const kpiDefinitionInput = {
+    sdTypeID: sdTypeID,
     sdTypeSpecification: sdTypeSpecification,
     userIdentifier: kpiDefinitionModel.userIdentifier,
     nodes: editableTreeNodeDataModelToKpiNodeInputs(kpiDefinitionModel)
   }
+  console.log('kpiDefinitionInput:', kpiDefinitionInput)
+  return kpiDefinitionInput
 }
 
 export const initialKPIDefinitionModel: KPIDefinitionModel = {
