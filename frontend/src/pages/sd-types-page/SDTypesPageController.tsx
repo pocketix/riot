@@ -6,11 +6,15 @@ import qSDTypes from '../../graphql/queries/sdTypes.graphql'
 import SDTypesPageView from './SDTypesPageView'
 import mDeleteSDType from '../../graphql/mutations/deleteSDType.graphql'
 import mCreateSDType from '../../graphql/mutations/createSDType.graphql'
+import { useModal } from '@ebay/nice-modal-react'
+import ConfirmDeletionModal from '../../page-independent-components/ConfirmDeletionModal'
 
 const SDTypesPageController: React.FC = () => {
   const { data: sdTypesData, loading: sdTypesLoading, error: sdTypesError, refetch: sdTypesRefetch } = useQuery<SdTypesQuery, SdTypesQueryVariables>(gql(qSDTypes))
   const [deleteSDTypeMutation, { loading: deleteSDTypeLoading, error: deleteSDTypeError }] = useMutation<DeleteSdTypeMutation, DeleteSdTypeMutationVariables>(gql(mDeleteSDType))
   const [createSDTypeMutation, { loading: createSDTypeLoading, error: createSDTypeError }] = useMutation<CreateSdTypeMutation, CreateSdTypeMutationVariables>(gql(mCreateSDType))
+
+  const { show: showConfirmDeletionModal, hide: hideConfirmDeletionModal } = useModal(ConfirmDeletionModal)
 
   const anyLoadingOccurs = useMemo(() => sdTypesLoading || deleteSDTypeLoading || createSDTypeLoading, [sdTypesLoading, deleteSDTypeLoading, createSDTypeLoading])
   const anyErrorOccurred = useMemo(() => !!sdTypesError || !!deleteSDTypeError || !!createSDTypeError, [sdTypesError, deleteSDTypeError, createSDTypeError])
@@ -44,19 +48,22 @@ const SDTypesPageController: React.FC = () => {
     [createSDTypeMutation, sdTypesRefetch]
   )
 
-  const deleteSDType = useCallback(
-    async (id: string) => {
-      await deleteSDTypeMutation({
-        variables: {
-          id: id
-        }
-      })
-      await sdTypesRefetch()
-    },
-    [deleteSDTypeMutation, sdTypesRefetch]
-  )
+  const initiateSDTypeDeletion = (id: string) => {
+    showConfirmDeletionModal({
+      denotationOfItemToBeDeleted: 'SD type definition',
+      onConfirm: async () => {
+        await deleteSDTypeMutation({
+          variables: {
+            id: id
+          }
+        })
+        await sdTypesRefetch()
+        await hideConfirmDeletionModal()
+      }
+    })
+  }
 
-  return <SDTypesPageView sdTypesData={sdTypesData} createSDType={createSDType} deleteSDType={deleteSDType} anyLoadingOccurs={anyLoadingOccurs} anyErrorOccurred={anyErrorOccurred} />
+  return <SDTypesPageView sdTypesData={sdTypesData} createSDType={createSDType} deleteSDType={initiateSDTypeDeletion} anyLoadingOccurs={anyLoadingOccurs} anyErrorOccurred={anyErrorOccurred} />
 }
 
 export default SDTypesPageController

@@ -3,12 +3,12 @@ import SDTypesSection from './components/SDTypesSection'
 import CreateSDTypeForm from './components/CreateSDTypeForm'
 import { SdTypesQuery } from '../../generated/graphql'
 import StandardContentPageTemplate from '../../page-independent-components/StandardContentPageTemplate'
-import { AsynchronousBiConsumerFunction, AsynchronousConsumerFunction } from '../../util'
+import { AsynchronousBiConsumerFunction, ConsumerFunction } from '../../util'
 
 interface SDTypesPageViewProps {
   sdTypesData: SdTypesQuery
   createSDType: AsynchronousBiConsumerFunction<string, { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]>
-  deleteSDType: AsynchronousConsumerFunction<string>
+  deleteSDType: ConsumerFunction<string>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }

@@ -2,11 +2,11 @@ import React, { useState } from 'react'
 import { SdTypesQuery } from '../../../generated/graphql'
 import { FormControlLabel, Switch } from '@mui/material'
 import SDTypeCard from './SDTypeCard'
-import { AsynchronousConsumerFunction } from '../../../util'
+import { ConsumerFunction } from '../../../util'
 
 interface SDTypesSectionProps {
   sdTypesQueryData: SdTypesQuery
-  deleteSDType: AsynchronousConsumerFunction<string>
+  deleteSDType: ConsumerFunction<string>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }

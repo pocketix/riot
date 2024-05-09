@@ -1,7 +1,7 @@
 import React from 'react'
 import { Collapse } from '@mui/material'
 import GenericCardTemplate from '../../../page-independent-components/GenericCardTemplate'
-import { AsynchronousConsumerFunction } from '../../../util'
+import { ConsumerFunction } from '../../../util'
 import { SdParameter } from '../../../generated/graphql'
 
 interface SDTypeCardProps {
@@ -9,7 +9,7 @@ interface SDTypeCardProps {
   denotation: string
   areParametersDisplayed: boolean
   parameters: SdParameter[]
-  deleteSDType: AsynchronousConsumerFunction<string>
+  deleteSDType: ConsumerFunction<string>
 }
 
 const SDTypeCard: React.FC<SDTypeCardProps> = (props) => {
