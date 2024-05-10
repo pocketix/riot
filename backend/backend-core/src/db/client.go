@@ -63,7 +63,7 @@ func (r *relationalDatabaseClientImpl) ConnectToDatabase() error {
 		return err
 	}
 	session := new(gorm.Session)
-	session.Logger = logger.Default.LogMode(logger.Info)
+	session.Logger = logger.Default.LogMode(logger.Silent)
 	r.db = db.Session(session)
 	return nil
 }
