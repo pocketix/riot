@@ -26,7 +26,8 @@ const SDInstancesPageController: React.FC = () => {
   const {
     data: sdInstancesPageData,
     loading: sdInstancesPageDataLoading,
-    error: sdInstancesPageDataError
+    error: sdInstancesPageDataError,
+    refetch: sdInstancesPageDataRefetch
   } = useQuery<SdInstancesPageDataQuery, SdInstancesPageDataQueryVariables>(gql(qSDInstancesPageData))
   const [updateUserIdentifierOfSdInstanceMutation, { loading: updateUserIdentifierOfSdInstanceLoading, error: updateUserIdentifierOfSdInstanceError }] = useMutation<
     UpdateUserIdentifierOfSdInstanceMutation,
@@ -60,6 +61,7 @@ const SDInstancesPageController: React.FC = () => {
           newUserIdentifier: newUserIdentifier
         }
       })
+      await sdInstancesPageDataRefetch()
     },
     [updateUserIdentifierOfSdInstanceMutation]
   )
@@ -71,6 +73,7 @@ const SDInstancesPageController: React.FC = () => {
           id: id
         }
       })
+      await sdInstancesPageDataRefetch()
     },
     [confirmSdInstanceMutation]
   )
