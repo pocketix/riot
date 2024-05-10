@@ -17,7 +17,7 @@ func CreateKPIDefinition(kpiDefinitionInput model.KPIDefinitionInput) util.Resul
 		return util.NewFailureResult[*model.KPIDefinition](toDTOTransformResult.GetError())
 	}
 	kpiDefinitionDTO := toDTOTransformResult.GetPayload()
-	persistResult := (*db.GetRelationalDatabaseClientInstance()).PersistKPIDefinition(kpiDefinitionDTO)
+	persistResult := db.GetRelationalDatabaseClientInstance().PersistKPIDefinition(kpiDefinitionDTO)
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[*model.KPIDefinition](persistResult.GetError())
 	}
@@ -37,7 +37,7 @@ func UpdateKPIDefinition(stringID string, kpiDefinitionInput model.KPIDefinition
 	}
 	id := uint32FromStringResult.GetPayload()
 	// TODO: Performing deletion followed by re-insertion instead of update on the data layer (suboptimal)
-	if err := (*db.GetRelationalDatabaseClientInstance()).DeleteKPIDefinition(id); err != nil {
+	if err := db.GetRelationalDatabaseClientInstance().DeleteKPIDefinition(id); err != nil {
 		return util.NewFailureResult[*model.KPIDefinition](err)
 	}
 	toDTOTransformResult := api2dto.KPIDefinitionInputToKPIDefinitionDTO(kpiDefinitionInput)
@@ -46,7 +46,7 @@ func UpdateKPIDefinition(stringID string, kpiDefinitionInput model.KPIDefinition
 	}
 	kpiDefinitionDTO := toDTOTransformResult.GetPayload()
 	kpiDefinitionDTO.ID = util.NewOptionalOf(id)
-	persistResult := (*db.GetRelationalDatabaseClientInstance()).PersistKPIDefinition(kpiDefinitionDTO)
+	persistResult := db.GetRelationalDatabaseClientInstance().PersistKPIDefinition(kpiDefinitionDTO)
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[*model.KPIDefinition](persistResult.GetError())
 	}
@@ -62,14 +62,14 @@ func DeleteKPIDefinition(stringID string) error {
 	if uint32FromStringResult.IsFailure() {
 		return uint32FromStringResult.GetError()
 	}
-	if err := (*db.GetRelationalDatabaseClientInstance()).DeleteKPIDefinition(uint32FromStringResult.GetPayload()); err != nil {
+	if err := db.GetRelationalDatabaseClientInstance().DeleteKPIDefinition(uint32FromStringResult.GetPayload()); err != nil {
 		return err
 	}
 	return nil
 }
 
 func GetKPIDefinitions() util.Result[[]*model.KPIDefinition] {
-	loadResult := (*db.GetRelationalDatabaseClientInstance()).LoadKPIDefinitions()
+	loadResult := db.GetRelationalDatabaseClientInstance().LoadKPIDefinitions()
 	if loadResult.IsFailure() {
 		return util.NewFailureResult[[]*model.KPIDefinition](loadResult.GetError())
 	}
@@ -83,7 +83,7 @@ func GetKPIDefinition(stringID string) util.Result[*model.KPIDefinition] {
 	}
 	id := uint32FromStringResult.GetPayload()
 	// TODO: Searching for target KPI definition on service layer (suboptimal)
-	loadResult := (*db.GetRelationalDatabaseClientInstance()).LoadKPIDefinitions()
+	loadResult := db.GetRelationalDatabaseClientInstance().LoadKPIDefinitions()
 	if loadResult.IsFailure() {
 		return util.NewFailureResult[*model.KPIDefinition](loadResult.GetError())
 	}

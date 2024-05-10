@@ -11,7 +11,7 @@ import (
 
 func CreateSDType(sdTypeInput model.SDTypeInput) util.Result[*model.SDType] {
 	sdTypeDTO := api2dto.SDTypeInputToSDTypeDTO(sdTypeInput)
-	persistResult := (*db.GetRelationalDatabaseClientInstance()).PersistSDType(sdTypeDTO)
+	persistResult := db.GetRelationalDatabaseClientInstance().PersistSDType(sdTypeDTO)
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[*model.SDType](persistResult.GetError())
 	}
@@ -29,7 +29,7 @@ func DeleteSDType(stringID string) error {
 	if uint32FromStringResult.IsFailure() {
 		return uint32FromStringResult.GetError()
 	}
-	if err := (*db.GetRelationalDatabaseClientInstance()).DeleteSDType(uint32FromStringResult.GetPayload()); err != nil {
+	if err := db.GetRelationalDatabaseClientInstance().DeleteSDType(uint32FromStringResult.GetPayload()); err != nil {
 		return err
 	}
 	go func() {
@@ -44,7 +44,7 @@ func UpdateSDInstance(stringID string, sdInstanceUpdateInput model.SDInstanceUpd
 		return util.NewFailureResult[*model.SDInstance](uint32FromStringResult.GetError())
 	}
 	id := uint32FromStringResult.GetPayload()
-	loadResult := (*db.GetRelationalDatabaseClientInstance()).LoadSDInstance(id)
+	loadResult := db.GetRelationalDatabaseClientInstance().LoadSDInstance(id)
 	if loadResult.IsFailure() {
 		return util.NewFailureResult[*model.SDInstance](loadResult.GetError())
 	}
@@ -57,7 +57,7 @@ func UpdateSDInstance(stringID string, sdInstanceUpdateInput model.SDInstanceUpd
 	if confirmedByUserOptional.IsPresent() {
 		sdInstanceDTO.ConfirmedByUser = confirmedByUserOptional.GetPayload()
 	}
-	persistResult := (*db.GetRelationalDatabaseClientInstance()).PersistSDInstance(sdInstanceDTO)
+	persistResult := db.GetRelationalDatabaseClientInstance().PersistSDInstance(sdInstanceDTO)
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[*model.SDInstance](persistResult.GetError())
 	}
@@ -76,7 +76,7 @@ func GetSDType(stringID string) util.Result[*model.SDType] {
 		return util.NewFailureResult[*model.SDType](uint32FromStringResult.GetError())
 	}
 	id := uint32FromStringResult.GetPayload()
-	loadResult := (*db.GetRelationalDatabaseClientInstance()).LoadSDType(id)
+	loadResult := db.GetRelationalDatabaseClientInstance().LoadSDType(id)
 	if loadResult.IsFailure() {
 		return util.NewFailureResult[*model.SDType](loadResult.GetError())
 	}
@@ -85,7 +85,7 @@ func GetSDType(stringID string) util.Result[*model.SDType] {
 }
 
 func GetSDTypes() util.Result[[]*model.SDType] {
-	loadResult := (*db.GetRelationalDatabaseClientInstance()).LoadSDTypes()
+	loadResult := db.GetRelationalDatabaseClientInstance().LoadSDTypes()
 	if loadResult.IsFailure() {
 		return util.NewFailureResult[[]*model.SDType](loadResult.GetError())
 	}
@@ -93,7 +93,7 @@ func GetSDTypes() util.Result[[]*model.SDType] {
 }
 
 func GetSDInstances() util.Result[[]*model.SDInstance] {
-	loadResult := (*db.GetRelationalDatabaseClientInstance()).LoadSDInstances()
+	loadResult := db.GetRelationalDatabaseClientInstance().LoadSDInstances()
 	if loadResult.IsFailure() {
 		return util.NewFailureResult[[]*model.SDInstance](loadResult.GetError())
 	}

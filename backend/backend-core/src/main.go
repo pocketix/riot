@@ -6,7 +6,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/generated"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/service"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
@@ -20,8 +19,6 @@ import (
 
 func main() {
 	util.TerminateOnError(util.WaitForDSs(time.Minute, util.NewPairOf("rabbitmq", 5672), util.NewPairOf("postgres", 5432)), "Some dependencies of this application are inaccessible")
-	// Set up PostgreSQL database and its client
-	db.SetupRelationalDatabaseClient()
 	// Set up RabbitMQ "infrastructure"
 	rabbitmq.SetupRabbitMQ()
 	// Set up RabbitMQ inside the 'Backend core' service

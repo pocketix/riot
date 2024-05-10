@@ -8,7 +8,7 @@ import (
 )
 
 func GetKPIFulfillmentCheckResults() util.Result[[]*model.KPIFulfillmentCheckResult] {
-	loadResult := (*db.GetRelationalDatabaseClientInstance()).LoadKPIFulFulfillmentCheckResults()
+	loadResult := db.GetRelationalDatabaseClientInstance().LoadKPIFulFulfillmentCheckResults()
 	if loadResult.IsFailure() {
 		return util.NewFailureResult[[]*model.KPIFulfillmentCheckResult](loadResult.GetError())
 	}
