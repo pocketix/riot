@@ -264,6 +264,12 @@ export type StringEqAtomKpiNode = AtomKpiNode & KpiNode & {
   stringReferenceValue: Scalars['String']['output'];
 };
 
+export type Subscription = {
+  __typename?: 'Subscription';
+  onKPIFulfillmentChecked: KpiFulfillmentCheckResult;
+  onSDInstanceRegistered: SdInstance;
+};
+
 export type ConfirmSdInstanceMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -336,3 +342,13 @@ export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type SdTypesQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: string, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: string, denotation: string, type: SdParameterType }> }> };
+
+export type OnKpiFulfillmentCheckedSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type OnKpiFulfillmentCheckedSubscription = { __typename?: 'Subscription', onKPIFulfillmentChecked: { __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: string, sdInstanceID: string, fulfilled: boolean } };
+
+export type OnSdInstanceRegisteredSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type OnSdInstanceRegisteredSubscription = { __typename?: 'Subscription', onSDInstanceRegistered: { __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } } };

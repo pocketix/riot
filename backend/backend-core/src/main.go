@@ -28,7 +28,7 @@ func main() {
 	service.SetupRabbitMQClient()
 	util.TerminateOnError(service.EnqueueMessagesRepresentingCurrentConfiguration(), "Couldn't enqueue messages representing the system configuration after 'Backend core' restart")
 	go service.CheckForSDInstanceRegistrationRequests(&graphql.SDInstanceChannel)
-	go service.CheckForKPIFulfillmentCheckResults()
+	go service.CheckForKPIFulfillmentCheckResults(&graphql.KPIFulfillmentCheckResultChannel)
 	// Set up the GraphQL API
 	gqlServer := handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: &graphql.Resolver{}}))
 	gqlServer.AddTransport(transport.POST{})

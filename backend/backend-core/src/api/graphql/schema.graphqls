@@ -201,5 +201,5 @@ type Mutation {
 
 type Subscription {
   onSDInstanceRegistered: SDInstance!
-  onKPIFulfillmentChecked: [KPIFulfillmentCheckResult!]!
+  onKPIFulfillmentChecked: KPIFulfillmentCheckResult!
 }

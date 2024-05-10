@@ -1,8 +1,12 @@
-import React, { useCallback, useEffect, useMemo } from 'react'
-import { useMutation, useQuery } from '@apollo/client'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMutation, useQuery, useSubscription } from '@apollo/client'
 import {
   ConfirmSdInstanceMutation,
   ConfirmSdInstanceMutationVariables,
+  OnKpiFulfillmentCheckedSubscription,
+  OnKpiFulfillmentCheckedSubscriptionVariables,
+  OnSdInstanceRegisteredSubscription,
+  OnSdInstanceRegisteredSubscriptionVariables,
   SdInstancesPageDataQuery,
   SdInstancesPageDataQueryVariables,
   UpdateUserIdentifierOfSdInstanceMutation,
@@ -13,13 +17,16 @@ import qSDInstancesPageData from '../../graphql/queries/sdInstancesPageData.grap
 import SDInstancesPageView from './SDInstancesPageView'
 import mUpdateUserIdentifierOfSDInstance from '../../graphql/mutations/updateUserIdentifierOfSDInstance.graphql'
 import mConfirmSDInstance from '../../graphql/mutations/confirmSDInstance.graphql'
+import sOnSDInstanceRegistered from '../../graphql/subscriptions/onSDInstanceRegistered.graphql'
+import sOnKPIFulfillmentChecked from '../../graphql/subscriptions/onKPIFulfillmentChecked.graphql'
+import { produce } from 'immer'
 
 const SDInstancesPageController: React.FC = () => {
+  const [combinedSDInstancesPageData, setCombinedSDInstancesPageData] = useState<SdInstancesPageDataQuery | null>(null)
   const {
     data: sdInstancesPageData,
     loading: sdInstancesPageDataLoading,
-    error: sdInstancesPageDataError,
-    refetch: sdInstancesPageDataRefetch
+    error: sdInstancesPageDataError
   } = useQuery<SdInstancesPageDataQuery, SdInstancesPageDataQueryVariables>(gql(qSDInstancesPageData))
   const [updateUserIdentifierOfSdInstanceMutation, { loading: updateUserIdentifierOfSdInstanceLoading, error: updateUserIdentifierOfSdInstanceError }] = useMutation<
     UpdateUserIdentifierOfSdInstanceMutation,
@@ -28,6 +35,12 @@ const SDInstancesPageController: React.FC = () => {
   const [confirmSdInstanceMutation, { loading: confirmSdInstanceLoading, error: confirmSdInstanceError }] = useMutation<ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables>(
     gql(mConfirmSDInstance)
   )
+  const { data: onSDInstanceRegisteredData, error: onSDInstanceRegisteredError } = useSubscription<OnSdInstanceRegisteredSubscription, OnSdInstanceRegisteredSubscriptionVariables>(
+    gql(sOnSDInstanceRegistered)
+  )
+  const { data: onKPIFulfillmentCheckedData, error: onKPIFulfillmentCheckedError } = useSubscription<OnKpiFulfillmentCheckedSubscription, OnKpiFulfillmentCheckedSubscriptionVariables>(
+    gql(sOnKPIFulfillmentChecked)
+  )
 
   const anyLoadingOccurs = useMemo(
     () => sdInstancesPageDataLoading || updateUserIdentifierOfSdInstanceLoading || confirmSdInstanceLoading,
@@ -35,8 +48,8 @@ const SDInstancesPageController: React.FC = () => {
   )
 
   const anyErrorOccurred = useMemo(
-    () => !!sdInstancesPageDataError || !!updateUserIdentifierOfSdInstanceError || !!confirmSdInstanceError,
-    [sdInstancesPageDataError, updateUserIdentifierOfSdInstanceError, confirmSdInstanceError]
+    () => !!sdInstancesPageDataError || !!updateUserIdentifierOfSdInstanceError || !!confirmSdInstanceError || !!onSDInstanceRegisteredError || !!onKPIFulfillmentCheckedError,
+    [sdInstancesPageDataError, updateUserIdentifierOfSdInstanceError, confirmSdInstanceError, onSDInstanceRegisteredError, onKPIFulfillmentCheckedError]
   )
 
   const updateUserIdentifierOfSdInstance = useCallback(
@@ -63,18 +76,46 @@ const SDInstancesPageController: React.FC = () => {
   )
 
   useEffect(() => {
-    // TODO: Replace this polling by GraphQL subscription once feasible
-    const timeout = setInterval(() => {
-      sdInstancesPageDataRefetch().catch((error) => {
-        console.error('Failed to refetch SD instances page data:', error)
+    setCombinedSDInstancesPageData(sdInstancesPageData)
+  }, [sdInstancesPageData])
+
+  useEffect(() => {
+    if (!onSDInstanceRegisteredData) {
+      return
+    }
+    setCombinedSDInstancesPageData((combinedSDInstancesPageData) =>
+      produce(combinedSDInstancesPageData, (draftCombinedSDInstancesPageData) => {
+        const { id, uid, confirmedByUser, userIdentifier, type } = onSDInstanceRegisteredData.onSDInstanceRegistered
+        draftCombinedSDInstancesPageData.sdInstances.push({
+          id: id,
+          uid: uid,
+          confirmedByUser: confirmedByUser,
+          userIdentifier: userIdentifier,
+          type: type
+        })
       })
-    }, 500)
-    return () => clearInterval(timeout)
-  }, [sdInstancesPageDataRefetch])
+    )
+  }, [onSDInstanceRegisteredData])
+
+  useEffect(() => {
+    if (!onKPIFulfillmentCheckedData) {
+      return
+    }
+    setCombinedSDInstancesPageData((combinedSDInstancesPageData) =>
+      produce(combinedSDInstancesPageData, (draftCombinedSDInstancesPageData) => {
+        const { kpiDefinitionID, sdInstanceID, fulfilled } = onKPIFulfillmentCheckedData.onKPIFulfillmentChecked
+        draftCombinedSDInstancesPageData.kpiFulfillmentCheckResults.push({
+          kpiDefinitionID: kpiDefinitionID,
+          sdInstanceID: sdInstanceID,
+          fulfilled: fulfilled
+        })
+      })
+    )
+  }, [onKPIFulfillmentCheckedData])
 
   return (
     <SDInstancesPageView
-      sdInstancesPageData={sdInstancesPageData}
+      sdInstancesPageData={combinedSDInstancesPageData}
       updateUserIdentifierOfSdInstance={updateUserIdentifierOfSdInstance}
       confirmSdInstance={confirmSdInstance}
       anyLoadingOccurs={anyLoadingOccurs}

@@ -57,7 +57,7 @@ func CheckForSDInstanceRegistrationRequests(sdInstanceChannel *chan *model.SDIns
 	}
 }
 
-func CheckForKPIFulfillmentCheckResults() {
+func CheckForKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel *chan *model.KPIFulfillmentCheckResult) {
 	err := rabbitmq.ConsumeJSONMessages(rabbitMQClient, constants.KPIFulfillmentCheckResultsQueueName, func(messagePayload cTypes.KPIFulfillmentCheckResultInfo) error {
 		targetKPIDefinitionID := messagePayload.KPIDefinitionID
 		targetSDInstanceUID := messagePayload.UID
@@ -83,6 +83,7 @@ func CheckForKPIFulfillmentCheckResults() {
 			if err := (*db.GetRelationalDatabaseClientInstance()).PersistKPIFulFulfillmentCheckResult(existingKPIFulfillmentCheckResult); err != nil {
 				return fmt.Errorf("couldn't update KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d: %w", targetKPIDefinitionID, targetSDInstanceID, err)
 			}
+			*kpiFulfillmentCheckResultChannel <- dto2api.KPIFulfillmentCheckResultDTOToKPIFulfillmentCheckResult(existingKPIFulfillmentCheckResult)
 			return nil
 		}
 		newKPIFulfillmentCheckResult := types.KPIFulfillmentCheckResultDTO{
@@ -93,6 +94,7 @@ func CheckForKPIFulfillmentCheckResults() {
 		if err := (*db.GetRelationalDatabaseClientInstance()).PersistKPIFulFulfillmentCheckResult(newKPIFulfillmentCheckResult); err != nil {
 			return fmt.Errorf("couldn't persist KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d: %w", targetKPIDefinitionID, targetSDInstanceID, err)
 		}
+		*kpiFulfillmentCheckResultChannel <- dto2api.KPIFulfillmentCheckResultDTOToKPIFulfillmentCheckResult(newKPIFulfillmentCheckResult)
 		return nil
 	})
 	if err != nil {

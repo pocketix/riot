@@ -1,0 +1,12 @@
+subscription OnSDInstanceRegistered {
+    onSDInstanceRegistered {
+        id
+        uid
+        confirmedByUser
+        userIdentifier
+        type {
+            id
+            denotation
+        }
+    }
+}

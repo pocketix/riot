@@ -2,7 +2,9 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import './index.scss'
-import { ApolloClient, InMemoryCache, ApolloProvider, NormalizedCacheObject } from '@apollo/client'
+import { ApolloClient, InMemoryCache, ApolloProvider, NormalizedCacheObject, split, HttpLink } from '@apollo/client'
+import { getMainDefinition } from '@apollo/client/utilities'
+import { WebSocketLink } from '@apollo/client/link/ws'
 import { createTheme, Theme, ThemeProvider } from '@mui/material'
 import NiceModal from '@ebay/nice-modal-react'
 
@@ -18,6 +20,14 @@ import ConfigurationPage from './pages/ConfigurationPage'
 
 const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   uri: 'http://localhost:9090',
+  link: split(
+    ({ query }) => {
+      const definition = getMainDefinition(query)
+      return definition.kind === 'OperationDefinition' && definition.operation === 'subscription'
+    },
+    new WebSocketLink({ uri: 'ws://localhost:9090' }),
+    new HttpLink({ uri: 'http://localhost:9090' })
+  ),
   cache: new InMemoryCache(),
   defaultOptions: {
     // TODO: Currently bypassing the Apollo Client cache...

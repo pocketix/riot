@@ -194,7 +194,7 @@ type QueryResolver interface {
 }
 type SubscriptionResolver interface {
 	OnSDInstanceRegistered(ctx context.Context) (<-chan *model.SDInstance, error)
-	OnKPIFulfillmentChecked(ctx context.Context) (<-chan []*model.KPIFulfillmentCheckResult, error)
+	OnKPIFulfillmentChecked(ctx context.Context) (<-chan *model.KPIFulfillmentCheckResult, error)
 }
 
 type executableSchema struct {
@@ -1139,7 +1139,7 @@ type Mutation {
 
 type Subscription {
   onSDInstanceRegistered: SDInstance!
-  onKPIFulfillmentChecked: [KPIFulfillmentCheckResult!]!
+  onKPIFulfillmentChecked: KPIFulfillmentCheckResult!
 }
 `, BuiltIn: false},
 }
@@ -1371,7 +1371,7 @@ func (ec *executionContext) _BooleanEQAtomKPINode_id(ctx context.Context, field 
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BooleanEQAtomKPINode",
 		Field:      field,
@@ -1412,7 +1412,7 @@ func (ec *executionContext) _BooleanEQAtomKPINode_parentNodeID(ctx context.Conte
 	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_parentNodeID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_parentNodeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BooleanEQAtomKPINode",
 		Field:      field,
@@ -1456,7 +1456,7 @@ func (ec *executionContext) _BooleanEQAtomKPINode_nodeType(ctx context.Context, 
 	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINodeType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_nodeType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BooleanEQAtomKPINode",
 		Field:      field,
@@ -1500,7 +1500,7 @@ func (ec *executionContext) _BooleanEQAtomKPINode_sdParameterID(ctx context.Cont
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_sdParameterID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_sdParameterID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BooleanEQAtomKPINode",
 		Field:      field,
@@ -1544,7 +1544,7 @@ func (ec *executionContext) _BooleanEQAtomKPINode_sdParameterSpecification(ctx c
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_sdParameterSpecification(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BooleanEQAtomKPINode",
 		Field:      field,
@@ -1588,7 +1588,7 @@ func (ec *executionContext) _BooleanEQAtomKPINode_booleanReferenceValue(ctx cont
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_booleanReferenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_booleanReferenceValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "BooleanEQAtomKPINode",
 		Field:      field,
@@ -1632,7 +1632,7 @@ func (ec *executionContext) _KPIDefinition_id(ctx context.Context, field graphql
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_KPIDefinition_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_KPIDefinition_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "KPIDefinition",
 		Field:      field,
@@ -1676,7 +1676,7 @@ func (ec *executionContext) _KPIDefinition_sdTypeID(ctx context.Context, field g
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_KPIDefinition_sdTypeID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_KPIDefinition_sdTypeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "KPIDefinition",
 		Field:      field,
@@ -1720,7 +1720,7 @@ func (ec *executionContext) _KPIDefinition_sdTypeSpecification(ctx context.Conte
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_KPIDefinition_sdTypeSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_KPIDefinition_sdTypeSpecification(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "KPIDefinition",
 		Field:      field,
@@ -1764,7 +1764,7 @@ func (ec *executionContext) _KPIDefinition_userIdentifier(ctx context.Context, f
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_KPIDefinition_userIdentifier(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_KPIDefinition_userIdentifier(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "KPIDefinition",
 		Field:      field,
@@ -1808,7 +1808,7 @@ func (ec *executionContext) _KPIDefinition_nodes(ctx context.Context, field grap
 	return ec.marshalNKPINode2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINodeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_KPIDefinition_nodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_KPIDefinition_nodes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "KPIDefinition",
 		Field:      field,
@@ -1852,7 +1852,7 @@ func (ec *executionContext) _KPIFulfillmentCheckResult_kpiDefinitionID(ctx conte
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_KPIFulfillmentCheckResult_kpiDefinitionID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_KPIFulfillmentCheckResult_kpiDefinitionID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "KPIFulfillmentCheckResult",
 		Field:      field,
@@ -1896,7 +1896,7 @@ func (ec *executionContext) _KPIFulfillmentCheckResult_sdInstanceID(ctx context.
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_KPIFulfillmentCheckResult_sdInstanceID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_KPIFulfillmentCheckResult_sdInstanceID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "KPIFulfillmentCheckResult",
 		Field:      field,
@@ -1940,7 +1940,7 @@ func (ec *executionContext) _KPIFulfillmentCheckResult_fulfilled(ctx context.Con
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_KPIFulfillmentCheckResult_fulfilled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_KPIFulfillmentCheckResult_fulfilled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "KPIFulfillmentCheckResult",
 		Field:      field,
@@ -1984,7 +1984,7 @@ func (ec *executionContext) _LogicalOperationKPINode_id(ctx context.Context, fie
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_LogicalOperationKPINode_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_LogicalOperationKPINode_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "LogicalOperationKPINode",
 		Field:      field,
@@ -2025,7 +2025,7 @@ func (ec *executionContext) _LogicalOperationKPINode_parentNodeID(ctx context.Co
 	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_LogicalOperationKPINode_parentNodeID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_LogicalOperationKPINode_parentNodeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "LogicalOperationKPINode",
 		Field:      field,
@@ -2069,7 +2069,7 @@ func (ec *executionContext) _LogicalOperationKPINode_nodeType(ctx context.Contex
 	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINodeType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_LogicalOperationKPINode_nodeType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_LogicalOperationKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "LogicalOperationKPINode",
 		Field:      field,
@@ -2113,7 +2113,7 @@ func (ec *executionContext) _LogicalOperationKPINode_type(ctx context.Context, f
 	return ec.marshalNLogicalOperationType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐLogicalOperationType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_LogicalOperationKPINode_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_LogicalOperationKPINode_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "LogicalOperationKPINode",
 		Field:      field,
@@ -2531,7 +2531,7 @@ func (ec *executionContext) _NumericEQAtomKPINode_id(ctx context.Context, field 
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericEQAtomKPINode_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericEQAtomKPINode_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericEQAtomKPINode",
 		Field:      field,
@@ -2572,7 +2572,7 @@ func (ec *executionContext) _NumericEQAtomKPINode_parentNodeID(ctx context.Conte
 	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericEQAtomKPINode_parentNodeID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericEQAtomKPINode_parentNodeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericEQAtomKPINode",
 		Field:      field,
@@ -2616,7 +2616,7 @@ func (ec *executionContext) _NumericEQAtomKPINode_nodeType(ctx context.Context, 
 	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINodeType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericEQAtomKPINode_nodeType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericEQAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericEQAtomKPINode",
 		Field:      field,
@@ -2660,7 +2660,7 @@ func (ec *executionContext) _NumericEQAtomKPINode_sdParameterID(ctx context.Cont
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericEQAtomKPINode_sdParameterID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericEQAtomKPINode_sdParameterID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericEQAtomKPINode",
 		Field:      field,
@@ -2704,7 +2704,7 @@ func (ec *executionContext) _NumericEQAtomKPINode_sdParameterSpecification(ctx c
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericEQAtomKPINode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericEQAtomKPINode_sdParameterSpecification(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericEQAtomKPINode",
 		Field:      field,
@@ -2748,7 +2748,7 @@ func (ec *executionContext) _NumericEQAtomKPINode_numericReferenceValue(ctx cont
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericEQAtomKPINode_numericReferenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericEQAtomKPINode_numericReferenceValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericEQAtomKPINode",
 		Field:      field,
@@ -2792,7 +2792,7 @@ func (ec *executionContext) _NumericGEQAtomKPINode_id(ctx context.Context, field
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericGEQAtomKPINode",
 		Field:      field,
@@ -2833,7 +2833,7 @@ func (ec *executionContext) _NumericGEQAtomKPINode_parentNodeID(ctx context.Cont
 	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_parentNodeID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_parentNodeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericGEQAtomKPINode",
 		Field:      field,
@@ -2877,7 +2877,7 @@ func (ec *executionContext) _NumericGEQAtomKPINode_nodeType(ctx context.Context,
 	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINodeType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_nodeType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericGEQAtomKPINode",
 		Field:      field,
@@ -2921,7 +2921,7 @@ func (ec *executionContext) _NumericGEQAtomKPINode_sdParameterID(ctx context.Con
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_sdParameterID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_sdParameterID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericGEQAtomKPINode",
 		Field:      field,
@@ -2965,7 +2965,7 @@ func (ec *executionContext) _NumericGEQAtomKPINode_sdParameterSpecification(ctx 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_sdParameterSpecification(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericGEQAtomKPINode",
 		Field:      field,
@@ -3009,7 +3009,7 @@ func (ec *executionContext) _NumericGEQAtomKPINode_numericReferenceValue(ctx con
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_numericReferenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_numericReferenceValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericGEQAtomKPINode",
 		Field:      field,
@@ -3053,7 +3053,7 @@ func (ec *executionContext) _NumericGTAtomKPINode_id(ctx context.Context, field 
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericGTAtomKPINode_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericGTAtomKPINode_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericGTAtomKPINode",
 		Field:      field,
@@ -3094,7 +3094,7 @@ func (ec *executionContext) _NumericGTAtomKPINode_parentNodeID(ctx context.Conte
 	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericGTAtomKPINode_parentNodeID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericGTAtomKPINode_parentNodeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericGTAtomKPINode",
 		Field:      field,
@@ -3138,7 +3138,7 @@ func (ec *executionContext) _NumericGTAtomKPINode_nodeType(ctx context.Context, 
 	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINodeType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericGTAtomKPINode_nodeType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericGTAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericGTAtomKPINode",
 		Field:      field,
@@ -3182,7 +3182,7 @@ func (ec *executionContext) _NumericGTAtomKPINode_sdParameterID(ctx context.Cont
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericGTAtomKPINode_sdParameterID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericGTAtomKPINode_sdParameterID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericGTAtomKPINode",
 		Field:      field,
@@ -3226,7 +3226,7 @@ func (ec *executionContext) _NumericGTAtomKPINode_sdParameterSpecification(ctx c
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericGTAtomKPINode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericGTAtomKPINode_sdParameterSpecification(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericGTAtomKPINode",
 		Field:      field,
@@ -3270,7 +3270,7 @@ func (ec *executionContext) _NumericGTAtomKPINode_numericReferenceValue(ctx cont
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericGTAtomKPINode_numericReferenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericGTAtomKPINode_numericReferenceValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericGTAtomKPINode",
 		Field:      field,
@@ -3314,7 +3314,7 @@ func (ec *executionContext) _NumericLEQAtomKPINode_id(ctx context.Context, field
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericLEQAtomKPINode",
 		Field:      field,
@@ -3355,7 +3355,7 @@ func (ec *executionContext) _NumericLEQAtomKPINode_parentNodeID(ctx context.Cont
 	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_parentNodeID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_parentNodeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericLEQAtomKPINode",
 		Field:      field,
@@ -3399,7 +3399,7 @@ func (ec *executionContext) _NumericLEQAtomKPINode_nodeType(ctx context.Context,
 	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINodeType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_nodeType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericLEQAtomKPINode",
 		Field:      field,
@@ -3443,7 +3443,7 @@ func (ec *executionContext) _NumericLEQAtomKPINode_sdParameterID(ctx context.Con
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_sdParameterID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_sdParameterID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericLEQAtomKPINode",
 		Field:      field,
@@ -3487,7 +3487,7 @@ func (ec *executionContext) _NumericLEQAtomKPINode_sdParameterSpecification(ctx 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_sdParameterSpecification(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericLEQAtomKPINode",
 		Field:      field,
@@ -3531,7 +3531,7 @@ func (ec *executionContext) _NumericLEQAtomKPINode_numericReferenceValue(ctx con
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_numericReferenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_numericReferenceValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericLEQAtomKPINode",
 		Field:      field,
@@ -3575,7 +3575,7 @@ func (ec *executionContext) _NumericLTAtomKPINode_id(ctx context.Context, field 
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericLTAtomKPINode_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericLTAtomKPINode_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericLTAtomKPINode",
 		Field:      field,
@@ -3616,7 +3616,7 @@ func (ec *executionContext) _NumericLTAtomKPINode_parentNodeID(ctx context.Conte
 	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericLTAtomKPINode_parentNodeID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericLTAtomKPINode_parentNodeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericLTAtomKPINode",
 		Field:      field,
@@ -3660,7 +3660,7 @@ func (ec *executionContext) _NumericLTAtomKPINode_nodeType(ctx context.Context, 
 	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINodeType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericLTAtomKPINode_nodeType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericLTAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericLTAtomKPINode",
 		Field:      field,
@@ -3704,7 +3704,7 @@ func (ec *executionContext) _NumericLTAtomKPINode_sdParameterID(ctx context.Cont
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericLTAtomKPINode_sdParameterID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericLTAtomKPINode_sdParameterID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericLTAtomKPINode",
 		Field:      field,
@@ -3748,7 +3748,7 @@ func (ec *executionContext) _NumericLTAtomKPINode_sdParameterSpecification(ctx c
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericLTAtomKPINode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericLTAtomKPINode_sdParameterSpecification(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericLTAtomKPINode",
 		Field:      field,
@@ -3792,7 +3792,7 @@ func (ec *executionContext) _NumericLTAtomKPINode_numericReferenceValue(ctx cont
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_NumericLTAtomKPINode_numericReferenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_NumericLTAtomKPINode_numericReferenceValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "NumericLTAtomKPINode",
 		Field:      field,
@@ -3899,7 +3899,7 @@ func (ec *executionContext) _Query_sdTypes(ctx context.Context, field graphql.Co
 	return ec.marshalNSDType2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDTypeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_sdTypes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_sdTypes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -3951,7 +3951,7 @@ func (ec *executionContext) _Query_sdInstances(ctx context.Context, field graphq
 	return ec.marshalNSDInstance2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_sdInstances(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_sdInstances(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -4074,7 +4074,7 @@ func (ec *executionContext) _Query_kpiDefinitions(ctx context.Context, field gra
 	return ec.marshalNKPIDefinition2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIDefinitionᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_kpiDefinitions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_kpiDefinitions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -4130,7 +4130,7 @@ func (ec *executionContext) _Query_kpiFulfillmentCheckResults(ctx context.Contex
 	return ec.marshalNKPIFulfillmentCheckResult2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIFulfillmentCheckResultᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_kpiFulfillmentCheckResults(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_kpiFulfillmentCheckResults(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -4253,7 +4253,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -4311,7 +4311,7 @@ func (ec *executionContext) _SDInstance_id(ctx context.Context, field graphql.Co
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDInstance_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDInstance_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDInstance",
 		Field:      field,
@@ -4355,7 +4355,7 @@ func (ec *executionContext) _SDInstance_uid(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDInstance_uid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDInstance_uid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDInstance",
 		Field:      field,
@@ -4399,7 +4399,7 @@ func (ec *executionContext) _SDInstance_confirmedByUser(ctx context.Context, fie
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDInstance_confirmedByUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDInstance_confirmedByUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDInstance",
 		Field:      field,
@@ -4443,7 +4443,7 @@ func (ec *executionContext) _SDInstance_userIdentifier(ctx context.Context, fiel
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDInstance_userIdentifier(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDInstance_userIdentifier(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDInstance",
 		Field:      field,
@@ -4487,7 +4487,7 @@ func (ec *executionContext) _SDInstance_type(ctx context.Context, field graphql.
 	return ec.marshalNSDType2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDInstance_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDInstance_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDInstance",
 		Field:      field,
@@ -4539,7 +4539,7 @@ func (ec *executionContext) _SDParameter_id(ctx context.Context, field graphql.C
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDParameter_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDParameter_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDParameter",
 		Field:      field,
@@ -4583,7 +4583,7 @@ func (ec *executionContext) _SDParameter_denotation(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDParameter_denotation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDParameter_denotation(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDParameter",
 		Field:      field,
@@ -4627,7 +4627,7 @@ func (ec *executionContext) _SDParameter_type(ctx context.Context, field graphql
 	return ec.marshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDParameter_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDParameter_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDParameter",
 		Field:      field,
@@ -4671,7 +4671,7 @@ func (ec *executionContext) _SDType_id(ctx context.Context, field graphql.Collec
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDType_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDType_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDType",
 		Field:      field,
@@ -4715,7 +4715,7 @@ func (ec *executionContext) _SDType_denotation(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDType_denotation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDType_denotation(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDType",
 		Field:      field,
@@ -4759,7 +4759,7 @@ func (ec *executionContext) _SDType_parameters(ctx context.Context, field graphq
 	return ec.marshalNSDParameter2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDParameterᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDType_parameters(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDType_parameters(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDType",
 		Field:      field,
@@ -4811,7 +4811,7 @@ func (ec *executionContext) _StringEQAtomKPINode_id(ctx context.Context, field g
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_StringEQAtomKPINode_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_StringEQAtomKPINode_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "StringEQAtomKPINode",
 		Field:      field,
@@ -4852,7 +4852,7 @@ func (ec *executionContext) _StringEQAtomKPINode_parentNodeID(ctx context.Contex
 	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_StringEQAtomKPINode_parentNodeID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_StringEQAtomKPINode_parentNodeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "StringEQAtomKPINode",
 		Field:      field,
@@ -4896,7 +4896,7 @@ func (ec *executionContext) _StringEQAtomKPINode_nodeType(ctx context.Context, f
 	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPINodeType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_StringEQAtomKPINode_nodeType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_StringEQAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "StringEQAtomKPINode",
 		Field:      field,
@@ -4940,7 +4940,7 @@ func (ec *executionContext) _StringEQAtomKPINode_sdParameterID(ctx context.Conte
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_StringEQAtomKPINode_sdParameterID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_StringEQAtomKPINode_sdParameterID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "StringEQAtomKPINode",
 		Field:      field,
@@ -4984,7 +4984,7 @@ func (ec *executionContext) _StringEQAtomKPINode_sdParameterSpecification(ctx co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_StringEQAtomKPINode_sdParameterSpecification(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_StringEQAtomKPINode_sdParameterSpecification(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "StringEQAtomKPINode",
 		Field:      field,
@@ -5028,7 +5028,7 @@ func (ec *executionContext) _StringEQAtomKPINode_stringReferenceValue(ctx contex
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_StringEQAtomKPINode_stringReferenceValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_StringEQAtomKPINode_stringReferenceValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "StringEQAtomKPINode",
 		Field:      field,
@@ -5086,7 +5086,7 @@ func (ec *executionContext) _Subscription_onSDInstanceRegistered(ctx context.Con
 	}
 }
 
-func (ec *executionContext) fieldContext_Subscription_onSDInstanceRegistered(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Subscription_onSDInstanceRegistered(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
 		Field:      field,
@@ -5139,7 +5139,7 @@ func (ec *executionContext) _Subscription_onKPIFulfillmentChecked(ctx context.Co
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan []*model.KPIFulfillmentCheckResult):
+		case res, ok := <-resTmp.(<-chan *model.KPIFulfillmentCheckResult):
 			if !ok {
 				return nil
 			}
@@ -5147,7 +5147,7 @@ func (ec *executionContext) _Subscription_onKPIFulfillmentChecked(ctx context.Co
 				w.Write([]byte{'{'})
 				graphql.MarshalString(field.Alias).MarshalGQL(w)
 				w.Write([]byte{':'})
-				ec.marshalNKPIFulfillmentCheckResult2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIFulfillmentCheckResultᚄ(ctx, field.Selections, res).MarshalGQL(w)
+				ec.marshalNKPIFulfillmentCheckResult2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIFulfillmentCheckResult(ctx, field.Selections, res).MarshalGQL(w)
 				w.Write([]byte{'}'})
 			})
 		case <-ctx.Done():
@@ -5156,7 +5156,7 @@ func (ec *executionContext) _Subscription_onKPIFulfillmentChecked(ctx context.Co
 	}
 }
 
-func (ec *executionContext) fieldContext_Subscription_onKPIFulfillmentChecked(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Subscription_onKPIFulfillmentChecked(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
 		Field:      field,
@@ -5208,7 +5208,7 @@ func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Directive_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Directive_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
 		Field:      field,
@@ -5249,7 +5249,7 @@ func (ec *executionContext) ___Directive_description(ctx context.Context, field 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Directive_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Directive_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
 		Field:      field,
@@ -5293,7 +5293,7 @@ func (ec *executionContext) ___Directive_locations(ctx context.Context, field gr
 	return ec.marshalN__DirectiveLocation2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Directive_locations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Directive_locations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
 		Field:      field,
@@ -5337,7 +5337,7 @@ func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql
 	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Directive_args(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Directive_args(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
 		Field:      field,
@@ -5391,7 +5391,7 @@ func (ec *executionContext) ___Directive_isRepeatable(ctx context.Context, field
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Directive_isRepeatable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Directive_isRepeatable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Directive",
 		Field:      field,
@@ -5435,7 +5435,7 @@ func (ec *executionContext) ___EnumValue_name(ctx context.Context, field graphql
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___EnumValue_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___EnumValue_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__EnumValue",
 		Field:      field,
@@ -5476,7 +5476,7 @@ func (ec *executionContext) ___EnumValue_description(ctx context.Context, field 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___EnumValue_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___EnumValue_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__EnumValue",
 		Field:      field,
@@ -5520,7 +5520,7 @@ func (ec *executionContext) ___EnumValue_isDeprecated(ctx context.Context, field
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___EnumValue_isDeprecated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___EnumValue_isDeprecated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__EnumValue",
 		Field:      field,
@@ -5561,7 +5561,7 @@ func (ec *executionContext) ___EnumValue_deprecationReason(ctx context.Context, 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___EnumValue_deprecationReason(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___EnumValue_deprecationReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__EnumValue",
 		Field:      field,
@@ -5605,7 +5605,7 @@ func (ec *executionContext) ___Field_name(ctx context.Context, field graphql.Col
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -5646,7 +5646,7 @@ func (ec *executionContext) ___Field_description(ctx context.Context, field grap
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -5690,7 +5690,7 @@ func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.Col
 	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_args(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_args(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -5744,7 +5744,7 @@ func (ec *executionContext) ___Field_type(ctx context.Context, field graphql.Col
 	return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -5810,7 +5810,7 @@ func (ec *executionContext) ___Field_isDeprecated(ctx context.Context, field gra
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_isDeprecated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_isDeprecated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -5851,7 +5851,7 @@ func (ec *executionContext) ___Field_deprecationReason(ctx context.Context, fiel
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Field_deprecationReason(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Field_deprecationReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Field",
 		Field:      field,
@@ -5895,7 +5895,7 @@ func (ec *executionContext) ___InputValue_name(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___InputValue_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___InputValue_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__InputValue",
 		Field:      field,
@@ -5936,7 +5936,7 @@ func (ec *executionContext) ___InputValue_description(ctx context.Context, field
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___InputValue_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___InputValue_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__InputValue",
 		Field:      field,
@@ -5980,7 +5980,7 @@ func (ec *executionContext) ___InputValue_type(ctx context.Context, field graphq
 	return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___InputValue_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___InputValue_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__InputValue",
 		Field:      field,
@@ -6043,7 +6043,7 @@ func (ec *executionContext) ___InputValue_defaultValue(ctx context.Context, fiel
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___InputValue_defaultValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___InputValue_defaultValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__InputValue",
 		Field:      field,
@@ -6084,7 +6084,7 @@ func (ec *executionContext) ___Schema_description(ctx context.Context, field gra
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Schema_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Schema_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
 		Field:      field,
@@ -6128,7 +6128,7 @@ func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.C
 	return ec.marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Schema_types(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Schema_types(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
 		Field:      field,
@@ -6194,7 +6194,7 @@ func (ec *executionContext) ___Schema_queryType(ctx context.Context, field graph
 	return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Schema_queryType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Schema_queryType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
 		Field:      field,
@@ -6257,7 +6257,7 @@ func (ec *executionContext) ___Schema_mutationType(ctx context.Context, field gr
 	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Schema_mutationType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Schema_mutationType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
 		Field:      field,
@@ -6320,7 +6320,7 @@ func (ec *executionContext) ___Schema_subscriptionType(ctx context.Context, fiel
 	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Schema_subscriptionType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Schema_subscriptionType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
 		Field:      field,
@@ -6386,7 +6386,7 @@ func (ec *executionContext) ___Schema_directives(ctx context.Context, field grap
 	return ec.marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Schema_directives(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Schema_directives(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Schema",
 		Field:      field,
@@ -6442,7 +6442,7 @@ func (ec *executionContext) ___Type_kind(ctx context.Context, field graphql.Coll
 	return ec.marshalN__TypeKind2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_kind(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_kind(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -6483,7 +6483,7 @@ func (ec *executionContext) ___Type_name(ctx context.Context, field graphql.Coll
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -6524,7 +6524,7 @@ func (ec *executionContext) ___Type_description(ctx context.Context, field graph
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -6631,7 +6631,7 @@ func (ec *executionContext) ___Type_interfaces(ctx context.Context, field graphq
 	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_interfaces(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_interfaces(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -6694,7 +6694,7 @@ func (ec *executionContext) ___Type_possibleTypes(ctx context.Context, field gra
 	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_possibleTypes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_possibleTypes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -6819,7 +6819,7 @@ func (ec *executionContext) ___Type_inputFields(ctx context.Context, field graph
 	return ec.marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_inputFields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_inputFields(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -6870,7 +6870,7 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_ofType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_ofType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -6933,7 +6933,7 @@ func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field gr
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext___Type_specifiedByURL(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "__Type",
 		Field:      field,
@@ -8782,6 +8782,10 @@ func (ec *executionContext) marshalNKPIDefinition2ᚖgithubᚗcomᚋMichalBures�
 func (ec *executionContext) unmarshalNKPIDefinitionInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIDefinitionInput(ctx context.Context, v interface{}) (model.KPIDefinitionInput, error) {
 	res, err := ec.unmarshalInputKPIDefinitionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNKPIFulfillmentCheckResult2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIFulfillmentCheckResult(ctx context.Context, sel ast.SelectionSet, v model.KPIFulfillmentCheckResult) graphql.Marshaler {
+	return ec._KPIFulfillmentCheckResult(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNKPIFulfillmentCheckResult2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIFulfillmentCheckResultᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.KPIFulfillmentCheckResult) graphql.Marshaler {
