@@ -32,13 +32,13 @@ type RelationalDatabaseClient interface {
 	DeleteSDType(id uint32) error
 	PersistSDInstance(sdInstanceDTO types.SDInstanceDTO) cUtil.Result[uint32] // TODO: Is ID enough?
 	LoadSDInstance(id uint32) cUtil.Result[types.SDInstanceDTO]
+	LoadSDInstanceBasedOnUID(uid string) cUtil.Result[cUtil.Optional[types.SDInstanceDTO]]
 	DoesSDInstanceExist(uid string) cUtil.Result[bool]
 	LoadSDInstances() cUtil.Result[[]types.SDInstanceDTO]
 	DeleteSDInstance(id uint32) error
-	PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResultDTO types.KPIFulfillmentCheckResultDTO) cUtil.Result[uint32] // TODO: Is ID enough?
-	LoadKPIFulFulfillmentCheckResult(id uint32) cUtil.Result[types.KPIFulfillmentCheckResultDTO]
+	PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResultDTO types.KPIFulfillmentCheckResultDTO) error
+	LoadKPIFulFulfillmentCheckResult(kpiDefinitionID uint32, sdInstanceID uint32) cUtil.Result[cUtil.Optional[types.KPIFulfillmentCheckResultDTO]]
 	LoadKPIFulFulfillmentCheckResults() cUtil.Result[[]types.KPIFulfillmentCheckResultDTO]
-	DeleteKPIFulFulfillmentCheckResult(id uint32) error
 }
 
 type relationalDatabaseClientImpl struct {
@@ -63,7 +63,7 @@ func (r *relationalDatabaseClientImpl) ConnectToDatabase() error {
 		return err
 	}
 	session := new(gorm.Session)
-	session.Logger = logger.Default.LogMode(logger.Silent)
+	session.Logger = logger.Default.LogMode(logger.Info)
 	r.db = db.Session(session)
 	return nil
 }
@@ -121,7 +121,7 @@ func (r *relationalDatabaseClientImpl) LoadKPIDefinition(id uint32) cUtil.Result
 }
 
 func (r *relationalDatabaseClientImpl) LoadKPIDefinitions() cUtil.Result[[]kpi.DefinitionDTO] {
-	kpiDefinitionEntitiesLoadResult := LoadEntitiesFromDB[schema.KPIDefinitionEntity](r.db, PreloadPath("SDType"))
+	kpiDefinitionEntitiesLoadResult := LoadEntitiesFromDB[schema.KPIDefinitionEntity](r.db, PreloadPaths("SDType"))
 	if kpiDefinitionEntitiesLoadResult.IsFailure() {
 		err := fmt.Errorf("failed to load KPI definition entities from the database: %w", kpiDefinitionEntitiesLoadResult.GetError())
 		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](err)
@@ -139,7 +139,7 @@ func (r *relationalDatabaseClientImpl) LoadKPIDefinitions() cUtil.Result[[]kpi.D
 		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](err)
 	}
 	logicalOperationKPINodeEntities := logicalOperationKPINodeEntitiesLoadResult.GetPayload()
-	atomKPINodeEntitiesLoadResult := LoadEntitiesFromDB[schema.AtomKPINodeEntity](r.db, PreloadPath("SDParameter"))
+	atomKPINodeEntitiesLoadResult := LoadEntitiesFromDB[schema.AtomKPINodeEntity](r.db, PreloadPaths("SDParameter"))
 	if atomKPINodeEntitiesLoadResult.IsFailure() {
 		err := fmt.Errorf("failed to load atom KPI node entities from the database: %w", atomKPINodeEntitiesLoadResult.GetError())
 		return cUtil.NewFailureResult[[]kpi.DefinitionDTO](err)
@@ -206,7 +206,7 @@ func (r *relationalDatabaseClientImpl) PersistSDType(sdTypeDTO types.SDTypeDTO) 
 }
 
 func loadSDType(g *gorm.DB, whereClause WhereClausePair) cUtil.Result[types.SDTypeDTO] {
-	sdTypeEntityLoadResult := LoadEntityFromDB[schema.SDTypeEntity](g, PreloadPath("Parameters"), whereClause)
+	sdTypeEntityLoadResult := LoadEntityFromDB[schema.SDTypeEntity](g, PreloadPaths("Parameters"), whereClause)
 	if sdTypeEntityLoadResult.IsFailure() {
 		return cUtil.NewFailureResult[types.SDTypeDTO](sdTypeEntityLoadResult.GetError())
 	}
@@ -222,7 +222,7 @@ func (r *relationalDatabaseClientImpl) LoadSDTypeBasedOnDenotation(denotation st
 }
 
 func (r *relationalDatabaseClientImpl) LoadSDTypes() cUtil.Result[[]types.SDTypeDTO] {
-	sdTypeEntitiesLoadResult := LoadEntitiesFromDB[schema.SDTypeEntity](r.db, PreloadPath("Parameters"))
+	sdTypeEntitiesLoadResult := LoadEntitiesFromDB[schema.SDTypeEntity](r.db, PreloadPaths("Parameters"))
 	if sdTypeEntitiesLoadResult.IsFailure() {
 		return cUtil.NewFailureResult[[]types.SDTypeDTO](sdTypeEntitiesLoadResult.GetError())
 	}
@@ -258,11 +258,24 @@ func (r *relationalDatabaseClientImpl) PersistSDInstance(sdInstanceDTO types.SDI
 }
 
 func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) cUtil.Result[types.SDInstanceDTO] {
-	sdInstanceEntityLoadResult := LoadEntityFromDB[schema.SDInstanceEntity](r.db, PreloadPath("SDType"), WhereClause("id = ?", id))
+	sdInstanceEntityLoadResult := LoadEntityFromDB[schema.SDInstanceEntity](r.db, PreloadPaths("SDType"), WhereClause("id = ?", id))
 	if sdInstanceEntityLoadResult.IsFailure() {
 		return cUtil.NewFailureResult[types.SDInstanceDTO](sdInstanceEntityLoadResult.GetError())
 	}
 	return cUtil.NewSuccessResult[types.SDInstanceDTO](db2dto.SDInstanceEntityToSDInstanceDTO(sdInstanceEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) LoadSDInstanceBasedOnUID(uid string) cUtil.Result[cUtil.Optional[types.SDInstanceDTO]] {
+	sdInstanceEntityLoadResult := LoadEntityFromDB[schema.SDInstanceEntity](r.db, PreloadPaths("SDType"), WhereClause("uid = ?", uid))
+	if sdInstanceEntityLoadResult.IsFailure() {
+		err := sdInstanceEntityLoadResult.GetError()
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return cUtil.NewSuccessResult[cUtil.Optional[types.SDInstanceDTO]](cUtil.NewEmptyOptional[types.SDInstanceDTO]())
+		} else {
+			return cUtil.NewFailureResult[cUtil.Optional[types.SDInstanceDTO]](err)
+		}
+	}
+	return cUtil.NewSuccessResult[cUtil.Optional[types.SDInstanceDTO]](cUtil.NewOptionalOf(db2dto.SDInstanceEntityToSDInstanceDTO(sdInstanceEntityLoadResult.GetPayload())))
 }
 
 func (r *relationalDatabaseClientImpl) DoesSDInstanceExist(uid string) cUtil.Result[bool] {
@@ -270,7 +283,7 @@ func (r *relationalDatabaseClientImpl) DoesSDInstanceExist(uid string) cUtil.Res
 }
 
 func (r *relationalDatabaseClientImpl) LoadSDInstances() cUtil.Result[[]types.SDInstanceDTO] {
-	sdInstanceEntitiesLoadResult := LoadEntitiesFromDB[schema.SDInstanceEntity](r.db, PreloadPath("SDType"))
+	sdInstanceEntitiesLoadResult := LoadEntitiesFromDB[schema.SDInstanceEntity](r.db, PreloadPaths("SDType"))
 	if sdInstanceEntitiesLoadResult.IsFailure() {
 		return cUtil.NewFailureResult[[]types.SDInstanceDTO](sdInstanceEntitiesLoadResult.GetError())
 	}
@@ -282,46 +295,28 @@ func (r *relationalDatabaseClientImpl) DeleteSDInstance(id uint32) error {
 	return errors.New("[rdb client] not implemented")
 }
 
-func (r *relationalDatabaseClientImpl) PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResultDTO types.KPIFulfillmentCheckResultDTO) cUtil.Result[uint32] {
+func (r *relationalDatabaseClientImpl) PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResultDTO types.KPIFulfillmentCheckResultDTO) error {
 	kpiFulfillmentCheckEntity := dto2db.KPIFulfillmentCheckResultDTOToKPIFulfillmentCheckResultEntity(kpiFulfillmentCheckResultDTO)
-	if err := PersistEntityIntoDB(r.db, &kpiFulfillmentCheckEntity); err != nil {
-		return cUtil.NewFailureResult[uint32](err)
-	}
-	return cUtil.NewSuccessResult[uint32](kpiFulfillmentCheckEntity.ID)
+	return PersistEntityIntoDB(r.db, &kpiFulfillmentCheckEntity)
 }
 
-func (r *relationalDatabaseClientImpl) LoadKPIFulFulfillmentCheckResult(id uint32) cUtil.Result[types.KPIFulfillmentCheckResultDTO] {
-	// TODO: Implement
-	return cUtil.NewFailureResult[types.KPIFulfillmentCheckResultDTO](errors.New("[rdb client] not implemented"))
+func (r *relationalDatabaseClientImpl) LoadKPIFulFulfillmentCheckResult(kpiDefinitionID uint32, sdInstanceID uint32) cUtil.Result[cUtil.Optional[types.KPIFulfillmentCheckResultDTO]] {
+	kpiFulFulfillmentCheckResultEntityLoadResult := LoadEntityFromDB[schema.KPIFulfillmentCheckResultEntity](r.db, WhereClause("kpi_definition_id = ? and sd_instance_id = ?", kpiDefinitionID, sdInstanceID))
+	if kpiFulFulfillmentCheckResultEntityLoadResult.IsFailure() {
+		err := kpiFulFulfillmentCheckResultEntityLoadResult.GetError()
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return cUtil.NewSuccessResult[cUtil.Optional[types.KPIFulfillmentCheckResultDTO]](cUtil.NewEmptyOptional[types.KPIFulfillmentCheckResultDTO]())
+		} else {
+			return cUtil.NewFailureResult[cUtil.Optional[types.KPIFulfillmentCheckResultDTO]](err)
+		}
+	}
+	return cUtil.NewSuccessResult[cUtil.Optional[types.KPIFulfillmentCheckResultDTO]](cUtil.NewOptionalOf(db2dto.KPIFulfillmentCheckResultEntityToKPIFulfillmentCheckResultDTO(kpiFulFulfillmentCheckResultEntityLoadResult.GetPayload())))
 }
 
 func (r *relationalDatabaseClientImpl) LoadKPIFulFulfillmentCheckResults() cUtil.Result[[]types.KPIFulfillmentCheckResultDTO] {
-	kpiFulFulfillmentCheckResultEntitiesLoadResult := LoadEntitiesFromDB[schema.KPIFulfillmentCheckResultEntity](r.db, PreloadPath("SDInstance.SDType.Parameters"), PreloadPath("KPIDefinition"))
+	kpiFulFulfillmentCheckResultEntitiesLoadResult := LoadEntitiesFromDB[schema.KPIFulfillmentCheckResultEntity](r.db)
 	if kpiFulFulfillmentCheckResultEntitiesLoadResult.IsFailure() {
 		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](kpiFulFulfillmentCheckResultEntitiesLoadResult.GetError())
 	}
-	kpiFulFulfillmentCheckResultEntities := kpiFulFulfillmentCheckResultEntitiesLoadResult.GetPayload()
-	kpiNodeEntitiesLoadResult := LoadEntitiesFromDB[schema.KPINodeEntity](r.db)
-	if kpiNodeEntitiesLoadResult.IsFailure() {
-		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](kpiNodeEntitiesLoadResult.GetError())
-	}
-	kpiNodeEntities := kpiNodeEntitiesLoadResult.GetPayload()
-	logicalOperationKPINodeEntitiesLoadResult := LoadEntitiesFromDB[schema.LogicalOperationKPINodeEntity](r.db)
-	if logicalOperationKPINodeEntitiesLoadResult.IsFailure() {
-		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](logicalOperationKPINodeEntitiesLoadResult.GetError())
-	}
-	logicalOperationKPINodeEntities := logicalOperationKPINodeEntitiesLoadResult.GetPayload()
-	atomKPINodeEntitiesLoadResult := LoadEntitiesFromDB[schema.AtomKPINodeEntity](r.db)
-	if atomKPINodeEntitiesLoadResult.IsFailure() {
-		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](atomKPINodeEntitiesLoadResult.GetError())
-	}
-	atomKPINodeEntities := atomKPINodeEntitiesLoadResult.GetPayload()
-	return cUtil.NewSuccessResult[[]types.KPIFulfillmentCheckResultDTO](cUtil.Map(kpiFulFulfillmentCheckResultEntities, func(kpiFulfillmentCheckResultEntity schema.KPIFulfillmentCheckResultEntity) types.KPIFulfillmentCheckResultDTO {
-		return db2dto.KPIFulfillmentCheckResultEntityToKPIFulfillmentCheckResultDTO(kpiFulfillmentCheckResultEntity, kpiNodeEntities, logicalOperationKPINodeEntities, atomKPINodeEntities)
-	}))
-}
-
-func (r *relationalDatabaseClientImpl) DeleteKPIFulFulfillmentCheckResult(id uint32) error {
-	// TODO: Implement
-	return errors.New("[rdb client] not implemented")
+	return cUtil.NewSuccessResult[[]types.KPIFulfillmentCheckResultDTO](cUtil.Map(kpiFulFulfillmentCheckResultEntitiesLoadResult.GetPayload(), db2dto.KPIFulfillmentCheckResultEntityToKPIFulfillmentCheckResultDTO))
 }

@@ -10,13 +10,8 @@ query SDInstancesPageData {
     }
   }
   kpiFulfillmentCheckResults {
-    id
-    kpiDefinition {
-      id
-    }
-    sdInstance {
-      id
-    }
+    kpiDefinitionID
+    sdInstanceID
     fulfilled
   }
   kpiDefinitions {

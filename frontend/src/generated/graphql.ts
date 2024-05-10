@@ -51,9 +51,8 @@ export type KpiDefinitionInput = {
 export type KpiFulfillmentCheckResult = {
   __typename?: 'KPIFulfillmentCheckResult';
   fulfilled: Scalars['Boolean']['output'];
-  id: Scalars['ID']['output'];
-  kpiDefinition: KpiDefinition;
-  sdInstance: SdInstance;
+  kpiDefinitionID: Scalars['ID']['output'];
+  sdInstanceID: Scalars['ID']['output'];
 };
 
 export type KpiNode = {
@@ -328,15 +327,10 @@ export type KpiDefinitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type KpiDefinitionsQuery = { __typename?: 'Query', kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeID: string, sdTypeSpecification: string }> };
 
-export type KpiFulfillmentCheckResultsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type KpiFulfillmentCheckResultsQuery = { __typename?: 'Query', kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', id: string, fulfilled: boolean, kpiDefinition: { __typename?: 'KPIDefinition', id: string, userIdentifier: string }, sdInstance: { __typename?: 'SDInstance', id: string } }> };
-
 export type SdInstancesPageDataQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdInstancesPageDataQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }>, kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', id: string, fulfilled: boolean, kpiDefinition: { __typename?: 'KPIDefinition', id: string }, sdInstance: { __typename?: 'SDInstance', id: string } }>, kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeSpecification: string }> };
+export type SdInstancesPageDataQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }>, kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: string, sdInstanceID: string, fulfilled: boolean }>, kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeSpecification: string }> };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 

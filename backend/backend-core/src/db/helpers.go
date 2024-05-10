@@ -7,14 +7,14 @@ import (
 	"reflect"
 )
 
-type WhereClausePair = cUtil.Pair[string, any]
+type WhereClausePair = cUtil.Pair[string, []any]
 type PreloadPathString = string
 
-func WhereClause(s string, a any) WhereClausePair {
+func WhereClause(s string, a ...any) WhereClausePair {
 	return cUtil.NewPairOf(s, a)
 }
 
-func PreloadPath(s string) PreloadPathString {
+func PreloadPaths(s ...string) []PreloadPathString {
 	return s
 }
 
@@ -23,10 +23,12 @@ func prepareLoadQuery(g *gorm.DB, args ...any) *gorm.DB {
 	cUtil.ForEach(args, func(arg any) {
 		switch typedArg := arg.(type) {
 		case WhereClausePair:
-			query = query.Where(typedArg.GetFirst(), typedArg.GetSecond())
+			query = query.Where(typedArg.GetFirst(), typedArg.GetSecond()...)
 			break
-		case PreloadPathString:
-			query = query.Preload(typedArg)
+		case []PreloadPathString:
+			cUtil.ForEach(typedArg, func(preloadPathString PreloadPathString) {
+				query = query.Preload(preloadPathString)
+			})
 			break
 		default:
 			log.Printf("prepareLoadQuery: unexpected arg type: %s\n", reflect.TypeOf(typedArg).String())
@@ -59,7 +61,7 @@ func DoesSuchEntityExist[T any](g *gorm.DB, whereClauses ...WhereClausePair) cUt
 	entityCount := int64(0)
 	query := g.Model(new(T))
 	cUtil.ForEach(whereClauses, func(whereClause WhereClausePair) {
-		query = query.Where(whereClause.GetFirst(), whereClause.GetSecond())
+		query = query.Where(whereClause.GetFirst(), whereClause.GetSecond()...)
 	})
 	if err := query.Count(&entityCount).Error; err != nil {
 		return cUtil.NewFailureResult[bool](err)
@@ -78,7 +80,7 @@ func DeleteEntitiesBasedOnSliceOfIds[T any](g *gorm.DB, ids []uint32) error {
 func DeleteEntitiesBasedOnWhereClauses[T any](g *gorm.DB, whereClauses ...WhereClausePair) error {
 	query := g
 	cUtil.ForEach(whereClauses, func(whereClause WhereClausePair) {
-		query = query.Where(whereClause.GetFirst(), whereClause.GetSecond())
+		query = query.Where(whereClause.GetFirst(), whereClause.GetSecond()...)
 	})
 	return query.Delete(new(T)).Error
 }

@@ -174,9 +174,8 @@ input KPINodeInput {
 # ----- KPI fulfillment check results -----
 
 type KPIFulfillmentCheckResult {
-  id: ID!
-  kpiDefinition: KPIDefinition!
-  sdInstance: SDInstance!
+  kpiDefinitionID: ID!
+  sdInstanceID: ID!
   fulfilled: Boolean!
 }
 

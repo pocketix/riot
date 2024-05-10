@@ -6,7 +6,6 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/constants"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	cTypes "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
@@ -58,43 +57,36 @@ func CheckForKPIFulfillmentCheckResults() {
 		targetKPIDefinitionID := messagePayload.KPIDefinitionID
 		targetSDInstanceUID := messagePayload.UID
 		fulfilled := messagePayload.Fulfilled
-		kpiFulfillmentCheckResultOptional := util.FindFirst((*db.GetRelationalDatabaseClientInstance()).LoadKPIFulFulfillmentCheckResults().GetPayload(), func(k types.KPIFulfillmentCheckResultDTO) bool {
-			return k.KPIDefinition.ID.GetPayload() == targetKPIDefinitionID && k.SDInstance.UID == targetSDInstanceUID
-		})
-		if kpiFulfillmentCheckResultOptional.IsPresent() {
-			kpiFulfillmentCheckResult := kpiFulfillmentCheckResultOptional.GetPayload()
-			kpiFulfillmentCheckResult.Fulfilled = fulfilled
-			if (*db.GetRelationalDatabaseClientInstance()).PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResult).IsFailure() {
-				return fmt.Errorf("couldn't update KPI fulfillment check result with ID = %d", kpiFulfillmentCheckResult.ID.GetPayload())
+		targetSDInstanceLoadResult := (*db.GetRelationalDatabaseClientInstance()).LoadSDInstanceBasedOnUID(targetSDInstanceUID)
+		if targetSDInstanceLoadResult.IsFailure() {
+			return fmt.Errorf("couldn't load data from database (SD instance with UID = %s): %w", targetSDInstanceUID, targetSDInstanceLoadResult.GetError())
+		}
+		targetSDInstanceOptional := targetSDInstanceLoadResult.GetPayload()
+		if targetSDInstanceOptional.IsEmpty() {
+			return fmt.Errorf("there is no record of SD instance with UID = %s in the database", targetSDInstanceUID)
+		}
+		targetSDInstanceID := targetSDInstanceOptional.GetPayload().ID.GetPayload()
+		existingKPIFulfillmentCheckResultLoadResult := (*db.GetRelationalDatabaseClientInstance()).LoadKPIFulFulfillmentCheckResult(targetKPIDefinitionID, targetSDInstanceID)
+		if existingKPIFulfillmentCheckResultLoadResult.IsFailure() {
+			err := existingKPIFulfillmentCheckResultLoadResult.GetError()
+			return fmt.Errorf("couldn't load data from database (KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d): %w", targetKPIDefinitionID, targetSDInstanceID, err)
+		}
+		existingKPIFulfillmentCheckResultOptional := existingKPIFulfillmentCheckResultLoadResult.GetPayload()
+		if existingKPIFulfillmentCheckResultOptional.IsPresent() {
+			existingKPIFulfillmentCheckResult := existingKPIFulfillmentCheckResultOptional.GetPayload()
+			existingKPIFulfillmentCheckResult.Fulfilled = fulfilled
+			if err := (*db.GetRelationalDatabaseClientInstance()).PersistKPIFulFulfillmentCheckResult(existingKPIFulfillmentCheckResult); err != nil {
+				return fmt.Errorf("couldn't update KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d: %w", targetKPIDefinitionID, targetSDInstanceID, err)
 			}
 			return nil
 		}
-		// TODO: Searching for target KPI definition on service layer (suboptimal)
-		kpiDefinitionsLoadResult := (*db.GetRelationalDatabaseClientInstance()).LoadKPIDefinitions()
-		if kpiDefinitionsLoadResult.IsFailure() {
-			return errors.New("couldn't load KPI definitions")
+		newKPIFulfillmentCheckResult := types.KPIFulfillmentCheckResultDTO{
+			KPIDefinitionID: targetKPIDefinitionID,
+			SDInstanceID:    targetSDInstanceID,
+			Fulfilled:       fulfilled,
 		}
-		targetKPIDefinitionOptional := util.FindFirst(kpiDefinitionsLoadResult.GetPayload(), func(k kpi.DefinitionDTO) bool { return k.ID.GetPayload() == targetKPIDefinitionID })
-		if targetKPIDefinitionOptional.IsEmpty() {
-			return fmt.Errorf("couldn't load database record of KPI definition with ID = %d", targetKPIDefinitionID)
-		}
-		// TODO: Searching for target SD instance on service layer (suboptimal)
-		sdInstancesLoadResult := (*db.GetRelationalDatabaseClientInstance()).LoadSDInstances()
-		if sdInstancesLoadResult.IsFailure() {
-			return errors.New("couldn't load SD instances")
-		}
-		targetSDInstanceOptional := util.FindFirst(sdInstancesLoadResult.GetPayload(), func(s types.SDInstanceDTO) bool { return s.UID == targetSDInstanceUID })
-		if targetSDInstanceOptional.IsEmpty() {
-			return fmt.Errorf("couldn't load database record of SD instance with UID = %s", targetSDInstanceUID)
-		}
-		kpiFulfillmentCheckResultDTO := types.KPIFulfillmentCheckResultDTO{
-			ID:            util.NewEmptyOptional[uint32](),
-			KPIDefinition: targetKPIDefinitionOptional.GetPayload(),
-			SDInstance:    targetSDInstanceOptional.GetPayload(),
-			Fulfilled:     fulfilled,
-		}
-		if (*db.GetRelationalDatabaseClientInstance()).PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResultDTO).IsFailure() {
-			return errors.New("couldn't persist the KPI fulfillment check result")
+		if err := (*db.GetRelationalDatabaseClientInstance()).PersistKPIFulFulfillmentCheckResult(newKPIFulfillmentCheckResult); err != nil {
+			return fmt.Errorf("couldn't persist KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d: %w", targetKPIDefinitionID, targetSDInstanceID, err)
 		}
 		return nil
 	})

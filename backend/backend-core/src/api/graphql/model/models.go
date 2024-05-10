@@ -62,10 +62,9 @@ type KPIDefinitionInput struct {
 }
 
 type KPIFulfillmentCheckResult struct {
-	ID            string         `json:"id"`
-	KpiDefinition *KPIDefinition `json:"kpiDefinition"`
-	SdInstance    *SDInstance    `json:"sdInstance"`
-	Fulfilled     bool           `json:"fulfilled"`
+	KpiDefinitionID string `json:"kpiDefinitionID"`
+	SdInstanceID    string `json:"sdInstanceID"`
+	Fulfilled       bool   `json:"fulfilled"`
 }
 
 type KPINodeInput struct {

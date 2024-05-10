@@ -21,7 +21,7 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
   const [userIdentifier, setUserIdentifier] = useState<string>(props.userIdentifier)
 
   const fulfillmentCheckResults = useMemo(() => {
-    return props.sdInstancePageData.kpiFulfillmentCheckResults.filter((kpiFulfillmentCheckResult) => kpiFulfillmentCheckResult.sdInstance.id === props.id)
+    return props.sdInstancePageData.kpiFulfillmentCheckResults.filter((kpiFulfillmentCheckResult) => kpiFulfillmentCheckResult.sdInstanceID === props.id)
   }, [props.sdInstancePageData.kpiFulfillmentCheckResults, props.id])
 
   const kpiDefinitions = useMemo(() => {
@@ -32,7 +32,7 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
 
   const kpiDefinitionFulfillmentMap: { [key: string]: boolean | null } = useMemo(() => {
     return kpiDefinitions.reduce((map, kpiDefinition) => {
-      const result = fulfillmentCheckResults.find((result) => result.kpiDefinition.id === kpiDefinition.id)
+      const result = fulfillmentCheckResults.find((result) => result.kpiDefinitionID === kpiDefinition.id)
       map[kpiDefinition.id] = result?.fulfilled ?? null
       return map
     }, {})

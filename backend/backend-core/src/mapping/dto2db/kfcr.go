@@ -7,9 +7,8 @@ import (
 
 func KPIFulfillmentCheckResultDTOToKPIFulfillmentCheckResultEntity(kpiFulfillmentCheckResultDTO types.KPIFulfillmentCheckResultDTO) schema.KPIFulfillmentCheckResultEntity {
 	return schema.KPIFulfillmentCheckResultEntity{
-		ID:              kpiFulfillmentCheckResultDTO.ID.GetPayloadOrDefault(0),
-		KPIDefinitionID: kpiFulfillmentCheckResultDTO.KPIDefinition.ID.GetPayloadOrDefault(0),
-		SDInstanceID:    kpiFulfillmentCheckResultDTO.SDInstance.ID.GetPayloadOrDefault(0),
+		KPIDefinitionID: kpiFulfillmentCheckResultDTO.KPIDefinitionID,
+		SDInstanceID:    kpiFulfillmentCheckResultDTO.SDInstanceID,
 		Fulfilled:       kpiFulfillmentCheckResultDTO.Fulfilled,
 	}
 }

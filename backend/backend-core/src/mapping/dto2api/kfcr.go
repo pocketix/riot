@@ -8,9 +8,8 @@ import (
 
 func KPIFulfillmentCheckResultDTOToKPIFulfillmentCheckResult(kpiFulfillmentCheckResultDTO types.KPIFulfillmentCheckResultDTO) *model.KPIFulfillmentCheckResult {
 	return &model.KPIFulfillmentCheckResult{
-		ID:            util.UINT32ToString(kpiFulfillmentCheckResultDTO.ID.GetPayload()),
-		KpiDefinition: KPIDefinitionDTOToKPIDefinition(kpiFulfillmentCheckResultDTO.KPIDefinition),
-		SdInstance:    SDInstanceDTOToSDInstance(kpiFulfillmentCheckResultDTO.SDInstance),
-		Fulfilled:     kpiFulfillmentCheckResultDTO.Fulfilled,
+		KpiDefinitionID: util.UINT32ToString(kpiFulfillmentCheckResultDTO.KPIDefinitionID),
+		SdInstanceID:    util.UINT32ToString(kpiFulfillmentCheckResultDTO.SDInstanceID),
+		Fulfilled:       kpiFulfillmentCheckResultDTO.Fulfilled,
 	}
 }

@@ -1,7 +1,7 @@
 package schema
 
 type KPIDefinitionEntity struct {
-	ID             uint32         `gorm:"column:id;primarykey"`
+	ID             uint32         `gorm:"column:id;primaryKey"`
 	UserIdentifier string         `gorm:"column:user_identifier;not null"`
 	RootNodeID     *uint32        `gorm:"column:root_node_id;not null"`
 	RootNode       *KPINodeEntity `gorm:"foreignKey:RootNodeID;constraint:OnDelete:CASCADE"`
@@ -14,7 +14,7 @@ func (KPIDefinitionEntity) TableName() string {
 }
 
 type KPINodeEntity struct {
-	ID           uint32         `gorm:"column:id;primarykey;not null"`
+	ID           uint32         `gorm:"column:id;primaryKey;not null"`
 	ParentNodeID *uint32        `gorm:"column:parent_node_id"`
 	ParentNode   *KPINodeEntity `gorm:"foreignKey:ParentNodeID;constraint:OnDelete:CASCADE"`
 }
@@ -24,7 +24,7 @@ func (KPINodeEntity) TableName() string {
 }
 
 type LogicalOperationKPINodeEntity struct {
-	NodeID *uint32        `gorm:"column:node_id;primarykey;not null"`
+	NodeID *uint32        `gorm:"column:node_id;primaryKey;not null"`
 	Node   *KPINodeEntity `gorm:"foreignKey:NodeID;constraint:OnDelete:CASCADE"`
 	Type   string         `gorm:"column:type;not null"`
 }
@@ -34,7 +34,7 @@ func (LogicalOperationKPINodeEntity) TableName() string {
 }
 
 type AtomKPINodeEntity struct {
-	NodeID                *uint32           `gorm:"column:node_id;primarykey;not null"`
+	NodeID                *uint32           `gorm:"column:node_id;primaryKey;not null"`
 	Node                  *KPINodeEntity    `gorm:"foreignKey:NodeID;constraint:OnDelete:CASCADE"`
 	SDParameterID         uint32            `gorm:"column:sd_parameter_id;not null"`
 	SDParameter           SDParameterEntity `gorm:"foreignKey:SDParameterID;constraint:OnDelete:CASCADE"`
@@ -49,7 +49,7 @@ func (AtomKPINodeEntity) TableName() string {
 }
 
 type SDTypeEntity struct {
-	ID         uint32              `gorm:"column:id;primarykey;not null"`
+	ID         uint32              `gorm:"column:id;primaryKey;not null"`
 	Denotation string              `gorm:"column:denotation;not null;index"` // Denotation is an indexed field
 	Parameters []SDParameterEntity `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
 }
@@ -59,7 +59,7 @@ func (SDTypeEntity) TableName() string {
 }
 
 type SDParameterEntity struct {
-	ID         uint32 `gorm:"column:id;primarykey;not null"`
+	ID         uint32 `gorm:"column:id;primaryKey;not null"`
 	SDTypeID   uint32 `gorm:"column:sd_type_id;not null"`
 	Denotation string `gorm:"column:denotation;not null"`
 	Type       string `gorm:"column:type;not null"`
@@ -70,7 +70,7 @@ func (SDParameterEntity) TableName() string {
 }
 
 type SDInstanceEntity struct {
-	ID              uint32       `gorm:"column:id;primarykey;not null"`
+	ID              uint32       `gorm:"column:id;primaryKey;not null"`
 	UID             string       `gorm:"column:uid;not null;index"` // UID is an indexed field
 	ConfirmedByUser bool         `gorm:"column:confirmed_by_user;not null"`
 	UserIdentifier  string       `gorm:"column:user_identifier;not null"`
@@ -83,12 +83,9 @@ func (SDInstanceEntity) TableName() string {
 }
 
 type KPIFulfillmentCheckResultEntity struct {
-	ID              uint32              `gorm:"column:id;primarykey"`
-	KPIDefinitionID uint32              `gorm:"column:kpi_definition_id;not null"`
-	KPIDefinition   KPIDefinitionEntity `gorm:"foreignKey:KPIDefinitionID;constraint:OnDelete:CASCADE"`
-	SDInstanceID    uint32              `gorm:"column:sd_instance_id;not null"`
-	SDInstance      SDInstanceEntity    `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
-	Fulfilled       bool                `gorm:"column:fulfilled;not null"`
+	KPIDefinitionID uint32 `gorm:"column:kpi_definition_id;primaryKey;not null;constraint:OnDelete:CASCADE"`
+	SDInstanceID    uint32 `gorm:"column:sd_instance_id;primaryKey;not null;constraint:OnDelete:CASCADE"`
+	Fulfilled       bool   `gorm:"column:fulfilled;not null"`
 }
 
 func (KPIFulfillmentCheckResultEntity) TableName() string {
