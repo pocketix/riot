@@ -104,11 +104,17 @@ const SDInstancesPageController: React.FC = () => {
     setCombinedSDInstancesPageData((combinedSDInstancesPageData) =>
       produce(combinedSDInstancesPageData, (draftCombinedSDInstancesPageData) => {
         const { kpiDefinitionID, sdInstanceID, fulfilled } = onKPIFulfillmentCheckedData.onKPIFulfillmentChecked
-        draftCombinedSDInstancesPageData.kpiFulfillmentCheckResults.push({
-          kpiDefinitionID: kpiDefinitionID,
-          sdInstanceID: sdInstanceID,
-          fulfilled: fulfilled
-        })
+        const kpiFulfillmentCheckResultIndex = draftCombinedSDInstancesPageData.kpiFulfillmentCheckResults.findIndex((k) => k.kpiDefinitionID === kpiDefinitionID && k.sdInstanceID === sdInstanceID)
+        const kpiFulfillmentCheckResult = {
+          kpiDefinitionID,
+          sdInstanceID,
+          fulfilled
+        }
+        if (kpiFulfillmentCheckResultIndex !== -1) {
+          draftCombinedSDInstancesPageData.kpiFulfillmentCheckResults[kpiFulfillmentCheckResultIndex] = kpiFulfillmentCheckResult
+        } else {
+          draftCombinedSDInstancesPageData.kpiFulfillmentCheckResults.push(kpiFulfillmentCheckResult)
+        }
       })
     )
   }, [onKPIFulfillmentCheckedData])
