@@ -3,7 +3,9 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2api"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/constants"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
@@ -19,7 +21,7 @@ func SetupRabbitMQClient() {
 	rabbitMQClient = client
 }
 
-func CheckForSDInstanceRegistrationRequests() {
+func CheckForSDInstanceRegistrationRequests(sdInstanceChannel *chan *model.SDInstance) {
 	err := rabbitmq.ConsumeJSONMessages(rabbitMQClient, constants.SDInstanceRegistrationRequestsQueueName, func(messagePayload cTypes.RequestForSDInstanceRegistration) error {
 		sd := messagePayload.SD
 		uid := sd.UID
@@ -42,9 +44,12 @@ func CheckForSDInstanceRegistrationRequests() {
 			UserIdentifier:  uid,
 			SDType:          sdTypeLoadResult.GetPayload(),
 		}
-		if (*db.GetRelationalDatabaseClientInstance()).PersistSDInstance(sdInstanceDTO).IsFailure() {
+		sdInstancePersistResult := (*db.GetRelationalDatabaseClientInstance()).PersistSDInstance(sdInstanceDTO)
+		if sdInstancePersistResult.IsFailure() {
 			return errors.New("couldn't persist the SD instance")
 		}
+		sdInstanceDTO.ID = util.NewOptionalOf(sdInstancePersistResult.GetPayload())
+		*sdInstanceChannel <- dto2api.SDInstanceDTOToSDInstance(sdInstanceDTO)
 		return nil
 	})
 	if err != nil {

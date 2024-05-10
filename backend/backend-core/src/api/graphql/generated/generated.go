@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -40,6 +41,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	Subscription() SubscriptionResolver
 }
 
 type DirectiveRoot struct {
@@ -167,6 +169,11 @@ type ComplexityRoot struct {
 		SdParameterSpecification func(childComplexity int) int
 		StringReferenceValue     func(childComplexity int) int
 	}
+
+	Subscription struct {
+		OnKPIFulfillmentChecked func(childComplexity int) int
+		OnSDInstanceRegistered  func(childComplexity int) int
+	}
 }
 
 type MutationResolver interface {
@@ -184,6 +191,10 @@ type QueryResolver interface {
 	KpiDefinition(ctx context.Context, id string) (*model.KPIDefinition, error)
 	KpiDefinitions(ctx context.Context) ([]*model.KPIDefinition, error)
 	KpiFulfillmentCheckResults(ctx context.Context) ([]*model.KPIFulfillmentCheckResult, error)
+}
+type SubscriptionResolver interface {
+	OnSDInstanceRegistered(ctx context.Context) (<-chan *model.SDInstance, error)
+	OnKPIFulfillmentChecked(ctx context.Context) (<-chan []*model.KPIFulfillmentCheckResult, error)
 }
 
 type executableSchema struct {
@@ -784,6 +795,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.StringEQAtomKPINode.StringReferenceValue(childComplexity), true
 
+	case "Subscription.onKPIFulfillmentChecked":
+		if e.complexity.Subscription.OnKPIFulfillmentChecked == nil {
+			break
+		}
+
+		return e.complexity.Subscription.OnKPIFulfillmentChecked(childComplexity), true
+
+	case "Subscription.onSDInstanceRegistered":
+		if e.complexity.Subscription.OnSDInstanceRegistered == nil {
+			break
+		}
+
+		return e.complexity.Subscription.OnSDInstanceRegistered(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -840,6 +865,23 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
 			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
 			var buf bytes.Buffer
+			data.MarshalGQL(&buf)
+
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
+		}
+	case ast.Subscription:
+		next := ec._Subscription(ctx, rc.Operation.SelectionSet)
+
+		var buf bytes.Buffer
+		return func(ctx context.Context) *graphql.Response {
+			buf.Reset()
+			data := next(ctx)
+
+			if data == nil {
+				return nil
+			}
 			data.MarshalGQL(&buf)
 
 			return &graphql.Response{
@@ -1075,7 +1117,7 @@ type KPIFulfillmentCheckResult {
   fulfilled: Boolean!
 }
 
-# ----- Queries and Mutations -----
+# ----- Queries, Mutations and Subscriptions -----
 
 type Query {
   sdType(id: ID!): SDType!
@@ -1093,6 +1135,11 @@ type Mutation {
   createKPIDefinition(input: KPIDefinitionInput!): KPIDefinition!
   updateKPIDefinition(id: ID!, input: KPIDefinitionInput!): KPIDefinition!
   deleteKPIDefinition(id: ID!): Boolean!
+}
+
+type Subscription {
+  onSDInstanceRegistered: SDInstance!
+  onKPIFulfillmentChecked: [KPIFulfillmentCheckResult!]!
 }
 `, BuiltIn: false},
 }
@@ -4994,6 +5041,142 @@ func (ec *executionContext) fieldContext_StringEQAtomKPINode_stringReferenceValu
 	return fc, nil
 }
 
+func (ec *executionContext) _Subscription_onSDInstanceRegistered(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_onSDInstanceRegistered(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().OnSDInstanceRegistered(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan *model.SDInstance):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNSDInstance2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstance(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_onSDInstanceRegistered(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SDInstance_id(ctx, field)
+			case "uid":
+				return ec.fieldContext_SDInstance_uid(ctx, field)
+			case "confirmedByUser":
+				return ec.fieldContext_SDInstance_confirmedByUser(ctx, field)
+			case "userIdentifier":
+				return ec.fieldContext_SDInstance_userIdentifier(ctx, field)
+			case "type":
+				return ec.fieldContext_SDInstance_type(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SDInstance", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_onKPIFulfillmentChecked(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_onKPIFulfillmentChecked(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().OnKPIFulfillmentChecked(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan []*model.KPIFulfillmentCheckResult):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNKPIFulfillmentCheckResult2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIFulfillmentCheckResultᚄ(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_onKPIFulfillmentChecked(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "kpiDefinitionID":
+				return ec.fieldContext_KPIFulfillmentCheckResult_kpiDefinitionID(ctx, field)
+			case "sdInstanceID":
+				return ec.fieldContext_KPIFulfillmentCheckResult_sdInstanceID(ctx, field)
+			case "fulfilled":
+				return ec.fieldContext_KPIFulfillmentCheckResult_fulfilled(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KPIFulfillmentCheckResult", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext___Directive_name(ctx, field)
 	if err != nil {
@@ -8143,6 +8326,28 @@ func (ec *executionContext) _StringEQAtomKPINode(ctx context.Context, sel ast.Se
 	}
 
 	return out
+}
+
+var subscriptionImplementors = []string{"Subscription"}
+
+func (ec *executionContext) _Subscription(ctx context.Context, sel ast.SelectionSet) func(ctx context.Context) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, subscriptionImplementors)
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
+		Object: "Subscription",
+	})
+	if len(fields) != 1 {
+		ec.Errorf(ctx, "must subscribe to exactly one stream")
+		return nil
+	}
+
+	switch fields[0].Name {
+	case "onSDInstanceRegistered":
+		return ec._Subscription_onSDInstanceRegistered(ctx, fields[0])
+	case "onKPIFulfillmentChecked":
+		return ec._Subscription_onKPIFulfillmentChecked(ctx, fields[0])
+	default:
+		panic("unknown field " + strconv.Quote(fields[0].Name))
+	}
 }
 
 var __DirectiveImplementors = []string{"__Directive"}

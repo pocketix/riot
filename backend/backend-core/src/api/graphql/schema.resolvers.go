@@ -6,11 +6,14 @@ package graphql
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/generated"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/service"
 )
+
+var SDInstanceChannel = make(chan *model.SDInstance)
 
 // CreateSDType is the resolver for the createSDType field.
 func (r *mutationResolver) CreateSDType(ctx context.Context, input model.SDTypeInput) (*model.SDType, error) {
@@ -74,11 +77,25 @@ func (r *queryResolver) KpiFulfillmentCheckResults(ctx context.Context) ([]*mode
 	return service.GetKPIFulfillmentCheckResults().Unwrap()
 }
 
+// OnSDInstanceRegistered is the resolver for the onSDInstanceRegistered field.
+func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan *model.SDInstance, error) {
+	return SDInstanceChannel, nil
+}
+
+// OnKPIFulfillmentChecked is the resolver for the onKPIFulfillmentChecked field.
+func (r *subscriptionResolver) OnKPIFulfillmentChecked(ctx context.Context) (<-chan []*model.KPIFulfillmentCheckResult, error) {
+	panic(fmt.Errorf("not implemented: OnKPIFulfillmentChecked - onKPIFulfillmentChecked"))
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// Subscription returns generated.SubscriptionResolver implementation.
+func (r *Resolver) Subscription() generated.SubscriptionResolver { return &subscriptionResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }

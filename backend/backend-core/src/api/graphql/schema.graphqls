@@ -179,7 +179,7 @@ type KPIFulfillmentCheckResult {
   fulfilled: Boolean!
 }
 
-# ----- Queries and Mutations -----
+# ----- Queries, Mutations and Subscriptions -----
 
 type Query {
   sdType(id: ID!): SDType!
@@ -197,4 +197,9 @@ type Mutation {
   createKPIDefinition(input: KPIDefinitionInput!): KPIDefinition!
   updateKPIDefinition(id: ID!, input: KPIDefinitionInput!): KPIDefinition!
   deleteKPIDefinition(id: ID!): Boolean!
+}
+
+type Subscription {
+  onSDInstanceRegistered: SDInstance!
+  onKPIFulfillmentChecked: [KPIFulfillmentCheckResult!]!
 }

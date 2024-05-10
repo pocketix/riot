@@ -258,6 +258,9 @@ func (this StringEQAtomKPINode) GetSdParameterSpecification() string {
 	return this.SdParameterSpecification
 }
 
+type Subscription struct {
+}
+
 type KPINodeType string
 
 const (
