@@ -44,6 +44,22 @@ func (r *mutationResolver) DeleteKPIDefinition(ctx context.Context, id string) (
 	return err == nil, err
 }
 
+// CreateSDInstanceGroup is the resolver for the createSDInstanceGroup field.
+func (r *mutationResolver) CreateSDInstanceGroup(ctx context.Context, input model.SDInstanceGroupInput) (*model.SDInstanceGroup, error) {
+	return service.CreateSDInstanceGroup(input).Unwrap()
+}
+
+// UpdateSDInstanceGroup is the resolver for the updateSDInstanceGroup field.
+func (r *mutationResolver) UpdateSDInstanceGroup(ctx context.Context, id string, input model.SDInstanceGroupUpdateInput) (*model.SDInstanceGroup, error) {
+	return service.UpdateSDInstanceGroup(id, input).Unwrap()
+}
+
+// DeleteSDInstanceGroup is the resolver for the deleteSDInstanceGroup field.
+func (r *mutationResolver) DeleteSDInstanceGroup(ctx context.Context, id string) (bool, error) {
+	err := service.DeleteSDInstanceGroup(id)
+	return err == nil, err
+}
+
 // SdType is the resolver for the sdType field.
 func (r *queryResolver) SdType(ctx context.Context, id string) (*model.SDType, error) {
 	return service.GetSDType(id).Unwrap()
@@ -72,6 +88,16 @@ func (r *queryResolver) KpiDefinitions(ctx context.Context) ([]*model.KPIDefinit
 // KpiFulfillmentCheckResults is the resolver for the kpiFulfillmentCheckResults field.
 func (r *queryResolver) KpiFulfillmentCheckResults(ctx context.Context) ([]*model.KPIFulfillmentCheckResult, error) {
 	return service.GetKPIFulfillmentCheckResults().Unwrap()
+}
+
+// SdInstanceGroup is the resolver for the sdInstanceGroup field.
+func (r *queryResolver) SdInstanceGroup(ctx context.Context, id string) (*model.SDInstanceGroup, error) {
+	return service.GetSDInstanceGroup(id).Unwrap()
+}
+
+// SdInstanceGroups is the resolver for the sdInstanceGroups field.
+func (r *queryResolver) SdInstanceGroups(ctx context.Context) ([]*model.SDInstanceGroup, error) {
+	return service.GetSDInstanceGroups().Unwrap()
 }
 
 // OnSDInstanceRegistered is the resolver for the onSDInstanceRegistered field.

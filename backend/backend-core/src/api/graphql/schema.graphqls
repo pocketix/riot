@@ -179,6 +179,25 @@ type KPIFulfillmentCheckResult {
   fulfilled: Boolean!
 }
 
+# ----- SD instance groups -----
+
+type SDInstanceGroup {
+  id: ID!
+  userIdentifier: String!
+  sdInstanceIDs: [ID!]!
+}
+
+input SDInstanceGroupInput {
+  userIdentifier: String!
+  sdInstanceIDs: [ID!]!
+}
+
+input SDInstanceGroupUpdateInput {
+  newUserIdentifier: String
+  sdInstanceIDsToAdd: [ID!]
+  sdInstanceIDsToRemove: [ID!]
+}
+
 # ----- Queries, Mutations and Subscriptions -----
 
 type Query {
@@ -188,6 +207,8 @@ type Query {
   kpiDefinition(id: ID!): KPIDefinition!
   kpiDefinitions: [KPIDefinition!]!
   kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!
+  sdInstanceGroup(id: ID!): SDInstanceGroup!
+  sdInstanceGroups: [SDInstanceGroup!]!
 }
 
 type Mutation {
@@ -197,6 +218,9 @@ type Mutation {
   createKPIDefinition(input: KPIDefinitionInput!): KPIDefinition!
   updateKPIDefinition(id: ID!, input: KPIDefinitionInput!): KPIDefinition!
   deleteKPIDefinition(id: ID!): Boolean!
+  createSDInstanceGroup(input: SDInstanceGroupInput!): SDInstanceGroup!
+  updateSDInstanceGroup(id: ID!, input: SDInstanceGroupUpdateInput!): SDInstanceGroup!
+  deleteSDInstanceGroup(id: ID!): Boolean!
 }
 
 type Subscription {

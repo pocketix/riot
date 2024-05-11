@@ -43,6 +43,10 @@ type RelationalDatabaseClient interface {
 	PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResultDTO types.KPIFulfillmentCheckResultDTO) error
 	LoadKPIFulFulfillmentCheckResult(kpiDefinitionID uint32, sdInstanceID uint32) cUtil.Result[cUtil.Optional[types.KPIFulfillmentCheckResultDTO]]
 	LoadKPIFulFulfillmentCheckResults() cUtil.Result[[]types.KPIFulfillmentCheckResultDTO]
+	LoadSDInstanceGroups() cUtil.Result[[]types.SDInstanceGroupDTO]
+	LoadSDInstanceGroup(id uint32) cUtil.Result[types.SDInstanceGroupDTO]
+	PersistSDInstanceGroup(sdInstanceGroupDTO types.SDInstanceGroupDTO) cUtil.Result[uint32]
+	DeleteSDInstanceGroup(id uint32) error
 }
 
 type relationalDatabaseClientImpl struct {
@@ -73,6 +77,8 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(schema.SDParameterEntity),
 		new(schema.SDInstanceEntity),
 		new(schema.KPIFulfillmentCheckResultEntity),
+		new(schema.SDInstanceGroupEntity),
+		new(schema.SDInstanceGroupMembershipEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
 
@@ -163,8 +169,8 @@ func getIDsOfKPINodeEntitiesFormingTheKPIDefinition(g *gorm.DB, kpiDefinitionID 
 		err := fmt.Errorf("failed to load KPI node entities from the database: %w", kpiNodeEntitiesLoadResult.GetError())
 		return cUtil.NewFailureResult[[]uint32](err)
 	}
-	setOfIDsOfKPINodeEntitiesFormingTheDefinition := cUtil.SliceToSet(cUtil.SliceOf(*kpiDefinitionEntity.RootNodeID))
-	setOfRemainingKPINodeEntities := cUtil.SliceToSet(kpiNodeEntitiesLoadResult.GetPayload())
+	setOfIDsOfKPINodeEntitiesFormingTheDefinition := cUtil.NewSetFromSlice(cUtil.SliceOf(*kpiDefinitionEntity.RootNodeID))
+	setOfRemainingKPINodeEntities := cUtil.NewSetFromSlice(kpiNodeEntitiesLoadResult.GetPayload())
 	for {
 		nextLayerOfKPINodeEntities := cUtil.Filter(setOfRemainingKPINodeEntities.ToSlice(), func(kpiNodeEntity schema.KPINodeEntity) bool {
 			parentNodeIDOptional := cUtil.NewOptionalFromPointer(kpiNodeEntity.ParentNodeID)
@@ -340,4 +346,40 @@ func (r *relationalDatabaseClientImpl) LoadKPIFulFulfillmentCheckResults() cUtil
 		return cUtil.NewFailureResult[[]types.KPIFulfillmentCheckResultDTO](kpiFulFulfillmentCheckResultEntitiesLoadResult.GetError())
 	}
 	return cUtil.NewSuccessResult[[]types.KPIFulfillmentCheckResultDTO](cUtil.Map(kpiFulFulfillmentCheckResultEntitiesLoadResult.GetPayload(), db2dto.KPIFulfillmentCheckResultEntityToKPIFulfillmentCheckResultDTO))
+}
+
+func (r *relationalDatabaseClientImpl) LoadSDInstanceGroups() cUtil.Result[[]types.SDInstanceGroupDTO] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	sdInstanceGroupEntitiesLoadResult := LoadEntitiesFromDB[schema.SDInstanceGroupEntity](r.db, PreloadPaths("GroupMembershipRecords"))
+	if sdInstanceGroupEntitiesLoadResult.IsFailure() {
+		return cUtil.NewFailureResult[[]types.SDInstanceGroupDTO](sdInstanceGroupEntitiesLoadResult.GetError())
+	}
+	return cUtil.NewSuccessResult(cUtil.Map(sdInstanceGroupEntitiesLoadResult.GetPayload(), db2dto.SDInstanceGroupEntityToSDInstanceGroupDTO))
+}
+
+func (r *relationalDatabaseClientImpl) LoadSDInstanceGroup(id uint32) cUtil.Result[types.SDInstanceGroupDTO] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	sdInstanceGroupEntityLoadResult := LoadEntityFromDB[schema.SDInstanceGroupEntity](r.db, PreloadPaths("GroupMembershipRecords"), WhereClause("id = ?", id))
+	if sdInstanceGroupEntityLoadResult.IsFailure() {
+		return cUtil.NewFailureResult[types.SDInstanceGroupDTO](sdInstanceGroupEntityLoadResult.GetError())
+	}
+	return cUtil.NewSuccessResult(db2dto.SDInstanceGroupEntityToSDInstanceGroupDTO(sdInstanceGroupEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) PersistSDInstanceGroup(sdInstanceGroupDTO types.SDInstanceGroupDTO) cUtil.Result[uint32] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	sdInstanceGroupEntity := dto2db.SDInstanceGroupDTOToSDInstanceGroupEntity(sdInstanceGroupDTO)
+	if err := PersistEntityIntoDB(r.db, &sdInstanceGroupEntity); err != nil {
+		return cUtil.NewFailureResult[uint32](err)
+	}
+	return cUtil.NewSuccessResult[uint32](sdInstanceGroupEntity.ID)
+}
+
+func (r *relationalDatabaseClientImpl) DeleteSDInstanceGroup(id uint32) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return DeleteCertainEntityBasedOnId[schema.SDInstanceGroupEntity](r.db, id)
 }

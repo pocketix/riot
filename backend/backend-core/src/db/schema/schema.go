@@ -50,7 +50,7 @@ func (AtomKPINodeEntity) TableName() string {
 
 type SDTypeEntity struct {
 	ID         uint32              `gorm:"column:id;primaryKey;not null"`
-	Denotation string              `gorm:"column:denotation;not null;index"` // Denotation is an indexed field
+	Denotation string              `gorm:"column:denotation;not null;index"` // Denotation is a separately indexed field
 	Parameters []SDParameterEntity `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
 }
 
@@ -71,7 +71,7 @@ func (SDParameterEntity) TableName() string {
 
 type SDInstanceEntity struct {
 	ID              uint32       `gorm:"column:id;primaryKey;not null"`
-	UID             string       `gorm:"column:uid;not null;index"` // UID is an indexed field
+	UID             string       `gorm:"column:uid;not null;index"` // UID is a separately indexed field
 	ConfirmedByUser bool         `gorm:"column:confirmed_by_user;not null"`
 	UserIdentifier  string       `gorm:"column:user_identifier;not null"`
 	SDTypeID        uint32       `gorm:"column:sd_type_id"`
@@ -90,4 +90,23 @@ type KPIFulfillmentCheckResultEntity struct {
 
 func (KPIFulfillmentCheckResultEntity) TableName() string {
 	return "kpi_fulfillment_check_results"
+}
+
+type SDInstanceGroupEntity struct {
+	ID                     uint32                            `gorm:"column:id;primaryKey;not null"`
+	UserIdentifier         string                            `gorm:"column:user_identifier;not null"`
+	GroupMembershipRecords []SDInstanceGroupMembershipEntity `gorm:"foreignKey:SDInstanceGroupID"`
+}
+
+func (SDInstanceGroupEntity) TableName() string {
+	return "sd_instance_groups"
+}
+
+type SDInstanceGroupMembershipEntity struct {
+	SDInstanceGroupID uint32 `gorm:"column:sd_instance_group_id;primaryKey;not null;constraint:OnDelete:CASCADE;index"` // SDInstanceGroupID is a separately indexed field
+	SDInstanceID      uint32 `gorm:"column:sd_instance_id;primaryKey;not null;constraint:OnDelete:CASCADE"`
+}
+
+func (SDInstanceGroupMembershipEntity) TableName() string {
+	return "sd_instance_group_membership"
 }

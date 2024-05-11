@@ -33,7 +33,7 @@ var (
 
 func checkForSetOfSDTypesUpdates() {
 	err := rabbitmq.ConsumeJSONMessages[[]string](rabbitMQClient, constants.SetOfSDTypesUpdatesQueueName, func(messagePayload []string) error {
-		updatedSDTypes := util.SliceToSet(messagePayload)
+		updatedSDTypes := util.NewSetFromSlice(messagePayload)
 		sdTypesMutex.Lock()
 		sdTypes = updatedSDTypes
 		sdTypesMutex.Unlock()
@@ -46,7 +46,7 @@ func checkForSetOfSDTypesUpdates() {
 
 func checkForSetOfSDInstancesUpdates() {
 	err := rabbitmq.ConsumeJSONMessages[[]cTypes.SDInstanceInfo](rabbitMQClient, constants.SetOfSDInstancesUpdatesQueueName, func(messagePayload []cTypes.SDInstanceInfo) error {
-		updatedSDInstances := util.SliceToSet(messagePayload)
+		updatedSDInstances := util.NewSetFromSlice(messagePayload)
 		sdInstancesMutex.Lock()
 		sdInstances = updatedSDInstances
 		sdInstancesMutex.Unlock()

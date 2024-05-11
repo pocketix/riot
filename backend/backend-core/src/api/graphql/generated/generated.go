@@ -79,12 +79,15 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateKPIDefinition func(childComplexity int, input model.KPIDefinitionInput) int
-		CreateSDType        func(childComplexity int, input model.SDTypeInput) int
-		DeleteKPIDefinition func(childComplexity int, id string) int
-		DeleteSDType        func(childComplexity int, id string) int
-		UpdateKPIDefinition func(childComplexity int, id string, input model.KPIDefinitionInput) int
-		UpdateSDInstance    func(childComplexity int, id string, input model.SDInstanceUpdateInput) int
+		CreateKPIDefinition   func(childComplexity int, input model.KPIDefinitionInput) int
+		CreateSDInstanceGroup func(childComplexity int, input model.SDInstanceGroupInput) int
+		CreateSDType          func(childComplexity int, input model.SDTypeInput) int
+		DeleteKPIDefinition   func(childComplexity int, id string) int
+		DeleteSDInstanceGroup func(childComplexity int, id string) int
+		DeleteSDType          func(childComplexity int, id string) int
+		UpdateKPIDefinition   func(childComplexity int, id string, input model.KPIDefinitionInput) int
+		UpdateSDInstance      func(childComplexity int, id string, input model.SDInstanceUpdateInput) int
+		UpdateSDInstanceGroup func(childComplexity int, id string, input model.SDInstanceGroupUpdateInput) int
 	}
 
 	NumericEQAtomKPINode struct {
@@ -136,6 +139,8 @@ type ComplexityRoot struct {
 		KpiDefinition              func(childComplexity int, id string) int
 		KpiDefinitions             func(childComplexity int) int
 		KpiFulfillmentCheckResults func(childComplexity int) int
+		SdInstanceGroup            func(childComplexity int, id string) int
+		SdInstanceGroups           func(childComplexity int) int
 		SdInstances                func(childComplexity int) int
 		SdType                     func(childComplexity int, id string) int
 		SdTypes                    func(childComplexity int) int
@@ -147,6 +152,12 @@ type ComplexityRoot struct {
 		Type            func(childComplexity int) int
 		UID             func(childComplexity int) int
 		UserIdentifier  func(childComplexity int) int
+	}
+
+	SDInstanceGroup struct {
+		ID             func(childComplexity int) int
+		SdInstanceIDs  func(childComplexity int) int
+		UserIdentifier func(childComplexity int) int
 	}
 
 	SDParameter struct {
@@ -183,6 +194,9 @@ type MutationResolver interface {
 	CreateKPIDefinition(ctx context.Context, input model.KPIDefinitionInput) (*model.KPIDefinition, error)
 	UpdateKPIDefinition(ctx context.Context, id string, input model.KPIDefinitionInput) (*model.KPIDefinition, error)
 	DeleteKPIDefinition(ctx context.Context, id string) (bool, error)
+	CreateSDInstanceGroup(ctx context.Context, input model.SDInstanceGroupInput) (*model.SDInstanceGroup, error)
+	UpdateSDInstanceGroup(ctx context.Context, id string, input model.SDInstanceGroupUpdateInput) (*model.SDInstanceGroup, error)
+	DeleteSDInstanceGroup(ctx context.Context, id string) (bool, error)
 }
 type QueryResolver interface {
 	SdType(ctx context.Context, id string) (*model.SDType, error)
@@ -191,6 +205,8 @@ type QueryResolver interface {
 	KpiDefinition(ctx context.Context, id string) (*model.KPIDefinition, error)
 	KpiDefinitions(ctx context.Context) ([]*model.KPIDefinition, error)
 	KpiFulfillmentCheckResults(ctx context.Context) ([]*model.KPIFulfillmentCheckResult, error)
+	SdInstanceGroup(ctx context.Context, id string) (*model.SDInstanceGroup, error)
+	SdInstanceGroups(ctx context.Context) ([]*model.SDInstanceGroup, error)
 }
 type SubscriptionResolver interface {
 	OnSDInstanceRegistered(ctx context.Context) (<-chan *model.SDInstance, error)
@@ -354,6 +370,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateKPIDefinition(childComplexity, args["input"].(model.KPIDefinitionInput)), true
 
+	case "Mutation.createSDInstanceGroup":
+		if e.complexity.Mutation.CreateSDInstanceGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createSDInstanceGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateSDInstanceGroup(childComplexity, args["input"].(model.SDInstanceGroupInput)), true
+
 	case "Mutation.createSDType":
 		if e.complexity.Mutation.CreateSDType == nil {
 			break
@@ -377,6 +405,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteKPIDefinition(childComplexity, args["id"].(string)), true
+
+	case "Mutation.deleteSDInstanceGroup":
+		if e.complexity.Mutation.DeleteSDInstanceGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSDInstanceGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSDInstanceGroup(childComplexity, args["id"].(string)), true
 
 	case "Mutation.deleteSDType":
 		if e.complexity.Mutation.DeleteSDType == nil {
@@ -413,6 +453,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateSDInstance(childComplexity, args["id"].(string), args["input"].(model.SDInstanceUpdateInput)), true
+
+	case "Mutation.updateSDInstanceGroup":
+		if e.complexity.Mutation.UpdateSDInstanceGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateSDInstanceGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateSDInstanceGroup(childComplexity, args["id"].(string), args["input"].(model.SDInstanceGroupUpdateInput)), true
 
 	case "NumericEQAtomKPINode.id":
 		if e.complexity.NumericEQAtomKPINode.ID == nil {
@@ -650,6 +702,25 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.KpiFulfillmentCheckResults(childComplexity), true
 
+	case "Query.sdInstanceGroup":
+		if e.complexity.Query.SdInstanceGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Query_sdInstanceGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SdInstanceGroup(childComplexity, args["id"].(string)), true
+
+	case "Query.sdInstanceGroups":
+		if e.complexity.Query.SdInstanceGroups == nil {
+			break
+		}
+
+		return e.complexity.Query.SdInstanceGroups(childComplexity), true
+
 	case "Query.sdInstances":
 		if e.complexity.Query.SdInstances == nil {
 			break
@@ -710,6 +781,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SDInstance.UserIdentifier(childComplexity), true
+
+	case "SDInstanceGroup.id":
+		if e.complexity.SDInstanceGroup.ID == nil {
+			break
+		}
+
+		return e.complexity.SDInstanceGroup.ID(childComplexity), true
+
+	case "SDInstanceGroup.sdInstanceIDs":
+		if e.complexity.SDInstanceGroup.SdInstanceIDs == nil {
+			break
+		}
+
+		return e.complexity.SDInstanceGroup.SdInstanceIDs(childComplexity), true
+
+	case "SDInstanceGroup.userIdentifier":
+		if e.complexity.SDInstanceGroup.UserIdentifier == nil {
+			break
+		}
+
+		return e.complexity.SDInstanceGroup.UserIdentifier(childComplexity), true
 
 	case "SDParameter.denotation":
 		if e.complexity.SDParameter.Denotation == nil {
@@ -819,6 +911,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputKPIDefinitionInput,
 		ec.unmarshalInputKPINodeInput,
+		ec.unmarshalInputSDInstanceGroupInput,
+		ec.unmarshalInputSDInstanceGroupUpdateInput,
 		ec.unmarshalInputSDInstanceUpdateInput,
 		ec.unmarshalInputSDParameterInput,
 		ec.unmarshalInputSDTypeInput,
@@ -1117,6 +1211,25 @@ type KPIFulfillmentCheckResult {
   fulfilled: Boolean!
 }
 
+# ----- SD instance groups -----
+
+type SDInstanceGroup {
+  id: ID!
+  userIdentifier: String!
+  sdInstanceIDs: [ID!]!
+}
+
+input SDInstanceGroupInput {
+  userIdentifier: String!
+  sdInstanceIDs: [ID!]!
+}
+
+input SDInstanceGroupUpdateInput {
+  newUserIdentifier: String
+  sdInstanceIDsToAdd: [ID!]
+  sdInstanceIDsToRemove: [ID!]
+}
+
 # ----- Queries, Mutations and Subscriptions -----
 
 type Query {
@@ -1126,6 +1239,8 @@ type Query {
   kpiDefinition(id: ID!): KPIDefinition!
   kpiDefinitions: [KPIDefinition!]!
   kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!
+  sdInstanceGroup(id: ID!): SDInstanceGroup!
+  sdInstanceGroups: [SDInstanceGroup!]!
 }
 
 type Mutation {
@@ -1135,6 +1250,9 @@ type Mutation {
   createKPIDefinition(input: KPIDefinitionInput!): KPIDefinition!
   updateKPIDefinition(id: ID!, input: KPIDefinitionInput!): KPIDefinition!
   deleteKPIDefinition(id: ID!): Boolean!
+  createSDInstanceGroup(input: SDInstanceGroupInput!): SDInstanceGroup!
+  updateSDInstanceGroup(id: ID!, input: SDInstanceGroupUpdateInput!): SDInstanceGroup!
+  deleteSDInstanceGroup(id: ID!): Boolean!
 }
 
 type Subscription {
@@ -1164,6 +1282,21 @@ func (ec *executionContext) field_Mutation_createKPIDefinition_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createSDInstanceGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.SDInstanceGroupInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNSDInstanceGroupInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroupInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createSDType_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1180,6 +1313,21 @@ func (ec *executionContext) field_Mutation_createSDType_args(ctx context.Context
 }
 
 func (ec *executionContext) field_Mutation_deleteKPIDefinition_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSDInstanceGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -1233,6 +1381,30 @@ func (ec *executionContext) field_Mutation_updateKPIDefinition_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updateSDInstanceGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.SDInstanceGroupUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNSDInstanceGroupUpdateInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroupUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateSDInstance_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1273,6 +1445,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 }
 
 func (ec *executionContext) field_Query_kpiDefinition_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_sdInstanceGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -2494,6 +2681,187 @@ func (ec *executionContext) fieldContext_Mutation_deleteKPIDefinition(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteKPIDefinition_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createSDInstanceGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createSDInstanceGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateSDInstanceGroup(rctx, fc.Args["input"].(model.SDInstanceGroupInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SDInstanceGroup)
+	fc.Result = res
+	return ec.marshalNSDInstanceGroup2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroup(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createSDInstanceGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SDInstanceGroup_id(ctx, field)
+			case "userIdentifier":
+				return ec.fieldContext_SDInstanceGroup_userIdentifier(ctx, field)
+			case "sdInstanceIDs":
+				return ec.fieldContext_SDInstanceGroup_sdInstanceIDs(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SDInstanceGroup", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createSDInstanceGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateSDInstanceGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateSDInstanceGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateSDInstanceGroup(rctx, fc.Args["id"].(string), fc.Args["input"].(model.SDInstanceGroupUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SDInstanceGroup)
+	fc.Result = res
+	return ec.marshalNSDInstanceGroup2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroup(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateSDInstanceGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SDInstanceGroup_id(ctx, field)
+			case "userIdentifier":
+				return ec.fieldContext_SDInstanceGroup_userIdentifier(ctx, field)
+			case "sdInstanceIDs":
+				return ec.fieldContext_SDInstanceGroup_sdInstanceIDs(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SDInstanceGroup", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateSDInstanceGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteSDInstanceGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteSDInstanceGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteSDInstanceGroup(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteSDInstanceGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteSDInstanceGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -4151,6 +4519,121 @@ func (ec *executionContext) fieldContext_Query_kpiFulfillmentCheckResults(_ cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_sdInstanceGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_sdInstanceGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SdInstanceGroup(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SDInstanceGroup)
+	fc.Result = res
+	return ec.marshalNSDInstanceGroup2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroup(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_sdInstanceGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SDInstanceGroup_id(ctx, field)
+			case "userIdentifier":
+				return ec.fieldContext_SDInstanceGroup_userIdentifier(ctx, field)
+			case "sdInstanceIDs":
+				return ec.fieldContext_SDInstanceGroup_sdInstanceIDs(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SDInstanceGroup", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_sdInstanceGroup_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_sdInstanceGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_sdInstanceGroups(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SdInstanceGroups(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SDInstanceGroup)
+	fc.Result = res
+	return ec.marshalNSDInstanceGroup2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroupᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_sdInstanceGroups(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SDInstanceGroup_id(ctx, field)
+			case "userIdentifier":
+				return ec.fieldContext_SDInstanceGroup_userIdentifier(ctx, field)
+			case "sdInstanceIDs":
+				return ec.fieldContext_SDInstanceGroup_sdInstanceIDs(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SDInstanceGroup", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -4503,6 +4986,138 @@ func (ec *executionContext) fieldContext_SDInstance_type(_ context.Context, fiel
 				return ec.fieldContext_SDType_parameters(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDInstanceGroup_id(ctx context.Context, field graphql.CollectedField, obj *model.SDInstanceGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDInstanceGroup_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDInstanceGroup_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDInstanceGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDInstanceGroup_userIdentifier(ctx context.Context, field graphql.CollectedField, obj *model.SDInstanceGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDInstanceGroup_userIdentifier(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserIdentifier, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDInstanceGroup_userIdentifier(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDInstanceGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDInstanceGroup_sdInstanceIDs(ctx context.Context, field graphql.CollectedField, obj *model.SDInstanceGroup) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDInstanceGroup_sdInstanceIDs(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SdInstanceIDs, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNID2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDInstanceGroup_sdInstanceIDs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDInstanceGroup",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -7081,6 +7696,81 @@ func (ec *executionContext) unmarshalInputKPINodeInput(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSDInstanceGroupInput(ctx context.Context, obj interface{}) (model.SDInstanceGroupInput, error) {
+	var it model.SDInstanceGroupInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"userIdentifier", "sdInstanceIDs"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "userIdentifier":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIdentifier"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UserIdentifier = data
+		case "sdInstanceIDs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sdInstanceIDs"))
+			data, err := ec.unmarshalNID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SdInstanceIDs = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSDInstanceGroupUpdateInput(ctx context.Context, obj interface{}) (model.SDInstanceGroupUpdateInput, error) {
+	var it model.SDInstanceGroupUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"newUserIdentifier", "sdInstanceIDsToAdd", "sdInstanceIDsToRemove"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "newUserIdentifier":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newUserIdentifier"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NewUserIdentifier = data
+		case "sdInstanceIDsToAdd":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sdInstanceIDsToAdd"))
+			data, err := ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SdInstanceIDsToAdd = data
+		case "sdInstanceIDsToRemove":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sdInstanceIDsToRemove"))
+			data, err := ec.unmarshalOID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SdInstanceIDsToRemove = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSDInstanceUpdateInput(ctx context.Context, obj interface{}) (model.SDInstanceUpdateInput, error) {
 	var it model.SDInstanceUpdateInput
 	asMap := map[string]interface{}{}
@@ -7600,6 +8290,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createSDInstanceGroup":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createSDInstanceGroup(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateSDInstanceGroup":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateSDInstanceGroup(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteSDInstanceGroup":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteSDInstanceGroup(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8079,6 +8790,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "sdInstanceGroup":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_sdInstanceGroup(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "sdInstanceGroups":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_sdInstanceGroups(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -8143,6 +8898,55 @@ func (ec *executionContext) _SDInstance(ctx context.Context, sel ast.SelectionSe
 			}
 		case "type":
 			out.Values[i] = ec._SDInstance_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var sDInstanceGroupImplementors = []string{"SDInstanceGroup"}
+
+func (ec *executionContext) _SDInstanceGroup(ctx context.Context, sel ast.SelectionSet, obj *model.SDInstanceGroup) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sDInstanceGroupImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SDInstanceGroup")
+		case "id":
+			out.Values[i] = ec._SDInstanceGroup_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "userIdentifier":
+			out.Values[i] = ec._SDInstanceGroup_userIdentifier(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sdInstanceIDs":
+			out.Values[i] = ec._SDInstanceGroup_sdInstanceIDs(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -8721,6 +9525,38 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) unmarshalNID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNKPIDefinition2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐKPIDefinition(ctx context.Context, sel ast.SelectionSet, v model.KPIDefinition) graphql.Marshaler {
 	return ec._KPIDefinition(ctx, sel, &v)
 }
@@ -8994,6 +9830,74 @@ func (ec *executionContext) marshalNSDInstance2ᚖgithubᚗcomᚋMichalBuresᚑO
 		return graphql.Null
 	}
 	return ec._SDInstance(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSDInstanceGroup2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroup(ctx context.Context, sel ast.SelectionSet, v model.SDInstanceGroup) graphql.Marshaler {
+	return ec._SDInstanceGroup(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSDInstanceGroup2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SDInstanceGroup) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSDInstanceGroup2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroup(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSDInstanceGroup2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroup(ctx context.Context, sel ast.SelectionSet, v *model.SDInstanceGroup) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SDInstanceGroup(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSDInstanceGroupInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroupInput(ctx context.Context, v interface{}) (model.SDInstanceGroupInput, error) {
+	res, err := ec.unmarshalInputSDInstanceGroupInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSDInstanceGroupUpdateInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroupUpdateInput(ctx context.Context, v interface{}) (model.SDInstanceGroupUpdateInput, error) {
+	res, err := ec.unmarshalInputSDInstanceGroupUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNSDInstanceUpdateInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceUpdateInput(ctx context.Context, v interface{}) (model.SDInstanceUpdateInput, error) {
@@ -9458,6 +10362,44 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	}
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
+}
+
+func (ec *executionContext) unmarshalOID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
