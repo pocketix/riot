@@ -101,16 +101,24 @@ export enum LogicalOperationType {
 export type Mutation = {
   __typename?: 'Mutation';
   createKPIDefinition: KpiDefinition;
+  createSDInstanceGroup: SdInstanceGroup;
   createSDType: SdType;
   deleteKPIDefinition: Scalars['Boolean']['output'];
+  deleteSDInstanceGroup: Scalars['Boolean']['output'];
   deleteSDType: Scalars['Boolean']['output'];
   updateKPIDefinition: KpiDefinition;
   updateSDInstance: SdInstance;
+  updateSDInstanceGroup: SdInstanceGroup;
 };
 
 
 export type MutationCreateKpiDefinitionArgs = {
   input: KpiDefinitionInput;
+};
+
+
+export type MutationCreateSdInstanceGroupArgs = {
+  input: SdInstanceGroupInput;
 };
 
 
@@ -120,6 +128,11 @@ export type MutationCreateSdTypeArgs = {
 
 
 export type MutationDeleteKpiDefinitionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteSdInstanceGroupArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -138,6 +151,12 @@ export type MutationUpdateKpiDefinitionArgs = {
 export type MutationUpdateSdInstanceArgs = {
   id: Scalars['ID']['input'];
   input: SdInstanceUpdateInput;
+};
+
+
+export type MutationUpdateSdInstanceGroupArgs = {
+  id: Scalars['ID']['input'];
+  input: SdInstanceGroupUpdateInput;
 };
 
 export type NumericEqAtomKpiNode = AtomKpiNode & KpiNode & {
@@ -195,6 +214,8 @@ export type Query = {
   kpiDefinition: KpiDefinition;
   kpiDefinitions: Array<KpiDefinition>;
   kpiFulfillmentCheckResults: Array<KpiFulfillmentCheckResult>;
+  sdInstanceGroup: SdInstanceGroup;
+  sdInstanceGroups: Array<SdInstanceGroup>;
   sdInstances: Array<SdInstance>;
   sdType: SdType;
   sdTypes: Array<SdType>;
@@ -202,6 +223,11 @@ export type Query = {
 
 
 export type QueryKpiDefinitionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QuerySdInstanceGroupArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -217,6 +243,24 @@ export type SdInstance = {
   type: SdType;
   uid: Scalars['String']['output'];
   userIdentifier: Scalars['String']['output'];
+};
+
+export type SdInstanceGroup = {
+  __typename?: 'SDInstanceGroup';
+  id: Scalars['ID']['output'];
+  sdInstanceIDs: Array<Scalars['ID']['output']>;
+  userIdentifier: Scalars['String']['output'];
+};
+
+export type SdInstanceGroupInput = {
+  sdInstanceIDs: Array<Scalars['ID']['input']>;
+  userIdentifier: Scalars['String']['input'];
+};
+
+export type SdInstanceGroupUpdateInput = {
+  newUserIdentifier?: InputMaybe<Scalars['String']['input']>;
+  sdInstanceIDsToAdd?: InputMaybe<Array<Scalars['ID']['input']>>;
+  sdInstanceIDsToRemove?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 export type SdInstanceUpdateInput = {
@@ -333,10 +377,15 @@ export type KpiDefinitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type KpiDefinitionsQuery = { __typename?: 'Query', kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeID: string, sdTypeSpecification: string }> };
 
+export type SdInstanceGroupsPageDataQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SdInstanceGroupsPageDataQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, userIdentifier: string, type: { __typename?: 'SDType', id: string } }>, sdInstanceGroups: Array<{ __typename?: 'SDInstanceGroup', id: string, userIdentifier: string, sdInstanceIDs: Array<string> }>, kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeID: string }>, kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: string, sdInstanceID: string, fulfilled: boolean }> };
+
 export type SdInstancesPageDataQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdInstancesPageDataQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }>, kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: string, sdInstanceID: string, fulfilled: boolean }>, kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeSpecification: string }> };
+export type SdInstancesPageDataQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }>, kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: string, sdInstanceID: string, fulfilled: boolean }>, kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeID: string }> };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 

@@ -17,6 +17,7 @@ import KPIPageController from './pages/kpi-page/KPIPageController'
 import CustomLinkButton from './page-independent-components/CustomLinkButton'
 import { ApolloSandbox } from '@apollo/sandbox/react'
 import ConfigurationPage from './pages/ConfigurationPage'
+import SDInstanceGroupsPageController from './pages/sd-instance-groups-page/SDInstanceGroupsPageController'
 
 const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   uri: 'http://localhost:9090',
@@ -77,6 +78,7 @@ const customTheme: Theme = createTheme({
   }
 })
 
+const sdInstanceGroups = 'sd-instance-groups'
 const sdInstances = 'sd-instances'
 const sdTypes = 'sd-types'
 const kpiDefinitions = 'kpi-definitions'
@@ -88,6 +90,7 @@ const ApplicationLayout: React.FC = () => {
     <div className="flex h-screen">
       <div className="flex flex-col gap-4 bg-gray-100 px-2.5 py-8">
         <CustomLinkButton route="/" text="Homepage" iconIdentifier="home" />
+        <CustomLinkButton route={`/${sdInstanceGroups}`} text="SD instance groups" iconIdentifier="communities" />
         <CustomLinkButton route={`/${sdInstances}`} text="SD instances" iconIdentifier="lightbulb" />
         <CustomLinkButton route={`/${sdTypes}`} text="SD type definitions" iconIdentifier="home_iot_device" />
         <CustomLinkButton route={`/${kpiDefinitions}`} text="KPI definitions" iconIdentifier="rule" />
@@ -112,6 +115,7 @@ const Application: React.FC = () => {
             <Routes>
               <Route path="/" element={<ApplicationLayout />}>
                 <Route index element={<Homepage />} />
+                <Route path={sdInstanceGroups} element={<SDInstanceGroupsPageController />} />
                 <Route path={sdInstances} element={<SDInstancesPageController />} />
                 <Route path={sdTypes} element={<SDTypesPageController />} />
                 <Route path={kpiDefinitions} element={<KPIPageController />} />

@@ -3,14 +3,15 @@ import GenericCardTemplate from '../../../page-independent-components/GenericCar
 import { Button } from '@mui/material'
 import { PlainTextField } from '../../../page-independent-components/mui-based/Styled'
 import { AsynchronousBiConsumerFunction, AsynchronousConsumerFunction } from '../../../util'
-import KPIFulfillmentCheckResultLabel, { KPIFulfillmentCheckResultLabelState } from './KPIFulfillmentCheckResultLabel'
 import { SdInstancesPageDataQuery } from '../../../generated/graphql'
+import KPIFulfillmentCheckResultSection, { KPIFulfillmentState } from '../../../page-independent-components/KPIFulfillmentCheckResultSection'
 
 interface SDInstanceCardProps {
   id: string
   userIdentifier: string
   uid: string
   sdTypeDenotation: string
+  sdTypeID: string
   confirmedByUser: boolean
   updateUserIdentifierOfSdInstance: AsynchronousBiConsumerFunction<string, string>
   confirmSdInstance: AsynchronousConsumerFunction<string>
@@ -25,7 +26,7 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
   }, [props.sdInstancePageData.kpiFulfillmentCheckResults, props.id])
 
   const kpiDefinitions = useMemo(() => {
-    return props.sdInstancePageData.kpiDefinitions.filter((kpiDefinition) => kpiDefinition.sdTypeSpecification === props.sdTypeDenotation)
+    return props.sdInstancePageData.kpiDefinitions.filter((kpiDefinition) => kpiDefinition.sdTypeID === props.sdTypeID)
   }, [props.sdInstancePageData.kpiDefinitions, props.sdTypeDenotation])
 
   const displayFulfillmentCheckResultSection = useMemo(() => props.confirmedByUser && kpiDefinitions.length > 0, [props.confirmedByUser, kpiDefinitions])
@@ -77,23 +78,19 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
             )}
           </div>
           {displayFulfillmentCheckResultSection && (
-            <div className="mt-2 flex flex-col gap-1 rounded-[5px] border-2 border-gray-500 bg-[#dcdcdc] px-3 py-1">
-              {kpiDefinitions
-                .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10))
-                .map((kpiDefinition) => (
-                  <KPIFulfillmentCheckResultLabel
-                    id={kpiDefinition.id}
-                    kpiUserIdentifier={kpiDefinition.userIdentifier}
-                    kpiFulfillmentCheckResultLabelState={((fulfilled: boolean | null): KPIFulfillmentCheckResultLabelState => {
-                      return fulfilled === null
-                        ? KPIFulfillmentCheckResultLabelState.Unknown
-                        : fulfilled
-                        ? KPIFulfillmentCheckResultLabelState.Fulfilled
-                        : KPIFulfillmentCheckResultLabelState.Unfulfilled
-                    })(kpiDefinitionFulfillmentMap[kpiDefinition.id])}
-                  />
-                ))}
-            </div>
+            <KPIFulfillmentCheckResultSection
+              kpiFulfillmentCheckResultsData={kpiDefinitions.map((kpiDefinition) => {
+                return {
+                  kpiDefinitionData: {
+                    id: kpiDefinition.id,
+                    userIdentifier: kpiDefinition.userIdentifier
+                  },
+                  kpiFulfillmentState: ((fulfilled: boolean | null): KPIFulfillmentState => {
+                    return fulfilled === null ? KPIFulfillmentState.Unknown : fulfilled ? KPIFulfillmentState.Fulfilled : KPIFulfillmentState.Unfulfilled
+                  })(kpiDefinitionFulfillmentMap[kpiDefinition.id])
+                }
+              })}
+            />
           )}
         </>
       }

@@ -33,6 +33,7 @@ const SDInstancesSection: React.FC<ConfirmedSDInstancesSectionProps> = (props) =
               userIdentifier={sdInstance.userIdentifier}
               uid={sdInstance.uid}
               sdTypeDenotation={sdInstance.type.denotation}
+              sdTypeID={sdInstance.type.id}
               confirmedByUser={confirmedByUserRequirement}
               updateUserIdentifierOfSdInstance={props.updateUserIdentifierOfSdInstance}
               confirmSdInstance={props.confirmSdInstance}

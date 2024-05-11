@@ -17,6 +17,6 @@ query SDInstancesPageData {
   kpiDefinitions {
     id
     userIdentifier
-    sdTypeSpecification
+    sdTypeID
   }
 }

@@ -1,0 +1,24 @@
+query SDInstanceGroupsPageData {
+    sdInstances {
+        id
+        userIdentifier
+        type {
+            id
+        }
+    }
+    sdInstanceGroups {
+        id
+        userIdentifier
+        sdInstanceIDs
+    }
+    kpiDefinitions {
+        id
+        userIdentifier
+        sdTypeID
+    }
+    kpiFulfillmentCheckResults {
+        kpiDefinitionID
+        sdInstanceID
+        fulfilled
+    }
+}
