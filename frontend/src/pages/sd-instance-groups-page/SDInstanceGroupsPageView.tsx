@@ -3,6 +3,7 @@ import StandardContentPageTemplate from '../../page-independent-components/Stand
 import GenericCardTemplate from '../../page-independent-components/GenericCardTemplate'
 import AddNewCardButton from '../../page-independent-components/AddNewCardButton'
 import KPIFulfillmentCheckResultSection, { KPIFulfillmentState } from '../../page-independent-components/KPIFulfillmentCheckResultSection'
+import { EffectFunction } from '../../util'
 
 export interface SDInstanceGroupData {
   id: string
@@ -22,6 +23,7 @@ interface SDInstanceGroupsPageViewProps {
   sdInstanceGroupsPageData: SDInstanceGroupData[]
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
+  initiateSDInstanceGroupCreation: EffectFunction
 }
 
 const SDInstanceGroupsPageView: React.FC<SDInstanceGroupsPageViewProps> = (props) => {
@@ -78,7 +80,7 @@ const SDInstanceGroupsPageView: React.FC<SDInstanceGroupsPageViewProps> = (props
               className="max-w-[500px]"
             ></GenericCardTemplate>
           ))}
-        <AddNewCardButton onClick={() => {}} />
+        <AddNewCardButton onClick={props.initiateSDInstanceGroupCreation} />
       </div>
     </StandardContentPageTemplate>
   )

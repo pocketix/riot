@@ -1,0 +1,7 @@
+mutation CreateSDInstanceGroup($input: SDInstanceGroupInput!) {
+    createSDInstanceGroup(input: $input) {
+        id
+        userIdentifier
+        sdInstanceIDs
+    }
+}

@@ -328,6 +328,13 @@ export type CreateKpiDefinitionMutationVariables = Exact<{
 
 export type CreateKpiDefinitionMutation = { __typename?: 'Mutation', createKPIDefinition: { __typename?: 'KPIDefinition', id: string } };
 
+export type CreateSdInstanceGroupMutationVariables = Exact<{
+  input: SdInstanceGroupInput;
+}>;
+
+
+export type CreateSdInstanceGroupMutation = { __typename?: 'Mutation', createSDInstanceGroup: { __typename?: 'SDInstanceGroup', id: string, userIdentifier: string, sdInstanceIDs: Array<string> } };
+
 export type CreateSdTypeMutationVariables = Exact<{
   input: SdTypeInput;
 }>;

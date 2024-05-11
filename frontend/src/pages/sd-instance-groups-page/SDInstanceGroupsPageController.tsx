@@ -1,25 +1,80 @@
 import React, { useEffect, useState } from 'react'
 import SDInstanceGroupsPageView, { SDInstanceGroupData } from './SDInstanceGroupsPageView'
-import { useQuery, useSubscription } from '@apollo/client'
-import { OnKpiFulfillmentCheckedSubscription, OnKpiFulfillmentCheckedSubscriptionVariables, SdInstanceGroupsPageDataQuery, SdInstanceGroupsPageDataQueryVariables } from '../../generated/graphql'
+import { useMutation, useQuery, useSubscription } from '@apollo/client'
+import {
+  CreateSdInstanceGroupMutation,
+  CreateSdInstanceGroupMutationVariables,
+  OnKpiFulfillmentCheckedSubscription,
+  OnKpiFulfillmentCheckedSubscriptionVariables,
+  SdInstanceGroupsPageDataQuery,
+  SdInstanceGroupsPageDataQueryVariables
+} from '../../generated/graphql'
 import qSDInstanceGroupsPageData from './../../graphql/queries/sdInstanceGroupsPageData.graphql'
 import gql from 'graphql-tag'
 import { KPIFulfillmentState } from '../../page-independent-components/KPIFulfillmentCheckResultSection'
 import sOnKPIFulfillmentChecked from '../../graphql/subscriptions/onKPIFulfillmentChecked.graphql'
 import { produce } from 'immer'
+import { useModal } from '@ebay/nice-modal-react'
+import SDInstanceGroupModal, { SDInstanceGroupModalMode } from './components/SDInstanceGroupModal'
+import mCreateSDInstanceGroup from '../../graphql/mutations/createSDInstanceGroup.graphql'
 
 const SDInstanceGroupsPageController: React.FC = () => {
   const { data, loading, error } = useQuery<SdInstanceGroupsPageDataQuery, SdInstanceGroupsPageDataQueryVariables>(gql(qSDInstanceGroupsPageData))
   const { data: onKPIFulfillmentCheckedData, error: onKPIFulfillmentCheckedError } = useSubscription<OnKpiFulfillmentCheckedSubscription, OnKpiFulfillmentCheckedSubscriptionVariables>(
     gql(sOnKPIFulfillmentChecked)
   )
+  const [createSDInstanceGroupMutation, { data: createSDInstanceGroupData, loading: createSDInstanceGroupLoading, error: createSDInstanceGroupError }] = useMutation<
+    CreateSdInstanceGroupMutation,
+    CreateSdInstanceGroupMutationVariables
+  >(gql(mCreateSDInstanceGroup))
 
   const [sdInstanceGroupsPageData, setSDInstanceGroupsPageData] = useState<SdInstanceGroupsPageDataQuery | null>(null)
   const [finalSDInstanceGroupsPageData, setFinalSDInstanceGroupsPageData] = useState<SDInstanceGroupData[]>([])
 
+  const { show: showSDInstanceGroupModal, hide: hideSDInstanceGroupModal } = useModal(SDInstanceGroupModal)
+
+  const initiateSDInstanceGroupCreation = () => {
+    showSDInstanceGroupModal({
+      mode: SDInstanceGroupModalMode.create,
+      sdInstanceData: sdInstanceGroupsPageData.sdInstances.map(({ id, userIdentifier }) => ({
+        id: id,
+        userIdentifier: userIdentifier
+      })),
+      onConfirm: finalizeSDInstanceGroupCreation
+    })
+  }
+
+  const finalizeSDInstanceGroupCreation = async (sdInstanceGroupUserIdentifier: string, selectedSDInstanceIDs: string[]) => {
+    await createSDInstanceGroupMutation({
+      variables: {
+        input: {
+          sdInstanceIDs: selectedSDInstanceIDs,
+          userIdentifier: sdInstanceGroupUserIdentifier
+        }
+      }
+    })
+    await hideSDInstanceGroupModal()
+  }
+
   useEffect(() => {
-    setSDInstanceGroupsPageData(data)
+    setSDInstanceGroupsPageData(data ?? null)
   }, [data])
+
+  useEffect(() => {
+    if (!createSDInstanceGroupData) {
+      return
+    }
+    const { id, userIdentifier, sdInstanceIDs } = createSDInstanceGroupData.createSDInstanceGroup
+    setSDInstanceGroupsPageData((sdInstanceGroupsPageData) =>
+      produce(sdInstanceGroupsPageData, (draftSDInstanceGroupsPageData) => {
+        draftSDInstanceGroupsPageData.sdInstanceGroups.push({
+          id: id,
+          userIdentifier: userIdentifier,
+          sdInstanceIDs: sdInstanceIDs
+        })
+      })
+    )
+  }, [createSDInstanceGroupData])
 
   useEffect(() => {
     if (!onKPIFulfillmentCheckedData) {
@@ -98,7 +153,14 @@ const SDInstanceGroupsPageController: React.FC = () => {
     })
     setFinalSDInstanceGroupsPageData(finalSDInstanceGroupsPageData)
   }, [sdInstanceGroupsPageData])
-  return <SDInstanceGroupsPageView sdInstanceGroupsPageData={finalSDInstanceGroupsPageData} anyLoadingOccurs={loading} anyErrorOccurred={!!error || !!onKPIFulfillmentCheckedError} />
+  return (
+    <SDInstanceGroupsPageView
+      sdInstanceGroupsPageData={finalSDInstanceGroupsPageData}
+      anyLoadingOccurs={loading || createSDInstanceGroupLoading}
+      anyErrorOccurred={!!error || !!onKPIFulfillmentCheckedError || !!createSDInstanceGroupError}
+      initiateSDInstanceGroupCreation={initiateSDInstanceGroupCreation}
+    />
+  )
 }
 
 export default SDInstanceGroupsPageController
