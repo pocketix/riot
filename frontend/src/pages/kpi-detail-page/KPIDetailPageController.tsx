@@ -220,12 +220,20 @@ const KPIDetailPageController: React.FC = () => {
     )
   }
 
+  const reset = () => {
+    currentNodeNameRef.current = ''
+    setSDTypeData(null)
+    setDefinitionModel(initialKPIDefinitionModel)
+  }
+
   const canSubmit: boolean = useMemo(() => {
     return !!sdTypeData && definitionModel.attributes.nodeType !== NodeType.NewNode
   }, [sdTypeData, definitionModel])
 
   return (
     <KPIDetailPageView
+      pageTitle={id ? 'KPI editor – Edit KPI definition' : 'KPI editor – Create KPI definition'}
+      reset={reset}
       kpiDefinitionModel={definitionModel}
       sdTypesData={sdTypesData}
       sdTypeData={sdTypeData}

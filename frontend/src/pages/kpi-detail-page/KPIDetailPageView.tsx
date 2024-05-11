@@ -8,6 +8,8 @@ import { AsynchronousEffectFunction, ConsumerFunction, EffectFunction, TetraCons
 import { PlainTextField } from '../../page-independent-components/mui-based/Styled'
 
 interface KPIDetailPageViewProps {
+  pageTitle: string
+  reset: EffectFunction
   kpiDefinitionModel: KPIDefinitionModel
   sdTypesData: SdTypesQuery
   sdTypeData: SdType
@@ -31,7 +33,7 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
     setUserIdentifier(props.kpiDefinitionModel.userIdentifier)
   }, [props.kpiDefinitionModel.userIdentifier])
   return (
-    <StandardContentPageTemplate pageTitle="KPI detail" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
+    <StandardContentPageTemplate pageTitle={props.pageTitle} anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
       <div className="flex items-center gap-5">
         <p className="m-0 text-[40px]">User identifier:</p>
         <PlainTextField
@@ -67,6 +69,10 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
               ))}
           </Select>
         </FormControl>
+        <div className="ml-auto flex cursor-pointer items-center gap-1.5" onClick={props.reset}>
+          <span className="text-2xl">Reset KPI editor to default state</span>
+          <span className="material-symbols-outlined text-5xl">restart_alt</span>
+        </div>
       </div>
       <EditableTree
         editableTreeNodeData={props.kpiDefinitionModel}
