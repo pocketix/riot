@@ -17,7 +17,6 @@ const KPIPageView: React.FC<KPIPageViewProps> = (props) => {
   const navigate = useNavigate()
   return (
     <StandardContentPageTemplate pageTitle="KPI definitions" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
-      <h2>Current KPI definitions</h2>
       <div className="flex flex-wrap gap-5">
         {props.kpiDefinitionsData &&
           props.kpiDefinitionsData.kpiDefinitions

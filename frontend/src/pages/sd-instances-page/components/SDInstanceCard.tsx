@@ -49,6 +49,9 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
               <div className="flex items-baseline gap-1">
                 <p className="mb-1 mt-1">User identifier:</p>
                 <PlainTextField
+                  sx={{
+                    flexGrow: 1
+                  }}
                   id="standard-basic"
                   label=""
                   variant="standard"
@@ -94,6 +97,7 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
           )}
         </>
       }
+      className="max-w-[500px]"
     />
   )
 }

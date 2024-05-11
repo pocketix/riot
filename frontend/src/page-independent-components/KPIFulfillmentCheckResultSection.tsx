@@ -22,7 +22,7 @@ interface KPIFulfillmentCheckResultSectionProps {
 
 const KPIFulfillmentCheckResultSection: React.FC<KPIFulfillmentCheckResultSectionProps> = (props) => {
   return (
-    <div className="mt-2 flex flex-row flex-wrap gap-x-3 gap-y-1 rounded-[5px] border-2 border-gray-500 bg-[#dcdcdc] px-3 py-1">
+    <div className="mt-2 flex flex-row flex-wrap gap-x-3 gap-y-1 rounded-[5px] border-gray-500 bg-[#dcdcdc] px-3 py-1">
       {props.kpiFulfillmentCheckResultsData
         .sort((a, b) => parseInt(a.kpiDefinitionData.id, 10) - parseInt(b.kpiDefinitionData.id, 10))
         .map((kpiFulfillmentCheckResultData) => (
@@ -55,10 +55,10 @@ const KPIFulfillmentCheckResultLabel: React.FC<KPIFulfillmentCheckResultLabelPro
     }
   }, [props.kpiFulfillmentState])
   return (
-    <div key={props.kpiDefinitionID} className="flex items-center gap-1 rounded-[5px] border-[1px] border-[#5d5d5d] px-2 py-2">
+    <div key={props.kpiDefinitionID} className="flex items-center gap-1.5 rounded-[5px] px-2 py-2">
       <p className="font-bold">{props.kpiDefinitionUserIdentifier}</p>
       <div
-        className="h-5 w-5 rounded-full border-[1px] border-black"
+        className="h-5 w-5 rounded-full border-[2px] border-black"
         style={{
           backgroundColor: bgColorHex
         }}

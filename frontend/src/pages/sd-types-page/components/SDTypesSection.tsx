@@ -20,7 +20,6 @@ const SDTypesSection: React.FC<SDTypesSectionProps> = (props) => {
 
   return (
     <div>
-      <h2>Current SD type definitions</h2>
       <FormControlLabel control={<Switch checked={areParametersDisplayed} onChange={handleChange} />} label="Display parameters?" />
       <div className="mt-1 flex flex-wrap gap-5">
         {props.sdTypesQueryData &&

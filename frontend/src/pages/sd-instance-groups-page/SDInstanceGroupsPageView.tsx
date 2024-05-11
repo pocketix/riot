@@ -27,7 +27,6 @@ interface SDInstanceGroupsPageViewProps {
 const SDInstanceGroupsPageView: React.FC<SDInstanceGroupsPageViewProps> = (props) => {
   return (
     <StandardContentPageTemplate pageTitle="SD instance groups" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
-      <h2>Currently defined SD instance groups</h2>
       <div className="flex flex-wrap gap-5">
         {props.sdInstanceGroupsPageData
           .slice()
@@ -47,15 +46,16 @@ const SDInstanceGroupsPageView: React.FC<SDInstanceGroupsPageViewProps> = (props
               }
               bodyContent={
                 <>
-                  <p>
+                  <p className="text-[24px]">
                     User identifier: <strong>{sdInstanceGroupDataItem.userIdentifier}</strong>
                   </p>
-                  <div className="flex flex-wrap gap-1">
-                    <p>SD instances:</p>
+                  <div className="flex flex-wrap">
+                    <p className="text-[24px]">SD instances:</p>
                     {sdInstanceGroupDataItem.sdInstanceData.map((sdInstanceDataItem, index, array) => {
                       return (
-                        <p key={sdInstanceDataItem.id}>
-                          <strong>{`${sdInstanceDataItem.userIdentifier}${index !== array.length - 1 ? ',' : ''}`}</strong>
+                        <p key={sdInstanceDataItem.id} className={`text-[24px] ${index === 0 ? 'ml-1.5' : 'ml-2'}`}>
+                          <strong>{sdInstanceDataItem.userIdentifier}</strong>
+                          {index !== array.length - 1 ? ',' : ''}
                         </p>
                       )
                     })}
@@ -75,7 +75,7 @@ const SDInstanceGroupsPageView: React.FC<SDInstanceGroupsPageViewProps> = (props
                   )}
                 </>
               }
-              className="max-w-[400px]"
+              className="max-w-[500px]"
             ></GenericCardTemplate>
           ))}
         <AddNewCardButton onClick={() => {}} />
