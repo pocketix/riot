@@ -100,6 +100,7 @@ func ReconstructKPIDefinitionDTO(kpiDefinitionEntity schema.KPIDefinitionEntity,
 	kpiDefinitionRootOptional := util.NewOptionalOf(reconstructKPINodeTree(*kpiDefinitionEntity.RootNodeID, prepareKPINodeParentChildrenMap(kpiNodeEntities), logicalOperationKPINodeEntities, atomKPINodeEntities))
 	return kpi.DefinitionDTO{
 		ID:                  util.NewOptionalOf[uint32](kpiDefinitionEntity.ID),
+		SDTypeID:            kpiDefinitionEntity.SDTypeID,
 		SDTypeSpecification: kpiDefinitionEntity.SDType.Denotation,
 		UserIdentifier:      kpiDefinitionEntity.UserIdentifier,
 		RootNode:            kpiDefinitionRootOptional.GetPayload(),
