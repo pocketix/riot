@@ -34,6 +34,7 @@ const SDInstanceGroupsPageView: React.FC<SDInstanceGroupsPageViewProps> = (props
           .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10))
           .map((sdInstanceGroupDataItem) => (
             <GenericCardTemplate // TODO: Consider creating a separate component out of this...
+              key={sdInstanceGroupDataItem.id}
               headerContent={
                 <>
                   <span onClick={() => {}} className="material-symbols-outlined cursor-pointer">

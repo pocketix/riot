@@ -27,6 +27,7 @@ const KPIFulfillmentCheckResultSection: React.FC<KPIFulfillmentCheckResultSectio
         .sort((a, b) => parseInt(a.kpiDefinitionData.id, 10) - parseInt(b.kpiDefinitionData.id, 10))
         .map((kpiFulfillmentCheckResultData) => (
           <KPIFulfillmentCheckResultLabel
+            key={kpiFulfillmentCheckResultData.kpiDefinitionData.id}
             kpiDefinitionID={kpiFulfillmentCheckResultData.kpiDefinitionData.id}
             kpiDefinitionUserIdentifier={kpiFulfillmentCheckResultData.kpiDefinitionData.userIdentifier}
             kpiFulfillmentState={kpiFulfillmentCheckResultData.kpiFulfillmentState}

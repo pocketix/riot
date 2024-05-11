@@ -1,15 +1,50 @@
 import React, { useEffect, useState } from 'react'
 import SDInstanceGroupsPageView, { SDInstanceGroupData } from './SDInstanceGroupsPageView'
-import { useQuery } from '@apollo/client'
-import { SdInstanceGroupsPageDataQuery, SdInstanceGroupsPageDataQueryVariables } from '../../generated/graphql'
+import { useQuery, useSubscription } from '@apollo/client'
+import { OnKpiFulfillmentCheckedSubscription, OnKpiFulfillmentCheckedSubscriptionVariables, SdInstanceGroupsPageDataQuery, SdInstanceGroupsPageDataQueryVariables } from '../../generated/graphql'
 import qSDInstanceGroupsPageData from './../../graphql/queries/sdInstanceGroupsPageData.graphql'
 import gql from 'graphql-tag'
 import { KPIFulfillmentState } from '../../page-independent-components/KPIFulfillmentCheckResultSection'
+import sOnKPIFulfillmentChecked from '../../graphql/subscriptions/onKPIFulfillmentChecked.graphql'
+import { produce } from 'immer'
 
 const SDInstanceGroupsPageController: React.FC = () => {
   const { data, loading, error } = useQuery<SdInstanceGroupsPageDataQuery, SdInstanceGroupsPageDataQueryVariables>(gql(qSDInstanceGroupsPageData))
-  const [sdInstanceGroupsPageData, setSDInstanceGroupsPageData] = useState<SDInstanceGroupData[]>([])
+  const { data: onKPIFulfillmentCheckedData, error: onKPIFulfillmentCheckedError } = useSubscription<OnKpiFulfillmentCheckedSubscription, OnKpiFulfillmentCheckedSubscriptionVariables>(
+    gql(sOnKPIFulfillmentChecked)
+  )
+
+  const [sdInstanceGroupsPageData, setSDInstanceGroupsPageData] = useState<SdInstanceGroupsPageDataQuery | null>(null)
+  const [finalSDInstanceGroupsPageData, setFinalSDInstanceGroupsPageData] = useState<SDInstanceGroupData[]>([])
+
   useEffect(() => {
+    setSDInstanceGroupsPageData(data)
+  }, [data])
+
+  useEffect(() => {
+    if (!onKPIFulfillmentCheckedData) {
+      return
+    }
+    setSDInstanceGroupsPageData((sdInstanceGroupsPageData) =>
+      produce(sdInstanceGroupsPageData, (draftSDInstanceGroupsPageData) => {
+        const { kpiDefinitionID, sdInstanceID, fulfilled } = onKPIFulfillmentCheckedData.onKPIFulfillmentChecked
+        const kpiFulfillmentCheckResultIndex = draftSDInstanceGroupsPageData.kpiFulfillmentCheckResults.findIndex((k) => k.kpiDefinitionID === kpiDefinitionID && k.sdInstanceID === sdInstanceID)
+        const kpiFulfillmentCheckResult = {
+          kpiDefinitionID,
+          sdInstanceID,
+          fulfilled
+        }
+        if (kpiFulfillmentCheckResultIndex !== -1) {
+          draftSDInstanceGroupsPageData.kpiFulfillmentCheckResults[kpiFulfillmentCheckResultIndex] = kpiFulfillmentCheckResult
+        } else {
+          draftSDInstanceGroupsPageData.kpiFulfillmentCheckResults.push(kpiFulfillmentCheckResult)
+        }
+      })
+    )
+  }, [onKPIFulfillmentCheckedData])
+
+  useEffect(() => {
+    const data = sdInstanceGroupsPageData
     if (!data?.sdInstances || !data?.sdInstanceGroups || !data?.kpiDefinitions || !data?.kpiFulfillmentCheckResults) {
       return
     }
@@ -27,7 +62,7 @@ const SDInstanceGroupsPageController: React.FC = () => {
       }),
       {}
     )
-    const sdInstanceGroupsPageData: SDInstanceGroupData[] = data.sdInstanceGroups.map((sdInstanceGroup) => {
+    const finalSDInstanceGroupsPageData: SDInstanceGroupData[] = data.sdInstanceGroups.map((sdInstanceGroup) => {
       const sdTypeIDs = data.sdInstances.filter((s) => sdInstanceGroup.sdInstanceIDs.some((sdInstanceID) => sdInstanceID === s.id)).map((s) => s.type.id)
       const kpiDefinitions = data.kpiDefinitions.filter((k) => sdTypeIDs.some((sdTypeID) => sdTypeID === k.sdTypeID))
       const kpiFulfillmentStateByKPIDefinitionIDMap: { [key: string]: KPIFulfillmentState } = kpiDefinitions.reduce(
@@ -61,9 +96,9 @@ const SDInstanceGroupsPageController: React.FC = () => {
         })
       }
     })
-    setSDInstanceGroupsPageData(sdInstanceGroupsPageData)
-  }, [data])
-  return <SDInstanceGroupsPageView sdInstanceGroupsPageData={sdInstanceGroupsPageData} anyLoadingOccurs={loading} anyErrorOccurred={!!error} />
+    setFinalSDInstanceGroupsPageData(finalSDInstanceGroupsPageData)
+  }, [sdInstanceGroupsPageData])
+  return <SDInstanceGroupsPageView sdInstanceGroupsPageData={finalSDInstanceGroupsPageData} anyLoadingOccurs={loading} anyErrorOccurred={!!error || !!onKPIFulfillmentCheckedError} />
 }
 
 export default SDInstanceGroupsPageController
