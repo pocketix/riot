@@ -51,16 +51,15 @@ const SDInstanceGroupsPageView: React.FC<SDInstanceGroupsPageViewProps> = (props
                   <p className="text-[24px]">
                     User identifier: <strong>{sdInstanceGroupDataItem.userIdentifier}</strong>
                   </p>
-                  <div className="flex flex-wrap">
+                  <div className="flex flex-col">
                     <p className="text-[24px]">SD instances:</p>
-                    {sdInstanceGroupDataItem.sdInstanceData.map((sdInstanceDataItem, index, array) => {
-                      return (
-                        <p key={sdInstanceDataItem.id} className={`text-[24px] ${index === 0 ? 'ml-1.5' : 'ml-2'}`}>
-                          <strong>{sdInstanceDataItem.userIdentifier}</strong>
-                          {index !== array.length - 1 ? ',' : ''}
-                        </p>
-                      )
-                    })}
+                    <ul>
+                      {sdInstanceGroupDataItem.sdInstanceData.map((sdInstanceDataItem) => (
+                        <li key={sdInstanceDataItem.id} className="text-[24px] font-bold">
+                          {sdInstanceDataItem.userIdentifier}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                   {sdInstanceGroupDataItem.kpiDefinitionData.length > 0 && (
                     <KPIFulfillmentCheckResultSection
