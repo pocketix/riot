@@ -45,10 +45,12 @@ const SDInstanceGroupsPageController: React.FC = () => {
   const initiateSDInstanceGroupCreation = () => {
     showSDInstanceGroupModal({
       mode: SDInstanceGroupModalMode.create,
-      sdInstanceData: sdInstanceGroupsPageData.sdInstances.map(({ id, userIdentifier }) => ({
-        id: id,
-        userIdentifier: userIdentifier
-      })),
+      sdInstanceData: sdInstanceGroupsPageData.sdInstances
+        .filter(({ confirmedByUser }) => confirmedByUser)
+        .map(({ id, userIdentifier }) => ({
+          id: id,
+          userIdentifier: userIdentifier
+        })),
       onConfirm: finalizeSDInstanceGroupCreation
     })
   }

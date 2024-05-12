@@ -1,6 +1,7 @@
 query SDInstanceGroupsPageData {
     sdInstances {
         id
+        confirmedByUser
         userIdentifier
         type {
             id
