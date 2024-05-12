@@ -349,6 +349,13 @@ export type DeleteKpiDefinitionMutationVariables = Exact<{
 
 export type DeleteKpiDefinitionMutation = { __typename?: 'Mutation', deleteKPIDefinition: boolean };
 
+export type DeleteSdInstanceGroupMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteSdInstanceGroupMutation = { __typename?: 'Mutation', deleteSDInstanceGroup: boolean };
+
 export type DeleteSdTypeMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
