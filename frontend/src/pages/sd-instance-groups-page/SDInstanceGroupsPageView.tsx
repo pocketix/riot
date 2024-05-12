@@ -3,7 +3,7 @@ import StandardContentPageTemplate from '../../page-independent-components/Stand
 import GenericCardTemplate from '../../page-independent-components/GenericCardTemplate'
 import AddNewCardButton from '../../page-independent-components/AddNewCardButton'
 import KPIFulfillmentCheckResultSection, { KPIFulfillmentState } from '../../page-independent-components/KPIFulfillmentCheckResultSection'
-import { AsynchronousConsumerFunction, EffectFunction } from '../../util'
+import { AsynchronousConsumerFunction, ConsumerFunction, EffectFunction } from '../../util'
 
 export interface SDInstanceGroupData {
   id: string
@@ -24,6 +24,7 @@ interface SDInstanceGroupsPageViewProps {
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
   initiateSDInstanceGroupCreation: EffectFunction
+  initiateSDInstanceGroupUpdate: ConsumerFunction<string>
   deleteSDInstanceGroup: AsynchronousConsumerFunction<string>
 }
 
@@ -39,7 +40,7 @@ const SDInstanceGroupsPageView: React.FC<SDInstanceGroupsPageViewProps> = (props
               key={sdInstanceGroupDataItem.id}
               headerContent={
                 <>
-                  <span onClick={() => {}} className="material-symbols-outlined cursor-pointer">
+                  <span onClick={() => props.initiateSDInstanceGroupUpdate(sdInstanceGroupDataItem.id)} className="material-symbols-outlined cursor-pointer">
                     edit
                   </span>
                   <span onClick={() => props.deleteSDInstanceGroup(sdInstanceGroupDataItem.id)} className="material-symbols-outlined cursor-pointer">

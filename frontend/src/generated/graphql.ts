@@ -156,7 +156,7 @@ export type MutationUpdateSdInstanceArgs = {
 
 export type MutationUpdateSdInstanceGroupArgs = {
   id: Scalars['ID']['input'];
-  input: SdInstanceGroupUpdateInput;
+  input: SdInstanceGroupInput;
 };
 
 export type NumericEqAtomKpiNode = AtomKpiNode & KpiNode & {
@@ -255,12 +255,6 @@ export type SdInstanceGroup = {
 export type SdInstanceGroupInput = {
   sdInstanceIDs: Array<Scalars['ID']['input']>;
   userIdentifier: Scalars['String']['input'];
-};
-
-export type SdInstanceGroupUpdateInput = {
-  newUserIdentifier?: InputMaybe<Scalars['String']['input']>;
-  sdInstanceIDsToAdd?: InputMaybe<Array<Scalars['ID']['input']>>;
-  sdInstanceIDsToRemove?: InputMaybe<Array<Scalars['ID']['input']>>;
 };
 
 export type SdInstanceUpdateInput = {
@@ -370,6 +364,14 @@ export type UpdateKpiDefinitionMutationVariables = Exact<{
 
 
 export type UpdateKpiDefinitionMutation = { __typename?: 'Mutation', updateKPIDefinition: { __typename?: 'KPIDefinition', id: string } };
+
+export type UpdateSdInstanceGroupMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: SdInstanceGroupInput;
+}>;
+
+
+export type UpdateSdInstanceGroupMutation = { __typename?: 'Mutation', updateSDInstanceGroup: { __typename?: 'SDInstanceGroup', id: string, userIdentifier: string, sdInstanceIDs: Array<string> } };
 
 export type UpdateUserIdentifierOfSdInstanceMutationVariables = Exact<{
   id: Scalars['ID']['input'];

@@ -1,4 +1,4 @@
-import { AsynchronousBiConsumerFunction } from '../../../util'
+import { AsynchronousBiConsumerFunction, AsynchronousTriConsumerFunction } from '../../../util'
 import NiceModal, { useModal } from '@ebay/nice-modal-react'
 import ModalBase from '../../../page-independent-components/mui-based/ModalBase'
 import { Box, Button, Checkbox, Chip, FormControl, Grid, InputLabel, ListItemText, MenuItem, OutlinedInput, Select, TextField } from '@mui/material'
@@ -15,13 +15,17 @@ interface SDInstanceGroupModalProps {
     id: string
     userIdentifier: string
   }[]
-  onConfirm: AsynchronousBiConsumerFunction<string, string[]>
+  createSDInstanceGroup: AsynchronousBiConsumerFunction<string, string[]>
+  updateSDInstanceGroup: AsynchronousTriConsumerFunction<string, string, string[]>
+  sdInstanceGroupID?: string
+  userIdentifier?: string
+  selectedSDInstanceIDs?: string[]
 }
 
 export default NiceModal.create<SDInstanceGroupModalProps>((props) => {
-  const { visible, hide } = useModal()
-  const [userIdentifier, setUserIdentifier] = useState<string>('Set a sensible user identifier for this SD instance group...')
-  const [selectedSDInstanceIDs, setSelectedSDInstanceIDs] = useState<string[]>([])
+  const { visible, remove } = useModal()
+  const [userIdentifier, setUserIdentifier] = useState<string>(props.userIdentifier ?? 'Set a sensible user identifier for this SD instance group...')
+  const [selectedSDInstanceIDs, setSelectedSDInstanceIDs] = useState<string[]>(props.selectedSDInstanceIDs ?? [])
   const sdInstanceUserIdentifierByIDMap: { [key: string]: string } = useMemo(() => {
     if (!props.sdInstanceData) {
       return {}
@@ -42,21 +46,8 @@ export default NiceModal.create<SDInstanceGroupModalProps>((props) => {
     return interactionWithSDInstanceMultiSelectDetectedRef.current && selectedSDInstanceIDs.length === 0
   }, [selectedSDInstanceIDs])
 
-  const reset = () => {
-    setUserIdentifier('Set a sensible user identifier for this SD instance group...')
-    setSelectedSDInstanceIDs([])
-    interactionWithSDInstanceMultiSelectDetectedRef.current = false
-  }
-
   return (
-    <ModalBase
-      isOpen={visible}
-      onClose={() => {
-        reset()
-        hide()
-      }}
-      modalTitle={`${props.mode === SDInstanceGroupModalMode.create ? 'Create' : 'Update'} SD instance group`}
-    >
+    <ModalBase isOpen={visible} onClose={remove} modalTitle={`${props.mode === SDInstanceGroupModalMode.create ? 'Create' : 'Update'} SD instance group`}>
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12}>
           <TextField
@@ -108,8 +99,11 @@ export default NiceModal.create<SDInstanceGroupModalProps>((props) => {
             fullWidth
             disabled={!canConfirm}
             onClick={() => {
-              props.onConfirm(userIdentifier, selectedSDInstanceIDs)
-              reset()
+              if (props.mode === SDInstanceGroupModalMode.create) {
+                props.createSDInstanceGroup && props.createSDInstanceGroup(userIdentifier, selectedSDInstanceIDs)
+              } else {
+                props.updateSDInstanceGroup && props.sdInstanceGroupID && props.updateSDInstanceGroup(props.sdInstanceGroupID, userIdentifier, selectedSDInstanceIDs)
+              }
             }}
           >
             Confirm

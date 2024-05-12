@@ -221,12 +221,6 @@ type SDInstanceGroupInput struct {
 	SdInstanceIDs  []string `json:"sdInstanceIDs"`
 }
 
-type SDInstanceGroupUpdateInput struct {
-	NewUserIdentifier     *string  `json:"newUserIdentifier,omitempty"`
-	SdInstanceIDsToAdd    []string `json:"sdInstanceIDsToAdd,omitempty"`
-	SdInstanceIDsToRemove []string `json:"sdInstanceIDsToRemove,omitempty"`
-}
-
 type SDInstanceUpdateInput struct {
 	UserIdentifier  *string `json:"userIdentifier,omitempty"`
 	ConfirmedByUser *bool   `json:"confirmedByUser,omitempty"`

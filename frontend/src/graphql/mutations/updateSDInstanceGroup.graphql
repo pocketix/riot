@@ -1,0 +1,7 @@
+mutation UpdateSDInstanceGroup($id: ID!, $input: SDInstanceGroupInput!) {
+    updateSDInstanceGroup(id: $id, input: $input) {
+        id
+        userIdentifier
+        sdInstanceIDs
+    }
+}

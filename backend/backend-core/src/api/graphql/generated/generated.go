@@ -87,7 +87,7 @@ type ComplexityRoot struct {
 		DeleteSDType          func(childComplexity int, id string) int
 		UpdateKPIDefinition   func(childComplexity int, id string, input model.KPIDefinitionInput) int
 		UpdateSDInstance      func(childComplexity int, id string, input model.SDInstanceUpdateInput) int
-		UpdateSDInstanceGroup func(childComplexity int, id string, input model.SDInstanceGroupUpdateInput) int
+		UpdateSDInstanceGroup func(childComplexity int, id string, input model.SDInstanceGroupInput) int
 	}
 
 	NumericEQAtomKPINode struct {
@@ -195,7 +195,7 @@ type MutationResolver interface {
 	UpdateKPIDefinition(ctx context.Context, id string, input model.KPIDefinitionInput) (*model.KPIDefinition, error)
 	DeleteKPIDefinition(ctx context.Context, id string) (bool, error)
 	CreateSDInstanceGroup(ctx context.Context, input model.SDInstanceGroupInput) (*model.SDInstanceGroup, error)
-	UpdateSDInstanceGroup(ctx context.Context, id string, input model.SDInstanceGroupUpdateInput) (*model.SDInstanceGroup, error)
+	UpdateSDInstanceGroup(ctx context.Context, id string, input model.SDInstanceGroupInput) (*model.SDInstanceGroup, error)
 	DeleteSDInstanceGroup(ctx context.Context, id string) (bool, error)
 }
 type QueryResolver interface {
@@ -464,7 +464,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateSDInstanceGroup(childComplexity, args["id"].(string), args["input"].(model.SDInstanceGroupUpdateInput)), true
+		return e.complexity.Mutation.UpdateSDInstanceGroup(childComplexity, args["id"].(string), args["input"].(model.SDInstanceGroupInput)), true
 
 	case "NumericEQAtomKPINode.id":
 		if e.complexity.NumericEQAtomKPINode.ID == nil {
@@ -912,7 +912,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputKPIDefinitionInput,
 		ec.unmarshalInputKPINodeInput,
 		ec.unmarshalInputSDInstanceGroupInput,
-		ec.unmarshalInputSDInstanceGroupUpdateInput,
 		ec.unmarshalInputSDInstanceUpdateInput,
 		ec.unmarshalInputSDParameterInput,
 		ec.unmarshalInputSDTypeInput,
@@ -1224,12 +1223,6 @@ input SDInstanceGroupInput {
   sdInstanceIDs: [ID!]!
 }
 
-input SDInstanceGroupUpdateInput {
-  newUserIdentifier: String
-  sdInstanceIDsToAdd: [ID!]
-  sdInstanceIDsToRemove: [ID!]
-}
-
 # ----- Queries, Mutations and Subscriptions -----
 
 type Query {
@@ -1251,7 +1244,7 @@ type Mutation {
   updateKPIDefinition(id: ID!, input: KPIDefinitionInput!): KPIDefinition!
   deleteKPIDefinition(id: ID!): Boolean!
   createSDInstanceGroup(input: SDInstanceGroupInput!): SDInstanceGroup!
-  updateSDInstanceGroup(id: ID!, input: SDInstanceGroupUpdateInput!): SDInstanceGroup!
+  updateSDInstanceGroup(id: ID!, input: SDInstanceGroupInput!): SDInstanceGroup!
   deleteSDInstanceGroup(id: ID!): Boolean!
 }
 
@@ -1393,10 +1386,10 @@ func (ec *executionContext) field_Mutation_updateSDInstanceGroup_args(ctx contex
 		}
 	}
 	args["id"] = arg0
-	var arg1 model.SDInstanceGroupUpdateInput
+	var arg1 model.SDInstanceGroupInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNSDInstanceGroupUpdateInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroupUpdateInput(ctx, tmp)
+		arg1, err = ec.unmarshalNSDInstanceGroupInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroupInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2764,7 +2757,7 @@ func (ec *executionContext) _Mutation_updateSDInstanceGroup(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateSDInstanceGroup(rctx, fc.Args["id"].(string), fc.Args["input"].(model.SDInstanceGroupUpdateInput))
+		return ec.resolvers.Mutation().UpdateSDInstanceGroup(rctx, fc.Args["id"].(string), fc.Args["input"].(model.SDInstanceGroupInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7730,47 +7723,6 @@ func (ec *executionContext) unmarshalInputSDInstanceGroupInput(ctx context.Conte
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSDInstanceGroupUpdateInput(ctx context.Context, obj interface{}) (model.SDInstanceGroupUpdateInput, error) {
-	var it model.SDInstanceGroupUpdateInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"newUserIdentifier", "sdInstanceIDsToAdd", "sdInstanceIDsToRemove"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "newUserIdentifier":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newUserIdentifier"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.NewUserIdentifier = data
-		case "sdInstanceIDsToAdd":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sdInstanceIDsToAdd"))
-			data, err := ec.unmarshalOID2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.SdInstanceIDsToAdd = data
-		case "sdInstanceIDsToRemove":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sdInstanceIDsToRemove"))
-			data, err := ec.unmarshalOID2ᚕstringᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.SdInstanceIDsToRemove = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputSDInstanceUpdateInput(ctx context.Context, obj interface{}) (model.SDInstanceUpdateInput, error) {
 	var it model.SDInstanceUpdateInput
 	asMap := map[string]interface{}{}
@@ -9895,11 +9847,6 @@ func (ec *executionContext) unmarshalNSDInstanceGroupInput2githubᚗcomᚋMichal
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNSDInstanceGroupUpdateInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceGroupUpdateInput(ctx context.Context, v interface{}) (model.SDInstanceGroupUpdateInput, error) {
-	res, err := ec.unmarshalInputSDInstanceGroupUpdateInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalNSDInstanceUpdateInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋapiᚋgraphqlᚋmodelᚐSDInstanceUpdateInput(ctx context.Context, v interface{}) (model.SDInstanceUpdateInput, error) {
 	res, err := ec.unmarshalInputSDInstanceUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -10362,44 +10309,6 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	}
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
-}
-
-func (ec *executionContext) unmarshalOID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

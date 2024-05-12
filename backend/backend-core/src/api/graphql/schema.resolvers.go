@@ -50,7 +50,7 @@ func (r *mutationResolver) CreateSDInstanceGroup(ctx context.Context, input mode
 }
 
 // UpdateSDInstanceGroup is the resolver for the updateSDInstanceGroup field.
-func (r *mutationResolver) UpdateSDInstanceGroup(ctx context.Context, id string, input model.SDInstanceGroupUpdateInput) (*model.SDInstanceGroup, error) {
+func (r *mutationResolver) UpdateSDInstanceGroup(ctx context.Context, id string, input model.SDInstanceGroupInput) (*model.SDInstanceGroup, error) {
 	return service.UpdateSDInstanceGroup(id, input).Unwrap()
 }
 

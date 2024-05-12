@@ -192,12 +192,6 @@ input SDInstanceGroupInput {
   sdInstanceIDs: [ID!]!
 }
 
-input SDInstanceGroupUpdateInput {
-  newUserIdentifier: String
-  sdInstanceIDsToAdd: [ID!]
-  sdInstanceIDsToRemove: [ID!]
-}
-
 # ----- Queries, Mutations and Subscriptions -----
 
 type Query {
@@ -219,7 +213,7 @@ type Mutation {
   updateKPIDefinition(id: ID!, input: KPIDefinitionInput!): KPIDefinition!
   deleteKPIDefinition(id: ID!): Boolean!
   createSDInstanceGroup(input: SDInstanceGroupInput!): SDInstanceGroup!
-  updateSDInstanceGroup(id: ID!, input: SDInstanceGroupUpdateInput!): SDInstanceGroup!
+  updateSDInstanceGroup(id: ID!, input: SDInstanceGroupInput!): SDInstanceGroup!
   deleteSDInstanceGroup(id: ID!): Boolean!
 }
 

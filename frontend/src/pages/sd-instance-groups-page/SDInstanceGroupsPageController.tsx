@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import SDInstanceGroupsPageView, { SDInstanceGroupData } from './SDInstanceGroupsPageView'
 import { useMutation, useQuery, useSubscription } from '@apollo/client'
 import {
@@ -9,7 +9,9 @@ import {
   OnKpiFulfillmentCheckedSubscription,
   OnKpiFulfillmentCheckedSubscriptionVariables,
   SdInstanceGroupsPageDataQuery,
-  SdInstanceGroupsPageDataQueryVariables
+  SdInstanceGroupsPageDataQueryVariables,
+  UpdateSdInstanceGroupMutation,
+  UpdateSdInstanceGroupMutationVariables
 } from '../../generated/graphql'
 import qSDInstanceGroupsPageData from './../../graphql/queries/sdInstanceGroupsPageData.graphql'
 import gql from 'graphql-tag'
@@ -19,6 +21,7 @@ import { produce } from 'immer'
 import { useModal } from '@ebay/nice-modal-react'
 import SDInstanceGroupModal, { SDInstanceGroupModalMode } from './components/SDInstanceGroupModal'
 import mCreateSDInstanceGroup from '../../graphql/mutations/createSDInstanceGroup.graphql'
+import mUpdateSDInstanceGroup from '../../graphql/mutations/updateSDInstanceGroup.graphql'
 import mDeleteSDInstanceGroup from '../../graphql/mutations/deleteSDInstanceGroup.graphql'
 
 const SDInstanceGroupsPageController: React.FC = () => {
@@ -30,6 +33,10 @@ const SDInstanceGroupsPageController: React.FC = () => {
     CreateSdInstanceGroupMutation,
     CreateSdInstanceGroupMutationVariables
   >(gql(mCreateSDInstanceGroup))
+  const [updateSDInstanceGroupMutation, { data: updateSDInstanceGroupData, loading: updateSDInstanceGroupLoading, error: updateSDInstanceGroupError }] = useMutation<
+    UpdateSdInstanceGroupMutation,
+    UpdateSdInstanceGroupMutationVariables
+  >(gql(mUpdateSDInstanceGroup))
   const [deleteSDInstanceGroupMutation, { data: deleteSDInstanceGroupData, loading: deleteSDInstanceGroupLoading, error: deleteSDInstanceGroupError }] = useMutation<
     DeleteSdInstanceGroupMutation,
     DeleteSdInstanceGroupMutationVariables
@@ -40,18 +47,27 @@ const SDInstanceGroupsPageController: React.FC = () => {
 
   const currentlyDeletedSDInstanceGroupIDRef = useRef<string>('')
 
-  const { show: showSDInstanceGroupModal, hide: hideSDInstanceGroupModal } = useModal(SDInstanceGroupModal)
+  const { show: showSDInstanceGroupModal, remove: removeSDInstanceGroupModal } = useModal(SDInstanceGroupModal)
 
-  const initiateSDInstanceGroupCreation = () => {
-    showSDInstanceGroupModal({
-      mode: SDInstanceGroupModalMode.create,
-      sdInstanceData: sdInstanceGroupsPageData.sdInstances
+  const userConfirmedSDInstancesData: {
+    id: string
+    userIdentifier: string
+  }[] = useMemo(() => {
+    return (
+      sdInstanceGroupsPageData?.sdInstances
         .filter(({ confirmedByUser }) => confirmedByUser)
         .map(({ id, userIdentifier }) => ({
           id: id,
           userIdentifier: userIdentifier
-        })),
-      onConfirm: finalizeSDInstanceGroupCreation
+        })) ?? []
+    )
+  }, [sdInstanceGroupsPageData])
+
+  const initiateSDInstanceGroupCreation = () => {
+    showSDInstanceGroupModal({
+      mode: SDInstanceGroupModalMode.create,
+      sdInstanceData: userConfirmedSDInstancesData,
+      createSDInstanceGroup: finalizeSDInstanceGroupCreation
     })
   }
 
@@ -64,7 +80,36 @@ const SDInstanceGroupsPageController: React.FC = () => {
         }
       }
     })
-    await hideSDInstanceGroupModal()
+    removeSDInstanceGroupModal()
+  }
+
+  const initiateSDInstanceGroupUpdate = (id: string) => {
+    const targetSDInstanceGroup = sdInstanceGroupsPageData.sdInstanceGroups.find((sdInstanceGroup) => sdInstanceGroup.id === id)
+    if (!targetSDInstanceGroup) {
+      console.warn(`Couldn't find SD instance group with ID = ${id}`)
+      return
+    }
+    showSDInstanceGroupModal({
+      mode: SDInstanceGroupModalMode.update,
+      sdInstanceData: userConfirmedSDInstancesData,
+      updateSDInstanceGroup: finalizeSDInstanceGroupUpdate,
+      sdInstanceGroupID: id,
+      userIdentifier: targetSDInstanceGroup.userIdentifier,
+      selectedSDInstanceIDs: targetSDInstanceGroup.sdInstanceIDs
+    })
+  }
+
+  const finalizeSDInstanceGroupUpdate = async (id: string, sdInstanceGroupUserIdentifier: string, selectedSDInstanceIDs: string[]) => {
+    await updateSDInstanceGroupMutation({
+      variables: {
+        id: id,
+        input: {
+          userIdentifier: sdInstanceGroupUserIdentifier,
+          sdInstanceIDs: selectedSDInstanceIDs
+        }
+      }
+    })
+    removeSDInstanceGroupModal()
   }
 
   const deleteSDInstanceGroup = async (id: string) => {
@@ -95,6 +140,23 @@ const SDInstanceGroupsPageController: React.FC = () => {
       })
     )
   }, [createSDInstanceGroupData])
+
+  useEffect(() => {
+    if (!updateSDInstanceGroupData?.updateSDInstanceGroup) {
+      return
+    }
+    const { id, userIdentifier, sdInstanceIDs } = updateSDInstanceGroupData.updateSDInstanceGroup
+    setSDInstanceGroupsPageData((sdInstanceGroupsPageData) =>
+      produce(sdInstanceGroupsPageData, (draftSDInstanceGroupsPageData) => {
+        const index = draftSDInstanceGroupsPageData.sdInstanceGroups.findIndex((s) => s.id === id)
+        draftSDInstanceGroupsPageData.sdInstanceGroups[index] = {
+          id: id,
+          userIdentifier: userIdentifier,
+          sdInstanceIDs: sdInstanceIDs
+        }
+      })
+    )
+  }, [updateSDInstanceGroupData])
 
   useEffect(() => {
     if (!deleteSDInstanceGroupData?.deleteSDInstanceGroup || !!deleteSDInstanceGroupError) {
@@ -189,9 +251,10 @@ const SDInstanceGroupsPageController: React.FC = () => {
   return (
     <SDInstanceGroupsPageView
       sdInstanceGroupsPageData={finalSDInstanceGroupsPageData}
-      anyLoadingOccurs={loading || createSDInstanceGroupLoading || deleteSDInstanceGroupLoading}
-      anyErrorOccurred={!!error || !!onKPIFulfillmentCheckedError || !!createSDInstanceGroupError || !!deleteSDInstanceGroupError}
+      anyLoadingOccurs={loading || createSDInstanceGroupLoading || updateSDInstanceGroupLoading || deleteSDInstanceGroupLoading}
+      anyErrorOccurred={!!error || !!onKPIFulfillmentCheckedError || !!createSDInstanceGroupError || !!updateSDInstanceGroupError || !!deleteSDInstanceGroupError}
       initiateSDInstanceGroupCreation={initiateSDInstanceGroupCreation}
+      initiateSDInstanceGroupUpdate={initiateSDInstanceGroupUpdate}
       deleteSDInstanceGroup={deleteSDInstanceGroup}
     />
   )
