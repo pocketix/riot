@@ -109,7 +109,7 @@ const SDInstanceGroupsPageController: React.FC = () => {
   }, [deleteSDInstanceGroupData, deleteSDInstanceGroupError])
 
   useEffect(() => {
-    if (!onKPIFulfillmentCheckedData) {
+    if (!sdInstanceGroupsPageData || !onKPIFulfillmentCheckedData?.onKPIFulfillmentChecked) {
       return
     }
     setSDInstanceGroupsPageData((sdInstanceGroupsPageData) =>

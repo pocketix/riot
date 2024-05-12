@@ -83,7 +83,7 @@ const SDInstancesPageController: React.FC = () => {
   }, [sdInstancesPageData])
 
   useEffect(() => {
-    if (!onSDInstanceRegisteredData) {
+    if (!combinedSDInstancesPageData || !onSDInstanceRegisteredData?.onSDInstanceRegistered) {
       return
     }
     setCombinedSDInstancesPageData((combinedSDInstancesPageData) =>
@@ -101,7 +101,7 @@ const SDInstancesPageController: React.FC = () => {
   }, [onSDInstanceRegisteredData])
 
   useEffect(() => {
-    if (!onKPIFulfillmentCheckedData) {
+    if (!combinedSDInstancesPageData || !onKPIFulfillmentCheckedData?.onKPIFulfillmentChecked) {
       return
     }
     setCombinedSDInstancesPageData((combinedSDInstancesPageData) =>
