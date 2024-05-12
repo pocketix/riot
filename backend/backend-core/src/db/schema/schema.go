@@ -1,12 +1,13 @@
 package schema
 
 type KPIDefinitionEntity struct {
-	ID             uint32         `gorm:"column:id;primaryKey"`
-	UserIdentifier string         `gorm:"column:user_identifier;not null"`
-	RootNodeID     *uint32        `gorm:"column:root_node_id;not null"`
-	RootNode       *KPINodeEntity `gorm:"foreignKey:RootNodeID;constraint:OnDelete:CASCADE"`
-	SDTypeID       uint32         `gorm:"column:sd_type_id;not null"`
-	SDType         SDTypeEntity   `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
+	ID                         uint32                            `gorm:"column:id;primaryKey"`
+	UserIdentifier             string                            `gorm:"column:user_identifier;not null"`
+	RootNodeID                 *uint32                           `gorm:"column:root_node_id;not null"`
+	RootNode                   *KPINodeEntity                    `gorm:"foreignKey:RootNodeID;constraint:OnDelete:CASCADE"`
+	SDTypeID                   uint32                            `gorm:"column:sd_type_id;not null"`
+	SDType                     SDTypeEntity                      `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
+	KPIFulfillmentCheckResults []KPIFulfillmentCheckResultEntity `gorm:"foreignKey:KPIDefinitionID;constraint:OnDelete:CASCADE"`
 }
 
 func (KPIDefinitionEntity) TableName() string {
@@ -70,12 +71,14 @@ func (SDParameterEntity) TableName() string {
 }
 
 type SDInstanceEntity struct {
-	ID              uint32       `gorm:"column:id;primaryKey;not null"`
-	UID             string       `gorm:"column:uid;not null;index"` // UID is a separately indexed field
-	ConfirmedByUser bool         `gorm:"column:confirmed_by_user;not null"`
-	UserIdentifier  string       `gorm:"column:user_identifier;not null"`
-	SDTypeID        uint32       `gorm:"column:sd_type_id"`
-	SDType          SDTypeEntity `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
+	ID                         uint32                            `gorm:"column:id;primaryKey;not null"`
+	UID                        string                            `gorm:"column:uid;not null;index"` // UID is a separately indexed field
+	ConfirmedByUser            bool                              `gorm:"column:confirmed_by_user;not null"`
+	UserIdentifier             string                            `gorm:"column:user_identifier;not null"`
+	SDTypeID                   uint32                            `gorm:"column:sd_type_id"`
+	SDType                     SDTypeEntity                      `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
+	GroupMembershipRecords     []SDInstanceGroupMembershipEntity `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
+	KPIFulfillmentCheckResults []KPIFulfillmentCheckResultEntity `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 }
 
 func (SDInstanceEntity) TableName() string {
@@ -95,7 +98,7 @@ func (KPIFulfillmentCheckResultEntity) TableName() string {
 type SDInstanceGroupEntity struct {
 	ID                     uint32                            `gorm:"column:id;primaryKey;not null"`
 	UserIdentifier         string                            `gorm:"column:user_identifier;not null"`
-	GroupMembershipRecords []SDInstanceGroupMembershipEntity `gorm:"foreignKey:SDInstanceGroupID"`
+	GroupMembershipRecords []SDInstanceGroupMembershipEntity `gorm:"foreignKey:SDInstanceGroupID;constraint:OnDelete:CASCADE"`
 }
 
 func (SDInstanceGroupEntity) TableName() string {
@@ -103,8 +106,8 @@ func (SDInstanceGroupEntity) TableName() string {
 }
 
 type SDInstanceGroupMembershipEntity struct {
-	SDInstanceGroupID uint32 `gorm:"column:sd_instance_group_id;primaryKey;not null;constraint:OnDelete:CASCADE;index"` // SDInstanceGroupID is a separately indexed field
-	SDInstanceID      uint32 `gorm:"column:sd_instance_id;primaryKey;not null;constraint:OnDelete:CASCADE"`
+	SDInstanceGroupID uint32 `gorm:"column:sd_instance_group_id;primaryKey;not null;index"` // SDInstanceGroupID is a separately indexed field
+	SDInstanceID      uint32 `gorm:"column:sd_instance_id;primaryKey;not null"`
 }
 
 func (SDInstanceGroupMembershipEntity) TableName() string {
