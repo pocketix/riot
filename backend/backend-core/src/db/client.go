@@ -326,7 +326,7 @@ func (r *relationalDatabaseClientImpl) PersistKPIFulFulfillmentCheckResult(kpiFu
 func (r *relationalDatabaseClientImpl) LoadKPIFulFulfillmentCheckResult(kpiDefinitionID uint32, sdInstanceID uint32) cUtil.Result[cUtil.Optional[types.KPIFulfillmentCheckResultDTO]] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	kpiFulFulfillmentCheckResultEntityLoadResult := LoadEntityFromDB[schema.KPIFulfillmentCheckResultEntity](r.db, WhereClause("kpi_definition_id = ? and sd_instance_id = ?", kpiDefinitionID, sdInstanceID))
+	kpiFulFulfillmentCheckResultEntityLoadResult := LoadEntityFromDB[schema.KPIFulfillmentCheckResultEntity](r.db, WhereClause("kpi_definition_id = ?", kpiDefinitionID), WhereClause("sd_instance_id = ?", sdInstanceID))
 	if kpiFulFulfillmentCheckResultEntityLoadResult.IsFailure() {
 		err := kpiFulFulfillmentCheckResultEntityLoadResult.GetError()
 		if errors.Is(err, gorm.ErrRecordNotFound) {
