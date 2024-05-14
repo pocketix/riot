@@ -11,7 +11,7 @@ func getQueueDeclarationErrorMessage(queueName string) string {
 }
 
 func SetupRabbitMQInfrastructureForISC() {
-	namesOfQueuesToDeclare := util.SliceOf(constants.KPIDefinitionsBySDTypeDenotationMapUpdates, constants.KPIFulfillmentCheckResultsQueueName, constants.KPIFulfillmentCheckRequestsQueueName, constants.SDInstanceRegistrationRequestsQueueName, constants.SetOfSDTypesUpdatesQueueName, constants.SetOfSDInstancesUpdatesQueueName)
+	namesOfQueuesToDeclare := util.SliceOf[string](constants.KPIDefinitionsBySDTypeDenotationMapUpdates, constants.KPIFulfillmentCheckResultsQueueName, constants.KPIFulfillmentCheckRequestsQueueName, constants.SDInstanceRegistrationRequestsQueueName, constants.SetOfSDTypesUpdatesQueueName, constants.SetOfSDInstancesUpdatesQueueName)
 	util.ForEach(namesOfQueuesToDeclare, func(nameOfQueuesToDeclare string) {
 		util.TerminateOnError(getRabbitMQClient().DeclareStandardQueue(nameOfQueuesToDeclare), getQueueDeclarationErrorMessage(nameOfQueuesToDeclare))
 	})
