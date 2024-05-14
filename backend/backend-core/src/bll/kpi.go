@@ -1,10 +1,11 @@
-package service
+package bll
 
 import (
 	"errors"
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbClient"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/isc"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/api2dto"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2api"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
@@ -21,9 +22,7 @@ func CreateKPIDefinition(kpiDefinitionInput model.KPIDefinitionInput) util.Resul
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[*model.KPIDefinition](persistResult.GetError())
 	}
-	go func() {
-		util.LogPossibleErrorThenProceed(EnqueueMessageRepresentingCurrentKPIDefinitions(), "Failed to enqueue message representing current KPI definitions in the system")
-	}()
+	go isc.EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration()
 	id := persistResult.GetPayload()
 	kpiDefinitionDTO.ID = util.NewOptionalOf[uint32](id)
 	kpiDefinition := dto2api.KPIDefinitionDTOToKPIDefinition(kpiDefinitionDTO)
@@ -50,9 +49,7 @@ func UpdateKPIDefinition(stringID string, kpiDefinitionInput model.KPIDefinition
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[*model.KPIDefinition](persistResult.GetError())
 	}
-	go func() {
-		util.LogPossibleErrorThenProceed(EnqueueMessageRepresentingCurrentKPIDefinitions(), "Failed to enqueue message representing current KPI definitions in the system")
-	}()
+	go isc.EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration()
 	kpiDefinition := dto2api.KPIDefinitionDTOToKPIDefinition(kpiDefinitionDTO)
 	return util.NewSuccessResult[*model.KPIDefinition](kpiDefinition)
 }
@@ -65,6 +62,7 @@ func DeleteKPIDefinition(stringID string) error {
 	if err := dbClient.GetRelationalDatabaseClientInstance().DeleteKPIDefinition(uint32FromStringResult.GetPayload()); err != nil {
 		return err
 	}
+	go isc.EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration()
 	return nil
 }
 
@@ -82,7 +80,7 @@ func GetKPIDefinition(stringID string) util.Result[*model.KPIDefinition] {
 		return util.NewFailureResult[*model.KPIDefinition](uint32FromStringResult.GetError())
 	}
 	id := uint32FromStringResult.GetPayload()
-	// TODO: Searching for target KPI definition on service layer (suboptimal)
+	// TODO: Searching for target KPI definition on business-logic layer (suboptimal)
 	loadResult := dbClient.GetRelationalDatabaseClientInstance().LoadKPIDefinitions()
 	if loadResult.IsFailure() {
 		return util.NewFailureResult[*model.KPIDefinition](loadResult.GetError())

@@ -1,12 +1,12 @@
-package service
+package bll
 
 import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbClient"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/isc"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/api2dto"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2api"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
-	"log"
 )
 
 func CreateSDType(sdTypeInput model.SDTypeInput) util.Result[*model.SDType] {
@@ -15,11 +15,7 @@ func CreateSDType(sdTypeInput model.SDTypeInput) util.Result[*model.SDType] {
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[*model.SDType](persistResult.GetError())
 	}
-	go func() {
-		if err := EnqueueMessageRepresentingCurrentSDTypes(); err != nil {
-			log.Println("Failed to enqueue message representing current SD types in the system")
-		}
-	}()
+	go isc.EnqueueMessageRepresentingCurrentSDTypeConfiguration()
 	sdType := dto2api.SDTypeDTOToSDType(persistResult.GetPayload())
 	return util.NewSuccessResult[*model.SDType](sdType)
 }
@@ -32,9 +28,7 @@ func DeleteSDType(stringID string) error {
 	if err := dbClient.GetRelationalDatabaseClientInstance().DeleteSDType(uint32FromStringResult.GetPayload()); err != nil {
 		return err
 	}
-	go func() {
-		util.LogPossibleErrorThenProceed(EnqueueMessagesRepresentingCurrentConfiguration(), "failed to enqueue messages representing the current system configuration (SD types, SD instances and KPI definitions)")
-	}()
+	go isc.EnqueueMessagesRepresentingCurrentSystemConfiguration()
 	return nil
 }
 
@@ -61,11 +55,7 @@ func UpdateSDInstance(stringID string, sdInstanceUpdateInput model.SDInstanceUpd
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[*model.SDInstance](persistResult.GetError())
 	}
-	go func() {
-		if err := EnqueueMessageRepresentingCurrentSDInstances(); err != nil {
-			log.Println("Failed to enqueue message representing current SD instances in the system")
-		}
-	}()
+	go isc.EnqueueMessageRepresentingCurrentSDInstanceConfiguration()
 	sdInstance := dto2api.SDInstanceDTOToSDInstance(sdInstanceDTO)
 	return util.NewSuccessResult[*model.SDInstance](sdInstance)
 }

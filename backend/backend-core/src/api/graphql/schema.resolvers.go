@@ -9,95 +9,95 @@ import (
 
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/generated"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/service"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/bll"
 )
 
 // CreateSDType is the resolver for the createSDType field.
 func (r *mutationResolver) CreateSDType(ctx context.Context, input model.SDTypeInput) (*model.SDType, error) {
-	return service.CreateSDType(input).Unwrap()
+	return bll.CreateSDType(input).Unwrap()
 }
 
 // DeleteSDType is the resolver for the deleteSDType field.
 func (r *mutationResolver) DeleteSDType(ctx context.Context, id string) (bool, error) {
-	err := service.DeleteSDType(id)
+	err := bll.DeleteSDType(id)
 	return err == nil, err
 }
 
 // UpdateSDInstance is the resolver for the updateSDInstance field.
 func (r *mutationResolver) UpdateSDInstance(ctx context.Context, id string, input model.SDInstanceUpdateInput) (*model.SDInstance, error) {
-	return service.UpdateSDInstance(id, input).Unwrap()
+	return bll.UpdateSDInstance(id, input).Unwrap()
 }
 
 // CreateKPIDefinition is the resolver for the createKPIDefinition field.
 func (r *mutationResolver) CreateKPIDefinition(ctx context.Context, input model.KPIDefinitionInput) (*model.KPIDefinition, error) {
-	return service.CreateKPIDefinition(input).Unwrap()
+	return bll.CreateKPIDefinition(input).Unwrap()
 }
 
 // UpdateKPIDefinition is the resolver for the updateKPIDefinition field.
 func (r *mutationResolver) UpdateKPIDefinition(ctx context.Context, id string, input model.KPIDefinitionInput) (*model.KPIDefinition, error) {
-	return service.UpdateKPIDefinition(id, input).Unwrap()
+	return bll.UpdateKPIDefinition(id, input).Unwrap()
 }
 
 // DeleteKPIDefinition is the resolver for the deleteKPIDefinition field.
 func (r *mutationResolver) DeleteKPIDefinition(ctx context.Context, id string) (bool, error) {
-	err := service.DeleteKPIDefinition(id)
+	err := bll.DeleteKPIDefinition(id)
 	return err == nil, err
 }
 
 // CreateSDInstanceGroup is the resolver for the createSDInstanceGroup field.
 func (r *mutationResolver) CreateSDInstanceGroup(ctx context.Context, input model.SDInstanceGroupInput) (*model.SDInstanceGroup, error) {
-	return service.CreateSDInstanceGroup(input).Unwrap()
+	return bll.CreateSDInstanceGroup(input).Unwrap()
 }
 
 // UpdateSDInstanceGroup is the resolver for the updateSDInstanceGroup field.
 func (r *mutationResolver) UpdateSDInstanceGroup(ctx context.Context, id string, input model.SDInstanceGroupInput) (*model.SDInstanceGroup, error) {
-	return service.UpdateSDInstanceGroup(id, input).Unwrap()
+	return bll.UpdateSDInstanceGroup(id, input).Unwrap()
 }
 
 // DeleteSDInstanceGroup is the resolver for the deleteSDInstanceGroup field.
 func (r *mutationResolver) DeleteSDInstanceGroup(ctx context.Context, id string) (bool, error) {
-	err := service.DeleteSDInstanceGroup(id)
+	err := bll.DeleteSDInstanceGroup(id)
 	return err == nil, err
 }
 
 // SdType is the resolver for the sdType field.
 func (r *queryResolver) SdType(ctx context.Context, id string) (*model.SDType, error) {
-	return service.GetSDType(id).Unwrap()
+	return bll.GetSDType(id).Unwrap()
 }
 
 // SdTypes is the resolver for the sdTypes field.
 func (r *queryResolver) SdTypes(ctx context.Context) ([]*model.SDType, error) {
-	return service.GetSDTypes().Unwrap()
+	return bll.GetSDTypes().Unwrap()
 }
 
 // SdInstances is the resolver for the sdInstances field.
 func (r *queryResolver) SdInstances(ctx context.Context) ([]*model.SDInstance, error) {
-	return service.GetSDInstances().Unwrap()
+	return bll.GetSDInstances().Unwrap()
 }
 
 // KpiDefinition is the resolver for the kpiDefinition field.
 func (r *queryResolver) KpiDefinition(ctx context.Context, id string) (*model.KPIDefinition, error) {
-	return service.GetKPIDefinition(id).Unwrap()
+	return bll.GetKPIDefinition(id).Unwrap()
 }
 
 // KpiDefinitions is the resolver for the kpiDefinitions field.
 func (r *queryResolver) KpiDefinitions(ctx context.Context) ([]*model.KPIDefinition, error) {
-	return service.GetKPIDefinitions().Unwrap()
+	return bll.GetKPIDefinitions().Unwrap()
 }
 
 // KpiFulfillmentCheckResults is the resolver for the kpiFulfillmentCheckResults field.
 func (r *queryResolver) KpiFulfillmentCheckResults(ctx context.Context) ([]*model.KPIFulfillmentCheckResult, error) {
-	return service.GetKPIFulfillmentCheckResults().Unwrap()
+	return bll.GetKPIFulfillmentCheckResults().Unwrap()
 }
 
 // SdInstanceGroup is the resolver for the sdInstanceGroup field.
 func (r *queryResolver) SdInstanceGroup(ctx context.Context, id string) (*model.SDInstanceGroup, error) {
-	return service.GetSDInstanceGroup(id).Unwrap()
+	return bll.GetSDInstanceGroup(id).Unwrap()
 }
 
 // SdInstanceGroups is the resolver for the sdInstanceGroups field.
 func (r *queryResolver) SdInstanceGroups(ctx context.Context) ([]*model.SDInstanceGroup, error) {
-	return service.GetSDInstanceGroups().Unwrap()
+	return bll.GetSDInstanceGroups().Unwrap()
 }
 
 // OnSDInstanceRegistered is the resolver for the onSDInstanceRegistered field.

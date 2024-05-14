@@ -1,4 +1,4 @@
-package service
+package bll
 
 import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
