@@ -1,22 +1,26 @@
 import React from 'react'
 import SDTypesSection from './components/SDTypesSection'
-import CreateSDTypeForm from './components/CreateSDTypeForm'
 import { SdTypesQuery } from '../../generated/graphql'
 import StandardContentPageTemplate from '../../page-independent-components/StandardContentPageTemplate'
-import { AsynchronousBiConsumerFunction, ConsumerFunction } from '../../util'
+import { ConsumerFunction, EffectFunction } from '../../util'
 
 interface SDTypesPageViewProps {
   sdTypesData: SdTypesQuery
-  createSDType: AsynchronousBiConsumerFunction<string, { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]>
-  deleteSDType: ConsumerFunction<string>
+  initiateSDTypeCreation: EffectFunction
+  initiateSDTypeDeletion: ConsumerFunction<string>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }
 
 const SDTypesPageView: React.FC<SDTypesPageViewProps> = (props) => (
   <StandardContentPageTemplate pageTitle="SD type definitions" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
-    <SDTypesSection sdTypesQueryData={props.sdTypesData} deleteSDType={props.deleteSDType} anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred} />
-    <CreateSDTypeForm sdTypesQueryData={props.sdTypesData} createSDType={props.createSDType} anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred} />
+    <SDTypesSection
+      sdTypesQueryData={props.sdTypesData}
+      initiateSDTypeCreation={props.initiateSDTypeCreation}
+      initiateSDTypeDeletion={props.initiateSDTypeDeletion}
+      anyLoadingOccurs={props.anyLoadingOccurs}
+      anyErrorOccurred={props.anyErrorOccurred}
+    />
   </StandardContentPageTemplate>
 )
 

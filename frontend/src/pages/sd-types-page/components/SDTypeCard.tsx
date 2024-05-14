@@ -9,7 +9,7 @@ interface SDTypeCardProps {
   denotation: string
   areParametersDisplayed: boolean
   parameters: SdParameter[]
-  deleteSDType: ConsumerFunction<string>
+  initiateSDTypeDeletion: ConsumerFunction<string>
 }
 
 const SDTypeCard: React.FC<SDTypeCardProps> = (props) => {
@@ -17,7 +17,7 @@ const SDTypeCard: React.FC<SDTypeCardProps> = (props) => {
     <GenericCardTemplate
       headerContent={
         <>
-          <div className="cursor-pointer" onClick={() => props.deleteSDType(props.id)}>
+          <div className="cursor-pointer" onClick={() => props.initiateSDTypeDeletion(props.id)}>
             <span className="material-symbols-outlined">delete</span>
           </div>
         </>

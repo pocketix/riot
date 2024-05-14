@@ -2,44 +2,37 @@ import React, { useState, useCallback, useMemo, ChangeEvent } from 'react'
 import { Button, FormControl, Grid, InputLabel, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material'
 import { SdTypesQuery } from '../../../generated/graphql'
 import { AsynchronousBiConsumerFunction } from '../../../util'
+import NiceModal, { useModal } from '@ebay/nice-modal-react'
+import ModalBase from '../../../page-independent-components/mui-based/ModalBase'
 
-interface CreateSDTypeFormProps {
+interface SDTypeModalProps {
   sdTypesQueryData: SdTypesQuery
-  createSDType: AsynchronousBiConsumerFunction<string, { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]>
-  anyLoadingOccurs: boolean
-  anyErrorOccurred: boolean
+  onConfirm: AsynchronousBiConsumerFunction<string, { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[]>
 }
 
-const CreateSDTypeForm: React.FC<CreateSDTypeFormProps> = (props) => {
+export default NiceModal.create<SDTypeModalProps>((props) => {
+  const { visible, remove } = useModal()
+
   const [denotation, setDenotation] = useState<string>('shelly1pro')
   const [parameters, setParameters] = useState<{ denotation: string; type: string }[]>([{ denotation: 'relay_0_temperature', type: 'NUMBER' }])
 
-  const isFormDisabled: boolean = useMemo<boolean>(() => props.anyLoadingOccurs || props.anyErrorOccurred, [props.anyLoadingOccurs, props.anyErrorOccurred])
-  const denotationFieldError: boolean = useMemo<boolean>(
-    () => denotation.length === 0 || props.sdTypesQueryData?.sdTypes.some((sdType) => sdType.denotation === denotation),
-    [denotation, props.sdTypesQueryData]
-  )
-  const denotationFieldHelperText: string = useMemo<string>(() => {
-    if (!denotationFieldError) {
+  const denotationFieldErrorFlag = useMemo(() => denotation.length === 0 || props.sdTypesQueryData?.sdTypes.some((sdType) => sdType.denotation === denotation), [denotation, props.sdTypesQueryData])
+
+  const denotationFieldHelperText = useMemo(() => {
+    if (!denotationFieldErrorFlag) {
       return ''
     } else if (denotation.length === 0) {
       return 'SD type denotation must be a non-empty string'
     } else {
       return 'SD type denotation must be unique'
     }
-  }, [denotationFieldError, denotation])
-  const formSubmitButtonDisabled: boolean = useMemo<boolean>(
-    () => isFormDisabled || denotationFieldError || parameters.some((p) => p.denotation.length === 0),
-    [isFormDisabled, denotationFieldError, parameters]
-  )
+  }, [denotationFieldErrorFlag, denotation])
+
+  const formSubmitButtonDisabled = useMemo(() => denotationFieldErrorFlag || parameters.some((p) => p.denotation.length === 0), [denotationFieldErrorFlag, parameters])
 
   const onSubmitHandler = useCallback(async () => {
-    await props.createSDType(denotation, parameters as { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[])
-  }, [denotation, parameters, props.createSDType])
-
-  const onDenotationChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setDenotation(e.target.value)
-  }, [])
+    await props.onConfirm(denotation, parameters as { denotation: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' }[])
+  }, [denotation, parameters, props.onConfirm])
 
   const onParameterDenotationChange = (index: number) => (e: ChangeEvent<HTMLInputElement>) => {
     const newParameters = [...parameters]
@@ -64,49 +57,40 @@ const CreateSDTypeForm: React.FC<CreateSDTypeFormProps> = (props) => {
   }
 
   return (
-    <div className="mt-8 flex w-3/5 flex-col gap-4 self-center">
-      <h2>Create SD type definition</h2>
+    <ModalBase isOpen={visible} onClose={remove} modalTitle="Create SD type definition" vwPercentage={40}>
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={8}>
-          <TextField fullWidth error={denotationFieldError} label="Denotation" value={denotation} disabled={isFormDisabled} onChange={onDenotationChange} helperText={denotationFieldHelperText} />
+          <TextField fullWidth error={denotationFieldErrorFlag} label="Denotation" value={denotation} onChange={(e) => setDenotation(e.target.value)} helperText={denotationFieldHelperText} />
         </Grid>
         <Grid item xs={4} />
-        <Grid item xs={12} style={{ height: 15 }} />
+        <Grid item xs={12} />
         {parameters.map((parameter, index) => {
-          const parameterDenotationFieldError: boolean = parameter.denotation.length === 0
-          const parameterDenotationFieldHelperText: string = parameterDenotationFieldError ? 'Parameter denotation must be a non-empty string' : ''
-
+          const parameterDenotationFieldError = parameter.denotation.length === 0
+          const parameterDenotationFieldHelperText = parameterDenotationFieldError ? 'Parameter denotation must be a non-empty string' : ''
           return (
             <React.Fragment key={index}>
-              <Grid item xs={4} style={{ height: 80 }}>
+              <Grid item xs={5.5}>
                 <TextField
                   fullWidth
                   error={parameterDenotationFieldError}
                   label={`Parameter ${index + 1} – Denotation`}
                   value={parameter.denotation}
-                  disabled={isFormDisabled}
                   onChange={onParameterDenotationChange(index)}
                   helperText={parameterDenotationFieldHelperText}
                 />
               </Grid>
-              <Grid item xs={4} style={{ height: 80 }}>
+              <Grid item xs={3}>
                 <FormControl fullWidth>
                   <InputLabel id={`parameter-type-select-label-${index}`}>{`Parameter ${index + 1} – Type`}</InputLabel>
-                  <Select
-                    labelId={`parameter-type-select-label-${index}`}
-                    label={`Parameter ${index + 1} – Type`}
-                    value={parameter.type}
-                    onChange={onParameterTypeChange(index)}
-                    disabled={isFormDisabled}
-                  >
+                  <Select labelId={`parameter-type-select-label-${index}`} label={`Parameter ${index + 1} – Type`} value={parameter.type} onChange={onParameterTypeChange(index)}>
                     <MenuItem value={'STRING'}>STRING</MenuItem>
                     <MenuItem value={'NUMBER'}>NUMBER</MenuItem>
                     <MenuItem value={'BOOLEAN'}>BOOLEAN</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={3} style={{ height: 60 }}>
-                <Button fullWidth disabled={isFormDisabled} onClick={() => deleteParameter(index)}>
+              <Grid item xs={2.5}>
+                <Button fullWidth onClick={() => deleteParameter(index)}>
                   Delete this parameter
                 </Button>
               </Grid>
@@ -115,7 +99,7 @@ const CreateSDTypeForm: React.FC<CreateSDTypeFormProps> = (props) => {
           )
         })}
         <Grid item xs={3}>
-          <Button fullWidth disabled={isFormDisabled} onClick={addParameter}>
+          <Button fullWidth onClick={addParameter}>
             Introduce next parameter
           </Button>
         </Grid>
@@ -126,8 +110,6 @@ const CreateSDTypeForm: React.FC<CreateSDTypeFormProps> = (props) => {
           </Button>
         </Grid>
       </Grid>
-    </div>
+    </ModalBase>
   )
-}
-
-export default CreateSDTypeForm
+})

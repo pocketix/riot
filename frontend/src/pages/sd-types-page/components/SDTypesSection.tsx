@@ -2,11 +2,13 @@ import React, { useState } from 'react'
 import { SdTypesQuery } from '../../../generated/graphql'
 import { FormControlLabel, Switch } from '@mui/material'
 import SDTypeCard from './SDTypeCard'
-import { ConsumerFunction } from '../../../util'
+import { ConsumerFunction, EffectFunction } from '../../../util'
+import AddNewCardButton from '../../../page-independent-components/AddNewCardButton'
 
 interface SDTypesSectionProps {
   sdTypesQueryData: SdTypesQuery
-  deleteSDType: ConsumerFunction<string>
+  initiateSDTypeCreation: EffectFunction
+  initiateSDTypeDeletion: ConsumerFunction<string>
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
 }
@@ -34,10 +36,11 @@ const SDTypesSection: React.FC<SDTypesSectionProps> = (props) => {
                   denotation={sdType.denotation}
                   areParametersDisplayed={areParametersDisplayed}
                   parameters={sdType.parameters}
-                  deleteSDType={props.deleteSDType}
+                  initiateSDTypeDeletion={props.initiateSDTypeDeletion}
                 />
               )
             })}
+        <AddNewCardButton onClick={props.initiateSDTypeCreation} />
       </div>
     </div>
   )
