@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/api2dto"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2api"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
@@ -14,7 +14,7 @@ func GetSDInstanceGroup(stringID string) util.Result[*model.SDInstanceGroup] {
 	if uint32FromStringResult.IsFailure() {
 		return util.NewFailureResult[*model.SDInstanceGroup](uint32FromStringResult.GetError())
 	}
-	sdInstanceGroupLoadResult := db.GetRelationalDatabaseClientInstance().LoadSDInstanceGroup(uint32FromStringResult.GetPayload())
+	sdInstanceGroupLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstanceGroup(uint32FromStringResult.GetPayload())
 	if sdInstanceGroupLoadResult.IsFailure() {
 		return util.NewFailureResult[*model.SDInstanceGroup](sdInstanceGroupLoadResult.GetError())
 	}
@@ -22,7 +22,7 @@ func GetSDInstanceGroup(stringID string) util.Result[*model.SDInstanceGroup] {
 }
 
 func GetSDInstanceGroups() util.Result[[]*model.SDInstanceGroup] {
-	sdInstanceGroupsLoadResult := db.GetRelationalDatabaseClientInstance().LoadSDInstanceGroups()
+	sdInstanceGroupsLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstanceGroups()
 	if sdInstanceGroupsLoadResult.IsFailure() {
 		return util.NewFailureResult[[]*model.SDInstanceGroup](sdInstanceGroupsLoadResult.GetError())
 	}
@@ -35,7 +35,7 @@ func CreateSDInstanceGroup(input model.SDInstanceGroupInput) util.Result[*model.
 		return util.NewFailureResult[*model.SDInstanceGroup](toDTOMappingResult.GetError())
 	}
 	sdInstanceGroupDTO := toDTOMappingResult.GetPayload()
-	sdInstanceGroupPersistResult := db.GetRelationalDatabaseClientInstance().PersistSDInstanceGroup(sdInstanceGroupDTO)
+	sdInstanceGroupPersistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDInstanceGroup(sdInstanceGroupDTO)
 	if sdInstanceGroupPersistResult.IsFailure() {
 		return util.NewFailureResult[*model.SDInstanceGroup](sdInstanceGroupPersistResult.GetError())
 	}
@@ -54,7 +54,7 @@ func UpdateSDInstanceGroup(stringID string, input model.SDInstanceGroupInput) ut
 	}
 	sdInstanceGroupDTO := toDTOMappingResult.GetPayload()
 	sdInstanceGroupDTO.ID = util.NewOptionalOf(uint32FromStringResult.GetPayload())
-	if sdInstanceGroupPersistResult := db.GetRelationalDatabaseClientInstance().PersistSDInstanceGroup(sdInstanceGroupDTO); sdInstanceGroupPersistResult.IsFailure() {
+	if sdInstanceGroupPersistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDInstanceGroup(sdInstanceGroupDTO); sdInstanceGroupPersistResult.IsFailure() {
 		return util.NewFailureResult[*model.SDInstanceGroup](sdInstanceGroupPersistResult.GetError())
 	}
 	return util.NewSuccessResult(dto2api.SDInstanceGroupDTOToSDInstanceGroup(sdInstanceGroupDTO))
@@ -65,5 +65,5 @@ func DeleteSDInstanceGroup(stringID string) error {
 	if uint32FromStringResult.IsFailure() {
 		return uint32FromStringResult.GetError()
 	}
-	return db.GetRelationalDatabaseClientInstance().DeleteSDInstanceGroup(uint32FromStringResult.GetPayload())
+	return dbClient.GetRelationalDatabaseClientInstance().DeleteSDInstanceGroup(uint32FromStringResult.GetPayload())
 }

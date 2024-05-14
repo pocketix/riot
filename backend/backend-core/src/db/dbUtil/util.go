@@ -1,4 +1,4 @@
-package db
+package dbUtil
 
 import (
 	cUtil "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
@@ -7,14 +7,14 @@ import (
 	"reflect"
 )
 
-type WhereClausePair = cUtil.Pair[string, []any]
-type PreloadPathString = string
+type WhereClause = cUtil.Pair[string, []any]
+type PreloadPath = string
 
-func WhereClause(s string, a ...any) WhereClausePair {
+func Where(s string, a ...any) WhereClause {
 	return cUtil.NewPairOf(s, a)
 }
 
-func PreloadPaths(s ...string) []PreloadPathString {
+func Preload(s ...string) []PreloadPath {
 	return s
 }
 
@@ -22,11 +22,11 @@ func prepareLoadQuery(g *gorm.DB, args ...any) *gorm.DB {
 	query := g
 	cUtil.ForEach(args, func(arg any) {
 		switch typedArg := arg.(type) {
-		case WhereClausePair:
+		case WhereClause:
 			query = query.Where(typedArg.GetFirst(), typedArg.GetSecond()...)
 			break
-		case []PreloadPathString:
-			cUtil.ForEach(typedArg, func(preloadPathString PreloadPathString) {
+		case []PreloadPath:
+			cUtil.ForEach(typedArg, func(preloadPathString PreloadPath) {
 				query = query.Preload(preloadPathString)
 			})
 			break
@@ -57,10 +57,10 @@ func PersistEntityIntoDB[T any](g *gorm.DB, entityReference *T) error {
 	return g.Save(entityReference).Error
 }
 
-func DoesSuchEntityExist[T any](g *gorm.DB, whereClauses ...WhereClausePair) cUtil.Result[bool] {
+func DoesSuchEntityExist[T any](g *gorm.DB, whereClauses ...WhereClause) cUtil.Result[bool] {
 	entityCount := int64(0)
 	query := g.Model(new(T))
-	cUtil.ForEach(whereClauses, func(whereClause WhereClausePair) {
+	cUtil.ForEach(whereClauses, func(whereClause WhereClause) {
 		query = query.Where(whereClause.GetFirst(), whereClause.GetSecond()...)
 	})
 	if err := query.Count(&entityCount).Error; err != nil {
@@ -77,9 +77,9 @@ func DeleteEntitiesBasedOnSliceOfIds[T any](g *gorm.DB, ids []uint32) error {
 	return g.Delete(new(T), ids).Error
 }
 
-func DeleteEntitiesBasedOnWhereClauses[T any](g *gorm.DB, whereClauses ...WhereClausePair) error {
+func DeleteEntitiesBasedOnWhereClauses[T any](g *gorm.DB, whereClauses ...WhereClause) error {
 	query := g
-	cUtil.ForEach(whereClauses, func(whereClause WhereClausePair) {
+	cUtil.ForEach(whereClauses, func(whereClause WhereClause) {
 		query = query.Where(whereClause.GetFirst(), whereClause.GetSecond()...)
 	})
 	return query.Delete(new(T)).Error

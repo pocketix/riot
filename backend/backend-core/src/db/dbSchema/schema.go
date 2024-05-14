@@ -1,4 +1,4 @@
-package schema
+package dbSchema
 
 type KPIDefinitionEntity struct {
 	ID                         uint32                            `gorm:"column:id;primaryKey"`

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2api"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/constants"
@@ -25,7 +25,7 @@ func CheckForSDInstanceRegistrationRequests(sdInstanceChannel *chan *model.SDIns
 	err := rabbitmq.ConsumeJSONMessages(rabbitMQClient, constants.SDInstanceRegistrationRequestsQueueName, func(messagePayload cTypes.RequestForSDInstanceRegistration) error {
 		sd := messagePayload.SD
 		uid := sd.UID
-		sdInstanceExistenceCheckResult := db.GetRelationalDatabaseClientInstance().DoesSDInstanceExist(uid)
+		sdInstanceExistenceCheckResult := dbClient.GetRelationalDatabaseClientInstance().DoesSDInstanceExist(uid)
 		if sdInstanceExistenceCheckResult.IsFailure() {
 			return errors.New(fmt.Sprintf("couldn't check the existence of SD instance with UID: '%s'", uid))
 		}
@@ -34,7 +34,7 @@ func CheckForSDInstanceRegistrationRequests(sdInstanceChannel *chan *model.SDIns
 			return nil
 		}
 		sdTypeDenotation := sd.Type
-		sdTypeLoadResult := db.GetRelationalDatabaseClientInstance().LoadSDTypeBasedOnDenotation(sdTypeDenotation)
+		sdTypeLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDTypeBasedOnDenotation(sdTypeDenotation)
 		if sdTypeLoadResult.IsFailure() {
 			return errors.New(fmt.Sprintf("couldn't load database record of the '%s' SD type", sdTypeDenotation))
 		}
@@ -44,7 +44,7 @@ func CheckForSDInstanceRegistrationRequests(sdInstanceChannel *chan *model.SDIns
 			UserIdentifier:  uid,
 			SDType:          sdTypeLoadResult.GetPayload(),
 		}
-		sdInstancePersistResult := db.GetRelationalDatabaseClientInstance().PersistSDInstance(sdInstanceDTO)
+		sdInstancePersistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDInstance(sdInstanceDTO)
 		if sdInstancePersistResult.IsFailure() {
 			return errors.New("couldn't persist the SD instance")
 		}
@@ -62,7 +62,7 @@ func CheckForKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel *chan *
 		targetKPIDefinitionID := messagePayload.KPIDefinitionID
 		targetSDInstanceUID := messagePayload.UID
 		fulfilled := messagePayload.Fulfilled
-		targetSDInstanceLoadResult := db.GetRelationalDatabaseClientInstance().LoadSDInstanceBasedOnUID(targetSDInstanceUID)
+		targetSDInstanceLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstanceBasedOnUID(targetSDInstanceUID)
 		if targetSDInstanceLoadResult.IsFailure() {
 			return fmt.Errorf("couldn't load data from database (SD instance with UID = %s): %w", targetSDInstanceUID, targetSDInstanceLoadResult.GetError())
 		}
@@ -71,7 +71,7 @@ func CheckForKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel *chan *
 			return fmt.Errorf("there is no record of SD instance with UID = %s in the database", targetSDInstanceUID)
 		}
 		targetSDInstanceID := targetSDInstanceOptional.GetPayload().ID.GetPayload()
-		existingKPIFulfillmentCheckResultLoadResult := db.GetRelationalDatabaseClientInstance().LoadKPIFulFulfillmentCheckResult(targetKPIDefinitionID, targetSDInstanceID)
+		existingKPIFulfillmentCheckResultLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadKPIFulFulfillmentCheckResult(targetKPIDefinitionID, targetSDInstanceID)
 		if existingKPIFulfillmentCheckResultLoadResult.IsFailure() {
 			err := existingKPIFulfillmentCheckResultLoadResult.GetError()
 			return fmt.Errorf("couldn't load data from database (KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d): %w", targetKPIDefinitionID, targetSDInstanceID, err)
@@ -80,7 +80,7 @@ func CheckForKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel *chan *
 		if existingKPIFulfillmentCheckResultOptional.IsPresent() {
 			existingKPIFulfillmentCheckResult := existingKPIFulfillmentCheckResultOptional.GetPayload()
 			existingKPIFulfillmentCheckResult.Fulfilled = fulfilled
-			if err := db.GetRelationalDatabaseClientInstance().PersistKPIFulFulfillmentCheckResult(existingKPIFulfillmentCheckResult); err != nil {
+			if err := dbClient.GetRelationalDatabaseClientInstance().PersistKPIFulFulfillmentCheckResult(existingKPIFulfillmentCheckResult); err != nil {
 				return fmt.Errorf("couldn't update KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d: %w", targetKPIDefinitionID, targetSDInstanceID, err)
 			}
 			*kpiFulfillmentCheckResultChannel <- dto2api.KPIFulfillmentCheckResultDTOToKPIFulfillmentCheckResult(existingKPIFulfillmentCheckResult)
@@ -91,7 +91,7 @@ func CheckForKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel *chan *
 			SDInstanceID:    targetSDInstanceID,
 			Fulfilled:       fulfilled,
 		}
-		if err := db.GetRelationalDatabaseClientInstance().PersistKPIFulFulfillmentCheckResult(newKPIFulfillmentCheckResult); err != nil {
+		if err := dbClient.GetRelationalDatabaseClientInstance().PersistKPIFulFulfillmentCheckResult(newKPIFulfillmentCheckResult); err != nil {
 			return fmt.Errorf("couldn't persist KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d: %w", targetKPIDefinitionID, targetSDInstanceID, err)
 		}
 		*kpiFulfillmentCheckResultChannel <- dto2api.KPIFulfillmentCheckResultDTOToKPIFulfillmentCheckResult(newKPIFulfillmentCheckResult)
@@ -103,7 +103,7 @@ func CheckForKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel *chan *
 }
 
 func EnqueueMessageRepresentingCurrentSDTypes() error {
-	sdTypesLoadResult := db.GetRelationalDatabaseClientInstance().LoadSDTypes()
+	sdTypesLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDTypes()
 	if sdTypesLoadResult.IsFailure() {
 		return sdTypesLoadResult.GetError()
 	}
@@ -118,7 +118,7 @@ func EnqueueMessageRepresentingCurrentSDTypes() error {
 }
 
 func EnqueueMessageRepresentingCurrentSDInstances() error {
-	sdInstancesLoadResult := db.GetRelationalDatabaseClientInstance().LoadSDInstances()
+	sdInstancesLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstances()
 	if sdInstancesLoadResult.IsFailure() {
 		return sdInstancesLoadResult.GetError()
 	}
@@ -136,7 +136,7 @@ func EnqueueMessageRepresentingCurrentSDInstances() error {
 }
 
 func EnqueueMessageRepresentingCurrentKPIDefinitions() error {
-	kpiDefinitionsLoadResult := db.GetRelationalDatabaseClientInstance().LoadKPIDefinitions()
+	kpiDefinitionsLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadKPIDefinitions()
 	if kpiDefinitionsLoadResult.IsFailure() {
 		return kpiDefinitionsLoadResult.GetError()
 	}
