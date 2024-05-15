@@ -7,8 +7,8 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2api"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/types"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/constants"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
 	cTypes "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 	"sync"
@@ -113,7 +113,7 @@ func EnqueueMessageRepresentingCurrentSDTypeConfiguration() {
 		if sdTypeDenotationsJSONSerializationResult.IsFailure() {
 			return sdTypeDenotationsJSONSerializationResult.GetError()
 		}
-		return getRabbitMQClient().EnqueueJSONMessage(constants.SetOfSDTypesUpdatesQueueName, sdTypeDenotationsJSONSerializationResult.GetPayload())
+		return getRabbitMQClient().EnqueueJSONMessage(sharedConstants.SetOfSDTypesUpdatesQueueName, sdTypeDenotationsJSONSerializationResult.GetPayload())
 	}(), "[ISC] Failed to enqueue RabbitMQ messages representing current SD type configuration")
 }
 
@@ -133,7 +133,7 @@ func EnqueueMessageRepresentingCurrentSDInstanceConfiguration() {
 		if sdInstancesInfoJSONSerializationResult.IsFailure() {
 			return sdInstancesInfoJSONSerializationResult.GetError()
 		}
-		return getRabbitMQClient().EnqueueJSONMessage(constants.SetOfSDInstancesUpdatesQueueName, sdInstancesInfoJSONSerializationResult.GetPayload())
+		return getRabbitMQClient().EnqueueJSONMessage(sharedConstants.SetOfSDInstancesUpdatesQueueName, sdInstancesInfoJSONSerializationResult.GetPayload())
 	}(), "[ISC] Failed to enqueue RabbitMQ messages representing current SD instance configuration")
 }
 
@@ -156,7 +156,7 @@ func EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration() {
 		if kpiDefinitionsBySDTypeDenotationMapTFJSONSerializationResult.IsFailure() {
 			return kpiDefinitionsBySDTypeDenotationMapTFJSONSerializationResult.GetError()
 		}
-		return getRabbitMQClient().EnqueueJSONMessage(constants.KPIDefinitionsBySDTypeDenotationMapUpdates, kpiDefinitionsBySDTypeDenotationMapTFJSONSerializationResult.GetPayload())
+		return getRabbitMQClient().EnqueueJSONMessage(sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates, kpiDefinitionsBySDTypeDenotationMapTFJSONSerializationResult.GetPayload())
 	}(), "[ISC] Failed to enqueue RabbitMQ messages representing current KPI definition configuration")
 }
 

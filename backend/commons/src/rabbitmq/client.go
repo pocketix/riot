@@ -1,16 +1,18 @@
 package rabbitmq
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/constants"
 	cUtil "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"time"
 )
 
-import (
-	"context"
+const (
+	mimeTypeOfJSONData      = "application/json"
+	urlOfRabbitMQ           = "amqp://guest:guest@rabbitmq:5672/"
+	contextTimeoutInSeconds = 5
 )
 
 type Client interface {
@@ -26,7 +28,7 @@ type ClientImpl struct {
 }
 
 func NewClient() Client {
-	connection, err := amqp.Dial(constants.URLOfRabbitMQ)
+	connection, err := amqp.Dial(urlOfRabbitMQ)
 	cUtil.TerminateOnError(err, "[RabbitMQ client] Failed to connect to RabbitMQ")
 	channel, err := connection.Channel()
 	cUtil.TerminateOnError(err, "[RabbitMQ client] Failed to open a channel")
@@ -34,10 +36,10 @@ func NewClient() Client {
 }
 
 func (r *ClientImpl) EnqueueJSONMessage(queueName string, messagePayload []byte) error {
-	ctx, cancelFunction := context.WithTimeout(context.Background(), constants.ContextTimeoutInSeconds*time.Second)
+	ctx, cancelFunction := context.WithTimeout(context.Background(), contextTimeoutInSeconds*time.Second)
 	defer cancelFunction()
 	return r.channel.PublishWithContext(ctx, "", queueName, false, false, amqp.Publishing{
-		ContentType: constants.MIMETypeOfJSONData,
+		ContentType: mimeTypeOfJSONData,
 		Body:        messagePayload,
 	})
 }
@@ -69,7 +71,7 @@ func (r *ClientImpl) Dispose() {
 func ConsumeJSONMessages[T any](c Client, queueName string, messagePayloadConsumerFunction func(messagePayload T) error) error {
 	return c.SetupMessageConsumption(queueName, func(message amqp.Delivery) error {
 		messageContentType := message.ContentType
-		if messageContentType != constants.MIMETypeOfJSONData {
+		if messageContentType != mimeTypeOfJSONData {
 			return errors.New(fmt.Sprintf("Incorrect message content type: %s", messageContentType))
 		}
 		jsonDeserializationResult := cUtil.DeserializeFromJSON[T](message.Body)

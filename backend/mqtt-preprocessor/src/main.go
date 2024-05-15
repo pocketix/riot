@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-MQTT-preprocessor/src/mqtt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-MQTT-preprocessor/src/types"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/constants"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
 	cTypes "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 	"log"
@@ -32,7 +32,7 @@ var (
 )
 
 func checkForSetOfSDTypesUpdates() {
-	err := rabbitmq.ConsumeJSONMessages[[]string](rabbitMQClient, constants.SetOfSDTypesUpdatesQueueName, func(messagePayload []string) error {
+	err := rabbitmq.ConsumeJSONMessages[[]string](rabbitMQClient, sharedConstants.SetOfSDTypesUpdatesQueueName, func(messagePayload []string) error {
 		updatedSDTypes := util.NewSetFromSlice(messagePayload)
 		sdTypesMutex.Lock()
 		sdTypes = updatedSDTypes
@@ -40,12 +40,12 @@ func checkForSetOfSDTypesUpdates() {
 		return nil
 	})
 	if err != nil {
-		log.Printf("Consumption of messages from the '%s' queue has failed", constants.SetOfSDTypesUpdatesQueueName)
+		log.Printf("Consumption of messages from the '%s' queue has failed", sharedConstants.SetOfSDTypesUpdatesQueueName)
 	}
 }
 
 func checkForSetOfSDInstancesUpdates() {
-	err := rabbitmq.ConsumeJSONMessages[[]cTypes.SDInstanceInfo](rabbitMQClient, constants.SetOfSDInstancesUpdatesQueueName, func(messagePayload []cTypes.SDInstanceInfo) error {
+	err := rabbitmq.ConsumeJSONMessages[[]cTypes.SDInstanceInfo](rabbitMQClient, sharedConstants.SetOfSDInstancesUpdatesQueueName, func(messagePayload []cTypes.SDInstanceInfo) error {
 		updatedSDInstances := util.NewSetFromSlice(messagePayload)
 		sdInstancesMutex.Lock()
 		sdInstances = updatedSDInstances
@@ -53,7 +53,7 @@ func checkForSetOfSDInstancesUpdates() {
 		return nil
 	})
 	if err != nil {
-		log.Printf("Consumption of messages from the '%s' queue has failed", constants.SetOfSDInstancesUpdatesQueueName)
+		log.Printf("Consumption of messages from the '%s' queue has failed", sharedConstants.SetOfSDInstancesUpdatesQueueName)
 	}
 }
 
@@ -99,7 +99,7 @@ func generateKPIFulfillmentCheckRequest(uid string, sdType string, parameters an
 	if jsonSerializationResult.IsFailure() {
 		log.Println("Failed to serialize the object representing a KPI fulfillment check request into JSON")
 	}
-	err := rabbitMQClient.EnqueueJSONMessage(constants.KPIFulfillmentCheckRequestsQueueName, jsonSerializationResult.GetPayload())
+	err := rabbitMQClient.EnqueueJSONMessage(sharedConstants.KPIFulfillmentCheckRequestsQueueName, jsonSerializationResult.GetPayload())
 	if err != nil {
 		log.Println("Failed to publish a KPI fulfillment check request message") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
 		return
@@ -119,7 +119,7 @@ func generateSDInstanceRegistrationRequest(uid string, sdType string, timestamp 
 	if jsonSerializationResult.IsFailure() {
 		log.Println("Failed to serialize the object representing a SD instance registration request into JSON")
 	}
-	err := rabbitMQClient.EnqueueJSONMessage(constants.SDInstanceRegistrationRequestsQueueName, jsonSerializationResult.GetPayload())
+	err := rabbitMQClient.EnqueueJSONMessage(sharedConstants.SDInstanceRegistrationRequestsQueueName, jsonSerializationResult.GetPayload())
 	if err != nil {
 		log.Println("Failed to publish a SD instance registration request message") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
 		return

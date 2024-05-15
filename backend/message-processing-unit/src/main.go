@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/constants"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
 	cTypes "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 	"github.com/google/uuid"
@@ -30,13 +30,13 @@ func checkKPIFulfilmentThenEnqueueResult(sdUniqueIdentifier string, sdParameters
 		log.Println("Failed to serialize the object representing a KPI fulfillment check result into JSON")
 		return
 	}
-	if err := rabbitMQClient.EnqueueJSONMessage(constants.KPIFulfillmentCheckResultsQueueName, jsonSerializationResult.GetPayload()); err != nil {
+	if err := rabbitMQClient.EnqueueJSONMessage(sharedConstants.KPIFulfillmentCheckResultsQueueName, jsonSerializationResult.GetPayload()); err != nil {
 		log.Println("Failed to publish a KPI fulfillment check result message")
 	}
 }
 
 func checkForKPIFulfilmentCheckRequests() {
-	err := rabbitmq.ConsumeJSONMessages[cTypes.RequestForKPIFulfillmentCheck](rabbitMQClient, constants.KPIFulfillmentCheckRequestsQueueName, func(messagePayload cTypes.RequestForKPIFulfillmentCheck) error {
+	err := rabbitmq.ConsumeJSONMessages[cTypes.RequestForKPIFulfillmentCheck](rabbitMQClient, sharedConstants.KPIFulfillmentCheckRequestsQueueName, func(messagePayload cTypes.RequestForKPIFulfillmentCheck) error {
 		log.Printf("KPI fulfillment check request accepted by message processing unit with UUID = %s\n", dsInstanceID.String()) // TODO: Get rid of this line once it's unnecessary
 		sdInfo := messagePayload.SD
 		kpiDefinitionsBySDTypeDenotationMapMutex.Lock()
@@ -54,12 +54,12 @@ func checkForKPIFulfilmentCheckRequests() {
 		return nil
 	})
 	if err != nil {
-		log.Printf("Consumption of messages from the '%s' queue has failed", constants.KPIFulfillmentCheckRequestsQueueName)
+		log.Printf("Consumption of messages from the '%s' queue has failed", sharedConstants.KPIFulfillmentCheckRequestsQueueName)
 	}
 }
 
 func checkForKPIDefinitionsBySDTypeDenotationMapUpdates() {
-	err := rabbitmq.ConsumeJSONMessages[map[string][]cTypes.KPIDefinitionTF](rabbitMQClient, constants.KPIDefinitionsBySDTypeDenotationMapUpdates, func(messagePayload map[string][]cTypes.KPIDefinitionTF) error {
+	err := rabbitmq.ConsumeJSONMessages[map[string][]cTypes.KPIDefinitionTF](rabbitMQClient, sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates, func(messagePayload map[string][]cTypes.KPIDefinitionTF) error {
 		updatedKPIDefinitionsBySDTypeDenotationMap := make(map[string][]kpi.DefinitionDTO)
 		for sdTypeDenotation, kpiDefinitionsTF := range messagePayload {
 			kpiDefinitionDTOs, err := util.EMap(kpiDefinitionsTF, func(kpiDefinitionTF cTypes.KPIDefinitionTF) (kpi.DefinitionDTO, error) {
@@ -76,7 +76,7 @@ func checkForKPIDefinitionsBySDTypeDenotationMapUpdates() {
 		return nil
 	})
 	if err != nil {
-		log.Printf("Consumption of messages from the '%s' queue has failed", constants.KPIDefinitionsBySDTypeDenotationMapUpdates)
+		log.Printf("Consumption of messages from the '%s' queue has failed", sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates)
 	}
 }
 
