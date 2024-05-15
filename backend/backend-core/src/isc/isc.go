@@ -3,9 +3,9 @@ package isc
 import (
 	"errors"
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2api"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/constants"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
@@ -26,7 +26,7 @@ func getRabbitMQClient() rabbitmq.Client {
 	return rabbitMQClient
 }
 
-func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceChannel *chan *model.SDInstance) {
+func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceChannel *chan graphQLModel.SDInstance) {
 	consumeSDInstanceRegistrationRequestJSONMessages(func(sdInstanceRegistrationRequest cTypes.RequestForSDInstanceRegistration) error {
 		sd := sdInstanceRegistrationRequest.SD
 		uid := sd.UID
@@ -58,7 +58,7 @@ func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceChannel *chan *mode
 	})
 }
 
-func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel *chan *model.KPIFulfillmentCheckResult) {
+func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel *chan graphQLModel.KPIFulfillmentCheckResult) {
 	consumeKPIFulfillmentCheckResultJSONMessages(func(kpiFulfillmentCheckResult cTypes.KPIFulfillmentCheckResultInfo) error {
 		targetKPIDefinitionID := kpiFulfillmentCheckResult.KPIDefinitionID
 		targetSDInstanceUID := kpiFulfillmentCheckResult.UID

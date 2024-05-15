@@ -1,6 +1,7 @@
 package db2dto
 
 import (
+	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbSchema"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
@@ -23,7 +24,7 @@ func SDTypeEntityToSDTypeDTO(sdTypeEntity dbSchema.SDTypeEntity) types.SDTypeDTO
 					case "boolean":
 						return types.SDParameterTypeTypeBoolean
 					}
-					panic("Mapping failed – should not happen...")
+					panic(fmt.Errorf("unpexted model mapping failure – shouldn't happen"))
 				}(sdParameterEntity.Type),
 			}
 		}),

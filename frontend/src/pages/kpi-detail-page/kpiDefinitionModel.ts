@@ -175,9 +175,25 @@ export const crateNewAtomNode = (
   processTree(currentNodeName, node, processNode, true)
 }
 
-const editableTreeNodeDataModelToKpiNodeInput = (editableTreeNodeDataModel: EditableTreeNodeDataModel, parentNodeId?: string): KpiNodeInput | null => {
+class SequentialNumberGenerator {
+  private counter: number
+
+  constructor(startValue: number = 0) {
+    this.counter = startValue
+  }
+
+  getNextNumber(): number {
+    return this.counter++
+  }
+}
+
+const editableTreeNodeDataModelToKpiNodeInput = (
+  editableTreeNodeDataModel: EditableTreeNodeDataModel,
+  sequentialNumberGenerator: SequentialNumberGenerator,
+  parentNodeId?: string
+): KpiNodeInput | null => {
   const kpiNodeInputBase = {
-    id: uuid(),
+    id: sequentialNumberGenerator.getNextNumber().toString(),
     parentNodeID: parentNodeId
   }
   const nodeType = editableTreeNodeDataModel.attributes.nodeType
@@ -251,25 +267,26 @@ const editableTreeNodeDataModelToKpiNodeInput = (editableTreeNodeDataModel: Edit
 }
 
 const editableTreeNodeDataModelToKpiNodeInputs = (editableTreeNodeDataModel: EditableTreeNodeDataModel): KpiNodeInput[] => {
-  const rootKPINodeInput: KpiNodeInput | null = editableTreeNodeDataModelToKpiNodeInput(editableTreeNodeDataModel)
+  const sequentialNumberGenerator = new SequentialNumberGenerator(1)
+  const rootKPINodeInput: KpiNodeInput | null = editableTreeNodeDataModelToKpiNodeInput(editableTreeNodeDataModel, sequentialNumberGenerator)
   if (!rootKPINodeInput) {
     return []
   }
   const kpiNodeInputs: KpiNodeInput[] = [rootKPINodeInput]
   const rootKPINodeInputID = rootKPINodeInput.id
-  const childKPINodeInputs = editableTreeNodeDataModel.children.map((child) => editableTreeNodeDataModelToKpiNodeInput(child, rootKPINodeInputID)).filter((kpiNodeInput) => !!kpiNodeInput)
+  const childKPINodeInputs = editableTreeNodeDataModel.children
+    .map((child) => editableTreeNodeDataModelToKpiNodeInput(child, sequentialNumberGenerator, rootKPINodeInputID))
+    .filter((kpiNodeInput) => !!kpiNodeInput)
   return kpiNodeInputs.concat(childKPINodeInputs)
 }
 
 export const kpiDefinitionModelToKPIDefinitionInput = (kpiDefinitionModel: KPIDefinitionModel, sdTypeID: string, sdTypeSpecification: string): KpiDefinitionInput => {
-  const kpiDefinitionInput = {
+  return {
     sdTypeID: sdTypeID,
     sdTypeSpecification: sdTypeSpecification,
     userIdentifier: kpiDefinitionModel.userIdentifier,
     nodes: editableTreeNodeDataModelToKpiNodeInputs(kpiDefinitionModel)
   }
-  console.log('kpiDefinitionInput:', kpiDefinitionInput)
-  return kpiDefinitionInput
 }
 
 export const initialKPIDefinitionModel: KPIDefinitionModel = {

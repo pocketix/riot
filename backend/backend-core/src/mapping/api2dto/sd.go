@@ -1,29 +1,30 @@
 package api2dto
 
 import (
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
+	"fmt"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 )
 
-func SDTypeInputToSDTypeDTO(sdTypeInput model.SDTypeInput) types.SDTypeDTO {
+func SDTypeInputToSDTypeDTO(sdTypeInput graphQLModel.SDTypeInput) types.SDTypeDTO {
 	return types.SDTypeDTO{
 		ID:         util.NewEmptyOptional[uint32](),
 		Denotation: sdTypeInput.Denotation,
-		Parameters: util.Map(sdTypeInput.Parameters, func(sdParameterInput *model.SDParameterInput) types.SDParameterDTO {
+		Parameters: util.Map(sdTypeInput.Parameters, func(sdParameterInput graphQLModel.SDParameterInput) types.SDParameterDTO {
 			return types.SDParameterDTO{
 				ID:         util.NewEmptyOptional[uint32](),
 				Denotation: sdParameterInput.Denotation,
-				Type: func(sdParameterType model.SDParameterType) types.SDParameterType {
+				Type: func(sdParameterType graphQLModel.SDParameterType) types.SDParameterType {
 					switch sdParameterType {
-					case model.SDParameterTypeString:
+					case graphQLModel.SDParameterTypeString:
 						return types.SDParameterTypeString
-					case model.SDParameterTypeNumber:
+					case graphQLModel.SDParameterTypeNumber:
 						return types.SDParameterTypeNumber
-					case model.SDParameterTypeBoolean:
+					case graphQLModel.SDParameterTypeBoolean:
 						return types.SDParameterTypeTypeBoolean
 					}
-					panic("Mapping failed – should not happen...")
+					panic(fmt.Errorf("unpexted model mapping failure – shouldn't happen"))
 				}(sdParameterInput.Type),
 			}
 		}),

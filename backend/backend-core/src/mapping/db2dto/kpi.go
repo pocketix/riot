@@ -11,8 +11,7 @@ func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap ma
 	logicalOperationKPINodeEntityOptional := util.FindFirst(logicalOperationKPINodeEntities, func(logicalOperationKPINodeEntity dbSchema.LogicalOperationKPINodeEntity) bool {
 		return *logicalOperationKPINodeEntity.NodeID == currentKPINodeID
 	})
-	currentNodeIsLogicalOperationNode := logicalOperationKPINodeEntityOptional.IsPresent()
-	if currentNodeIsLogicalOperationNode {
+	if logicalOperationKPINodeEntityOptional.IsPresent() {
 		logicalOperationKPINodeEntity := logicalOperationKPINodeEntityOptional.GetPayload()
 		childNodeIDs := kpiNodeParentChildrenMap[*logicalOperationKPINodeEntity.NodeID]
 		childNodes := make([]kpi.NodeDTO, 0)
@@ -27,8 +26,7 @@ func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap ma
 	atomKPINodeEntityOptional := util.FindFirst(atomKPINodeEntities, func(atomKPINodeEntity dbSchema.AtomKPINodeEntity) bool {
 		return *atomKPINodeEntity.NodeID == currentKPINodeID
 	})
-	currentNodeIsAtomNode := atomKPINodeEntityOptional.IsPresent()
-	if currentNodeIsAtomNode {
+	if atomKPINodeEntityOptional.IsPresent() {
 		atomKPINodeEntity := atomKPINodeEntityOptional.GetPayload()
 		sdParameterID := atomKPINodeEntity.SDParameter.ID
 		sdParameterDenotation := atomKPINodeEntity.SDParameter.Denotation
@@ -77,13 +75,7 @@ func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap ma
 			}
 		}
 	}
-	if currentNodeIsLogicalOperationNode {
-		panic(fmt.Sprintf("current node (ID: %d) found among logical operation KPI node entities, but the KPI node tree reconstruction still failed", currentKPINodeID))
-	} else if currentNodeIsAtomNode {
-		panic(fmt.Sprintf("current node (ID: %d) found among atom KPI node entities, but the KPI node tree reconstruction still failed", currentKPINodeID))
-	} else {
-		panic(fmt.Sprintf("current node (ID: %d) not found among logical operation KPI node entities, nor atom KPI node entities", currentKPINodeID))
-	}
+	panic(fmt.Errorf("unpexted model mapping failure – shouldn't happen"))
 }
 
 func prepareKPINodeParentChildrenMap(kpiNodeEntities []dbSchema.KPINodeEntity) map[uint32][]uint32 {

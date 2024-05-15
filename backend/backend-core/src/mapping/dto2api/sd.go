@@ -1,38 +1,39 @@
 package dto2api
 
 import (
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
+	"fmt"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 )
 
-func SDTypeDTOToSDType(sdTypeDto types.SDTypeDTO) *model.SDType {
-	return &model.SDType{
-		ID:         util.UINT32ToString(sdTypeDto.ID.GetPayload()),
+func SDTypeDTOToSDType(sdTypeDto types.SDTypeDTO) graphQLModel.SDType {
+	return graphQLModel.SDType{
+		ID:         sdTypeDto.ID.GetPayload(),
 		Denotation: sdTypeDto.Denotation,
-		Parameters: util.Map(sdTypeDto.Parameters, func(sdParameterDto types.SDParameterDTO) *model.SDParameter {
-			return &model.SDParameter{
-				ID:         util.UINT32ToString(sdParameterDto.ID.GetPayload()),
+		Parameters: util.Map(sdTypeDto.Parameters, func(sdParameterDto types.SDParameterDTO) graphQLModel.SDParameter {
+			return graphQLModel.SDParameter{
+				ID:         sdParameterDto.ID.GetPayload(),
 				Denotation: sdParameterDto.Denotation,
-				Type: func(sdParameterType types.SDParameterType) model.SDParameterType {
+				Type: func(sdParameterType types.SDParameterType) graphQLModel.SDParameterType {
 					switch sdParameterType {
 					case types.SDParameterTypeString:
-						return model.SDParameterTypeString
+						return graphQLModel.SDParameterTypeString
 					case types.SDParameterTypeNumber:
-						return model.SDParameterTypeNumber
+						return graphQLModel.SDParameterTypeNumber
 					case types.SDParameterTypeTypeBoolean:
-						return model.SDParameterTypeBoolean
+						return graphQLModel.SDParameterTypeBoolean
 					}
-					panic("Mapping failed – should not happen...")
+					panic(fmt.Errorf("unpexted model mapping failure – shouldn't happen"))
 				}(sdParameterDto.Type),
 			}
 		}),
 	}
 }
 
-func SDInstanceDTOToSDInstance(sdInstanceDTO types.SDInstanceDTO) *model.SDInstance {
-	return &model.SDInstance{
-		ID:              util.UINT32ToString(sdInstanceDTO.ID.GetPayload()),
+func SDInstanceDTOToSDInstance(sdInstanceDTO types.SDInstanceDTO) graphQLModel.SDInstance {
+	return graphQLModel.SDInstance{
+		ID:              sdInstanceDTO.ID.GetPayload(),
 		UID:             sdInstanceDTO.UID,
 		ConfirmedByUser: sdInstanceDTO.ConfirmedByUser,
 		UserIdentifier:  sdInstanceDTO.UserIdentifier,

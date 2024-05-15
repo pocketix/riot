@@ -1,123 +1,123 @@
 package dto2api
 
 import (
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/model"
+	"fmt"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
-	"github.com/google/uuid"
 )
 
-func kpiNodeDTOToKPINode(kpiNodeDTO kpi.NodeDTO, id string, parentNodeID *string) model.KPINode {
+func kpiNodeDTOToKPINode(kpiNodeDTO kpi.NodeDTO, id uint32, parentNodeID *uint32) graphQLModel.KPINode {
 	switch kpiNodeDTO.(type) {
 	case kpi.EQAtomNodeDTO[string]:
 		stringEQAtomNodeDTO := kpiNodeDTO.(kpi.EQAtomNodeDTO[string])
-		return model.StringEQAtomKPINode{
+		return graphQLModel.StringEQAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
-			NodeType:                 model.KPINodeTypeStringEQAtom,
-			SdParameterID:            util.UINT32ToString(stringEQAtomNodeDTO.SDParameterID),
+			NodeType:                 graphQLModel.KPINodeTypeStringEQAtom,
+			SdParameterID:            stringEQAtomNodeDTO.SDParameterID,
 			SdParameterSpecification: stringEQAtomNodeDTO.SDParameterSpecification,
 			StringReferenceValue:     stringEQAtomNodeDTO.ReferenceValue,
 		}
 	case kpi.EQAtomNodeDTO[bool]:
 		booleanEQAtomNodeDTO := kpiNodeDTO.(kpi.EQAtomNodeDTO[bool])
-		return model.BooleanEQAtomKPINode{
+		return graphQLModel.BooleanEQAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
-			NodeType:                 model.KPINodeTypeBooleanEQAtom,
-			SdParameterID:            util.UINT32ToString(booleanEQAtomNodeDTO.SDParameterID),
+			NodeType:                 graphQLModel.KPINodeTypeBooleanEQAtom,
+			SdParameterID:            booleanEQAtomNodeDTO.SDParameterID,
 			SdParameterSpecification: booleanEQAtomNodeDTO.SDParameterSpecification,
 			BooleanReferenceValue:    booleanEQAtomNodeDTO.ReferenceValue,
 		}
 	case kpi.EQAtomNodeDTO[float64]:
 		numericEQAtomNodeDTO := kpiNodeDTO.(kpi.EQAtomNodeDTO[float64])
-		return model.NumericEQAtomKPINode{
+		return graphQLModel.NumericEQAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
-			NodeType:                 model.KPINodeTypeNumericEQAtom,
-			SdParameterID:            util.UINT32ToString(numericEQAtomNodeDTO.SDParameterID),
+			NodeType:                 graphQLModel.KPINodeTypeNumericEQAtom,
+			SdParameterID:            numericEQAtomNodeDTO.SDParameterID,
 			SdParameterSpecification: numericEQAtomNodeDTO.SDParameterSpecification,
 			NumericReferenceValue:    numericEQAtomNodeDTO.ReferenceValue,
 		}
 	case kpi.NumericLTAtomNodeDTO:
 		numericLTAtomNodeDTO := kpiNodeDTO.(kpi.NumericLTAtomNodeDTO)
-		return model.NumericLTAtomKPINode{
+		return graphQLModel.NumericLTAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
-			NodeType:                 model.KPINodeTypeNumericLTAtom,
-			SdParameterID:            util.UINT32ToString(numericLTAtomNodeDTO.SDParameterID),
+			NodeType:                 graphQLModel.KPINodeTypeNumericLTAtom,
+			SdParameterID:            numericLTAtomNodeDTO.SDParameterID,
 			SdParameterSpecification: numericLTAtomNodeDTO.SDParameterSpecification,
 			NumericReferenceValue:    numericLTAtomNodeDTO.ReferenceValue,
 		}
 	case kpi.NumericLEQAtomNodeDTO:
 		numericLEQAtomNodeDTO := kpiNodeDTO.(kpi.NumericLEQAtomNodeDTO)
-		return model.NumericLEQAtomKPINode{
+		return graphQLModel.NumericLEQAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
-			NodeType:                 model.KPINodeTypeNumericLEQAtom,
-			SdParameterID:            util.UINT32ToString(numericLEQAtomNodeDTO.SDParameterID),
+			NodeType:                 graphQLModel.KPINodeTypeNumericLEQAtom,
+			SdParameterID:            numericLEQAtomNodeDTO.SDParameterID,
 			SdParameterSpecification: numericLEQAtomNodeDTO.SDParameterSpecification,
 			NumericReferenceValue:    numericLEQAtomNodeDTO.ReferenceValue,
 		}
 	case kpi.NumericGTAtomNodeDTO:
 		numericGTAtomNodeDTO := kpiNodeDTO.(kpi.NumericGTAtomNodeDTO)
-		return model.NumericGTAtomKPINode{
+		return graphQLModel.NumericGTAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
-			NodeType:                 model.KPINodeTypeNumericGTAtom,
-			SdParameterID:            util.UINT32ToString(numericGTAtomNodeDTO.SDParameterID),
+			NodeType:                 graphQLModel.KPINodeTypeNumericGTAtom,
+			SdParameterID:            numericGTAtomNodeDTO.SDParameterID,
 			SdParameterSpecification: numericGTAtomNodeDTO.SDParameterSpecification,
 			NumericReferenceValue:    numericGTAtomNodeDTO.ReferenceValue,
 		}
 	case kpi.NumericGEQAtomNodeDTO:
 		numericGEQAtomNodeDTO := kpiNodeDTO.(kpi.NumericGEQAtomNodeDTO)
-		return model.NumericGEQAtomKPINode{
+		return graphQLModel.NumericGEQAtomKPINode{
 			ID:                       id,
 			ParentNodeID:             parentNodeID,
-			NodeType:                 model.KPINodeTypeNumericGEQAtom,
-			SdParameterID:            util.UINT32ToString(numericGEQAtomNodeDTO.SDParameterID),
+			NodeType:                 graphQLModel.KPINodeTypeNumericGEQAtom,
+			SdParameterID:            numericGEQAtomNodeDTO.SDParameterID,
 			SdParameterSpecification: numericGEQAtomNodeDTO.SDParameterSpecification,
 			NumericReferenceValue:    numericGEQAtomNodeDTO.ReferenceValue,
 		}
 	case kpi.LogicalOperationNodeDTO:
 		logicalOperationNodeDTO := kpiNodeDTO.(kpi.LogicalOperationNodeDTO)
-		return model.LogicalOperationKPINode{
+		return graphQLModel.LogicalOperationKPINode{
 			ID:           id,
 			ParentNodeID: parentNodeID,
-			NodeType:     model.KPINodeTypeLogicalOperation,
-			Type: func(logicalOperationNodeType kpi.LogicalOperationNodeType) model.LogicalOperationType {
+			NodeType:     graphQLModel.KPINodeTypeLogicalOperation,
+			Type: func(logicalOperationNodeType kpi.LogicalOperationNodeType) graphQLModel.LogicalOperationType {
 				switch logicalOperationNodeType {
 				case kpi.AND:
-					return model.LogicalOperationTypeAnd
+					return graphQLModel.LogicalOperationTypeAnd
 				case kpi.OR:
-					return model.LogicalOperationTypeOr
+					return graphQLModel.LogicalOperationTypeOr
 				case kpi.NOR:
-					return model.LogicalOperationTypeNor
+					return graphQLModel.LogicalOperationTypeNor
 				}
-				panic("couldn't map kpi.LogicalOperationNodeType to model.LogicalOperationType... shouldn't happen")
+				panic(fmt.Errorf("unpexted model mapping failure – shouldn't happen"))
 			}(logicalOperationNodeDTO.Type),
 		}
 	}
-	panic("couldn't map kpi.NodeDTO to model.KPINode... shouldn't happen")
+	panic(fmt.Errorf("unpexted model mapping failure – shouldn't happen"))
 }
 
-func processKPINodeDTO(node kpi.NodeDTO, parentID *string) []model.KPINode {
-	nodeID := uuid.New().String()
-	nodes := make([]model.KPINode, 0)
+func processKPINodeDTO(node kpi.NodeDTO, generateNextNumber func() uint32, parentID *uint32) []graphQLModel.KPINode {
+	nodeID := generateNextNumber()
+	nodes := make([]graphQLModel.KPINode, 0)
 	nodes = append(nodes, kpiNodeDTOToKPINode(node, nodeID, parentID))
 	if util.TypeIs[kpi.LogicalOperationNodeDTO](node) {
 		for _, childNode := range node.(kpi.LogicalOperationNodeDTO).ChildNodes {
-			nodes = append(nodes, processKPINodeDTO(childNode, &nodeID)...)
+			nodes = append(nodes, processKPINodeDTO(childNode, generateNextNumber, &nodeID)...)
 		}
 	}
 	return nodes
 }
 
-func KPIDefinitionDTOToKPIDefinition(kpiDefinitionDTO kpi.DefinitionDTO) *model.KPIDefinition {
-	nodes := processKPINodeDTO(kpiDefinitionDTO.RootNode, nil)
-	return &model.KPIDefinition{
-		ID:                  util.UINT32ToString(kpiDefinitionDTO.ID.GetPayload()),
-		SdTypeID:            util.UINT32ToString(kpiDefinitionDTO.SDTypeID),
+func KPIDefinitionDTOToKPIDefinition(kpiDefinitionDTO kpi.DefinitionDTO) graphQLModel.KPIDefinition {
+	nodes := processKPINodeDTO(kpiDefinitionDTO.RootNode, util.SequentialNumberGenerator(), nil)
+	return graphQLModel.KPIDefinition{
+		ID:                  kpiDefinitionDTO.ID.GetPayload(),
+		SdTypeID:            kpiDefinitionDTO.SDTypeID,
 		SdTypeSpecification: kpiDefinitionDTO.SDTypeSpecification,
 		UserIdentifier:      kpiDefinitionDTO.UserIdentifier,
 		Nodes:               nodes,
