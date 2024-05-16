@@ -41,7 +41,7 @@ input SDInstanceUpdateInput {
   confirmedByUser: Boolean
 }
 
-# ----- KPIs -----
+# ----- KPI definitions and nodes -----
 
 type KPIDefinition {
   id: ID!
@@ -192,7 +192,7 @@ input SDInstanceGroupInput {
   sdInstanceIDs: [ID!]!
 }
 
-# ----- Queries, Mutations and Subscriptions -----
+# ----- Queries, mutations and subscriptions -----
 
 type Query {
   sdType(id: ID!): SDType!

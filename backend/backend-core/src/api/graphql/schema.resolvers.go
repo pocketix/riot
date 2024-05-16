@@ -2,81 +2,81 @@ package graphql
 
 import (
 	"context"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/bll"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/domainLogicLayer"
 
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/gsc"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 )
 
 func (r *mutationResolver) CreateSDType(ctx context.Context, input graphQLModel.SDTypeInput) (graphQLModel.SDType, error) {
-	return bll.CreateSDType(input).Unwrap()
+	return domainLogicLayer.CreateSDType(input).Unwrap()
 }
 
 func (r *mutationResolver) DeleteSDType(ctx context.Context, id uint32) (bool, error) {
-	err := bll.DeleteSDType(id)
+	err := domainLogicLayer.DeleteSDType(id)
 	return err == nil, err
 }
 
 func (r *mutationResolver) UpdateSDInstance(ctx context.Context, id uint32, input graphQLModel.SDInstanceUpdateInput) (graphQLModel.SDInstance, error) {
-	return bll.UpdateSDInstance(id, input).Unwrap()
+	return domainLogicLayer.UpdateSDInstance(id, input).Unwrap()
 }
 
 func (r *mutationResolver) CreateKPIDefinition(ctx context.Context, input graphQLModel.KPIDefinitionInput) (graphQLModel.KPIDefinition, error) {
-	return bll.CreateKPIDefinition(input).Unwrap()
+	return domainLogicLayer.CreateKPIDefinition(input).Unwrap()
 }
 
 func (r *mutationResolver) UpdateKPIDefinition(ctx context.Context, id uint32, input graphQLModel.KPIDefinitionInput) (graphQLModel.KPIDefinition, error) {
-	return bll.UpdateKPIDefinition(id, input).Unwrap()
+	return domainLogicLayer.UpdateKPIDefinition(id, input).Unwrap()
 }
 
 func (r *mutationResolver) DeleteKPIDefinition(ctx context.Context, id uint32) (bool, error) {
-	err := bll.DeleteKPIDefinition(id)
+	err := domainLogicLayer.DeleteKPIDefinition(id)
 	return err == nil, err
 }
 
 func (r *mutationResolver) CreateSDInstanceGroup(ctx context.Context, input graphQLModel.SDInstanceGroupInput) (graphQLModel.SDInstanceGroup, error) {
-	return bll.CreateSDInstanceGroup(input).Unwrap()
+	return domainLogicLayer.CreateSDInstanceGroup(input).Unwrap()
 }
 
 func (r *mutationResolver) UpdateSDInstanceGroup(ctx context.Context, id uint32, input graphQLModel.SDInstanceGroupInput) (graphQLModel.SDInstanceGroup, error) {
-	return bll.UpdateSDInstanceGroup(id, input).Unwrap()
+	return domainLogicLayer.UpdateSDInstanceGroup(id, input).Unwrap()
 }
 
 func (r *mutationResolver) DeleteSDInstanceGroup(ctx context.Context, id uint32) (bool, error) {
-	err := bll.DeleteSDInstanceGroup(id)
+	err := domainLogicLayer.DeleteSDInstanceGroup(id)
 	return err == nil, err
 }
 
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
-	return bll.GetSDType(id).Unwrap()
+	return domainLogicLayer.GetSDType(id).Unwrap()
 }
 
 func (r *queryResolver) SdTypes(ctx context.Context) ([]graphQLModel.SDType, error) {
-	return bll.GetSDTypes().Unwrap()
+	return domainLogicLayer.GetSDTypes().Unwrap()
 }
 
 func (r *queryResolver) SdInstances(ctx context.Context) ([]graphQLModel.SDInstance, error) {
-	return bll.GetSDInstances().Unwrap()
+	return domainLogicLayer.GetSDInstances().Unwrap()
 }
 
 func (r *queryResolver) KpiDefinition(ctx context.Context, id uint32) (graphQLModel.KPIDefinition, error) {
-	return bll.GetKPIDefinition(id).Unwrap()
+	return domainLogicLayer.GetKPIDefinition(id).Unwrap()
 }
 
 func (r *queryResolver) KpiDefinitions(ctx context.Context) ([]graphQLModel.KPIDefinition, error) {
-	return bll.GetKPIDefinitions().Unwrap()
+	return domainLogicLayer.GetKPIDefinitions().Unwrap()
 }
 
 func (r *queryResolver) KpiFulfillmentCheckResults(ctx context.Context) ([]graphQLModel.KPIFulfillmentCheckResult, error) {
-	return bll.GetKPIFulfillmentCheckResults().Unwrap()
+	return domainLogicLayer.GetKPIFulfillmentCheckResults().Unwrap()
 }
 
 func (r *queryResolver) SdInstanceGroup(ctx context.Context, id uint32) (graphQLModel.SDInstanceGroup, error) {
-	return bll.GetSDInstanceGroup(id).Unwrap()
+	return domainLogicLayer.GetSDInstanceGroup(id).Unwrap()
 }
 
 func (r *queryResolver) SdInstanceGroups(ctx context.Context) ([]graphQLModel.SDInstanceGroup, error) {
-	return bll.GetSDInstanceGroups().Unwrap()
+	return domainLogicLayer.GetSDInstanceGroups().Unwrap()
 }
 
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {

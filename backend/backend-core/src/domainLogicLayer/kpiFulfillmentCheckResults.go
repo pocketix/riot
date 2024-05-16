@@ -1,4 +1,4 @@
-package bll
+package domainLogicLayer
 
 import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbClient"
