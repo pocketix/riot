@@ -1,4 +1,4 @@
-package dbSchema
+package dbModel
 
 import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbUtil"

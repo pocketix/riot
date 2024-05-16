@@ -1,4 +1,4 @@
-package api2dto
+package gql2dll
 
 import (
 	"fmt"

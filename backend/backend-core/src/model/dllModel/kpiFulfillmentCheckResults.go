@@ -1,6 +1,6 @@
-package types
+package dllModel
 
-type KPIFulfillmentCheckResultDTO struct {
+type KPIFulfillmentCheckResult struct {
 	KPIDefinitionID uint32
 	SDInstanceID    uint32
 	Fulfilled       bool

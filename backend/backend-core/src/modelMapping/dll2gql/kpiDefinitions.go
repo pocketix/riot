@@ -1,4 +1,4 @@
-package dto2api
+package dll2gql
 
 import (
 	"fmt"

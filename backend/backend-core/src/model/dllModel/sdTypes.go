@@ -1,4 +1,4 @@
-package types
+package dllModel
 
 import "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 
@@ -10,22 +10,14 @@ const (
 	SDParameterTypeTypeBoolean SDParameterType = "boolean"
 )
 
-type SDParameterDTO struct {
+type SDParameter struct {
 	ID         util.Optional[uint32]
 	Denotation string
 	Type       SDParameterType
 }
 
-type SDTypeDTO struct {
+type SDType struct {
 	ID         util.Optional[uint32]
 	Denotation string
-	Parameters []SDParameterDTO
-}
-
-type SDInstanceDTO struct {
-	ID              util.Optional[uint32]
-	UID             string
-	ConfirmedByUser bool
-	UserIdentifier  string
-	SDType          SDTypeDTO
+	Parameters []SDParameter
 }

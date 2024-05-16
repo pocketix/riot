@@ -1,14 +1,14 @@
-package db2dto
+package db2dll
 
 import (
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbSchema"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dbModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 )
 
-func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap map[uint32][]uint32, logicalOperationKPINodeEntities []dbSchema.LogicalOperationKPINodeEntity, atomKPINodeEntities []dbSchema.AtomKPINodeEntity) kpi.NodeDTO {
-	logicalOperationKPINodeEntityOptional := util.FindFirst(logicalOperationKPINodeEntities, func(logicalOperationKPINodeEntity dbSchema.LogicalOperationKPINodeEntity) bool {
+func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap map[uint32][]uint32, logicalOperationKPINodeEntities []dbModel.LogicalOperationKPINodeEntity, atomKPINodeEntities []dbModel.AtomKPINodeEntity) kpi.NodeDTO {
+	logicalOperationKPINodeEntityOptional := util.FindFirst(logicalOperationKPINodeEntities, func(logicalOperationKPINodeEntity dbModel.LogicalOperationKPINodeEntity) bool {
 		return *logicalOperationKPINodeEntity.NodeID == currentKPINodeID
 	})
 	if logicalOperationKPINodeEntityOptional.IsPresent() {
@@ -23,7 +23,7 @@ func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap ma
 			ChildNodes: childNodes,
 		}
 	}
-	atomKPINodeEntityOptional := util.FindFirst(atomKPINodeEntities, func(atomKPINodeEntity dbSchema.AtomKPINodeEntity) bool {
+	atomKPINodeEntityOptional := util.FindFirst(atomKPINodeEntities, func(atomKPINodeEntity dbModel.AtomKPINodeEntity) bool {
 		return *atomKPINodeEntity.NodeID == currentKPINodeID
 	})
 	if atomKPINodeEntityOptional.IsPresent() {
@@ -78,7 +78,7 @@ func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap ma
 	panic(fmt.Errorf("unpexted model mapping failure – shouldn't happen"))
 }
 
-func prepareKPINodeParentChildrenMap(kpiNodeEntities []dbSchema.KPINodeEntity) map[uint32][]uint32 {
+func prepareKPINodeParentChildrenMap(kpiNodeEntities []dbModel.KPINodeEntity) map[uint32][]uint32 {
 	kpiNodeParentChildrenMap := make(map[uint32][]uint32)
 	for _, kpiNodeEntity := range kpiNodeEntities {
 		util.NewOptionalFromPointer(kpiNodeEntity.ParentNodeID).DoIfPresent(func(parentNodeID uint32) {
@@ -88,7 +88,7 @@ func prepareKPINodeParentChildrenMap(kpiNodeEntities []dbSchema.KPINodeEntity) m
 	return kpiNodeParentChildrenMap
 }
 
-func ReconstructKPIDefinitionDTO(kpiDefinitionEntity dbSchema.KPIDefinitionEntity, kpiNodeEntities []dbSchema.KPINodeEntity, logicalOperationKPINodeEntities []dbSchema.LogicalOperationKPINodeEntity, atomKPINodeEntities []dbSchema.AtomKPINodeEntity) kpi.DefinitionDTO {
+func ReconstructKPIDefinitionDTO(kpiDefinitionEntity dbModel.KPIDefinitionEntity, kpiNodeEntities []dbModel.KPINodeEntity, logicalOperationKPINodeEntities []dbModel.LogicalOperationKPINodeEntity, atomKPINodeEntities []dbModel.AtomKPINodeEntity) kpi.DefinitionDTO {
 	kpiDefinitionRootOptional := util.NewOptionalOf(reconstructKPINodeTree(*kpiDefinitionEntity.RootNodeID, prepareKPINodeParentChildrenMap(kpiNodeEntities), logicalOperationKPINodeEntities, atomKPINodeEntities))
 	return kpi.DefinitionDTO{
 		ID:                  util.NewOptionalOf[uint32](kpiDefinitionEntity.ID),

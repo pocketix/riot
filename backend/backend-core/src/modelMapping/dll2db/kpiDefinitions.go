@@ -1,18 +1,18 @@
-package dto2db
+package dll2db
 
 import (
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbSchema"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dbModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
 )
 
-func TransformKPIDefinitionTree(node kpi.NodeDTO, parentKPINodeEntity *dbSchema.KPINodeEntity, kpiNodeEntities []*dbSchema.KPINodeEntity, logicalOperationNodeEntities []dbSchema.LogicalOperationKPINodeEntity, atomNodeEntities []dbSchema.AtomKPINodeEntity) (*dbSchema.KPINodeEntity, []*dbSchema.KPINodeEntity, []dbSchema.LogicalOperationKPINodeEntity, []dbSchema.AtomKPINodeEntity) {
-	currentNodeEntity := &dbSchema.KPINodeEntity{
+func TransformKPIDefinitionTree(node kpi.NodeDTO, parentKPINodeEntity *dbModel.KPINodeEntity, kpiNodeEntities []*dbModel.KPINodeEntity, logicalOperationNodeEntities []dbModel.LogicalOperationKPINodeEntity, atomNodeEntities []dbModel.AtomKPINodeEntity) (*dbModel.KPINodeEntity, []*dbModel.KPINodeEntity, []dbModel.LogicalOperationKPINodeEntity, []dbModel.AtomKPINodeEntity) {
+	currentNodeEntity := &dbModel.KPINodeEntity{
 		ParentNode: parentKPINodeEntity,
 	}
 	kpiNodeEntities = append(kpiNodeEntities, currentNodeEntity)
 	switch typedNode := node.(type) {
 	case kpi.LogicalOperationNodeDTO:
-		logicalOperationNodeEntities = append(logicalOperationNodeEntities, dbSchema.LogicalOperationKPINodeEntity{
+		logicalOperationNodeEntities = append(logicalOperationNodeEntities, dbModel.LogicalOperationKPINodeEntity{
 			Node: currentNodeEntity,
 			Type: string(typedNode.Type),
 		})
@@ -20,49 +20,49 @@ func TransformKPIDefinitionTree(node kpi.NodeDTO, parentKPINodeEntity *dbSchema.
 			_, kpiNodeEntities, logicalOperationNodeEntities, atomNodeEntities = TransformKPIDefinitionTree(childNode, currentNodeEntity, kpiNodeEntities, logicalOperationNodeEntities, atomNodeEntities)
 		}
 	case kpi.EQAtomNodeDTO[string]:
-		atomNodeEntities = append(atomNodeEntities, dbSchema.AtomKPINodeEntity{
+		atomNodeEntities = append(atomNodeEntities, dbModel.AtomKPINodeEntity{
 			Node:                 currentNodeEntity,
 			SDParameterID:        typedNode.SDParameterID,
 			Type:                 "string_eq",
 			StringReferenceValue: &typedNode.ReferenceValue,
 		})
 	case kpi.EQAtomNodeDTO[bool]:
-		atomNodeEntities = append(atomNodeEntities, dbSchema.AtomKPINodeEntity{
+		atomNodeEntities = append(atomNodeEntities, dbModel.AtomKPINodeEntity{
 			Node:                  currentNodeEntity,
 			SDParameterID:         typedNode.SDParameterID,
 			Type:                  "boolean_eq",
 			BooleanReferenceValue: &typedNode.ReferenceValue,
 		})
 	case kpi.EQAtomNodeDTO[float64]:
-		atomNodeEntities = append(atomNodeEntities, dbSchema.AtomKPINodeEntity{
+		atomNodeEntities = append(atomNodeEntities, dbModel.AtomKPINodeEntity{
 			Node:                  currentNodeEntity,
 			SDParameterID:         typedNode.SDParameterID,
 			Type:                  "numeric_eq",
 			NumericReferenceValue: &typedNode.ReferenceValue,
 		})
 	case kpi.NumericLTAtomNodeDTO:
-		atomNodeEntities = append(atomNodeEntities, dbSchema.AtomKPINodeEntity{
+		atomNodeEntities = append(atomNodeEntities, dbModel.AtomKPINodeEntity{
 			Node:                  currentNodeEntity,
 			SDParameterID:         typedNode.SDParameterID,
 			Type:                  "numeric_lt",
 			NumericReferenceValue: &typedNode.ReferenceValue,
 		})
 	case kpi.NumericLEQAtomNodeDTO:
-		atomNodeEntities = append(atomNodeEntities, dbSchema.AtomKPINodeEntity{
+		atomNodeEntities = append(atomNodeEntities, dbModel.AtomKPINodeEntity{
 			Node:                  currentNodeEntity,
 			SDParameterID:         typedNode.SDParameterID,
 			Type:                  "numeric_leq",
 			NumericReferenceValue: &typedNode.ReferenceValue,
 		})
 	case kpi.NumericGTAtomNodeDTO:
-		atomNodeEntities = append(atomNodeEntities, dbSchema.AtomKPINodeEntity{
+		atomNodeEntities = append(atomNodeEntities, dbModel.AtomKPINodeEntity{
 			Node:                  currentNodeEntity,
 			SDParameterID:         typedNode.SDParameterID,
 			Type:                  "numeric_gt",
 			NumericReferenceValue: &typedNode.ReferenceValue,
 		})
 	case kpi.NumericGEQAtomNodeDTO:
-		atomNodeEntities = append(atomNodeEntities, dbSchema.AtomKPINodeEntity{
+		atomNodeEntities = append(atomNodeEntities, dbModel.AtomKPINodeEntity{
 			Node:                  currentNodeEntity,
 			SDParameterID:         typedNode.SDParameterID,
 			Type:                  "numeric_geq",

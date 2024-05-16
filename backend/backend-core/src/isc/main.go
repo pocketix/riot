@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbClient"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/mapping/dto2api"
+	types2 "github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/types"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/modelMapping/dll2gql"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
 	cTypes "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/types"
@@ -42,7 +42,7 @@ func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceChannel *chan graph
 		if sdTypeLoadResult.IsFailure() {
 			return errors.New(fmt.Sprintf("couldn't load database record of the '%s' SD type", sdTypeDenotation))
 		}
-		sdInstanceDTO := types.SDInstanceDTO{
+		sdInstanceDTO := types2.SDInstance{
 			UID:             uid,
 			ConfirmedByUser: false,
 			UserIdentifier:  uid,
@@ -53,7 +53,7 @@ func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceChannel *chan graph
 			return errors.New("couldn't persist the SD instance")
 		}
 		sdInstanceDTO.ID = util.NewOptionalOf(sdInstancePersistResult.GetPayload())
-		*sdInstanceChannel <- dto2api.SDInstanceDTOToSDInstance(sdInstanceDTO)
+		*sdInstanceChannel <- dll2gql.ToGraphQLModelSDInstance(sdInstanceDTO)
 		return nil
 	})
 }
@@ -84,10 +84,10 @@ func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel 
 			if err := dbClient.GetRelationalDatabaseClientInstance().PersistKPIFulFulfillmentCheckResult(existingKPIFulfillmentCheckResult); err != nil {
 				return fmt.Errorf("couldn't update KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d: %w", targetKPIDefinitionID, targetSDInstanceID, err)
 			}
-			*kpiFulfillmentCheckResultChannel <- dto2api.KPIFulfillmentCheckResultDTOToKPIFulfillmentCheckResult(existingKPIFulfillmentCheckResult)
+			*kpiFulfillmentCheckResultChannel <- dll2gql.ToGraphQLModelKPIFulfillmentCheckResult(existingKPIFulfillmentCheckResult)
 			return nil
 		}
-		newKPIFulfillmentCheckResult := types.KPIFulfillmentCheckResultDTO{
+		newKPIFulfillmentCheckResult := types2.KPIFulfillmentCheckResult{
 			KPIDefinitionID: targetKPIDefinitionID,
 			SDInstanceID:    targetSDInstanceID,
 			Fulfilled:       fulfilled,
@@ -95,7 +95,7 @@ func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel 
 		if err := dbClient.GetRelationalDatabaseClientInstance().PersistKPIFulFulfillmentCheckResult(newKPIFulfillmentCheckResult); err != nil {
 			return fmt.Errorf("couldn't persist KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d: %w", targetKPIDefinitionID, targetSDInstanceID, err)
 		}
-		*kpiFulfillmentCheckResultChannel <- dto2api.KPIFulfillmentCheckResultDTOToKPIFulfillmentCheckResult(newKPIFulfillmentCheckResult)
+		*kpiFulfillmentCheckResultChannel <- dll2gql.ToGraphQLModelKPIFulfillmentCheckResult(newKPIFulfillmentCheckResult)
 		return nil
 	})
 }
@@ -106,7 +106,7 @@ func EnqueueMessageRepresentingCurrentSDTypeConfiguration() {
 		if sdTypesLoadResult.IsFailure() {
 			return sdTypesLoadResult.GetError()
 		}
-		sdTypeDenotations := util.Map[types.SDTypeDTO, string](sdTypesLoadResult.GetPayload(), func(sdTypeDTO types.SDTypeDTO) string {
+		sdTypeDenotations := util.Map[types2.SDType, string](sdTypesLoadResult.GetPayload(), func(sdTypeDTO types2.SDType) string {
 			return sdTypeDTO.Denotation
 		})
 		sdTypeDenotationsJSONSerializationResult := util.SerializeToJSON(sdTypeDenotations)
@@ -123,7 +123,7 @@ func EnqueueMessageRepresentingCurrentSDInstanceConfiguration() {
 		if sdInstancesLoadResult.IsFailure() {
 			return sdInstancesLoadResult.GetError()
 		}
-		sdInstancesInfo := util.Map[types.SDInstanceDTO, cTypes.SDInstanceInfo](sdInstancesLoadResult.GetPayload(), func(sdInstanceDTO types.SDInstanceDTO) cTypes.SDInstanceInfo {
+		sdInstancesInfo := util.Map[types2.SDInstance, cTypes.SDInstanceInfo](sdInstancesLoadResult.GetPayload(), func(sdInstanceDTO types2.SDInstance) cTypes.SDInstanceInfo {
 			return cTypes.SDInstanceInfo{
 				UID:             sdInstanceDTO.UID,
 				ConfirmedByUser: sdInstanceDTO.ConfirmedByUser,
