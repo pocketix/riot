@@ -88,6 +88,7 @@ func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition shared
 	defer r.mu.Unlock()
 	kpiNodeEntity, kpiNodeEntities, logicalOperationNodeEntities, atomNodeEntities := dll2db.ToDBModelEntitiesKPIDefinition(kpiDefinition)
 	kpiDefinitionEntity := dbModel.KPIDefinitionEntity{
+		ID:             sharedUtils.NewOptionalFromPointer(kpiDefinition.ID).GetPayloadOrDefault(0),
 		SDTypeID:       kpiDefinition.SDTypeID,
 		UserIdentifier: kpiDefinition.UserIdentifier,
 		RootNode:       kpiNodeEntity,
