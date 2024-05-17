@@ -3,7 +3,7 @@ import time
 import json
 import random
 
-messages_per_second = 1000
+messages_per_second = 100
 
 
 def generate_message_payload():

@@ -6,7 +6,6 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
-	"log"
 )
 
 func consumeSDInstanceRegistrationRequestJSONMessages(sdInstanceRegistrationRequestConsumerFunction func(sdInstanceRegistrationRequest sharedModel.SDInstanceRegistrationRequestISCMessage) error) {
@@ -16,7 +15,7 @@ func consumeSDInstanceRegistrationRequestJSONMessages(sdInstanceRegistrationRequ
 }
 
 func consumeKPIFulfillmentCheckResultJSONMessages(kpiFulfillmentCheckResultConsumerFunction func(kpiFulfillmentCheckResult sharedModel.KPIFulfillmentCheckResultISCMessage) error) {
-	if err := rabbitmq.ConsumeJSONMessages[sharedModel.KPIFulfillmentCheckResultISCMessage](getRabbitMQClient(), sharedConstants.KPIFulfillmentCheckResultsQueueName, kpiFulfillmentCheckResultConsumerFunction); err != nil {
-		log.Printf("[ISC] Consumption of messages from the '%s' queue has failed: %s", sharedConstants.KPIFulfillmentCheckResultsQueueName, err.Error())
-	}
+	err := rabbitmq.ConsumeJSONMessages[sharedModel.KPIFulfillmentCheckResultISCMessage](getRabbitMQClient(), sharedConstants.KPIFulfillmentCheckResultsQueueName, kpiFulfillmentCheckResultConsumerFunction)
+	errorMessage := fmt.Sprintf("[ISC] Consumption of messages from the '%s' queue has failed", sharedConstants.KPIFulfillmentCheckResultsQueueName)
+	sharedUtils.TerminateOnError(err, errorMessage)
 }

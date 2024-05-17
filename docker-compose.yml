@@ -20,8 +20,8 @@ services:
       - postgres
     ports:
       - "9090:9090"
-    cpu_quota: 1000 # 1% of a single CPU core
-    mem_limit: 32m # 32 MB of RAM
+    #cpu_quota: 1000 # 1% of a single CPU core
+    #mem_limit: 32m # 32 MB of RAM
 
   sfpdfsd-message-processing-unit:
     build:
@@ -30,8 +30,8 @@ services:
     depends_on:
       - rabbitmq
       - sfpdfsd-backend-core # 'Backend-core' has to set up the 'RabbitMQ infrastructure'
-    cpu_quota: 1000 # 1% of a single CPU core
-    mem_limit: 32m # 32 MB of RAM
+    #cpu_quota: 1000 # 1% of a single CPU core
+    #mem_limit: 32m # 32 MB of RAM
 
   sfpdfsd-mqtt-preprocessor:
     build:
@@ -41,8 +41,8 @@ services:
       - rabbitmq
       - mosquitto # TODO: Consider getting rid of this 'dependency' (by adding a full-fledged MQTT configuration)
       - sfpdfsd-backend-core # 'Backend-core' has to set up the 'RabbitMQ infrastructure'
-    cpu_quota: 1000 # 1% of a single CPU core
-    mem_limit: 32m # 32 MB of RAM
+    #cpu_quota: 1000 # 1% of a single CPU core
+    #mem_limit: 32m # 32 MB of RAM
 
   mosquitto:
     image: eclipse-mosquitto:latest

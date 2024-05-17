@@ -50,13 +50,18 @@ func (r *ClientImpl) DeclareStandardQueue(queueName string) error {
 }
 
 func (r *ClientImpl) SetupMessageConsumption(queueName string, messageConsumerFunction func(message amqp.Delivery) error) error {
-	messages, err := r.channel.Consume(queueName, "", true, false, false, false, nil)
+	if err := r.channel.Qos(1, 0, false); err != nil {
+		return err
+	}
+	messageChannel, err := r.channel.Consume(queueName, "", false, false, false, false, nil)
 	if err != nil {
 		return err
 	}
-	for message := range messages {
-		err = messageConsumerFunction(message)
-		if err != nil {
+	for message := range messageChannel {
+		if err := messageConsumerFunction(message); err != nil {
+			return err
+		}
+		if err := message.Ack(false); err != nil {
 			return err
 		}
 	}
