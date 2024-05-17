@@ -80,11 +80,11 @@ func (r *queryResolver) SdInstanceGroups(ctx context.Context) ([]graphQLModel.SD
 }
 
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {
-	return SDInstanceChannel, nil
+	return SDInstanceGraphQLSubscriptionChannel, nil
 }
 
 func (r *subscriptionResolver) OnKPIFulfillmentChecked(ctx context.Context) (<-chan graphQLModel.KPIFulfillmentCheckResult, error) {
-	return KPIFulfillmentCheckResultChannel, nil
+	return KPIFulfillmentCheckResultGraphQLSubscriptionChannel, nil
 }
 
 func (r *Resolver) Mutation() gsc.MutationResolver { return &mutationResolver{r} }

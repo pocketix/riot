@@ -26,9 +26,9 @@ func getRabbitMQClient() rabbitmq.Client {
 	return rabbitMQClient
 }
 
-func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceChannel *chan graphQLModel.SDInstance) {
-	consumeSDInstanceRegistrationRequestJSONMessages(func(sdInstanceRegistrationRequest sharedModel.SDInstanceRegistrationRequestISCMessage) error {
-		sdInstanceUID := sdInstanceRegistrationRequest.SDInstanceUID
+func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceGraphQLSubscriptionChannel *chan graphQLModel.SDInstance) {
+	consumeSDInstanceRegistrationRequestJSONMessages(func(sdInstanceRegistrationRequestISCMessage sharedModel.SDInstanceRegistrationRequestISCMessage) error {
+		sdInstanceUID := sdInstanceRegistrationRequestISCMessage.SDInstanceUID
 		sdInstanceExistenceCheckResult := dbClient.GetRelationalDatabaseClientInstance().DoesSDInstanceExist(sdInstanceUID)
 		if sdInstanceExistenceCheckResult.IsFailure() {
 			return errors.New(fmt.Sprintf("couldn't check the existence of SD instance with UID: '%s'", sdInstanceUID))
@@ -36,7 +36,7 @@ func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceChannel *chan graph
 		if sdInstanceExistenceCheckResult.GetPayload() {
 			return nil
 		}
-		sdTypeDenotation := sdInstanceRegistrationRequest.SDTypeSpecification
+		sdTypeDenotation := sdInstanceRegistrationRequestISCMessage.SDTypeSpecification
 		sdTypeLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDTypeBasedOnDenotation(sdTypeDenotation)
 		if sdTypeLoadResult.IsFailure() {
 			return errors.New(fmt.Sprintf("couldn't load database record of the '%s' SD type", sdTypeDenotation))
@@ -52,16 +52,17 @@ func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceChannel *chan graph
 			return errors.New("couldn't persist the SD instance")
 		}
 		sdInstance.ID = sharedUtils.NewOptionalOf(sdInstancePersistResult.GetPayload())
-		*sdInstanceChannel <- dll2gql.ToGraphQLModelSDInstance(sdInstance)
+		select {
+		case *sdInstanceGraphQLSubscriptionChannel <- dll2gql.ToGraphQLModelSDInstance(sdInstance):
+		default:
+		}
 		return nil
 	})
 }
 
-func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel *chan graphQLModel.KPIFulfillmentCheckResult) {
-	consumeKPIFulfillmentCheckResultJSONMessages(func(kpiFulfillmentCheckResult sharedModel.KPIFulfillmentCheckResultISCMessage) error {
-		targetKPIDefinitionID := kpiFulfillmentCheckResult.KPIDefinitionID
-		targetSDInstanceUID := kpiFulfillmentCheckResult.SDInstanceUID
-		fulfilled := kpiFulfillmentCheckResult.Fulfilled
+func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultGraphQLSubscriptionChannel *chan graphQLModel.KPIFulfillmentCheckResult) {
+	consumeKPIFulfillmentCheckResultJSONMessages(func(kpiFulfillmentCheckResultISCMessage sharedModel.KPIFulfillmentCheckResultISCMessage) error {
+		targetSDInstanceUID := kpiFulfillmentCheckResultISCMessage.SDInstanceUID
 		targetSDInstanceLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstanceBasedOnUID(targetSDInstanceUID)
 		if targetSDInstanceLoadResult.IsFailure() {
 			return fmt.Errorf("couldn't load data from database (SD instance with UID = %s): %w", targetSDInstanceUID, targetSDInstanceLoadResult.GetError())
@@ -71,30 +72,19 @@ func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel 
 			return fmt.Errorf("there is no record of SD instance with UID = %s in the database", targetSDInstanceUID)
 		}
 		targetSDInstanceID := targetSDInstanceOptional.GetPayload().ID.GetPayload()
-		existingKPIFulfillmentCheckResultLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadKPIFulFulfillmentCheckResult(targetKPIDefinitionID, targetSDInstanceID)
-		if existingKPIFulfillmentCheckResultLoadResult.IsFailure() {
-			err := existingKPIFulfillmentCheckResultLoadResult.GetError()
-			return fmt.Errorf("couldn't load data from database (KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d): %w", targetKPIDefinitionID, targetSDInstanceID, err)
-		}
-		existingKPIFulfillmentCheckResultOptional := existingKPIFulfillmentCheckResultLoadResult.GetPayload()
-		if existingKPIFulfillmentCheckResultOptional.IsPresent() {
-			existingKPIFulfillmentCheckResult := existingKPIFulfillmentCheckResultOptional.GetPayload()
-			existingKPIFulfillmentCheckResult.Fulfilled = fulfilled
-			if err := dbClient.GetRelationalDatabaseClientInstance().PersistKPIFulFulfillmentCheckResult(existingKPIFulfillmentCheckResult); err != nil {
-				return fmt.Errorf("couldn't update KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d: %w", targetKPIDefinitionID, targetSDInstanceID, err)
-			}
-			*kpiFulfillmentCheckResultChannel <- dll2gql.ToGraphQLModelKPIFulfillmentCheckResult(existingKPIFulfillmentCheckResult)
-			return nil
-		}
-		newKPIFulfillmentCheckResult := dllModel.KPIFulfillmentCheckResult{
+		targetKPIDefinitionID := kpiFulfillmentCheckResultISCMessage.KPIDefinitionID
+		kpiFulfillmentCheckResult := dllModel.KPIFulfillmentCheckResult{
 			KPIDefinitionID: targetKPIDefinitionID,
 			SDInstanceID:    targetSDInstanceID,
-			Fulfilled:       fulfilled,
+			Fulfilled:       kpiFulfillmentCheckResultISCMessage.Fulfilled,
 		}
-		if err := dbClient.GetRelationalDatabaseClientInstance().PersistKPIFulFulfillmentCheckResult(newKPIFulfillmentCheckResult); err != nil {
+		if err := dbClient.GetRelationalDatabaseClientInstance().PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResult); err != nil {
 			return fmt.Errorf("couldn't persist KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d: %w", targetKPIDefinitionID, targetSDInstanceID, err)
 		}
-		*kpiFulfillmentCheckResultChannel <- dll2gql.ToGraphQLModelKPIFulfillmentCheckResult(newKPIFulfillmentCheckResult)
+		select {
+		case *kpiFulfillmentCheckResultGraphQLSubscriptionChannel <- dll2gql.ToGraphQLModelKPIFulfillmentCheckResult(kpiFulfillmentCheckResult):
+		default:
+		}
 		return nil
 	})
 }

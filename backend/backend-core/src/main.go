@@ -16,8 +16,8 @@ func waitForDependencies() {
 func setupISC() {
 	isc.SetupRabbitMQInfrastructureForISC()
 	isc.EnqueueMessagesRepresentingCurrentSystemConfiguration()
-	go isc.ProcessIncomingSDInstanceRegistrationRequests(&graphql.SDInstanceChannel)
-	go isc.ProcessIncomingKPIFulfillmentCheckResults(&graphql.KPIFulfillmentCheckResultChannel)
+	go isc.ProcessIncomingSDInstanceRegistrationRequests(&graphql.SDInstanceGraphQLSubscriptionChannel)
+	go isc.ProcessIncomingKPIFulfillmentCheckResults(&graphql.KPIFulfillmentCheckResultGraphQLSubscriptionChannel)
 }
 
 func main() {

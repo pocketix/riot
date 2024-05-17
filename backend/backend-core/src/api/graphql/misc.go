@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	SDInstanceChannel                = make(chan graphQLModel.SDInstance)
-	KPIFulfillmentCheckResultChannel = make(chan graphQLModel.KPIFulfillmentCheckResult)
+	SDInstanceGraphQLSubscriptionChannel                = make(chan graphQLModel.SDInstance)
+	KPIFulfillmentCheckResultGraphQLSubscriptionChannel = make(chan graphQLModel.KPIFulfillmentCheckResult)
 )
 
 type Resolver struct {
