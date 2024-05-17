@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
-	cTypes "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/types"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-message-processing-unit/src/processing"
 	"github.com/google/uuid"
 	"log"
 	"sync"
@@ -15,17 +15,17 @@ import (
 var (
 	dsInstanceID                             uuid.UUID
 	rabbitMQClient                           rabbitmq.Client
-	kpiDefinitionsBySDTypeDenotationMap      map[string][]kpi.DefinitionDTO
+	kpiDefinitionsBySDTypeDenotationMap      map[string][]sharedModel.KPIDefinition
 	kpiDefinitionsBySDTypeDenotationMapMutex sync.Mutex
 )
 
-func checkKPIFulfilmentThenEnqueueResult(sdUniqueIdentifier string, sdParameters any, kpiDefinition kpi.DefinitionDTO) {
-	kpiFulfillmentCheckResult := cTypes.KPIFulfillmentCheckResultInfo{ // TODO: Consider employing the timestamp...
-		UID:             sdUniqueIdentifier,
-		KPIDefinitionID: kpiDefinition.ID.GetPayload(),
-		Fulfilled:       kpi.CheckKPIFulfillment(kpiDefinition, &sdParameters),
+func checkKPIFulfilmentThenEnqueueResult(sdInstanceUID string, sdParameters any, kpiDefinition sharedModel.KPIDefinition) {
+	kpiFulfillmentCheckResultISCMessage := sharedModel.KPIFulfillmentCheckResultISCMessage{ // TODO: Consider employing the timestamp...
+		SDInstanceUID:   sdInstanceUID,
+		KPIDefinitionID: util.NewOptionalFromPointer(kpiDefinition.ID).GetPayload(),
+		Fulfilled:       processing.CheckKPIFulfillment(kpiDefinition, &sdParameters),
 	}
-	jsonSerializationResult := util.SerializeToJSON(kpiFulfillmentCheckResult)
+	jsonSerializationResult := util.SerializeToJSON(kpiFulfillmentCheckResultISCMessage)
 	if jsonSerializationResult.IsFailure() {
 		log.Println("Failed to serialize the object representing a KPI fulfillment check result into JSON")
 		return
@@ -36,47 +36,36 @@ func checkKPIFulfilmentThenEnqueueResult(sdUniqueIdentifier string, sdParameters
 }
 
 func checkForKPIFulfilmentCheckRequests() {
-	err := rabbitmq.ConsumeJSONMessages[cTypes.RequestForKPIFulfillmentCheck](rabbitMQClient, sharedConstants.KPIFulfillmentCheckRequestsQueueName, func(messagePayload cTypes.RequestForKPIFulfillmentCheck) error {
+	err := rabbitmq.ConsumeJSONMessages[sharedModel.KPIFulfillmentCheckRequestISCMessage](rabbitMQClient, sharedConstants.KPIFulfillmentCheckRequestsQueueName, func(messagePayload sharedModel.KPIFulfillmentCheckRequestISCMessage) error {
 		log.Printf("KPI fulfillment check request accepted by message processing unit with UUID = %s\n", dsInstanceID.String()) // TODO: Get rid of this line once it's unnecessary
-		sdInfo := messagePayload.SD
 		kpiDefinitionsBySDTypeDenotationMapMutex.Lock()
-		kpiDefinitions := kpiDefinitionsBySDTypeDenotationMap[sdInfo.Type]
+		kpiDefinitions := kpiDefinitionsBySDTypeDenotationMap[messagePayload.SDTypeSpecification]
 		kpiDefinitionsBySDTypeDenotationMapMutex.Unlock()
 		var wg sync.WaitGroup
 		wg.Add(len(kpiDefinitions))
 		for _, kpiDefinition := range kpiDefinitions {
-			go func(kpiDefinition kpi.DefinitionDTO) {
+			go func(kpiDefinition sharedModel.KPIDefinition) { // TODO: Consider replacing 'unlimited' number of gorountines by worker pool
 				defer wg.Done()
-				checkKPIFulfilmentThenEnqueueResult(sdInfo.UID, messagePayload.Parameters, kpiDefinition)
+				checkKPIFulfilmentThenEnqueueResult(messagePayload.SDInstanceUID, messagePayload.Parameters, kpiDefinition)
 			}(kpiDefinition)
 		}
 		wg.Wait()
 		return nil
 	})
 	if err != nil {
-		log.Printf("Consumption of messages from the '%s' queue has failed", sharedConstants.KPIFulfillmentCheckRequestsQueueName)
+		log.Printf("Consumption of messages from the '%s' queue has failed: %s\n", sharedConstants.KPIFulfillmentCheckRequestsQueueName, err.Error())
 	}
 }
 
 func checkForKPIDefinitionsBySDTypeDenotationMapUpdates() {
-	err := rabbitmq.ConsumeJSONMessages[map[string][]cTypes.KPIDefinitionTF](rabbitMQClient, sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates, func(messagePayload map[string][]cTypes.KPIDefinitionTF) error {
-		updatedKPIDefinitionsBySDTypeDenotationMap := make(map[string][]kpi.DefinitionDTO)
-		for sdTypeDenotation, kpiDefinitionsTF := range messagePayload {
-			kpiDefinitionDTOs, err := util.EMap(kpiDefinitionsTF, func(kpiDefinitionTF cTypes.KPIDefinitionTF) (kpi.DefinitionDTO, error) {
-				return cTypes.KPIDefinitionTFToKPIDefinitionDTO(kpiDefinitionTF).Unwrap()
-			})
-			if err != nil {
-				return err
-			}
-			updatedKPIDefinitionsBySDTypeDenotationMap[sdTypeDenotation] = kpiDefinitionDTOs
-		}
+	err := rabbitmq.ConsumeJSONMessages[sharedModel.KPIConfigurationUpdateISCMessage](rabbitMQClient, sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates, func(messagePayload sharedModel.KPIConfigurationUpdateISCMessage) error {
 		kpiDefinitionsBySDTypeDenotationMapMutex.Lock()
-		kpiDefinitionsBySDTypeDenotationMap = updatedKPIDefinitionsBySDTypeDenotationMap
+		kpiDefinitionsBySDTypeDenotationMap = messagePayload
 		kpiDefinitionsBySDTypeDenotationMapMutex.Unlock()
 		return nil
 	})
 	if err != nil {
-		log.Printf("Consumption of messages from the '%s' queue has failed", sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates)
+		log.Printf("Consumption of messages from the '%s' queue has failed: %s\n", sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates, err.Error())
 	}
 }
 

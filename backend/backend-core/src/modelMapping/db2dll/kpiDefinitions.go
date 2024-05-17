@@ -3,23 +3,23 @@ package db2dll
 import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dbModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 )
 
-func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap map[uint32][]uint32, logicalOperationKPINodeEntities []dbModel.LogicalOperationKPINodeEntity, atomKPINodeEntities []dbModel.AtomKPINodeEntity) kpi.NodeDTO {
+func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap map[uint32][]uint32, logicalOperationKPINodeEntities []dbModel.LogicalOperationKPINodeEntity, atomKPINodeEntities []dbModel.AtomKPINodeEntity) sharedModel.KPINode {
 	logicalOperationKPINodeEntityOptional := util.FindFirst(logicalOperationKPINodeEntities, func(logicalOperationKPINodeEntity dbModel.LogicalOperationKPINodeEntity) bool {
 		return *logicalOperationKPINodeEntity.NodeID == currentKPINodeID
 	})
 	if logicalOperationKPINodeEntityOptional.IsPresent() {
 		logicalOperationKPINodeEntity := logicalOperationKPINodeEntityOptional.GetPayload()
 		childNodeIDs := kpiNodeParentChildrenMap[*logicalOperationKPINodeEntity.NodeID]
-		childNodes := make([]kpi.NodeDTO, 0)
+		childNodes := make([]sharedModel.KPINode, 0)
 		util.ForEach(childNodeIDs, func(childNodeID uint32) {
 			childNodes = append(childNodes, reconstructKPINodeTree(childNodeID, kpiNodeParentChildrenMap, logicalOperationKPINodeEntities, atomKPINodeEntities))
 		})
-		return kpi.LogicalOperationNodeDTO{
-			Type:       kpi.LogicalOperationNodeType(logicalOperationKPINodeEntity.Type),
+		return &sharedModel.LogicalOperationKPINode{
+			Type:       sharedModel.LogicalOperationNodeType(logicalOperationKPINodeEntity.Type),
 			ChildNodes: childNodes,
 		}
 	}
@@ -32,43 +32,43 @@ func reconstructKPINodeTree(currentKPINodeID uint32, kpiNodeParentChildrenMap ma
 		sdParameterDenotation := atomKPINodeEntity.SDParameter.Denotation
 		switch atomKPINodeEntity.Type {
 		case "string_eq":
-			return kpi.EQAtomNodeDTO[string]{
+			return &sharedModel.StringEQAtomKPINode{
 				SDParameterID:            sdParameterID,
 				SDParameterSpecification: sdParameterDenotation,
 				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.StringReferenceValue).GetPayload(),
 			}
 		case "boolean_eq":
-			return kpi.EQAtomNodeDTO[bool]{
+			return &sharedModel.BooleanEQAtomKPINode{
 				SDParameterID:            sdParameterID,
 				SDParameterSpecification: sdParameterDenotation,
 				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.BooleanReferenceValue).GetPayload(),
 			}
 		case "numeric_eq":
-			return kpi.EQAtomNodeDTO[float64]{
+			return &sharedModel.NumericEQAtomKPINode{
 				SDParameterID:            sdParameterID,
 				SDParameterSpecification: sdParameterDenotation,
 				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
 			}
 		case "numeric_lt":
-			return kpi.NumericLTAtomNodeDTO{
+			return &sharedModel.NumericLTAtomKPINode{
 				SDParameterID:            sdParameterID,
 				SDParameterSpecification: sdParameterDenotation,
 				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
 			}
 		case "numeric_leq":
-			return kpi.NumericLEQAtomNodeDTO{
+			return &sharedModel.NumericLEQAtomKPINode{
 				SDParameterID:            sdParameterID,
 				SDParameterSpecification: sdParameterDenotation,
 				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
 			}
 		case "numeric_gt":
-			return kpi.NumericGTAtomNodeDTO{
+			return &sharedModel.NumericGTAtomKPINode{
 				SDParameterID:            sdParameterID,
 				SDParameterSpecification: sdParameterDenotation,
 				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
 			}
 		case "numeric_geq":
-			return kpi.NumericGEQAtomNodeDTO{
+			return &sharedModel.NumericGEQAtomKPINode{
 				SDParameterID:            sdParameterID,
 				SDParameterSpecification: sdParameterDenotation,
 				ReferenceValue:           util.NewOptionalFromPointer(atomKPINodeEntity.NumericReferenceValue).GetPayload(),
@@ -88,10 +88,10 @@ func prepareKPINodeParentChildrenMap(kpiNodeEntities []dbModel.KPINodeEntity) ma
 	return kpiNodeParentChildrenMap
 }
 
-func ReconstructKPIDefinitionDTO(kpiDefinitionEntity dbModel.KPIDefinitionEntity, kpiNodeEntities []dbModel.KPINodeEntity, logicalOperationKPINodeEntities []dbModel.LogicalOperationKPINodeEntity, atomKPINodeEntities []dbModel.AtomKPINodeEntity) kpi.DefinitionDTO {
+func ToDLLModelKPIDefinition(kpiDefinitionEntity dbModel.KPIDefinitionEntity, kpiNodeEntities []dbModel.KPINodeEntity, logicalOperationKPINodeEntities []dbModel.LogicalOperationKPINodeEntity, atomKPINodeEntities []dbModel.AtomKPINodeEntity) sharedModel.KPIDefinition {
 	kpiDefinitionRootOptional := util.NewOptionalOf(reconstructKPINodeTree(*kpiDefinitionEntity.RootNodeID, prepareKPINodeParentChildrenMap(kpiNodeEntities), logicalOperationKPINodeEntities, atomKPINodeEntities))
-	return kpi.DefinitionDTO{
-		ID:                  util.NewOptionalOf[uint32](kpiDefinitionEntity.ID),
+	return sharedModel.KPIDefinition{
+		ID:                  &kpiDefinitionEntity.ID,
 		SDTypeID:            kpiDefinitionEntity.SDTypeID,
 		SDTypeSpecification: kpiDefinitionEntity.SDType.Denotation,
 		UserIdentifier:      kpiDefinitionEntity.UserIdentifier,

@@ -1,4 +1,4 @@
-package types
+package model
 
 type UpstreamMQTTMessageInJSONBasedProprietaryFormatOfLogimic struct {
 	Notification struct {

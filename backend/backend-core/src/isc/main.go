@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbClient"
-	types2 "github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dllModel"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/modelMapping/dll2gql"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
-	cTypes "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/types"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 	"sync"
 )
@@ -27,41 +27,40 @@ func getRabbitMQClient() rabbitmq.Client {
 }
 
 func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceChannel *chan graphQLModel.SDInstance) {
-	consumeSDInstanceRegistrationRequestJSONMessages(func(sdInstanceRegistrationRequest cTypes.RequestForSDInstanceRegistration) error {
-		sd := sdInstanceRegistrationRequest.SD
-		uid := sd.UID
-		sdInstanceExistenceCheckResult := dbClient.GetRelationalDatabaseClientInstance().DoesSDInstanceExist(uid)
+	consumeSDInstanceRegistrationRequestJSONMessages(func(sdInstanceRegistrationRequest sharedModel.SDInstanceRegistrationRequestISCMessage) error {
+		sdInstanceUID := sdInstanceRegistrationRequest.SDInstanceUID
+		sdInstanceExistenceCheckResult := dbClient.GetRelationalDatabaseClientInstance().DoesSDInstanceExist(sdInstanceUID)
 		if sdInstanceExistenceCheckResult.IsFailure() {
-			return errors.New(fmt.Sprintf("couldn't check the existence of SD instance with UID: '%s'", uid))
+			return errors.New(fmt.Sprintf("couldn't check the existence of SD instance with UID: '%s'", sdInstanceUID))
 		}
 		if sdInstanceExistenceCheckResult.GetPayload() {
 			return nil
 		}
-		sdTypeDenotation := sd.Type
+		sdTypeDenotation := sdInstanceRegistrationRequest.SDTypeSpecification
 		sdTypeLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDTypeBasedOnDenotation(sdTypeDenotation)
 		if sdTypeLoadResult.IsFailure() {
 			return errors.New(fmt.Sprintf("couldn't load database record of the '%s' SD type", sdTypeDenotation))
 		}
-		sdInstanceDTO := types2.SDInstance{
-			UID:             uid,
+		sdInstance := dllModel.SDInstance{
+			UID:             sdInstanceUID,
 			ConfirmedByUser: false,
-			UserIdentifier:  uid,
+			UserIdentifier:  sdInstanceUID,
 			SDType:          sdTypeLoadResult.GetPayload(),
 		}
-		sdInstancePersistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDInstance(sdInstanceDTO)
+		sdInstancePersistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDInstance(sdInstance)
 		if sdInstancePersistResult.IsFailure() {
 			return errors.New("couldn't persist the SD instance")
 		}
-		sdInstanceDTO.ID = util.NewOptionalOf(sdInstancePersistResult.GetPayload())
-		*sdInstanceChannel <- dll2gql.ToGraphQLModelSDInstance(sdInstanceDTO)
+		sdInstance.ID = util.NewOptionalOf(sdInstancePersistResult.GetPayload())
+		*sdInstanceChannel <- dll2gql.ToGraphQLModelSDInstance(sdInstance)
 		return nil
 	})
 }
 
 func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel *chan graphQLModel.KPIFulfillmentCheckResult) {
-	consumeKPIFulfillmentCheckResultJSONMessages(func(kpiFulfillmentCheckResult cTypes.KPIFulfillmentCheckResultInfo) error {
+	consumeKPIFulfillmentCheckResultJSONMessages(func(kpiFulfillmentCheckResult sharedModel.KPIFulfillmentCheckResultISCMessage) error {
 		targetKPIDefinitionID := kpiFulfillmentCheckResult.KPIDefinitionID
-		targetSDInstanceUID := kpiFulfillmentCheckResult.UID
+		targetSDInstanceUID := kpiFulfillmentCheckResult.SDInstanceUID
 		fulfilled := kpiFulfillmentCheckResult.Fulfilled
 		targetSDInstanceLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstanceBasedOnUID(targetSDInstanceUID)
 		if targetSDInstanceLoadResult.IsFailure() {
@@ -87,7 +86,7 @@ func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel 
 			*kpiFulfillmentCheckResultChannel <- dll2gql.ToGraphQLModelKPIFulfillmentCheckResult(existingKPIFulfillmentCheckResult)
 			return nil
 		}
-		newKPIFulfillmentCheckResult := types2.KPIFulfillmentCheckResult{
+		newKPIFulfillmentCheckResult := dllModel.KPIFulfillmentCheckResult{
 			KPIDefinitionID: targetKPIDefinitionID,
 			SDInstanceID:    targetSDInstanceID,
 			Fulfilled:       fulfilled,
@@ -106,8 +105,8 @@ func EnqueueMessageRepresentingCurrentSDTypeConfiguration() {
 		if sdTypesLoadResult.IsFailure() {
 			return sdTypesLoadResult.GetError()
 		}
-		sdTypeDenotations := util.Map[types2.SDType, string](sdTypesLoadResult.GetPayload(), func(sdTypeDTO types2.SDType) string {
-			return sdTypeDTO.Denotation
+		sdTypeDenotations := util.Map[dllModel.SDType, string](sdTypesLoadResult.GetPayload(), func(sdType dllModel.SDType) string {
+			return sdType.Denotation
 		})
 		sdTypeDenotationsJSONSerializationResult := util.SerializeToJSON(sdTypeDenotations)
 		if sdTypeDenotationsJSONSerializationResult.IsFailure() {
@@ -123,10 +122,10 @@ func EnqueueMessageRepresentingCurrentSDInstanceConfiguration() {
 		if sdInstancesLoadResult.IsFailure() {
 			return sdInstancesLoadResult.GetError()
 		}
-		sdInstancesInfo := util.Map[types2.SDInstance, cTypes.SDInstanceInfo](sdInstancesLoadResult.GetPayload(), func(sdInstanceDTO types2.SDInstance) cTypes.SDInstanceInfo {
-			return cTypes.SDInstanceInfo{
-				UID:             sdInstanceDTO.UID,
-				ConfirmedByUser: sdInstanceDTO.ConfirmedByUser,
+		sdInstancesInfo := util.Map[dllModel.SDInstance, sharedModel.SDInstanceInfo](sdInstancesLoadResult.GetPayload(), func(sdInstance dllModel.SDInstance) sharedModel.SDInstanceInfo {
+			return sharedModel.SDInstanceInfo{
+				SDInstanceUID:   sdInstance.UID,
+				ConfirmedByUser: sdInstance.ConfirmedByUser,
 			}
 		})
 		sdInstancesInfoJSONSerializationResult := util.SerializeToJSON(sdInstancesInfo)
@@ -143,20 +142,20 @@ func EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration() {
 		if kpiDefinitionsLoadResult.IsFailure() {
 			return kpiDefinitionsLoadResult.GetError()
 		}
-		kpiDefinitionsBySDTypeDenotationMapTF := make(map[string][]cTypes.KPIDefinitionTF)
-		kpiDefinitionDTOs := kpiDefinitionsLoadResult.GetPayload()
-		for _, kpiDefinitionDTO := range kpiDefinitionDTOs {
-			sdTypeSpecification := kpiDefinitionDTO.SDTypeSpecification
-			if _, exists := kpiDefinitionsBySDTypeDenotationMapTF[sdTypeSpecification]; !exists {
-				kpiDefinitionsBySDTypeDenotationMapTF[sdTypeSpecification] = make([]cTypes.KPIDefinitionTF, 0)
+		kpiDefinitions := kpiDefinitionsLoadResult.GetPayload()
+		kpiDefinitionsBySDTypeDenotationMap := make(sharedModel.KPIConfigurationUpdateISCMessage)
+		for _, kpiDefinition := range kpiDefinitions {
+			sdTypeSpecification := kpiDefinition.SDTypeSpecification
+			if _, exists := kpiDefinitionsBySDTypeDenotationMap[sdTypeSpecification]; !exists {
+				kpiDefinitionsBySDTypeDenotationMap[sdTypeSpecification] = make([]sharedModel.KPIDefinition, 0)
 			}
-			kpiDefinitionsBySDTypeDenotationMapTF[sdTypeSpecification] = append(kpiDefinitionsBySDTypeDenotationMapTF[sdTypeSpecification], cTypes.KPIDefinitionDTOToKPIDefinitionTF(kpiDefinitionDTO))
+			kpiDefinitionsBySDTypeDenotationMap[sdTypeSpecification] = append(kpiDefinitionsBySDTypeDenotationMap[sdTypeSpecification], kpiDefinition)
 		}
-		kpiDefinitionsBySDTypeDenotationMapTFJSONSerializationResult := util.SerializeToJSON(kpiDefinitionsBySDTypeDenotationMapTF)
-		if kpiDefinitionsBySDTypeDenotationMapTFJSONSerializationResult.IsFailure() {
-			return kpiDefinitionsBySDTypeDenotationMapTFJSONSerializationResult.GetError()
+		jsonSerializationResult := util.SerializeToJSON(kpiDefinitionsBySDTypeDenotationMap)
+		if jsonSerializationResult.IsFailure() {
+			return jsonSerializationResult.GetError()
 		}
-		return getRabbitMQClient().EnqueueJSONMessage(sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates, kpiDefinitionsBySDTypeDenotationMapTFJSONSerializationResult.GetPayload())
+		return getRabbitMQClient().EnqueueJSONMessage(sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates, jsonSerializationResult.GetPayload())
 	}(), "[ISC] Failed to enqueue RabbitMQ messages representing current KPI definition configuration")
 }
 

@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-MQTT-preprocessor/src/model"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-MQTT-preprocessor/src/mqtt"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-MQTT-preprocessor/src/types"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
-	cTypes "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/types"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 	"log"
 	"sync"
@@ -25,14 +25,14 @@ var (
 	rabbitMQClient       rabbitmq.Client
 	sdTypes              = util.NewSet[string]()
 	sdTypesMutex         sync.Mutex
-	sdInstances          = util.NewSet[cTypes.SDInstanceInfo]()
+	sdInstances          = util.NewSet[sharedModel.SDInstanceInfo]()
 	sdInstancesMutex     sync.Mutex
 	mqttMessageFIFO      = make([][]byte, 0)
 	mqttMessageFIFOMutex sync.Mutex
 )
 
 func checkForSetOfSDTypesUpdates() {
-	err := rabbitmq.ConsumeJSONMessages[[]string](rabbitMQClient, sharedConstants.SetOfSDTypesUpdatesQueueName, func(messagePayload []string) error {
+	err := rabbitmq.ConsumeJSONMessages[sharedModel.SDTypeConfigurationUpdateISCMessage](rabbitMQClient, sharedConstants.SetOfSDTypesUpdatesQueueName, func(messagePayload sharedModel.SDTypeConfigurationUpdateISCMessage) error {
 		updatedSDTypes := util.NewSetFromSlice(messagePayload)
 		sdTypesMutex.Lock()
 		sdTypes = updatedSDTypes
@@ -45,7 +45,7 @@ func checkForSetOfSDTypesUpdates() {
 }
 
 func checkForSetOfSDInstancesUpdates() {
-	err := rabbitmq.ConsumeJSONMessages[[]cTypes.SDInstanceInfo](rabbitMQClient, sharedConstants.SetOfSDInstancesUpdatesQueueName, func(messagePayload []cTypes.SDInstanceInfo) error {
+	err := rabbitmq.ConsumeJSONMessages[sharedModel.SDInstanceConfigurationUpdateISCMessage](rabbitMQClient, sharedConstants.SetOfSDInstancesUpdatesQueueName, func(messagePayload sharedModel.SDInstanceConfigurationUpdateISCMessage) error {
 		updatedSDInstances := util.NewSetFromSlice(messagePayload)
 		sdInstancesMutex.Lock()
 		sdInstances = updatedSDInstances
@@ -75,9 +75,9 @@ const (
 func determineSDInstanceScenario(uid string) sdInstanceScenario {
 	var scenario sdInstanceScenario
 	sdInstancesMutex.Lock()
-	if sdInstances.Contains(cTypes.SDInstanceInfo{UID: uid, ConfirmedByUser: true}) {
+	if sdInstances.Contains(sharedModel.SDInstanceInfo{SDInstanceUID: uid, ConfirmedByUser: true}) {
 		scenario = confirmedSDInstance
-	} else if sdInstances.Contains(cTypes.SDInstanceInfo{UID: uid, ConfirmedByUser: false}) {
+	} else if sdInstances.Contains(sharedModel.SDInstanceInfo{SDInstanceUID: uid, ConfirmedByUser: false}) {
 		scenario = sdInstanceNotYetConfirmedByUser
 	} else {
 		scenario = unknownSDInstance
@@ -87,15 +87,13 @@ func determineSDInstanceScenario(uid string) sdInstanceScenario {
 }
 
 func generateKPIFulfillmentCheckRequest(uid string, sdType string, parameters any, timestamp float32) {
-	requestForKPIFulfillmentCheck := cTypes.RequestForKPIFulfillmentCheck{
-		Timestamp: timestamp,
-		SD: cTypes.SDInfo{
-			UID:  uid,
-			Type: sdType,
-		},
-		Parameters: parameters,
+	kpiFulfillmentCheckRequestISCMessage := sharedModel.KPIFulfillmentCheckRequestISCMessage{
+		Timestamp:           timestamp,
+		SDInstanceUID:       uid,
+		SDTypeSpecification: sdType,
+		Parameters:          parameters,
 	}
-	jsonSerializationResult := util.SerializeToJSON(requestForKPIFulfillmentCheck)
+	jsonSerializationResult := util.SerializeToJSON(kpiFulfillmentCheckRequestISCMessage)
 	if jsonSerializationResult.IsFailure() {
 		log.Println("Failed to serialize the object representing a KPI fulfillment check request into JSON")
 	}
@@ -108,14 +106,12 @@ func generateKPIFulfillmentCheckRequest(uid string, sdType string, parameters an
 }
 
 func generateSDInstanceRegistrationRequest(uid string, sdType string, timestamp float32) {
-	requestForSDInstanceRegistration := cTypes.RequestForSDInstanceRegistration{
-		Timestamp: timestamp,
-		SD: cTypes.SDInfo{
-			UID:  uid,
-			Type: sdType,
-		},
+	sdInstanceRegistrationRequestISCMessage := sharedModel.SDInstanceRegistrationRequestISCMessage{
+		Timestamp:           timestamp,
+		SDInstanceUID:       uid,
+		SDTypeSpecification: sdType,
 	}
-	jsonSerializationResult := util.SerializeToJSON(requestForSDInstanceRegistration)
+	jsonSerializationResult := util.SerializeToJSON(sdInstanceRegistrationRequestISCMessage)
 	if jsonSerializationResult.IsFailure() {
 		log.Println("Failed to serialize the object representing a SD instance registration request into JSON")
 	}
@@ -126,15 +122,15 @@ func generateSDInstanceRegistrationRequest(uid string, sdType string, timestamp 
 	}
 	log.Println("Successfully published a SD instance registration request message") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
 	sdInstancesMutex.Lock()
-	sdInstances.Add(cTypes.SDInstanceInfo{
-		UID:             uid,
+	sdInstances.Add(sharedModel.SDInstanceInfo{
+		SDInstanceUID:   uid,
 		ConfirmedByUser: false,
 	})
 	sdInstancesMutex.Unlock()
 }
 
 func processMQTTMessagePayload(mqttMessagePayload []byte) {
-	jsonDeserializationResult := util.DeserializeFromJSON[types.UpstreamMQTTMessageInJSONBasedProprietaryFormatOfLogimic](mqttMessagePayload)
+	jsonDeserializationResult := util.DeserializeFromJSON[model.UpstreamMQTTMessageInJSONBasedProprietaryFormatOfLogimic](mqttMessagePayload)
 	if jsonDeserializationResult.IsFailure() {
 		log.Println("Failed to deserialize the JSON payload of MQTT message")
 		return

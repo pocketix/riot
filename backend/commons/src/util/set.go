@@ -95,7 +95,7 @@ func (s *Set[T]) GenerateDifferenceWith(os *Set[T]) *Set[T] {
 
 func (s *Set[T]) ToSlice() []T {
 	slice := make([]T, 0, s.Size())
-	for item, _ := range s.items {
+	for item := range s.items {
 		slice = append(slice, item)
 	}
 	return slice

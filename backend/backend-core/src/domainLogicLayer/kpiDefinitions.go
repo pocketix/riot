@@ -8,24 +8,24 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/modelMapping/dll2gql"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/modelMapping/gql2dll"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/kpi"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
 )
 
 func CreateKPIDefinition(kpiDefinitionInput graphQLModel.KPIDefinitionInput) util.Result[graphQLModel.KPIDefinition] {
-	toDTOTransformResult := gql2dll.KPIDefinitionInputToKPIDefinitionDTO(kpiDefinitionInput)
-	if toDTOTransformResult.IsFailure() {
-		return util.NewFailureResult[graphQLModel.KPIDefinition](toDTOTransformResult.GetError())
+	toDLLModelTransformResult := gql2dll.ToDLLModelKPIDefinition(kpiDefinitionInput)
+	if toDLLModelTransformResult.IsFailure() {
+		return util.NewFailureResult[graphQLModel.KPIDefinition](toDLLModelTransformResult.GetError())
 	}
-	kpiDefinitionDTO := toDTOTransformResult.GetPayload()
-	persistResult := dbClient.GetRelationalDatabaseClientInstance().PersistKPIDefinition(kpiDefinitionDTO)
+	kpiDefinition := toDLLModelTransformResult.GetPayload()
+	persistResult := dbClient.GetRelationalDatabaseClientInstance().PersistKPIDefinition(kpiDefinition)
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[graphQLModel.KPIDefinition](persistResult.GetError())
 	}
 	go isc.EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration()
 	id := persistResult.GetPayload()
-	kpiDefinitionDTO.ID = util.NewOptionalOf[uint32](id)
-	return util.NewSuccessResult[graphQLModel.KPIDefinition](dll2gql.KPIDefinitionDTOToKPIDefinition(kpiDefinitionDTO))
+	kpiDefinition.ID = &id
+	return util.NewSuccessResult[graphQLModel.KPIDefinition](dll2gql.ToGraphQLModelKPIDefinition(kpiDefinition))
 }
 
 func UpdateKPIDefinition(id uint32, kpiDefinitionInput graphQLModel.KPIDefinitionInput) util.Result[graphQLModel.KPIDefinition] {
@@ -33,19 +33,18 @@ func UpdateKPIDefinition(id uint32, kpiDefinitionInput graphQLModel.KPIDefinitio
 	if err := dbClient.GetRelationalDatabaseClientInstance().DeleteKPIDefinition(id); err != nil {
 		return util.NewFailureResult[graphQLModel.KPIDefinition](err)
 	}
-	toDTOTransformResult := gql2dll.KPIDefinitionInputToKPIDefinitionDTO(kpiDefinitionInput)
-	if toDTOTransformResult.IsFailure() {
-		return util.NewFailureResult[graphQLModel.KPIDefinition](toDTOTransformResult.GetError())
+	toDLLModelTransformResult := gql2dll.ToDLLModelKPIDefinition(kpiDefinitionInput)
+	if toDLLModelTransformResult.IsFailure() {
+		return util.NewFailureResult[graphQLModel.KPIDefinition](toDLLModelTransformResult.GetError())
 	}
-	kpiDefinitionDTO := toDTOTransformResult.GetPayload()
-	kpiDefinitionDTO.ID = util.NewOptionalOf(id)
-	persistResult := dbClient.GetRelationalDatabaseClientInstance().PersistKPIDefinition(kpiDefinitionDTO)
+	kpiDefinition := toDLLModelTransformResult.GetPayload()
+	kpiDefinition.ID = &id
+	persistResult := dbClient.GetRelationalDatabaseClientInstance().PersistKPIDefinition(kpiDefinition)
 	if persistResult.IsFailure() {
 		return util.NewFailureResult[graphQLModel.KPIDefinition](persistResult.GetError())
 	}
 	go isc.EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration()
-	kpiDefinition := dll2gql.KPIDefinitionDTOToKPIDefinition(kpiDefinitionDTO)
-	return util.NewSuccessResult[graphQLModel.KPIDefinition](kpiDefinition)
+	return util.NewSuccessResult[graphQLModel.KPIDefinition](dll2gql.ToGraphQLModelKPIDefinition(kpiDefinition))
 }
 
 func DeleteKPIDefinition(id uint32) error {
@@ -61,7 +60,7 @@ func GetKPIDefinitions() util.Result[[]graphQLModel.KPIDefinition] {
 	if loadResult.IsFailure() {
 		return util.NewFailureResult[[]graphQLModel.KPIDefinition](loadResult.GetError())
 	}
-	return util.NewSuccessResult[[]graphQLModel.KPIDefinition](util.Map(loadResult.GetPayload(), dll2gql.KPIDefinitionDTOToKPIDefinition))
+	return util.NewSuccessResult[[]graphQLModel.KPIDefinition](util.Map(loadResult.GetPayload(), dll2gql.ToGraphQLModelKPIDefinition))
 }
 
 func GetKPIDefinition(id uint32) util.Result[graphQLModel.KPIDefinition] {
@@ -70,12 +69,12 @@ func GetKPIDefinition(id uint32) util.Result[graphQLModel.KPIDefinition] {
 	if loadResult.IsFailure() {
 		return util.NewFailureResult[graphQLModel.KPIDefinition](loadResult.GetError())
 	}
-	kpiDefinitionDTOs := loadResult.GetPayload()
-	targetKPIDefinitionDTOOptional := util.FindFirst[kpi.DefinitionDTO](kpiDefinitionDTOs, func(kpiDefinitionDTO kpi.DefinitionDTO) bool {
-		return kpiDefinitionDTO.ID.GetPayload() == id
+	kpiDefinitions := loadResult.GetPayload()
+	targetKPIDefinitionOptional := util.FindFirst[sharedModel.KPIDefinition](kpiDefinitions, func(kpiDefinition sharedModel.KPIDefinition) bool {
+		return *kpiDefinition.ID == id
 	})
-	if targetKPIDefinitionDTOOptional.IsEmpty() {
+	if targetKPIDefinitionOptional.IsEmpty() {
 		return util.NewFailureResult[graphQLModel.KPIDefinition](errors.New(fmt.Sprintf("couldn't find KPI definition for id: %d", id)))
 	}
-	return util.NewSuccessResult[graphQLModel.KPIDefinition](dll2gql.KPIDefinitionDTOToKPIDefinition(targetKPIDefinitionDTOOptional.GetPayload()))
+	return util.NewSuccessResult[graphQLModel.KPIDefinition](dll2gql.ToGraphQLModelKPIDefinition(targetKPIDefinitionOptional.GetPayload()))
 }

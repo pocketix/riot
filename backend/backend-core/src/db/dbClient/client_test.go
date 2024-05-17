@@ -39,7 +39,7 @@ func TestPersistSDType(t *testing.T) {
 		WithArgs(1, "relay_0_temperature", "number", 1, "relay_0_output", "boolean").
 		WillReturnRows(sqlmock.NewRows(util.SliceOf("id")).AddRow(1).AddRow(2))
 	mock.ExpectCommit()
-	sdTypeDTO := dllModel.SDType{
+	sdType := dllModel.SDType{
 		ID:         util.NewEmptyOptional[uint32](),
 		Denotation: "shelly1pro",
 		Parameters: []dllModel.SDParameter{{
@@ -52,7 +52,7 @@ func TestPersistSDType(t *testing.T) {
 			Type:       dllModel.SDParameterTypeTypeBoolean,
 		}},
 	}
-	if sdTypePersistResult := client.PersistSDType(sdTypeDTO); sdTypePersistResult.IsFailure() {
+	if sdTypePersistResult := client.PersistSDType(sdType); sdTypePersistResult.IsFailure() {
 		t.Fatalf("an error occurred while trying to persist the SD type: %s", sdTypePersistResult.GetError().Error())
 	}
 	if smUnfulfilledExpectationsError := mock.ExpectationsWereMet(); smUnfulfilledExpectationsError != nil {
