@@ -1,4 +1,4 @@
-version: '3'
+version: '2'
 
 services:
 
@@ -20,7 +20,8 @@ services:
       - postgres
     ports:
       - "9090:9090"
-    restart: unless-stopped
+    cpu_quota: 1000 # 1% of a single CPU core
+    mem_limit: 32m # 32 MB of RAM
 
   sfpdfsd-message-processing-unit:
     build:
@@ -29,7 +30,8 @@ services:
     depends_on:
       - rabbitmq
       - sfpdfsd-backend-core # 'Backend-core' has to set up the 'RabbitMQ infrastructure'
-    restart: unless-stopped
+    cpu_quota: 1000 # 1% of a single CPU core
+    mem_limit: 32m # 32 MB of RAM
 
   sfpdfsd-mqtt-preprocessor:
     build:
@@ -39,7 +41,8 @@ services:
       - rabbitmq
       - mosquitto # TODO: Consider getting rid of this 'dependency' (by adding a full-fledged MQTT configuration)
       - sfpdfsd-backend-core # 'Backend-core' has to set up the 'RabbitMQ infrastructure'
-    restart: unless-stopped
+    cpu_quota: 1000 # 1% of a single CPU core
+    mem_limit: 32m # 32 MB of RAM
 
   mosquitto:
     image: eclipse-mosquitto:latest
@@ -51,7 +54,6 @@ services:
       - ./docker/mosquitto-config/password.txt:/mosquitto/config/password.txt
       - ./docker/mosquitto-data:/mosquitto/data
       - ./docker/mosquitto-log:/mosquitto/log
-    restart: unless-stopped
 
   postgres:
     image: postgres:latest
@@ -63,7 +65,6 @@ services:
       - "5432:5432"
     volumes:
       - ./docker/postgres-data:/var/lib/postgresql/data
-    restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4:latest
