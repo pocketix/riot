@@ -4,13 +4,13 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/modelMapping/dll2gql"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 )
 
-func GetKPIFulfillmentCheckResults() util.Result[[]graphQLModel.KPIFulfillmentCheckResult] {
+func GetKPIFulfillmentCheckResults() sharedUtils.Result[[]graphQLModel.KPIFulfillmentCheckResult] {
 	loadResult := dbClient.GetRelationalDatabaseClientInstance().LoadKPIFulFulfillmentCheckResults()
 	if loadResult.IsFailure() {
-		return util.NewFailureResult[[]graphQLModel.KPIFulfillmentCheckResult](loadResult.GetError())
+		return sharedUtils.NewFailureResult[[]graphQLModel.KPIFulfillmentCheckResult](loadResult.GetError())
 	}
-	return util.NewSuccessResult[[]graphQLModel.KPIFulfillmentCheckResult](util.Map(loadResult.GetPayload(), dll2gql.ToGraphQLModelKPIFulfillmentCheckResult))
+	return sharedUtils.NewSuccessResult[[]graphQLModel.KPIFulfillmentCheckResult](sharedUtils.Map(loadResult.GetPayload(), dll2gql.ToGraphQLModelKPIFulfillmentCheckResult))
 }

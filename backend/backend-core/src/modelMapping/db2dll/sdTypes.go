@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dbModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 )
 
 func ToDLLModelSDType(sdTypeEntity dbModel.SDTypeEntity) dllModel.SDType {
 	return dllModel.SDType{
-		ID:         util.NewOptionalOf[uint32](sdTypeEntity.ID),
+		ID:         sharedUtils.NewOptionalOf[uint32](sdTypeEntity.ID),
 		Denotation: sdTypeEntity.Denotation,
-		Parameters: util.Map(sdTypeEntity.Parameters, func(sdParameterEntity dbModel.SDParameterEntity) dllModel.SDParameter {
+		Parameters: sharedUtils.Map(sdTypeEntity.Parameters, func(sdParameterEntity dbModel.SDParameterEntity) dllModel.SDParameter {
 			return dllModel.SDParameter{
-				ID:         util.NewOptionalOf[uint32](sdParameterEntity.ID),
+				ID:         sharedUtils.NewOptionalOf[uint32](sdParameterEntity.ID),
 				Denotation: sdParameterEntity.Denotation,
 				Type: func(sdParameterType string) dllModel.SDParameterType {
 					switch sdParameterType {

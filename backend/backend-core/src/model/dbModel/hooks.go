@@ -2,14 +2,14 @@ package dbModel
 
 import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbUtil"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 	"gorm.io/gorm"
 )
 
 // BeforeUpdate is a GORM hook implemented with the goal of getting rid of redundant SD instance group membership records. This is not handled by the update operation itself.
 func (s SDInstanceGroupEntity) BeforeUpdate(tx *gorm.DB) error {
 	referencesCurrentSDInstanceGroup := dbUtil.Where("sd_instance_group_id = ?", s.ID)
-	referencesSDInstanceOutsideCurrentGroup := dbUtil.Where("sd_instance_id NOT IN (?)", util.Map(s.GroupMembershipRecords, func(sdInstanceGroupMembershipEntity SDInstanceGroupMembershipEntity) uint32 {
+	referencesSDInstanceOutsideCurrentGroup := dbUtil.Where("sd_instance_id NOT IN (?)", sharedUtils.Map(s.GroupMembershipRecords, func(sdInstanceGroupMembershipEntity SDInstanceGroupMembershipEntity) uint32 {
 		return sdInstanceGroupMembershipEntity.SDInstanceID
 	}))
 	return dbUtil.DeleteEntitiesBasedOnWhereClauses[SDInstanceGroupMembershipEntity](tx, referencesCurrentSDInstanceGroup, referencesSDInstanceOutsideCurrentGroup)

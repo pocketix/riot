@@ -1,9 +1,9 @@
 package dllModel
 
-import "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+import "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 
 type SDInstanceGroup struct {
-	ID             util.Optional[uint32]
+	ID             sharedUtils.Optional[uint32]
 	UserIdentifier string
 	SDInstanceIDs  []uint32
 }

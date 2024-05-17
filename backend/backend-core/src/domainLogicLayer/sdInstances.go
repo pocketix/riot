@@ -5,32 +5,32 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/isc"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/modelMapping/dll2gql"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 )
 
-func GetSDInstances() util.Result[[]graphQLModel.SDInstance] {
+func GetSDInstances() sharedUtils.Result[[]graphQLModel.SDInstance] {
 	loadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstances()
 	if loadResult.IsFailure() {
-		return util.NewFailureResult[[]graphQLModel.SDInstance](loadResult.GetError())
+		return sharedUtils.NewFailureResult[[]graphQLModel.SDInstance](loadResult.GetError())
 	}
-	return util.NewSuccessResult[[]graphQLModel.SDInstance](util.Map(loadResult.GetPayload(), dll2gql.ToGraphQLModelSDInstance))
+	return sharedUtils.NewSuccessResult[[]graphQLModel.SDInstance](sharedUtils.Map(loadResult.GetPayload(), dll2gql.ToGraphQLModelSDInstance))
 }
 
-func UpdateSDInstance(id uint32, sdInstanceUpdateInput graphQLModel.SDInstanceUpdateInput) util.Result[graphQLModel.SDInstance] {
+func UpdateSDInstance(id uint32, sdInstanceUpdateInput graphQLModel.SDInstanceUpdateInput) sharedUtils.Result[graphQLModel.SDInstance] {
 	loadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstance(id)
 	if loadResult.IsFailure() {
-		return util.NewFailureResult[graphQLModel.SDInstance](loadResult.GetError())
+		return sharedUtils.NewFailureResult[graphQLModel.SDInstance](loadResult.GetError())
 	}
 	sdInstance := loadResult.GetPayload()
-	util.NewOptionalFromPointer(sdInstanceUpdateInput.UserIdentifier).DoIfPresent(func(userIdentifier string) {
+	sharedUtils.NewOptionalFromPointer(sdInstanceUpdateInput.UserIdentifier).DoIfPresent(func(userIdentifier string) {
 		sdInstance.UserIdentifier = userIdentifier
 	})
-	util.NewOptionalFromPointer(sdInstanceUpdateInput.ConfirmedByUser).DoIfPresent(func(confirmedByUser bool) {
+	sharedUtils.NewOptionalFromPointer(sdInstanceUpdateInput.ConfirmedByUser).DoIfPresent(func(confirmedByUser bool) {
 		sdInstance.ConfirmedByUser = confirmedByUser
 	})
 	if persistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDInstance(sdInstance); persistResult.IsFailure() {
-		return util.NewFailureResult[graphQLModel.SDInstance](persistResult.GetError())
+		return sharedUtils.NewFailureResult[graphQLModel.SDInstance](persistResult.GetError())
 	}
 	go isc.EnqueueMessageRepresentingCurrentSDInstanceConfiguration()
-	return util.NewSuccessResult[graphQLModel.SDInstance](dll2gql.ToGraphQLModelSDInstance(sdInstance))
+	return sharedUtils.NewSuccessResult[graphQLModel.SDInstance](dll2gql.ToGraphQLModelSDInstance(sdInstance))
 }

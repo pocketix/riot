@@ -1,6 +1,6 @@
 package dllModel
 
-import "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+import "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 
 type SDParameterType string
 
@@ -11,13 +11,13 @@ const (
 )
 
 type SDParameter struct {
-	ID         util.Optional[uint32]
+	ID         sharedUtils.Optional[uint32]
 	Denotation string
 	Type       SDParameterType
 }
 
 type SDType struct {
-	ID         util.Optional[uint32]
+	ID         sharedUtils.Optional[uint32]
 	Denotation string
 	Parameters []SDParameter
 }

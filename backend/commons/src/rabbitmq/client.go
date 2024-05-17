@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	cUtil "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"time"
 )
@@ -29,9 +29,9 @@ type ClientImpl struct {
 
 func NewClient() Client {
 	connection, err := amqp.Dial(urlOfRabbitMQ)
-	cUtil.TerminateOnError(err, "[RabbitMQ client] Failed to connect to RabbitMQ")
+	sharedUtils.TerminateOnError(err, "[RabbitMQ client] Failed to connect to RabbitMQ")
 	channel, err := connection.Channel()
-	cUtil.TerminateOnError(err, "[RabbitMQ client] Failed to open a channel")
+	sharedUtils.TerminateOnError(err, "[RabbitMQ client] Failed to open a channel")
 	return &ClientImpl{connection: connection, channel: channel}
 }
 
@@ -64,8 +64,8 @@ func (r *ClientImpl) SetupMessageConsumption(queueName string, messageConsumerFu
 }
 
 func (r *ClientImpl) Dispose() {
-	cUtil.LogPossibleErrorThenProceed(r.channel.Close(), "Failed to close a channel")
-	cUtil.TerminateOnError(r.connection.Close(), "Failed to close the connection to RabbitMQ")
+	sharedUtils.LogPossibleErrorThenProceed(r.channel.Close(), "Failed to close a channel")
+	sharedUtils.TerminateOnError(r.connection.Close(), "Failed to close the connection to RabbitMQ")
 }
 
 func ConsumeJSONMessages[T any](c Client, queueName string, messagePayloadConsumerFunction func(messagePayload T) error) error {
@@ -74,7 +74,7 @@ func ConsumeJSONMessages[T any](c Client, queueName string, messagePayloadConsum
 		if messageContentType != mimeTypeOfJSONData {
 			return errors.New(fmt.Sprintf("Incorrect message content type: %s", messageContentType))
 		}
-		jsonDeserializationResult := cUtil.DeserializeFromJSON[T](message.Body)
+		jsonDeserializationResult := sharedUtils.DeserializeFromJSON[T](message.Body)
 		if jsonDeserializationResult.IsFailure() {
 			return jsonDeserializationResult.GetError()
 		}

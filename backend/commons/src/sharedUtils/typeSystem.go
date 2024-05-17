@@ -1,4 +1,4 @@
-package util
+package sharedUtils
 
 func TypeIs[T any](subject any) bool {
 	_, ok := subject.(T)

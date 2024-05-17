@@ -3,7 +3,7 @@ package isc
 import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 )
 
 func getQueueDeclarationErrorMessage(queueName string) string {
@@ -11,8 +11,8 @@ func getQueueDeclarationErrorMessage(queueName string) string {
 }
 
 func SetupRabbitMQInfrastructureForISC() {
-	namesOfQueuesToDeclare := util.SliceOf[string](sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates, sharedConstants.KPIFulfillmentCheckResultsQueueName, sharedConstants.KPIFulfillmentCheckRequestsQueueName, sharedConstants.SDInstanceRegistrationRequestsQueueName, sharedConstants.SetOfSDTypesUpdatesQueueName, sharedConstants.SetOfSDInstancesUpdatesQueueName)
-	util.ForEach(namesOfQueuesToDeclare, func(nameOfQueuesToDeclare string) {
-		util.TerminateOnError(getRabbitMQClient().DeclareStandardQueue(nameOfQueuesToDeclare), getQueueDeclarationErrorMessage(nameOfQueuesToDeclare))
+	namesOfQueuesToDeclare := sharedUtils.SliceOf[string](sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates, sharedConstants.KPIFulfillmentCheckResultsQueueName, sharedConstants.KPIFulfillmentCheckRequestsQueueName, sharedConstants.SDInstanceRegistrationRequestsQueueName, sharedConstants.SetOfSDTypesUpdatesQueueName, sharedConstants.SetOfSDInstancesUpdatesQueueName)
+	sharedUtils.ForEach(namesOfQueuesToDeclare, func(nameOfQueuesToDeclare string) {
+		sharedUtils.TerminateOnError(getRabbitMQClient().DeclareStandardQueue(nameOfQueuesToDeclare), getQueueDeclarationErrorMessage(nameOfQueuesToDeclare))
 	})
 }

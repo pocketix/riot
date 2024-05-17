@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 )
 
 func toGraphQLModelKPINode(kpiNode sharedModel.KPINode, id uint32, parentNodeID *uint32) graphQLModel.KPINode {
@@ -97,7 +97,7 @@ func processKPINode(node sharedModel.KPINode, generateNextNumber func() uint32, 
 	nodeID := generateNextNumber()
 	nodes := make([]graphQLModel.KPINode, 0)
 	nodes = append(nodes, toGraphQLModelKPINode(node, nodeID, parentID))
-	if util.TypeIs[*sharedModel.LogicalOperationKPINode](node) {
+	if sharedUtils.TypeIs[*sharedModel.LogicalOperationKPINode](node) {
 		for _, childNode := range node.(*sharedModel.LogicalOperationKPINode).ChildNodes {
 			nodes = append(nodes, processKPINode(childNode, generateNextNumber, &nodeID)...)
 		}
@@ -106,9 +106,9 @@ func processKPINode(node sharedModel.KPINode, generateNextNumber func() uint32, 
 }
 
 func ToGraphQLModelKPIDefinition(kpiDefinition sharedModel.KPIDefinition) graphQLModel.KPIDefinition {
-	nodes := processKPINode(kpiDefinition.RootNode, util.SequentialNumberGenerator(), nil)
+	nodes := processKPINode(kpiDefinition.RootNode, sharedUtils.SequentialNumberGenerator(), nil)
 	return graphQLModel.KPIDefinition{
-		ID:                  util.NewOptionalFromPointer(kpiDefinition.ID).GetPayload(),
+		ID:                  sharedUtils.NewOptionalFromPointer(kpiDefinition.ID).GetPayload(),
 		SdTypeID:            kpiDefinition.SDTypeID,
 		SdTypeSpecification: kpiDefinition.SDTypeSpecification,
 		UserIdentifier:      kpiDefinition.UserIdentifier,

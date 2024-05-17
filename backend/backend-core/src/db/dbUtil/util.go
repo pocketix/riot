@@ -1,17 +1,17 @@
 package dbUtil
 
 import (
-	cUtil "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 	"gorm.io/gorm"
 	"log"
 	"reflect"
 )
 
-type WhereClause = cUtil.Pair[string, []any]
+type WhereClause = sharedUtils.Pair[string, []any]
 type PreloadPath = string
 
 func Where(s string, a ...any) WhereClause {
-	return cUtil.NewPairOf(s, a)
+	return sharedUtils.NewPairOf(s, a)
 }
 
 func Preload(s ...string) []PreloadPath {
@@ -20,13 +20,13 @@ func Preload(s ...string) []PreloadPath {
 
 func prepareLoadQuery(g *gorm.DB, args ...any) *gorm.DB {
 	query := g
-	cUtil.ForEach(args, func(arg any) {
+	sharedUtils.ForEach(args, func(arg any) {
 		switch typedArg := arg.(type) {
 		case WhereClause:
 			query = query.Where(typedArg.GetFirst(), typedArg.GetSecond()...)
 			break
 		case []PreloadPath:
-			cUtil.ForEach(typedArg, func(preloadPathString PreloadPath) {
+			sharedUtils.ForEach(typedArg, func(preloadPathString PreloadPath) {
 				query = query.Preload(preloadPathString)
 			})
 			break
@@ -37,36 +37,36 @@ func prepareLoadQuery(g *gorm.DB, args ...any) *gorm.DB {
 	return query
 }
 
-func LoadEntitiesFromDB[T any](g *gorm.DB, args ...any) cUtil.Result[[]T] {
+func LoadEntitiesFromDB[T any](g *gorm.DB, args ...any) sharedUtils.Result[[]T] {
 	entities := make([]T, 0)
 	if err := prepareLoadQuery(g, args...).Find(&entities).Error; err != nil {
-		return cUtil.NewFailureResult[[]T](err)
+		return sharedUtils.NewFailureResult[[]T](err)
 	}
-	return cUtil.NewSuccessResult(entities)
+	return sharedUtils.NewSuccessResult(entities)
 }
 
-func LoadEntityFromDB[T any](g *gorm.DB, args ...any) cUtil.Result[T] {
+func LoadEntityFromDB[T any](g *gorm.DB, args ...any) sharedUtils.Result[T] {
 	var entity T
 	if err := prepareLoadQuery(g, args...).First(&entity).Error; err != nil {
-		return cUtil.NewFailureResult[T](err)
+		return sharedUtils.NewFailureResult[T](err)
 	}
-	return cUtil.NewSuccessResult(entity)
+	return sharedUtils.NewSuccessResult(entity)
 }
 
 func PersistEntityIntoDB[T any](g *gorm.DB, entityReference *T) error {
 	return g.Save(entityReference).Error
 }
 
-func DoesSuchEntityExist[T any](g *gorm.DB, whereClauses ...WhereClause) cUtil.Result[bool] {
+func DoesSuchEntityExist[T any](g *gorm.DB, whereClauses ...WhereClause) sharedUtils.Result[bool] {
 	entityCount := int64(0)
 	query := g.Model(new(T))
-	cUtil.ForEach(whereClauses, func(whereClause WhereClause) {
+	sharedUtils.ForEach(whereClauses, func(whereClause WhereClause) {
 		query = query.Where(whereClause.GetFirst(), whereClause.GetSecond()...)
 	})
 	if err := query.Count(&entityCount).Error; err != nil {
-		return cUtil.NewFailureResult[bool](err)
+		return sharedUtils.NewFailureResult[bool](err)
 	}
-	return cUtil.NewSuccessResult[bool](entityCount > 0)
+	return sharedUtils.NewSuccessResult[bool](entityCount > 0)
 }
 
 func DeleteCertainEntityBasedOnId[T any](g *gorm.DB, id uint32) error {
@@ -79,7 +79,7 @@ func DeleteEntitiesBasedOnSliceOfIds[T any](g *gorm.DB, ids []uint32) error {
 
 func DeleteEntitiesBasedOnWhereClauses[T any](g *gorm.DB, whereClauses ...WhereClause) error {
 	query := g
-	cUtil.ForEach(whereClauses, func(whereClause WhereClause) {
+	sharedUtils.ForEach(whereClauses, func(whereClause WhereClause) {
 		query = query.Where(whereClause.GetFirst(), whereClause.GetSecond()...)
 	})
 	return query.Delete(new(T)).Error

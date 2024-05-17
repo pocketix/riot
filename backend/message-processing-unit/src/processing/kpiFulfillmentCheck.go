@@ -3,7 +3,7 @@ package processing
 import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
-	cUtil "github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 )
 
 func CheckKPIFulfillment(kpiDefinition sharedModel.KPIDefinition, sdParameterValueMap *any) bool {
@@ -99,15 +99,15 @@ func (_ *logicalOperationKPINodeFulfillmentChecker) checkNodeFulfillment(kpiNode
 	logicalOperationKPINode := kpiNode.(*sharedModel.LogicalOperationKPINode)
 	switch logicalOperationKPINode.Type {
 	case sharedModel.AND:
-		return cUtil.All(logicalOperationKPINode.ChildNodes, func(node sharedModel.KPINode) bool {
+		return sharedUtils.All(logicalOperationKPINode.ChildNodes, func(node sharedModel.KPINode) bool {
 			return checkKPINodeFulfillment(node, sdParameterValueMap)
 		})
 	case sharedModel.OR:
-		return cUtil.Any(logicalOperationKPINode.ChildNodes, func(node sharedModel.KPINode) bool {
+		return sharedUtils.Any(logicalOperationKPINode.ChildNodes, func(node sharedModel.KPINode) bool {
 			return checkKPINodeFulfillment(node, sdParameterValueMap)
 		})
 	case sharedModel.NOR:
-		return cUtil.All(logicalOperationKPINode.ChildNodes, func(node sharedModel.KPINode) bool {
+		return sharedUtils.All(logicalOperationKPINode.ChildNodes, func(node sharedModel.KPINode) bool {
 			return !checkKPINodeFulfillment(node, sdParameterValueMap)
 		})
 	default:

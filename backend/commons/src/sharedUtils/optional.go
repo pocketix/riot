@@ -1,4 +1,4 @@
-package util
+package sharedUtils
 
 type Optional[T any] struct {
 	payload   T

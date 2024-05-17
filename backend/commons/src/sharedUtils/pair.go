@@ -1,4 +1,4 @@
-package util
+package sharedUtils
 
 type Pair[T any, U any] struct {
 	e1 T

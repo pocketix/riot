@@ -3,7 +3,7 @@ package dll2db
 import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dbModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 )
 
 func ToDBModelEntitySDInstanceGroup(sdInstanceGroup dllModel.SDInstanceGroup) dbModel.SDInstanceGroupEntity {
@@ -11,7 +11,7 @@ func ToDBModelEntitySDInstanceGroup(sdInstanceGroup dllModel.SDInstanceGroup) db
 	return dbModel.SDInstanceGroupEntity{
 		ID:             sdInstanceGroupID,
 		UserIdentifier: sdInstanceGroup.UserIdentifier,
-		GroupMembershipRecords: util.Map[uint32, dbModel.SDInstanceGroupMembershipEntity](sdInstanceGroup.SDInstanceIDs, func(sdInstanceID uint32) dbModel.SDInstanceGroupMembershipEntity {
+		GroupMembershipRecords: sharedUtils.Map[uint32, dbModel.SDInstanceGroupMembershipEntity](sdInstanceGroup.SDInstanceIDs, func(sdInstanceID uint32) dbModel.SDInstanceGroupMembershipEntity {
 			return dbModel.SDInstanceGroupMembershipEntity{
 				SDInstanceGroupID: sdInstanceGroupID,
 				SDInstanceID:      sdInstanceID,

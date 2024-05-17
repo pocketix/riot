@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -34,20 +34,20 @@ func TestPersistSDType(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery(`^INSERT INTO "sd_types"`).
 		WithArgs("shelly1pro").
-		WillReturnRows(sqlmock.NewRows(util.SliceOf("id")).AddRow(1))
+		WillReturnRows(sqlmock.NewRows(sharedUtils.SliceOf("id")).AddRow(1))
 	mock.ExpectQuery(`^INSERT INTO "sd_parameters"`).
 		WithArgs(1, "relay_0_temperature", "number", 1, "relay_0_output", "boolean").
-		WillReturnRows(sqlmock.NewRows(util.SliceOf("id")).AddRow(1).AddRow(2))
+		WillReturnRows(sqlmock.NewRows(sharedUtils.SliceOf("id")).AddRow(1).AddRow(2))
 	mock.ExpectCommit()
 	sdType := dllModel.SDType{
-		ID:         util.NewEmptyOptional[uint32](),
+		ID:         sharedUtils.NewEmptyOptional[uint32](),
 		Denotation: "shelly1pro",
 		Parameters: []dllModel.SDParameter{{
-			ID:         util.NewEmptyOptional[uint32](),
+			ID:         sharedUtils.NewEmptyOptional[uint32](),
 			Denotation: "relay_0_temperature",
 			Type:       dllModel.SDParameterTypeNumber,
 		}, {
-			ID:         util.NewEmptyOptional[uint32](),
+			ID:         sharedUtils.NewEmptyOptional[uint32](),
 			Denotation: "relay_0_output",
 			Type:       dllModel.SDParameterTypeTypeBoolean,
 		}},

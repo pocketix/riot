@@ -1,4 +1,4 @@
-package util
+package sharedUtils
 
 type Set[T comparable] struct {
 	items map[T]struct{}

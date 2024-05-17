@@ -4,7 +4,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-message-processing-unit/src/processing"
 	"github.com/google/uuid"
 	"log"
@@ -22,10 +22,10 @@ var (
 func checkKPIFulfilmentThenEnqueueResult(sdInstanceUID string, sdParameters any, kpiDefinition sharedModel.KPIDefinition) {
 	kpiFulfillmentCheckResultISCMessage := sharedModel.KPIFulfillmentCheckResultISCMessage{ // TODO: Consider employing the timestamp...
 		SDInstanceUID:   sdInstanceUID,
-		KPIDefinitionID: util.NewOptionalFromPointer(kpiDefinition.ID).GetPayload(),
+		KPIDefinitionID: sharedUtils.NewOptionalFromPointer(kpiDefinition.ID).GetPayload(),
 		Fulfilled:       processing.CheckKPIFulfillment(kpiDefinition, &sdParameters),
 	}
-	jsonSerializationResult := util.SerializeToJSON(kpiFulfillmentCheckResultISCMessage)
+	jsonSerializationResult := sharedUtils.SerializeToJSON(kpiFulfillmentCheckResultISCMessage)
 	if jsonSerializationResult.IsFailure() {
 		log.Println("Failed to serialize the object representing a KPI fulfillment check result into JSON")
 		return
@@ -71,8 +71,8 @@ func checkForKPIDefinitionsBySDTypeDenotationMapUpdates() {
 
 func main() {
 	dsInstanceID = uuid.New()
-	util.TerminateOnError(util.WaitForDSs(time.Minute, util.NewPairOf("sfpdfsd-backend-core", 9090)), "Some dependencies of this application are inaccessible")
+	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf("sfpdfsd-backend-core", 9090)), "Some dependencies of this application are inaccessible")
 	rabbitMQClient = rabbitmq.NewClient()
-	util.WaitForAll(checkForKPIDefinitionsBySDTypeDenotationMapUpdates, checkForKPIFulfilmentCheckRequests)
+	sharedUtils.WaitForAll(checkForKPIDefinitionsBySDTypeDenotationMapUpdates, checkForKPIFulfilmentCheckRequests)
 	rabbitMQClient.Dispose()
 }

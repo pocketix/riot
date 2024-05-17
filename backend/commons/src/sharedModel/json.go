@@ -3,7 +3,7 @@ package sharedModel
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 	"reflect"
 	"strings"
 )
@@ -75,7 +75,7 @@ func getKPINode(kpiNodeType KPINodeType) KPINode {
 }
 
 func unmarshalKPINode(data []byte) (KPINode, error) {
-	kpiNodeTypeJSONDeserializationResult := util.DeserializeFromJSON[struct {
+	kpiNodeTypeJSONDeserializationResult := sharedUtils.DeserializeFromJSON[struct {
 		KPINodeType KPINodeType `json:"kpiNodeType"`
 	}](data)
 	if kpiNodeTypeJSONDeserializationResult.IsFailure() {

@@ -10,7 +10,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 	"sync"
 )
 
@@ -51,7 +51,7 @@ func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceChannel *chan graph
 		if sdInstancePersistResult.IsFailure() {
 			return errors.New("couldn't persist the SD instance")
 		}
-		sdInstance.ID = util.NewOptionalOf(sdInstancePersistResult.GetPayload())
+		sdInstance.ID = sharedUtils.NewOptionalOf(sdInstancePersistResult.GetPayload())
 		*sdInstanceChannel <- dll2gql.ToGraphQLModelSDInstance(sdInstance)
 		return nil
 	})
@@ -100,15 +100,15 @@ func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultChannel 
 }
 
 func EnqueueMessageRepresentingCurrentSDTypeConfiguration() {
-	util.TerminateOnError(func() error {
+	sharedUtils.TerminateOnError(func() error {
 		sdTypesLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDTypes()
 		if sdTypesLoadResult.IsFailure() {
 			return sdTypesLoadResult.GetError()
 		}
-		sdTypeDenotations := util.Map[dllModel.SDType, string](sdTypesLoadResult.GetPayload(), func(sdType dllModel.SDType) string {
+		sdTypeDenotations := sharedUtils.Map[dllModel.SDType, string](sdTypesLoadResult.GetPayload(), func(sdType dllModel.SDType) string {
 			return sdType.Denotation
 		})
-		sdTypeDenotationsJSONSerializationResult := util.SerializeToJSON(sdTypeDenotations)
+		sdTypeDenotationsJSONSerializationResult := sharedUtils.SerializeToJSON(sdTypeDenotations)
 		if sdTypeDenotationsJSONSerializationResult.IsFailure() {
 			return sdTypeDenotationsJSONSerializationResult.GetError()
 		}
@@ -117,18 +117,18 @@ func EnqueueMessageRepresentingCurrentSDTypeConfiguration() {
 }
 
 func EnqueueMessageRepresentingCurrentSDInstanceConfiguration() {
-	util.TerminateOnError(func() error {
+	sharedUtils.TerminateOnError(func() error {
 		sdInstancesLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstances()
 		if sdInstancesLoadResult.IsFailure() {
 			return sdInstancesLoadResult.GetError()
 		}
-		sdInstancesInfo := util.Map[dllModel.SDInstance, sharedModel.SDInstanceInfo](sdInstancesLoadResult.GetPayload(), func(sdInstance dllModel.SDInstance) sharedModel.SDInstanceInfo {
+		sdInstancesInfo := sharedUtils.Map[dllModel.SDInstance, sharedModel.SDInstanceInfo](sdInstancesLoadResult.GetPayload(), func(sdInstance dllModel.SDInstance) sharedModel.SDInstanceInfo {
 			return sharedModel.SDInstanceInfo{
 				SDInstanceUID:   sdInstance.UID,
 				ConfirmedByUser: sdInstance.ConfirmedByUser,
 			}
 		})
-		sdInstancesInfoJSONSerializationResult := util.SerializeToJSON(sdInstancesInfo)
+		sdInstancesInfoJSONSerializationResult := sharedUtils.SerializeToJSON(sdInstancesInfo)
 		if sdInstancesInfoJSONSerializationResult.IsFailure() {
 			return sdInstancesInfoJSONSerializationResult.GetError()
 		}
@@ -137,7 +137,7 @@ func EnqueueMessageRepresentingCurrentSDInstanceConfiguration() {
 }
 
 func EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration() {
-	util.TerminateOnError(func() error {
+	sharedUtils.TerminateOnError(func() error {
 		kpiDefinitionsLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadKPIDefinitions()
 		if kpiDefinitionsLoadResult.IsFailure() {
 			return kpiDefinitionsLoadResult.GetError()
@@ -151,7 +151,7 @@ func EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration() {
 			}
 			kpiDefinitionsBySDTypeDenotationMap[sdTypeSpecification] = append(kpiDefinitionsBySDTypeDenotationMap[sdTypeSpecification], kpiDefinition)
 		}
-		jsonSerializationResult := util.SerializeToJSON(kpiDefinitionsBySDTypeDenotationMap)
+		jsonSerializationResult := sharedUtils.SerializeToJSON(kpiDefinitionsBySDTypeDenotationMap)
 		if jsonSerializationResult.IsFailure() {
 			return jsonSerializationResult.GetError()
 		}

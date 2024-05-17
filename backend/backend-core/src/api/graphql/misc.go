@@ -6,7 +6,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/gsc"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
@@ -37,7 +37,7 @@ func SetupGraphQLServer() {
 	graphQLServer.Use(extension.Introspection{})
 	router := chi.NewRouter()
 	router.Handle("/", cors.New(cors.Options{
-		AllowedOrigins:   util.SliceOf("http://localhost:1234", "http://localhost:8080"),
+		AllowedOrigins:   sharedUtils.SliceOf("http://localhost:1234", "http://localhost:8080"),
 		AllowCredentials: true,
 		Debug:            false,
 	}).Handler(graphQLServer))

@@ -1,4 +1,4 @@
-package util
+package sharedUtils
 
 // Map is a custom functional programming helper function useful to change the type of slice items.
 func Map[T any, U any](sourceSlice []T, mappingFunction func(T) U) []U {

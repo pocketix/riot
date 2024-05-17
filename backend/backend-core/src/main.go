@@ -3,14 +3,14 @@ package main
 import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/isc"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 	"time"
 )
 
 func waitForDependencies() {
-	rabbitMQ := util.NewPairOf("rabbitmq", 5672)
-	postgreSQL := util.NewPairOf("postgres", 5432)
-	util.TerminateOnError(util.WaitForDSs(time.Minute, rabbitMQ, postgreSQL), "Some dependencies of this application are inaccessible")
+	rabbitMQ := sharedUtils.NewPairOf("rabbitmq", 5672)
+	postgreSQL := sharedUtils.NewPairOf("postgres", 5432)
+	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, rabbitMQ, postgreSQL), "Some dependencies of this application are inaccessible")
 }
 
 func setupISC() {

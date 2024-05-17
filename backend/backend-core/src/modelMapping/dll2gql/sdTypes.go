@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 )
 
 func ToGraphQLModelSDType(sdType dllModel.SDType) graphQLModel.SDType {
 	return graphQLModel.SDType{
 		ID:         sdType.ID.GetPayload(),
 		Denotation: sdType.Denotation,
-		Parameters: util.Map(sdType.Parameters, func(sdParameter dllModel.SDParameter) graphQLModel.SDParameter {
+		Parameters: sharedUtils.Map(sdType.Parameters, func(sdParameter dllModel.SDParameter) graphQLModel.SDParameter {
 			return graphQLModel.SDParameter{
 				ID:         sdParameter.ID.GetPayload(),
 				Denotation: sdParameter.Denotation,

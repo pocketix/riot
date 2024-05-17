@@ -6,17 +6,17 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/modelMapping/dll2gql"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/modelMapping/gql2dll"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/util"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 )
 
-func CreateSDType(sdTypeInput graphQLModel.SDTypeInput) util.Result[graphQLModel.SDType] {
+func CreateSDType(sdTypeInput graphQLModel.SDTypeInput) sharedUtils.Result[graphQLModel.SDType] {
 	sdType := gql2dll.ToDLLModelSDType(sdTypeInput)
 	persistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDType(sdType)
 	if persistResult.IsFailure() {
-		return util.NewFailureResult[graphQLModel.SDType](persistResult.GetError())
+		return sharedUtils.NewFailureResult[graphQLModel.SDType](persistResult.GetError())
 	}
 	go isc.EnqueueMessageRepresentingCurrentSDTypeConfiguration()
-	return util.NewSuccessResult[graphQLModel.SDType](dll2gql.ToGraphQLModelSDType(persistResult.GetPayload()))
+	return sharedUtils.NewSuccessResult[graphQLModel.SDType](dll2gql.ToGraphQLModelSDType(persistResult.GetPayload()))
 }
 
 func DeleteSDType(id uint32) error {
@@ -27,18 +27,18 @@ func DeleteSDType(id uint32) error {
 	return nil
 }
 
-func GetSDType(id uint32) util.Result[graphQLModel.SDType] {
+func GetSDType(id uint32) sharedUtils.Result[graphQLModel.SDType] {
 	loadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDType(id)
 	if loadResult.IsFailure() {
-		return util.NewFailureResult[graphQLModel.SDType](loadResult.GetError())
+		return sharedUtils.NewFailureResult[graphQLModel.SDType](loadResult.GetError())
 	}
-	return util.NewSuccessResult[graphQLModel.SDType](dll2gql.ToGraphQLModelSDType(loadResult.GetPayload()))
+	return sharedUtils.NewSuccessResult[graphQLModel.SDType](dll2gql.ToGraphQLModelSDType(loadResult.GetPayload()))
 }
 
-func GetSDTypes() util.Result[[]graphQLModel.SDType] {
+func GetSDTypes() sharedUtils.Result[[]graphQLModel.SDType] {
 	loadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDTypes()
 	if loadResult.IsFailure() {
-		return util.NewFailureResult[[]graphQLModel.SDType](loadResult.GetError())
+		return sharedUtils.NewFailureResult[[]graphQLModel.SDType](loadResult.GetError())
 	}
-	return util.NewSuccessResult[[]graphQLModel.SDType](util.Map(loadResult.GetPayload(), dll2gql.ToGraphQLModelSDType))
+	return sharedUtils.NewSuccessResult[[]graphQLModel.SDType](sharedUtils.Map(loadResult.GetPayload(), dll2gql.ToGraphQLModelSDType))
 }

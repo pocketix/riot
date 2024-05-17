@@ -1,4 +1,4 @@
-package util
+package sharedUtils
 
 type Result[T any] struct {
 	payload   T

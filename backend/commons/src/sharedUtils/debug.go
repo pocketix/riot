@@ -1,4 +1,4 @@
-package util
+package sharedUtils
 
 import (
 	"github.com/davecgh/go-spew/spew"
