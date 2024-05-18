@@ -50,6 +50,8 @@ type RelationalDatabaseClient interface {
 	DeleteSDInstanceGroup(id uint32) error
 }
 
+var ErrCannotPersistRecordDueToForeignKeyIntegrity = errors.New("cannot persist record due to foreign key integrity")
+
 type relationalDatabaseClientImpl struct {
 	db *gorm.DB
 	mu sync.Mutex
@@ -321,6 +323,19 @@ func (r *relationalDatabaseClientImpl) LoadSDInstances() sharedUtils.Result[[]dl
 func (r *relationalDatabaseClientImpl) PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResult dllModel.KPIFulfillmentCheckResult) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	referencedKPIDefinitionEntityExistsCheckResult := dbUtil.DoesSuchEntityExist[dbModel.KPIDefinitionEntity](r.db, dbUtil.Where("id = ?", kpiFulfillmentCheckResult.KPIDefinitionID))
+	if referencedKPIDefinitionEntityExistsCheckResult.IsFailure() {
+		return referencedKPIDefinitionEntityExistsCheckResult.GetError()
+	}
+	referencedKPIDefinitionEntityExists := referencedKPIDefinitionEntityExistsCheckResult.GetPayload()
+	referencedSDInstanceEntityExistsCheckResult := dbUtil.DoesSuchEntityExist[dbModel.SDInstanceEntity](r.db, dbUtil.Where("id = ?", kpiFulfillmentCheckResult.SDInstanceID))
+	if referencedSDInstanceEntityExistsCheckResult.IsFailure() {
+		return referencedSDInstanceEntityExistsCheckResult.GetError()
+	}
+	referencedSDInstanceEntityExists := referencedSDInstanceEntityExistsCheckResult.GetPayload()
+	if !referencedKPIDefinitionEntityExists || !referencedSDInstanceEntityExists {
+		return ErrCannotPersistRecordDueToForeignKeyIntegrity
+	}
 	kpiFulfillmentCheckEntity := dll2db.ToDBModelEntityKPIFulfillmentCheckResult(kpiFulfillmentCheckResult)
 	return dbUtil.PersistEntityIntoDB(r.db, &kpiFulfillmentCheckEntity)
 }

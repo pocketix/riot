@@ -79,6 +79,9 @@ func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultGraphQLS
 			Fulfilled:       kpiFulfillmentCheckResultISCMessage.Fulfilled,
 		}
 		if err := dbClient.GetRelationalDatabaseClientInstance().PersistKPIFulFulfillmentCheckResult(kpiFulfillmentCheckResult); err != nil {
+			if errors.Is(err, dbClient.ErrCannotPersistRecordDueToForeignKeyIntegrity) {
+				return nil
+			}
 			return fmt.Errorf("couldn't persist KPI fulfillment check result with KPI definition ID = %d and SD instance ID = %d: %w", targetKPIDefinitionID, targetSDInstanceID, err)
 		}
 		select {
