@@ -22,6 +22,7 @@ func setupISC() {
 
 func main() {
 	waitForDependencies()
+	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
 	setupISC()
 	graphql.SetupGraphQLServer()
 }

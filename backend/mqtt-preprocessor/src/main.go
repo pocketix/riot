@@ -174,6 +174,7 @@ func addIncomingMQTTMessageToFIFO(incomingMQTTMessagePayload []byte) {
 
 func main() {
 	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf("mosquitto", 1883), sharedUtils.NewPairOf("sfpdfsd-backend-core", 9090)), "Some dependencies of this application are inaccessible")
+	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
 	rabbitMQClient = rabbitmq.NewClient()
 	mqttClient := mqtt.NewEclipsePahoBasedMqttClient(mqttBrokerURI, mqttClientID, mqttBrokerUsername, mqttBrokerPassword)
 	sharedUtils.TerminateOnError(mqttClient.Connect(), fmt.Sprintf("Failed to connect to the MQTT broker [%s]", mqttBrokerURI))

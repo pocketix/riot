@@ -50,16 +50,6 @@ func (r *ClientImpl) DeclareStandardQueue(queueName string) error {
 }
 
 func (r *ClientImpl) SetupMessageConsumption(queueName string, messageConsumerFunction func(message amqp.Delivery) error) error {
-	workerPool := sharedUtils.NewWorkerPool[amqp.Delivery](10)
-	workerPool.Start(func(message amqp.Delivery) error {
-		if err := messageConsumerFunction(message); err != nil {
-			return err
-		}
-		if err := message.Ack(false); err != nil {
-			return err
-		}
-		return nil
-	})
 	if err := r.channel.Qos(1, 0, false); err != nil {
 		return err
 	}
@@ -68,9 +58,13 @@ func (r *ClientImpl) SetupMessageConsumption(queueName string, messageConsumerFu
 		return err
 	}
 	for message := range messageChannel {
-		workerPool.SubmitTask(message)
+		if err := messageConsumerFunction(message); err != nil {
+			return err
+		}
+		if err := message.Ack(false); err != nil {
+			return err
+		}
 	}
-	workerPool.Stop()
 	return nil
 }
 

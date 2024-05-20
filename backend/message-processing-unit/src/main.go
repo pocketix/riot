@@ -69,6 +69,7 @@ func checkForKPIDefinitionsBySDTypeDenotationMapUpdates() {
 func main() {
 	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf("sfpdfsd-backend-core", 9090)), "Some dependencies of this application are inaccessible")
 	rabbitMQClient = rabbitmq.NewClient()
+	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
 	sharedUtils.WaitForAll(checkForKPIDefinitionsBySDTypeDenotationMapUpdates, checkForKPIFulfilmentCheckRequests)
 	rabbitMQClient.Dispose()
 }

@@ -39,7 +39,7 @@ func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceGraphQLSubscription
 		sdTypeDenotation := sdInstanceRegistrationRequestISCMessage.SDTypeSpecification
 		sdTypeLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDTypeBasedOnDenotation(sdTypeDenotation)
 		if sdTypeLoadResult.IsFailure() {
-			return errors.New(fmt.Sprintf("couldn't load database record of the '%s' SD type", sdTypeDenotation))
+			return fmt.Errorf("couldn't load database record of the '%s' SD type: %w", sdTypeDenotation, sdTypeLoadResult.GetError())
 		}
 		sdInstance := dllModel.SDInstance{
 			UID:             sdInstanceUID,
