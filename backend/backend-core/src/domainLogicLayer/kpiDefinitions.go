@@ -29,10 +29,6 @@ func CreateKPIDefinition(kpiDefinitionInput graphQLModel.KPIDefinitionInput) sha
 }
 
 func UpdateKPIDefinition(id uint32, kpiDefinitionInput graphQLModel.KPIDefinitionInput) sharedUtils.Result[graphQLModel.KPIDefinition] {
-	// TODO: Performing deletion followed by re-insertion instead of update on the data layer (suboptimal)
-	if err := dbClient.GetRelationalDatabaseClientInstance().DeleteKPIDefinition(id); err != nil {
-		return sharedUtils.NewFailureResult[graphQLModel.KPIDefinition](err)
-	}
 	toDLLModelTransformResult := gql2dll.ToDLLModelKPIDefinition(kpiDefinitionInput)
 	if toDLLModelTransformResult.IsFailure() {
 		return sharedUtils.NewFailureResult[graphQLModel.KPIDefinition](toDLLModelTransformResult.GetError())

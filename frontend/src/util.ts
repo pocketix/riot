@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+
 /**
  * Truncates the input string to the given maximum length and appends an ellipsis ('...') if truncation occurs.
  * @param input - The input string to truncate.
@@ -22,3 +24,11 @@ export type AsynchronousTriConsumerFunction<T, U, R> = (arg1: T, arg2: U, arg3: 
 export type AsynchronousProducerFunction<T> = () => Promise<T>
 export type AsynchronousUnaryFunction<T, R> = (arg: T) => Promise<R>
 export type AsynchronousBinaryFunction<T, U, R> = (arg1: T, arg2: U) => Promise<R>
+
+export const useChangeURL = () => {
+  const navigate = useNavigate()
+  function changeURL(newURL: string) {
+    navigate(newURL)
+  }
+  return changeURL
+}

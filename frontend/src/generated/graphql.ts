@@ -36,15 +36,19 @@ export type KpiDefinition = {
   __typename?: 'KPIDefinition';
   id: Scalars['ID']['output'];
   nodes: Array<KpiNode>;
+  sdInstanceMode: SdInstanceMode;
   sdTypeID: Scalars['ID']['output'];
   sdTypeSpecification: Scalars['String']['output'];
+  selectedSDInstanceUIDs: Array<Scalars['String']['output']>;
   userIdentifier: Scalars['String']['output'];
 };
 
 export type KpiDefinitionInput = {
   nodes: Array<KpiNodeInput>;
+  sdInstanceMode: SdInstanceMode;
   sdTypeID: Scalars['ID']['input'];
   sdTypeSpecification: Scalars['String']['input'];
+  selectedSDInstanceUIDs: Array<Scalars['String']['input']>;
   userIdentifier: Scalars['String']['input'];
 };
 
@@ -257,6 +261,11 @@ export type SdInstanceGroupInput = {
   userIdentifier: Scalars['String']['input'];
 };
 
+export enum SdInstanceMode {
+  All = 'ALL',
+  Selected = 'SELECTED'
+}
+
 export type SdInstanceUpdateInput = {
   confirmedByUser?: InputMaybe<Scalars['Boolean']['input']>;
   userIdentifier?: InputMaybe<Scalars['String']['input']>;
@@ -386,12 +395,12 @@ export type KpiDefinitionDetailQueryVariables = Exact<{
 }>;
 
 
-export type KpiDefinitionDetailQuery = { __typename?: 'Query', kpiDefinition: { __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeID: string, sdTypeSpecification: string, nodes: Array<{ __typename?: 'BooleanEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, booleanReferenceValue: boolean } | { __typename?: 'LogicalOperationKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, type: LogicalOperationType } | { __typename?: 'NumericEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericGEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericGTAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericLEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericLTAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'StringEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, stringReferenceValue: string }> } };
+export type KpiDefinitionDetailQuery = { __typename?: 'Query', kpiDefinition: { __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeID: string, sdTypeSpecification: string, sdInstanceMode: SdInstanceMode, selectedSDInstanceUIDs: Array<string>, nodes: Array<{ __typename?: 'BooleanEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, booleanReferenceValue: boolean } | { __typename?: 'LogicalOperationKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, type: LogicalOperationType } | { __typename?: 'NumericEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericGEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericGTAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericLEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericLTAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'StringEQAtomKPINode', id: string, parentNodeID?: string | null, nodeType: KpiNodeType, sdParameterID: string, sdParameterSpecification: string, stringReferenceValue: string }> } };
 
 export type KpiDefinitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type KpiDefinitionsQuery = { __typename?: 'Query', kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeID: string, sdTypeSpecification: string }> };
+export type KpiDefinitionsQuery = { __typename?: 'Query', kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeID: string, sdTypeSpecification: string, sdInstanceMode: SdInstanceMode, selectedSDInstanceUIDs: Array<string> }> };
 
 export type SdInstanceGroupsPageDataQueryVariables = Exact<{ [key: string]: never; }>;
 

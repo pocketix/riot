@@ -2,13 +2,16 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { produce } from 'immer'
 import KPIDetailPageView from './KPIDetailPageView'
 import { AtomNodeType, EditableTreeNodeDataModel, LogicalOperationNodeType, NodeType } from './components/editable-tree/EditableTree'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useMutation, useQuery } from '@apollo/client'
 import {
   CreateKpiDefinitionMutation,
   CreateKpiDefinitionMutationVariables,
   KpiDefinitionDetailQuery,
   KpiDefinitionDetailQueryVariables,
+  SdInstanceMode,
+  SdInstancesPageDataQuery,
+  SdInstancesPageDataQueryVariables,
   SdType,
   SdTypesQuery,
   SdTypesQueryVariables,
@@ -18,6 +21,7 @@ import {
 import gql from 'graphql-tag'
 import qKPIDefinitionDetail from '../../graphql/queries/kpiDefinitionDetail.graphql'
 import qSDTypes from '../../graphql/queries/sdTypes.graphql'
+import qSDInstancePageData from '../../graphql/queries/sdInstancesPageData.graphql'
 import {
   changeTypeOfLogicalOperationNode,
   crateNewAtomNode,
@@ -33,18 +37,22 @@ import { useModal } from '@ebay/nice-modal-react'
 import SelectNewNodeTypeModal from './components/modals/SelectNewNodeTypeModal'
 import SelectLogicalOperationTypeModal from './components/modals/SelectLogicalOperationTypeModal'
 import AtomNodeModal, { BinaryRelation } from './components/modals/AtomNodeModal'
+import { useChangeURL } from '../../util'
 
 export interface KPIDefinitionModel extends EditableTreeNodeDataModel {
   id: string
   userIdentifier: string
+  sdInstanceMode: SdInstanceMode
+  selectedSDInstanceUIDs: string[]
 }
 
 const KPIDetailPageController: React.FC = () => {
-  const { show: showSelectNewNodeTypeModal, hide: hideSelectNewNodeTypeModal } = useModal(SelectNewNodeTypeModal)
-  const { show: showSelectLogicalOperationTypeModal, hide: hideSelectLogicalOperationTypeModal } = useModal(SelectLogicalOperationTypeModal)
-  const { show: showAtomNodeModal, hide: hideAtomNodeModal } = useModal(AtomNodeModal)
+  const { show: showSelectNewNodeTypeModal, remove: removeSelectNewNodeTypeModal } = useModal(SelectNewNodeTypeModal)
+  const { show: showSelectLogicalOperationTypeModal, remove: removeSelectLogicalOperationTypeModal } = useModal(SelectLogicalOperationTypeModal)
+  const { show: showAtomNodeModal, remove: removeAtomNodeModal } = useModal(AtomNodeModal)
 
-  const navigate = useNavigate()
+  const changeURL = useChangeURL()
+
   const { id } = useParams()
   const {
     data: kpiDefinitionDetailData,
@@ -57,6 +65,7 @@ const KPIDetailPageController: React.FC = () => {
     }
   })
   const { data: sdTypesData, loading: sdTypesLoading, error: sdTypesError } = useQuery<SdTypesQuery, SdTypesQueryVariables>(gql(qSDTypes))
+  const { data: sdInstancesData, loading: sdInstancesLoading, error: sdInstancesError } = useQuery<SdInstancesPageDataQuery, SdInstancesPageDataQueryVariables>(gql(qSDInstancePageData))
   const [createKPIDefinitionMutation, { loading: createKPIDefinitionLoading, error: createKPIDefinitionError }] = useMutation<CreateKpiDefinitionMutation, CreateKpiDefinitionMutationVariables>(
     gql(mCreateKPIDefinition)
   )
@@ -133,7 +142,7 @@ const KPIDetailPageController: React.FC = () => {
         modifyAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterID, sdParameterSpecification, referenceValue)
       })
     )
-    hideAtomNodeModal()
+    removeAtomNodeModal()
   }
 
   const initiateNewNodeCreation = async (nodeName: string) => {
@@ -145,14 +154,14 @@ const KPIDetailPageController: React.FC = () => {
   }
 
   const initiateNewLogicalOperationNodeCreation = () => {
-    hideSelectNewNodeTypeModal()
+    removeSelectNewNodeTypeModal()
     showSelectLogicalOperationTypeModal({
       onLogicalOperationTypeSelection: finalizeNewLogicalOperationNodeCreation
     })
   }
 
   const initiateNewAtomNodeCreation = () => {
-    hideSelectNewNodeTypeModal()
+    removeSelectNewNodeTypeModal()
     showAtomNodeModal({
       sdTypeData: sdTypeData,
       onConfirm: finalizeNewAtomNodeCreation
@@ -165,7 +174,7 @@ const KPIDetailPageController: React.FC = () => {
         crateNewLogicalOperationNode(currentNodeNameRef.current, draftDefinitionModel, logicalOperationType)
       })
     )
-    hideSelectLogicalOperationTypeModal()
+    removeSelectLogicalOperationTypeModal()
   }
 
   const finalizeNewAtomNodeCreation = (type: AtomNodeType, sdParameterID: string, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
@@ -174,7 +183,7 @@ const KPIDetailPageController: React.FC = () => {
         crateNewAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterID, sdParameterSpecification, referenceValue)
       })
     )
-    hideAtomNodeModal()
+    removeAtomNodeModal()
   }
 
   const handleSDTypeSelection = (sdTypeID: string) => {
@@ -187,6 +196,14 @@ const KPIDetailPageController: React.FC = () => {
     }
     setSDTypeData(selectedSDType)
     setDefinitionModel(initialKPIDefinitionModel)
+  }
+
+  const handleSDInstanceModeSelection = (sdInstanceMode: SdInstanceMode) => {
+    setDefinitionModel((definitionModel) =>
+      produce(definitionModel, (draftDefinitionModel) => {
+        draftDefinitionModel.sdInstanceMode = sdInstanceMode
+      })
+    )
   }
 
   const onSubmitHandler = async () => {
@@ -205,17 +222,25 @@ const KPIDetailPageController: React.FC = () => {
         }
       })
     }
-    navigate('/kpi-definitions')
+    changeURL('/kpi-definitions')
   }
 
   const onCancelHandler = () => {
-    navigate('/kpi-definitions')
+    changeURL('/kpi-definitions')
   }
 
   const updateUserIdentifier = (newUserIdentifier: string) => {
     setDefinitionModel((definitionModel) =>
       produce(definitionModel, (draftDefinitionModel) => {
         draftDefinitionModel.userIdentifier = newUserIdentifier
+      })
+    )
+  }
+
+  const updateSelectedSDInstanceUIDs = (selectedSDInstanceUIDs: string[]) => {
+    setDefinitionModel((definitionModel) =>
+      produce(definitionModel, (draftDefinitionModel) => {
+        draftDefinitionModel.selectedSDInstanceUIDs = selectedSDInstanceUIDs
       })
     )
   }
@@ -232,23 +257,26 @@ const KPIDetailPageController: React.FC = () => {
 
   return (
     <KPIDetailPageView
-      pageTitle={id ? 'KPI editor – Edit KPI definition' : 'KPI editor – Create KPI definition'}
+      pageTitle={`KPI editor – ${id ? 'Create' : 'Edit'} KPI definition`}
       reset={reset}
       kpiDefinitionModel={definitionModel}
       sdTypesData={sdTypesData}
+      sdInstancesPageData={sdInstancesData}
       sdTypeData={sdTypeData}
       canSubmit={canSubmit}
-      anyLoadingOccurs={kpiDefinitionDetailLoading || sdTypesLoading || createKPIDefinitionLoading || updateKPIDefinitionLoading}
-      anyErrorOccurred={!!kpiDefinitionDetailError || !!sdTypesError || !!createKPIDefinitionError || !!updateKPIDefinitionError}
+      anyLoadingOccurs={kpiDefinitionDetailLoading || sdTypesLoading || sdInstancesLoading || createKPIDefinitionLoading || updateKPIDefinitionLoading}
+      anyErrorOccurred={!!kpiDefinitionDetailError || !!sdTypesError || !!sdInstancesError || !!createKPIDefinitionError || !!updateKPIDefinitionError}
       initiateLogicalOperationNodeModification={initiateLogicalOperationNodeModification}
       initiateNewNodeCreation={initiateNewNodeCreation}
       initiateNewLogicalOperationNodeCreation={initiateNewLogicalOperationNodeCreation}
       initiateNewAtomNodeCreation={initiateNewAtomNodeCreation}
       handleSDTypeSelection={handleSDTypeSelection}
+      handleSDInstanceModeSelection={handleSDInstanceModeSelection}
       initiateAtomNodeModification={initiateAtomNodeModification}
       onSubmitHandler={onSubmitHandler}
       onCancelHandler={onCancelHandler}
       updateUserIdentifier={updateUserIdentifier}
+      updateSelectedSDInstanceUIDs={updateSelectedSDInstanceUIDs}
     />
   )
 }

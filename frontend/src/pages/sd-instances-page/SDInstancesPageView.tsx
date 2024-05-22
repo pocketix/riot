@@ -1,16 +1,14 @@
 import React, { useState } from 'react'
 import { SdInstancesPageDataQuery } from '../../generated/graphql'
-import StandardContentPageTemplate from '../../page-independent-components/StandardContentPageTemplate'
+import StandardContentPageTemplate, { StandardContentTemplatePageProps } from '../../page-independent-components/StandardContentPageTemplate'
 import SDInstancesSection from './components/SDInstancesSection'
 import { AsynchronousBiConsumerFunction, AsynchronousConsumerFunction } from '../../util'
 import { FormControlLabel, Switch } from '@mui/material'
 
-interface SDTypesPageViewProps {
+interface SDTypesPageViewProps extends Omit<StandardContentTemplatePageProps, 'pageTitle' | 'children'> {
   sdInstancesPageData: SdInstancesPageDataQuery
   updateUserIdentifierOfSdInstance: AsynchronousBiConsumerFunction<string, string>
   confirmSdInstance: AsynchronousConsumerFunction<string>
-  anyLoadingOccurs: boolean
-  anyErrorOccurred: boolean
 }
 
 const SDInstancesPageView: React.FC<SDTypesPageViewProps> = (props) => {

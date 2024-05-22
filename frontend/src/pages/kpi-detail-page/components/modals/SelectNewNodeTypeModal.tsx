@@ -10,9 +10,9 @@ interface SelectNewNodeTypeModalProps {
 }
 
 export default NiceModal.create<SelectNewNodeTypeModalProps>((props) => {
-  const { visible, hide } = useModal()
+  const { visible, remove } = useModal()
   return (
-    <ModalBase isOpen={visible} onClose={hide} modalTitle="Select the type of the node">
+    <ModalBase isOpen={visible} onClose={remove} modalTitle="Select the type of the node">
       <Grid container spacing={1} alignItems="center">
         <Grid item xs={3}>
           <Button fullWidth onClick={props.initiateNewAtomNodeCreation}>

@@ -38,48 +38,37 @@ const SDInstanceGroupsPageView: React.FC<SDInstanceGroupsPageViewProps> = (props
           .map((sdInstanceGroupDataItem) => (
             <GenericCardTemplate // TODO: Consider creating a separate component out of this...
               key={sdInstanceGroupDataItem.id}
-              headerContent={
-                <>
-                  <span onClick={() => props.initiateSDInstanceGroupUpdate(sdInstanceGroupDataItem.id)} className="material-symbols-outlined cursor-pointer">
-                    edit
-                  </span>
-                  <span onClick={() => props.deleteSDInstanceGroup(sdInstanceGroupDataItem.id)} className="material-symbols-outlined cursor-pointer">
-                    delete
-                  </span>
-                </>
-              }
-              bodyContent={
-                <>
-                  <p className="text-[24px]">
-                    User identifier: <strong>{sdInstanceGroupDataItem.userIdentifier}</strong>
-                  </p>
-                  <div className="flex flex-col">
-                    <p className="text-[24px]">SD instances:</p>
-                    <ul>
-                      {sdInstanceGroupDataItem.sdInstanceData.map((sdInstanceDataItem) => (
-                        <li key={sdInstanceDataItem.id} className="text-[24px] font-bold">
-                          {sdInstanceDataItem.userIdentifier}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  {sdInstanceGroupDataItem.kpiDefinitionData.length > 0 && (
-                    <KPIFulfillmentCheckResultSection
-                      kpiFulfillmentCheckResultsData={sdInstanceGroupDataItem.kpiDefinitionData.map((kpiDefinition) => {
-                        return {
-                          kpiDefinitionData: {
-                            id: kpiDefinition.id,
-                            userIdentifier: kpiDefinition.userIdentifier
-                          },
-                          kpiFulfillmentState: kpiDefinition.fulfillmentState
-                        }
-                      })}
-                    />
-                  )}
-                </>
-              }
+              onEdit={() => props.initiateSDInstanceGroupUpdate(sdInstanceGroupDataItem.id)}
+              onDelete={() => props.deleteSDInstanceGroup(sdInstanceGroupDataItem.id)}
               className="max-w-[500px]"
-            ></GenericCardTemplate>
+            >
+              <p className="text-[24px]">
+                User identifier: <strong>{sdInstanceGroupDataItem.userIdentifier}</strong>
+              </p>
+              <div className="flex flex-col">
+                <p className="text-[24px]">SD instances:</p>
+                <ul>
+                  {sdInstanceGroupDataItem.sdInstanceData.map((sdInstanceDataItem) => (
+                    <li key={sdInstanceDataItem.id} className="text-[24px] font-bold">
+                      {sdInstanceDataItem.userIdentifier}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {sdInstanceGroupDataItem.kpiDefinitionData.length > 0 && (
+                <KPIFulfillmentCheckResultSection
+                  kpiFulfillmentCheckResultsData={sdInstanceGroupDataItem.kpiDefinitionData.map((kpiDefinition) => {
+                    return {
+                      kpiDefinitionData: {
+                        id: kpiDefinition.id,
+                        userIdentifier: kpiDefinition.userIdentifier
+                      },
+                      kpiFulfillmentState: kpiDefinition.fulfillmentState
+                    }
+                  })}
+                />
+              )}
+            </GenericCardTemplate>
           ))}
         <AddNewCardButton onClick={props.initiateSDInstanceGroupCreation} />
       </div>

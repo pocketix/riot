@@ -5,6 +5,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
+	"strings"
 )
 
 func failureResultDueToMissingInputProperty() sharedUtils.Result[sharedModel.KPINode] {
@@ -145,10 +146,12 @@ func ToDLLModelKPIDefinition(kpiDefinitionInput graphQLModel.KPIDefinitionInput)
 		return sharedUtils.NewFailureResult[sharedModel.KPIDefinition](fmt.Errorf("model mapping failure – couldn't find root node ID"))
 	}
 	return sharedUtils.NewSuccessResult[sharedModel.KPIDefinition](sharedModel.KPIDefinition{
-		ID:                  nil,
-		SDTypeID:            kpiDefinitionInput.SdTypeID,
-		SDTypeSpecification: kpiDefinitionInput.SdTypeSpecification,
-		UserIdentifier:      kpiDefinitionInput.UserIdentifier,
-		RootNode:            kpiNodeByIDMap[rootNodeIDOptional.GetPayload()],
+		ID:                     nil,
+		SDTypeID:               kpiDefinitionInput.SdTypeID,
+		SDTypeSpecification:    kpiDefinitionInput.SdTypeSpecification,
+		UserIdentifier:         kpiDefinitionInput.UserIdentifier,
+		RootNode:               kpiNodeByIDMap[rootNodeIDOptional.GetPayload()],
+		SDInstanceMode:         sharedModel.SDInstanceMode(strings.ToLower(string(kpiDefinitionInput.SdInstanceMode))),
+		SelectedSDInstanceUIDs: kpiDefinitionInput.SelectedSDInstanceUIDs,
 	})
 }

@@ -1,20 +1,17 @@
-import React from 'react'
-import StandardContentPageTemplate from '../../page-independent-components/StandardContentPageTemplate'
-import { KpiDefinitionsQuery } from '../../generated/graphql'
+import React, { useEffect } from 'react'
+import StandardContentPageTemplate, { StandardContentTemplatePageProps } from '../../page-independent-components/StandardContentPageTemplate'
+import { KpiDefinitionsQuery, SdInstanceMode } from '../../generated/graphql'
 import GenericCardTemplate from '../../page-independent-components/GenericCardTemplate'
-import { useNavigate } from 'react-router-dom'
 import AddNewCardButton from '../../page-independent-components/AddNewCardButton'
-import { ConsumerFunction } from '../../util'
+import { ConsumerFunction, useChangeURL } from '../../util'
 
-interface KPIPageViewProps {
+interface KPIPageViewProps extends Omit<StandardContentTemplatePageProps, 'pageTitle' | 'children'> {
   kpiDefinitionsData: KpiDefinitionsQuery
   initiateKPIDefinitionDeletion: ConsumerFunction<string>
-  anyLoadingOccurs: boolean
-  anyErrorOccurred: boolean
 }
 
 const KPIPageView: React.FC<KPIPageViewProps> = (props) => {
-  const navigate = useNavigate()
+  const changeURL = useChangeURL()
   return (
     <StandardContentPageTemplate pageTitle="KPI definitions" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
       <div className="flex flex-wrap gap-5">
@@ -24,29 +21,21 @@ const KPIPageView: React.FC<KPIPageViewProps> = (props) => {
             .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10))
             .map((kpiDefinition) => (
               <GenericCardTemplate // TODO: Consider creating a separate component out of this...
-                headerContent={
-                  <>
-                    <span onClick={() => navigate(`${kpiDefinition.id}/edit`)} className="material-symbols-outlined cursor-pointer">
-                      edit
-                    </span>
-                    <span onClick={() => props.initiateKPIDefinitionDeletion(kpiDefinition.id)} className="material-symbols-outlined cursor-pointer">
-                      delete
-                    </span>
-                  </>
-                }
-                bodyContent={
-                  <>
-                    <p>
-                      User identifier: <strong>{kpiDefinition.userIdentifier}</strong>
-                    </p>
-                    <p>
-                      Defined for SD type: <strong>{kpiDefinition.sdTypeSpecification}</strong>
-                    </p>
-                  </>
-                }
-              ></GenericCardTemplate>
+                onEdit={() => changeURL(`${kpiDefinition.id}/edit`)}
+                onDelete={() => props.initiateKPIDefinitionDeletion(kpiDefinition.id)}
+              >
+                <p>
+                  User identifier: <strong>{kpiDefinition.userIdentifier}</strong>
+                </p>
+                <p>
+                  Defined for SD type: <strong>{kpiDefinition.sdTypeSpecification}</strong>
+                </p>
+                <p>
+                  Fulfillment check upon: <strong>{`${kpiDefinition.sdInstanceMode === SdInstanceMode.All ? 'all' : 'selected'} SD instances`}</strong>
+                </p>
+              </GenericCardTemplate>
             ))}
-        <AddNewCardButton onClick={() => navigate('create')} />
+        <AddNewCardButton onClick={() => changeURL('create')} />
       </div>
     </StandardContentPageTemplate>
   )

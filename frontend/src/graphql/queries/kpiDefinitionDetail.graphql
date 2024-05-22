@@ -4,6 +4,8 @@ query KPIDefinitionDetail($id: ID!) {
     userIdentifier
     sdTypeID
     sdTypeSpecification
+    sdInstanceMode
+    selectedSDInstanceUIDs
     nodes {
       ... on LogicalOperationKPINode {
         id

@@ -5,6 +5,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
+	"strings"
 )
 
 func toGraphQLModelKPINode(kpiNode sharedModel.KPINode, id uint32, parentNodeID *uint32) graphQLModel.KPINode {
@@ -108,10 +109,12 @@ func processKPINode(node sharedModel.KPINode, generateNextNumber func() uint32, 
 func ToGraphQLModelKPIDefinition(kpiDefinition sharedModel.KPIDefinition) graphQLModel.KPIDefinition {
 	nodes := processKPINode(kpiDefinition.RootNode, sharedUtils.SequentialNumberGenerator(), nil)
 	return graphQLModel.KPIDefinition{
-		ID:                  sharedUtils.NewOptionalFromPointer(kpiDefinition.ID).GetPayload(),
-		SdTypeID:            kpiDefinition.SDTypeID,
-		SdTypeSpecification: kpiDefinition.SDTypeSpecification,
-		UserIdentifier:      kpiDefinition.UserIdentifier,
-		Nodes:               nodes,
+		ID:                     sharedUtils.NewOptionalFromPointer(kpiDefinition.ID).GetPayload(),
+		SdTypeID:               kpiDefinition.SDTypeID,
+		SdTypeSpecification:    kpiDefinition.SDTypeSpecification,
+		UserIdentifier:         kpiDefinition.UserIdentifier,
+		Nodes:                  nodes,
+		SdInstanceMode:         graphQLModel.SDInstanceMode(strings.ToUpper(string(kpiDefinition.SDInstanceMode))),
+		SelectedSDInstanceUIDs: kpiDefinition.SelectedSDInstanceUIDs,
 	}
 }

@@ -69,7 +69,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 	db, err := gorm.Open(postgres.Open(dsn), new(gorm.Config))
 	sharedUtils.TerminateOnError(err, "[RDB client (GORM)]: couldn't connect to the database")
 	session := new(gorm.Session)
-	session.Logger = logger.Default.LogMode(logger.Silent)
+	session.Logger = logger.Default.LogMode(logger.Info)
 	r.db = db.Session(session)
 	sharedUtils.TerminateOnError(r.db.AutoMigrate(
 		new(dbModel.KPIDefinitionEntity),
@@ -82,6 +82,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.KPIFulfillmentCheckResultEntity),
 		new(dbModel.SDInstanceGroupEntity),
 		new(dbModel.SDInstanceGroupMembershipEntity),
+		new(dbModel.SDInstanceKPIDefinitionRelationshipEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
 
@@ -89,13 +90,19 @@ func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition shared
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	kpiNodeEntity, kpiNodeEntities, logicalOperationNodeEntities, atomNodeEntities := dll2db.ToDBModelEntitiesKPIDefinition(kpiDefinition)
+	referencedSDInstancesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDInstanceEntity](r.db, dbUtil.Where("uid IN (?)", kpiDefinition.SelectedSDInstanceUIDs))
+	if referencedSDInstancesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[uint32](referencedSDInstancesLoadResult.GetError())
+	}
+	referencedSDInstances := referencedSDInstancesLoadResult.GetPayload()
 	kpiDefinitionEntity := dbModel.KPIDefinitionEntity{
 		ID:             sharedUtils.NewOptionalFromPointer(kpiDefinition.ID).GetPayloadOrDefault(0),
 		SDTypeID:       kpiDefinition.SDTypeID,
 		UserIdentifier: kpiDefinition.UserIdentifier,
 		RootNode:       kpiNodeEntity,
+		SDInstanceMode: string(kpiDefinition.SDInstanceMode),
 	}
-	err := r.db.Transaction(func(tx *gorm.DB) error {
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
 		for _, entity := range kpiNodeEntities {
 			if err := dbUtil.PersistEntityIntoDB[dbModel.KPINodeEntity](tx, entity); err != nil {
 				return err
@@ -115,8 +122,28 @@ func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition shared
 			}
 		}
 		return nil
+	}); err != nil {
+		sharedUtils.NewFailureResult[uint32](err)
+	}
+	sdInstanceKPIDefinitionRelationshipEntities := sharedUtils.Map(referencedSDInstances, func(sdInstanceEntity dbModel.SDInstanceEntity) dbModel.SDInstanceKPIDefinitionRelationshipEntity {
+		return dbModel.SDInstanceKPIDefinitionRelationshipEntity{
+			KPIDefinitionID: kpiDefinitionEntity.ID,
+			SDInstanceID:    sdInstanceEntity.ID,
+			SDInstanceUID:   sdInstanceEntity.UID,
+		}
 	})
-	return sharedUtils.Ternary(err == nil, sharedUtils.NewSuccessResult[uint32](kpiDefinitionEntity.ID), sharedUtils.NewFailureResult[uint32](err))
+	// FIXME: No good reason to put this outside the main transaction... apart from foreign key integrity issues...
+	if err := r.db.Transaction(func(tx *gorm.DB) error {
+		for _, entity := range sdInstanceKPIDefinitionRelationshipEntities {
+			if err := dbUtil.PersistEntityIntoDB[dbModel.SDInstanceKPIDefinitionRelationshipEntity](tx, &entity); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		sharedUtils.NewFailureResult[uint32](err)
+	}
+	return sharedUtils.NewSuccessResult[uint32](kpiDefinitionEntity.ID)
 }
 
 func (r *relationalDatabaseClientImpl) LoadKPIDefinition(id uint32) sharedUtils.Result[sharedModel.KPIDefinition] {
@@ -129,7 +156,7 @@ func (r *relationalDatabaseClientImpl) LoadKPIDefinition(id uint32) sharedUtils.
 func (r *relationalDatabaseClientImpl) LoadKPIDefinitions() sharedUtils.Result[[]sharedModel.KPIDefinition] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	kpiDefinitionEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.KPIDefinitionEntity](r.db, dbUtil.Preload("SDType"))
+	kpiDefinitionEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.KPIDefinitionEntity](r.db, dbUtil.Preload("SDType", "SDInstanceKPIDefinitionRelationshipRecords"))
 	if kpiDefinitionEntitiesLoadResult.IsFailure() {
 		err := fmt.Errorf("failed to load KPI definition entities from the database: %w", kpiDefinitionEntitiesLoadResult.GetError())
 		return sharedUtils.NewFailureResult[[]sharedModel.KPIDefinition](err)
@@ -161,50 +188,22 @@ func (r *relationalDatabaseClientImpl) LoadKPIDefinitions() sharedUtils.Result[[
 	return sharedUtils.NewSuccessResult[[]sharedModel.KPIDefinition](kpiDefinitions)
 }
 
-func getIDsOfKPINodeEntitiesFormingTheKPIDefinition(g *gorm.DB, kpiDefinitionID uint32) sharedUtils.Result[[]uint32] {
-	kpiDefinitionEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.KPIDefinitionEntity](g, dbUtil.Where("id = ?", kpiDefinitionID))
-	if kpiDefinitionEntityLoadResult.IsFailure() {
-		err := fmt.Errorf("failed to load KPI definition entity with ID = %d from the database: %w", kpiDefinitionID, kpiDefinitionEntityLoadResult.GetError())
-		return sharedUtils.NewFailureResult[[]uint32](err)
-	}
-	kpiDefinitionEntity := kpiDefinitionEntityLoadResult.GetPayload()
-	kpiNodeEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.KPINodeEntity](g)
-	if kpiNodeEntitiesLoadResult.IsFailure() {
-		err := fmt.Errorf("failed to load KPI node entities from the database: %w", kpiNodeEntitiesLoadResult.GetError())
-		return sharedUtils.NewFailureResult[[]uint32](err)
-	}
-	setOfIDsOfKPINodeEntitiesFormingTheDefinition := sharedUtils.NewSetFromSlice(sharedUtils.SliceOf(*kpiDefinitionEntity.RootNodeID))
-	setOfRemainingKPINodeEntities := sharedUtils.NewSetFromSlice(kpiNodeEntitiesLoadResult.GetPayload())
-	for {
-		nextLayerOfKPINodeEntities := sharedUtils.Filter(setOfRemainingKPINodeEntities.ToSlice(), func(kpiNodeEntity dbModel.KPINodeEntity) bool {
-			parentNodeIDOptional := sharedUtils.NewOptionalFromPointer(kpiNodeEntity.ParentNodeID)
-			if parentNodeIDOptional.IsEmpty() {
-				return false
-			}
-			return setOfIDsOfKPINodeEntitiesFormingTheDefinition.Contains(parentNodeIDOptional.GetPayload())
-		})
-		if len(nextLayerOfKPINodeEntities) == 0 {
-			break
-		}
-		sharedUtils.ForEach(nextLayerOfKPINodeEntities, func(kpiNodeEntity dbModel.KPINodeEntity) {
-			setOfIDsOfKPINodeEntitiesFormingTheDefinition.Add(kpiNodeEntity.ID)
-			setOfRemainingKPINodeEntities.Delete(kpiNodeEntity)
-		})
-	}
-	return sharedUtils.NewSuccessResult[[]uint32](setOfIDsOfKPINodeEntitiesFormingTheDefinition.ToSlice())
-}
-
 func (r *relationalDatabaseClientImpl) DeleteKPIDefinition(id uint32) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	idsOfKPINodeEntitiesFormingTheDefinitionResult := getIDsOfKPINodeEntitiesFormingTheKPIDefinition(r.db, id)
+	idsOfKPINodeEntitiesFormingTheDefinitionResult := dbModel.GetIDsOfKPINodeEntitiesFormingTheKPIDefinition(r.db, id)
 	if idsOfKPINodeEntitiesFormingTheDefinitionResult.IsFailure() {
 		return idsOfKPINodeEntitiesFormingTheDefinitionResult.GetError()
 	}
-	if err := dbUtil.DeleteEntitiesBasedOnSliceOfIds[dbModel.KPINodeEntity](r.db, idsOfKPINodeEntitiesFormingTheDefinitionResult.GetPayload()); err != nil {
-		return err
-	}
-	return nil
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := dbUtil.DeleteEntitiesBasedOnSliceOfIds[dbModel.KPINodeEntity](tx, idsOfKPINodeEntitiesFormingTheDefinitionResult.GetPayload()); err != nil {
+			return err
+		}
+		if err := dbUtil.DeleteCertainEntityBasedOnId[dbModel.KPIDefinitionEntity](tx, id); err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (r *relationalDatabaseClientImpl) PersistSDType(sdType dllModel.SDType) sharedUtils.Result[dllModel.SDType] {

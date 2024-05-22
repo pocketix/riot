@@ -1,15 +1,13 @@
 import React from 'react'
 import SDTypesSection from './components/SDTypesSection'
 import { SdTypesQuery } from '../../generated/graphql'
-import StandardContentPageTemplate from '../../page-independent-components/StandardContentPageTemplate'
+import StandardContentPageTemplate, { StandardContentTemplatePageProps } from '../../page-independent-components/StandardContentPageTemplate'
 import { ConsumerFunction, EffectFunction } from '../../util'
 
-interface SDTypesPageViewProps {
+interface SDTypesPageViewProps extends Omit<StandardContentTemplatePageProps, 'pageTitle' | 'children'> {
   sdTypesData: SdTypesQuery
   initiateSDTypeCreation: EffectFunction
   initiateSDTypeDeletion: ConsumerFunction<string>
-  anyLoadingOccurs: boolean
-  anyErrorOccurred: boolean
 }
 
 const SDTypesPageView: React.FC<SDTypesPageViewProps> = (props) => (

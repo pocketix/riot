@@ -40,65 +40,59 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
   }, [kpiDefinitions, fulfillmentCheckResults])
 
   return (
-    <GenericCardTemplate
-      headerContent={<></>}
-      bodyContent={
-        <>
-          <div className="flex flex-col gap-1 text-[18px]">
-            {props.confirmedByUser && (
-              <div className="flex items-baseline gap-1">
-                <p className="mb-1 mt-1">User identifier:</p>
-                <PlainTextField
-                  sx={{
-                    flexGrow: 1
-                  }}
-                  id="standard-basic"
-                  label=""
-                  variant="standard"
-                  value={userIdentifier}
-                  onChange={(e) => setUserIdentifier(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-                  onBlur={async () => {
-                    if (userIdentifier === '') {
-                      setUserIdentifier(props.userIdentifier)
-                      return
-                    }
-                    await props.updateUserIdentifierOfSdInstance(props.id, userIdentifier)
-                  }}
-                />
-              </div>
-            )}
-            <p className="mb-1 mt-1">
-              UID: <strong className="font-bold">{props.uid}</strong>
-            </p>
-            <p className="mb-1 mt-1">
-              SD type denotation: <strong className="font-bold">{props.sdTypeDenotation}</strong>
-            </p>
-            {!props.confirmedByUser && (
-              <Button sx={{ border: '2px solid black' }} onClick={() => props.confirmSdInstance(props.id)}>
-                Confirm this SD instance
-              </Button>
-            )}
-          </div>
-          {displayFulfillmentCheckResultSection && (
-            <KPIFulfillmentCheckResultSection
-              kpiFulfillmentCheckResultsData={kpiDefinitions.map((kpiDefinition) => {
-                return {
-                  kpiDefinitionData: {
-                    id: kpiDefinition.id,
-                    userIdentifier: kpiDefinition.userIdentifier
-                  },
-                  kpiFulfillmentState: ((fulfilled: boolean | null): KPIFulfillmentState => {
-                    return fulfilled === null ? KPIFulfillmentState.Unknown : fulfilled ? KPIFulfillmentState.Fulfilled : KPIFulfillmentState.Unfulfilled
-                  })(kpiDefinitionFulfillmentMap[kpiDefinition.id])
+    <GenericCardTemplate className="max-w-[500px]">
+      <div className="flex flex-col gap-1 text-[18px]">
+        {props.confirmedByUser && (
+          <div className="flex items-baseline gap-1">
+            <p className="mb-1 mt-1">User identifier:</p>
+            <PlainTextField
+              sx={{
+                flexGrow: 1
+              }}
+              id="standard-basic"
+              label=""
+              variant="standard"
+              value={userIdentifier}
+              onChange={(e) => setUserIdentifier(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+              onBlur={async () => {
+                if (userIdentifier === '') {
+                  setUserIdentifier(props.userIdentifier)
+                  return
                 }
-              })}
+                await props.updateUserIdentifierOfSdInstance(props.id, userIdentifier)
+              }}
             />
-          )}
-        </>
-      }
-      className="max-w-[500px]"
-    />
+          </div>
+        )}
+        <p className="mb-1 mt-1">
+          UID: <strong className="font-bold">{props.uid}</strong>
+        </p>
+        <p className="mb-1 mt-1">
+          SD type denotation: <strong className="font-bold">{props.sdTypeDenotation}</strong>
+        </p>
+        {!props.confirmedByUser && (
+          <Button sx={{ border: '2px solid black' }} onClick={() => props.confirmSdInstance(props.id)}>
+            Confirm this SD instance
+          </Button>
+        )}
+      </div>
+      {displayFulfillmentCheckResultSection && (
+        <KPIFulfillmentCheckResultSection
+          kpiFulfillmentCheckResultsData={kpiDefinitions.map((kpiDefinition) => {
+            return {
+              kpiDefinitionData: {
+                id: kpiDefinition.id,
+                userIdentifier: kpiDefinition.userIdentifier
+              },
+              kpiFulfillmentState: ((fulfilled: boolean | null): KPIFulfillmentState => {
+                return fulfilled === null ? KPIFulfillmentState.Unknown : fulfilled ? KPIFulfillmentState.Fulfilled : KPIFulfillmentState.Unfulfilled
+              })(kpiDefinitionFulfillmentMap[kpiDefinition.id])
+            }
+          })}
+        />
+      )}
+    </GenericCardTemplate>
   )
 }
 

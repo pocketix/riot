@@ -1,6 +1,6 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
 import CustomActionButton from './CustomActionButton'
+import { useChangeURL } from '../util'
 
 interface CustomLinkButtonProps {
   route: string
@@ -9,8 +9,8 @@ interface CustomLinkButtonProps {
 }
 
 export const CustomLinkButton: React.FC<CustomLinkButtonProps> = ({ route, text, iconIdentifier }) => {
-  const navigate = useNavigate()
-  return <CustomActionButton action={() => navigate(route)} text={text} iconIdentifier={iconIdentifier} />
+  const changeURL = useChangeURL()
+  return <CustomActionButton action={() => changeURL(route)} text={text} iconIdentifier={iconIdentifier} />
 }
 
 export default CustomLinkButton

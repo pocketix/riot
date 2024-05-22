@@ -21,12 +21,21 @@ const (
 	LogicalOperation KPINodeType = "logical_operation"
 )
 
+type SDInstanceMode string
+
+const (
+	ALL      SDInstanceMode = "all"
+	SELECTED SDInstanceMode = "selected"
+)
+
 type KPIDefinition struct {
-	ID                  *uint32 `json:"id,omitempty"`
-	SDTypeID            uint32  `json:"sdTypeID"`
-	SDTypeSpecification string  `json:"sdTypeSpecification"`
-	UserIdentifier      string  `json:"userIdentifier"`
-	RootNode            KPINode `json:"rootNode"`
+	ID                     *uint32        `json:"id,omitempty"`
+	SDTypeID               uint32         `json:"sdTypeID"`
+	SDTypeSpecification    string         `json:"sdTypeSpecification"`
+	UserIdentifier         string         `json:"userIdentifier"`
+	RootNode               KPINode        `json:"rootNode"`
+	SDInstanceMode         SDInstanceMode `json:"sdInstanceMode"`
+	SelectedSDInstanceUIDs []string       `json:"selectedSDInstanceUIDs"`
 }
 
 type KPINode interface {

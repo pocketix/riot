@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Alert, CircularProgress } from '@mui/material'
 
-interface StandardContentPageProps {
+export interface StandardContentTemplatePageProps {
   pageTitle: string
   anyLoadingOccurs: boolean
   anyErrorOccurred: boolean
   children: React.ReactNode
 }
 
-const StandardContentPageTemplate: React.FC<StandardContentPageProps> = (props) => {
+const StandardContentPageTemplate: React.FC<StandardContentTemplatePageProps> = (props) => {
   const [contentShown, setContentShown] = useState(false)
 
   useEffect(() => {

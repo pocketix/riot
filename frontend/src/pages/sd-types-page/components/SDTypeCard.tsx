@@ -1,5 +1,4 @@
 import React from 'react'
-import { Collapse } from '@mui/material'
 import GenericCardTemplate from '../../../page-independent-components/GenericCardTemplate'
 import { ConsumerFunction } from '../../../util'
 import { SdParameter } from '../../../generated/graphql'
@@ -14,32 +13,20 @@ interface SDTypeCardProps {
 
 const SDTypeCard: React.FC<SDTypeCardProps> = (props) => {
   return (
-    <GenericCardTemplate
-      headerContent={
-        <>
-          <div className="cursor-pointer" onClick={() => props.initiateSDTypeDeletion(props.id)}>
-            <span className="material-symbols-outlined">delete</span>
-          </div>
-        </>
-      }
-      bodyContent={
-        <>
-          <p>
-            Denotation: <strong>{props.denotation}</strong>
-          </p>
-          {props.areParametersDisplayed && (
-            <div className="mt-2 flex flex-col gap-1 rounded-[5px] bg-[#dcdcdc] px-3 py-1">
-              {props.parameters.map((parameter) => (
-                <p key={parameter.id}>
-                  Denotation: <strong>{parameter.denotation}</strong>, Type: <strong>{parameter.type.toString()}</strong>
-                </p>
-              ))}
-            </div>
-          )}
-        </>
-      }
-      className="max-w-[500px]"
-    ></GenericCardTemplate>
+    <GenericCardTemplate onDelete={() => props.initiateSDTypeDeletion(props.id)} className="max-w-[500px]">
+      <p>
+        Denotation: <strong>{props.denotation}</strong>
+      </p>
+      {props.areParametersDisplayed && (
+        <div className="mt-2 flex flex-col gap-1 rounded-[5px] bg-[#dcdcdc] px-3 py-1">
+          {props.parameters.map((parameter) => (
+            <p key={parameter.id}>
+              Denotation: <strong>{parameter.denotation}</strong>, Type: <strong>{parameter.type.toString()}</strong>
+            </p>
+          ))}
+        </div>
+      )}
+    </GenericCardTemplate>
   )
 }
 

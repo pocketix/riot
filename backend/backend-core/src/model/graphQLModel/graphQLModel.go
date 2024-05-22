@@ -44,18 +44,22 @@ func (this BooleanEQAtomKPINode) GetSdParameterSpecification() string {
 }
 
 type KPIDefinition struct {
-	ID                  uint32    `json:"id"`
-	SdTypeID            uint32    `json:"sdTypeID"`
-	SdTypeSpecification string    `json:"sdTypeSpecification"`
-	UserIdentifier      string    `json:"userIdentifier"`
-	Nodes               []KPINode `json:"nodes"`
+	ID                     uint32         `json:"id"`
+	SdTypeID               uint32         `json:"sdTypeID"`
+	SdTypeSpecification    string         `json:"sdTypeSpecification"`
+	UserIdentifier         string         `json:"userIdentifier"`
+	Nodes                  []KPINode      `json:"nodes"`
+	SdInstanceMode         SDInstanceMode `json:"sdInstanceMode"`
+	SelectedSDInstanceUIDs []string       `json:"selectedSDInstanceUIDs"`
 }
 
 type KPIDefinitionInput struct {
-	SdTypeID            uint32         `json:"sdTypeID"`
-	SdTypeSpecification string         `json:"sdTypeSpecification"`
-	UserIdentifier      string         `json:"userIdentifier"`
-	Nodes               []KPINodeInput `json:"nodes"`
+	SdTypeID               uint32         `json:"sdTypeID"`
+	SdTypeSpecification    string         `json:"sdTypeSpecification"`
+	UserIdentifier         string         `json:"userIdentifier"`
+	Nodes                  []KPINodeInput `json:"nodes"`
+	SdInstanceMode         SDInstanceMode `json:"sdInstanceMode"`
+	SelectedSDInstanceUIDs []string       `json:"selectedSDInstanceUIDs"`
 }
 
 type KPIFulfillmentCheckResult struct {
@@ -362,6 +366,47 @@ func (e *LogicalOperationType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e LogicalOperationType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type SDInstanceMode string
+
+const (
+	SDInstanceModeAll      SDInstanceMode = "ALL"
+	SDInstanceModeSelected SDInstanceMode = "SELECTED"
+)
+
+var AllSDInstanceMode = []SDInstanceMode{
+	SDInstanceModeAll,
+	SDInstanceModeSelected,
+}
+
+func (e SDInstanceMode) IsValid() bool {
+	switch e {
+	case SDInstanceModeAll, SDInstanceModeSelected:
+		return true
+	}
+	return false
+}
+
+func (e SDInstanceMode) String() string {
+	return string(e)
+}
+
+func (e *SDInstanceMode) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SDInstanceMode(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SDInstanceMode", str)
+	}
+	return nil
+}
+
+func (e SDInstanceMode) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

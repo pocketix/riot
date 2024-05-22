@@ -20,9 +20,10 @@ func StartLoggingProfilingInformationPeriodically(period time.Duration) {
 				log.Printf("Total allocated memory: %d bytes\n", memStats.TotalAlloc)
 				log.Printf("Total system memory obtained: %d bytes\n", memStats.Sys)
 				log.Printf("Number of goroutines running: %d\n", runtime.NumGoroutine())
-				buffer := make([]byte, 262144)
-				stackLength := runtime.Stack(buffer, true)
-				log.Printf("Stack traces of the running goroutines:\n%s\n", buffer[:stackLength])
+				// Uncomment to print the stack traces of the running goroutines
+				// buffer := make([]byte, 262144)
+				// stackLength := runtime.Stack(buffer, true)
+				// log.Printf("Stack traces of the running goroutines:\n%s\n", buffer[:stackLength])
 				log.Println("-----")
 			}
 		}

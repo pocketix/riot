@@ -38,12 +38,16 @@ func checkForKPIFulfilmentCheckRequests() {
 		kpiDefinitionsBySDTypeDenotationMapMutex.Lock()
 		kpiDefinitions := kpiDefinitionsBySDTypeDenotationMap[messagePayload.SDTypeSpecification]
 		kpiDefinitionsBySDTypeDenotationMapMutex.Unlock()
+		sdInstanceUID := messagePayload.SDInstanceUID
+		kpiDefinitions = sharedUtils.Filter(kpiDefinitions, func(kpiDefinition sharedModel.KPIDefinition) bool {
+			return kpiDefinition.SDInstanceMode == sharedModel.ALL || sharedUtils.NewSetFromSlice(kpiDefinition.SelectedSDInstanceUIDs).Contains(sdInstanceUID)
+		})
 		var wg sync.WaitGroup
 		wg.Add(len(kpiDefinitions))
 		for _, kpiDefinition := range kpiDefinitions {
 			go func(kpiDefinition sharedModel.KPIDefinition) { // TODO: Consider replacing 'unlimited' number of gorountines by worker pool
 				defer wg.Done()
-				checkKPIFulfilmentThenEnqueueResult(messagePayload.SDInstanceUID, messagePayload.Parameters, kpiDefinition)
+				checkKPIFulfilmentThenEnqueueResult(sdInstanceUID, messagePayload.Parameters, kpiDefinition)
 			}(kpiDefinition)
 		}
 		wg.Wait()

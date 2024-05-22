@@ -1,8 +1,9 @@
 import { AsynchronousBiConsumerFunction, AsynchronousTriConsumerFunction } from '../../../util'
 import NiceModal, { useModal } from '@ebay/nice-modal-react'
 import ModalBase from '../../../page-independent-components/mui-based/ModalBase'
-import { Box, Button, Checkbox, Chip, FormControl, Grid, InputLabel, ListItemText, MenuItem, OutlinedInput, Select, TextField } from '@mui/material'
+import { Button, FormControl, Grid, TextField } from '@mui/material'
 import React, { useMemo, useRef, useState } from 'react'
+import ChipBasedMultiSelect from '../../../page-independent-components/mui-based/ChipBasedMultiSelect'
 
 export enum SDInstanceGroupModalMode {
   create,
@@ -26,18 +27,6 @@ export default NiceModal.create<SDInstanceGroupModalProps>((props) => {
   const { visible, remove } = useModal()
   const [userIdentifier, setUserIdentifier] = useState<string>(props.userIdentifier ?? 'Set a sensible user identifier for this SD instance group...')
   const [selectedSDInstanceIDs, setSelectedSDInstanceIDs] = useState<string[]>(props.selectedSDInstanceIDs ?? [])
-  const sdInstanceUserIdentifierByIDMap: { [key: string]: string } = useMemo(() => {
-    if (!props.sdInstanceData) {
-      return {}
-    }
-    return props.sdInstanceData.reduce(
-      (map, { id, userIdentifier }) => ({
-        ...map,
-        [id]: userIdentifier
-      }),
-      {}
-    )
-  }, [props.sdInstanceData])
   const canConfirm = useMemo(() => {
     return userIdentifier !== '' && selectedSDInstanceIDs.length > 0
   }, [userIdentifier, selectedSDInstanceIDs])
@@ -63,35 +52,26 @@ export default NiceModal.create<SDInstanceGroupModalProps>((props) => {
         </Grid>
         <Grid item xs={12}>
           <FormControl fullWidth>
-            <InputLabel error={sdInstanceMultiSelectFieldErrorFlag} id="multiple-sd-instance-select-label">
-              SD Instances
-            </InputLabel>
-            <Select
-              labelId="multiple-sd-instance-select-label"
-              multiple
-              value={selectedSDInstanceIDs}
-              onChange={(e) => {
-                const newValue = e.target.value
-                setSelectedSDInstanceIDs(typeof newValue === 'string' ? newValue.split(',') : newValue)
-                interactionWithSDInstanceMultiSelectDetectedRef.current = true
-              }}
+            <ChipBasedMultiSelect
+              title="SD instances"
               error={sdInstanceMultiSelectFieldErrorFlag}
-              input={<OutlinedInput label="SD Instances" />}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
-                  {selected.map((sdInstanceID) => (
-                    <Chip key={sdInstanceID} label={sdInstanceUserIdentifierByIDMap[sdInstanceID] ?? '---'} />
-                  ))}
-                </Box>
-              )}
-            >
-              {props.sdInstanceData.map(({ id, userIdentifier }) => (
-                <MenuItem key={id} value={id}>
-                  <Checkbox checked={selectedSDInstanceIDs.indexOf(id) !== -1} />
-                  <ListItemText primary={userIdentifier} />
-                </MenuItem>
-              ))}
-            </Select>
+              allSelectionSubjects={props.sdInstanceData.map(({ id, userIdentifier }) => {
+                return {
+                  id: id,
+                  name: userIdentifier
+                }
+              })}
+              selectedSelectionSubjects={props.sdInstanceData
+                .filter(({ id }) => selectedSDInstanceIDs.indexOf(id) !== -1)
+                .map(({ id, userIdentifier }) => {
+                  return {
+                    id: id,
+                    name: userIdentifier
+                  }
+                })}
+              onChange={setSelectedSDInstanceIDs}
+              interactionDetectedRef={interactionWithSDInstanceMultiSelectDetectedRef}
+            />
           </FormControl>
         </Grid>
         <Grid item xs={6}>

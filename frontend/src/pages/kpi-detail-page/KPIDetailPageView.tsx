@@ -1,37 +1,49 @@
 import React, { useEffect, useState } from 'react'
 import EditableTree, { AtomNodeType } from './components/editable-tree/EditableTree'
-import StandardContentPageTemplate from '../../page-independent-components/StandardContentPageTemplate'
+import StandardContentPageTemplate, { StandardContentTemplatePageProps } from '../../page-independent-components/StandardContentPageTemplate'
 import { KPIDefinitionModel } from './KPIDetailPageController'
 import { Button, FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material'
-import { SdType, SdTypesQuery } from '../../generated/graphql'
+import { SdInstanceMode, SdInstancesPageDataQuery, SdType, SdTypesQuery } from '../../generated/graphql'
 import { AsynchronousEffectFunction, ConsumerFunction, EffectFunction, TetraConsumerFunction } from '../../util'
 import { PlainTextField } from '../../page-independent-components/mui-based/Styled'
+import ChipBasedMultiSelect from '../../page-independent-components/mui-based/ChipBasedMultiSelect'
 
-interface KPIDetailPageViewProps {
-  pageTitle: string
+interface KPIDetailPageViewProps extends Omit<StandardContentTemplatePageProps, 'children'> {
   reset: EffectFunction
   kpiDefinitionModel: KPIDefinitionModel
   sdTypesData: SdTypesQuery
   sdTypeData: SdType
+  sdInstancesPageData: SdInstancesPageDataQuery
   canSubmit: boolean
-  anyLoadingOccurs: boolean
-  anyErrorOccurred: boolean
   initiateLogicalOperationNodeModification: ConsumerFunction<string>
   initiateNewNodeCreation: ConsumerFunction<string>
   initiateNewLogicalOperationNodeCreation: EffectFunction
   initiateNewAtomNodeCreation: EffectFunction
   handleSDTypeSelection: ConsumerFunction<string>
+  handleSDInstanceModeSelection: ConsumerFunction<SdInstanceMode>
   initiateAtomNodeModification: TetraConsumerFunction<string, string, AtomNodeType, string | number | boolean>
   onSubmitHandler: AsynchronousEffectFunction
   onCancelHandler: EffectFunction
   updateUserIdentifier: ConsumerFunction<string>
+  updateSelectedSDInstanceUIDs: ConsumerFunction<string[]>
 }
 
 const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
   const [userIdentifier, setUserIdentifier] = useState<string>('')
+  const [selectedSDInstanceIDs, setSelectedSDInstanceIDs] = useState<string[]>([])
+
+  useEffect(() => {
+    setSelectedSDInstanceIDs(
+      props.kpiDefinitionModel.selectedSDInstanceUIDs.map((selectedSDInstanceUID) => {
+        return props.sdInstancesPageData.sdInstances.find((sdInstance) => sdInstance.uid === selectedSDInstanceUID).id
+      })
+    )
+  }, [props.kpiDefinitionModel.selectedSDInstanceUIDs])
+
   useEffect(() => {
     setUserIdentifier(props.kpiDefinitionModel.userIdentifier)
   }, [props.kpiDefinitionModel.userIdentifier])
+
   return (
     <StandardContentPageTemplate pageTitle={props.pageTitle} anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
       <div className="flex items-center gap-5">
@@ -74,6 +86,62 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
           <span className="material-symbols-outlined text-5xl">restart_alt</span>
         </div>
       </div>
+      <div className="flex items-center gap-5 pt-2.5">
+        <p className="m-0 text-[32px]">SD instance mode:</p>
+        <FormControl sx={{ width: '20%' }}>
+          <InputLabel id="sd-instace-mode-select-field-label">Select SD instance mode</InputLabel>
+          <Select
+            labelId="sd-instace-mode-select-field-label"
+            value={props.kpiDefinitionModel.sdInstanceMode ? (props.kpiDefinitionModel.sdInstanceMode as string) : ''}
+            label="Select SD instance mode"
+            onChange={(e) => {
+              props.handleSDInstanceModeSelection(e.target.value as SdInstanceMode)
+            }}
+          >
+            <MenuItem key="ALL" value="ALL">
+              All
+            </MenuItem>
+            <MenuItem key="SELECTED" value="SELECTED">
+              Selected
+            </MenuItem>
+          </Select>
+        </FormControl>
+      </div>
+      {props.kpiDefinitionModel.sdInstanceMode && props.kpiDefinitionModel.sdInstanceMode === SdInstanceMode.Selected && (
+        <div className="flex items-center gap-5 pt-2.5">
+          <p className="m-0 text-[32px]">Selected SD instances:</p>
+          <FormControl sx={{ width: '30%' }}>
+            <ChipBasedMultiSelect
+              title="Select SD instances"
+              allSelectionSubjects={
+                props?.sdInstancesPageData?.sdInstances.map((sdInstance) => {
+                  return {
+                    id: sdInstance.id,
+                    name: sdInstance.userIdentifier
+                  }
+                }) ?? []
+              }
+              selectedSelectionSubjects={
+                props?.sdInstancesPageData?.sdInstances
+                  .filter((sdInstance) => selectedSDInstanceIDs.indexOf(sdInstance.id) !== -1)
+                  .map((sdInstance) => {
+                    return {
+                      id: sdInstance.id,
+                      name: sdInstance.userIdentifier
+                    }
+                  }) ?? []
+              }
+              onChange={(selectedSelectionSubjectIDs: string[]) => {
+                props.updateSelectedSDInstanceUIDs(
+                  selectedSelectionSubjectIDs.map((selectedSelectionSubjectID) => {
+                    return props.sdInstancesPageData.sdInstances.find((sdInstance) => sdInstance.id === selectedSelectionSubjectID).uid
+                  })
+                )
+              }}
+            />
+          </FormControl>
+        </div>
+      )}
       <EditableTree
         editableTreeNodeData={props.kpiDefinitionModel}
         initiateLogicalOperationNodeModification={props.initiateLogicalOperationNodeModification}

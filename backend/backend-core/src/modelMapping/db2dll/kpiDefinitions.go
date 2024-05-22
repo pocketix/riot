@@ -96,5 +96,9 @@ func ToDLLModelKPIDefinition(kpiDefinitionEntity dbModel.KPIDefinitionEntity, kp
 		SDTypeSpecification: kpiDefinitionEntity.SDType.Denotation,
 		UserIdentifier:      kpiDefinitionEntity.UserIdentifier,
 		RootNode:            kpiDefinitionRootOptional.GetPayload(),
+		SDInstanceMode:      sharedModel.SDInstanceMode(kpiDefinitionEntity.SDInstanceMode),
+		SelectedSDInstanceUIDs: sharedUtils.Map(kpiDefinitionEntity.SDInstanceKPIDefinitionRelationshipRecords, func(sdInstanceKPIDefinitionRelationshipEntity dbModel.SDInstanceKPIDefinitionRelationshipEntity) string {
+			return sdInstanceKPIDefinitionRelationshipEntity.SDInstanceUID
+		}),
 	}
 }

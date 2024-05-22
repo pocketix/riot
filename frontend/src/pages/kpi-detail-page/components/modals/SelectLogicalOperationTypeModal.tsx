@@ -10,9 +10,9 @@ interface SelectLogicalOperationTypeModalProps {
 }
 
 export default NiceModal.create<SelectLogicalOperationTypeModalProps>((props) => {
-  const { visible, hide } = useModal()
+  const { visible, remove } = useModal()
   return (
-    <ModalBase isOpen={visible} onClose={hide} modalTitle="Select logical operation type">
+    <ModalBase isOpen={visible} onClose={remove} modalTitle="Select logical operation type">
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={8.8}>
           <FormControl fullWidth>
@@ -23,7 +23,7 @@ export default NiceModal.create<SelectLogicalOperationTypeModalProps>((props) =>
               label="Logical operation type"
               onChange={(e: SelectChangeEvent<LogicalOperationNodeType>) => {
                 props.onLogicalOperationTypeSelection(e.target.value as LogicalOperationNodeType)
-                hide()
+                remove()
               }}
             >
               <MenuItem value={LogicalOperationNodeType.AND}>AND</MenuItem>

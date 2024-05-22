@@ -25,7 +25,7 @@ export enum BinaryRelation {
 const allBinaryRelationOptions = [BinaryRelation.EQ, BinaryRelation.LT, BinaryRelation.LEQ, BinaryRelation.GT, BinaryRelation.GEQ]
 
 export default NiceModal.create<AtomNodeModalProps>((props) => {
-  const { visible, hide } = useModal()
+  const { visible, remove } = useModal()
 
   const [referenceValueString, setReferenceValueString] = useState<string>('')
   const [incorrectReferenceValueStringFlag, setIncorrectReferenceValueStringFlag] = useState(false)
@@ -34,10 +34,9 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
   const [currentBinaryRelationOptions, setCurrentBinaryRelationOptions] = useState<BinaryRelation[]>(allBinaryRelationOptions)
 
   useEffect(() => {
-    clearModal()
-    setSDParameter(props.sdParameter ?? null)
-    setBinaryRelation(props.binaryRelation ?? null)
-    setReferenceValueString(props.referenceValueString ?? '')
+    setSDParameter(props?.sdParameter ?? null)
+    setBinaryRelation(props?.binaryRelation ?? null)
+    setReferenceValueString(props?.referenceValueString ?? '')
   }, [props])
 
   useEffect(() => {
@@ -55,14 +54,6 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
       setCurrentBinaryRelationOptions([BinaryRelation.EQ])
     }
   }, [sdParameter])
-
-  const clearModal = () => {
-    setReferenceValueString('')
-    setIncorrectReferenceValueStringFlag(false)
-    setSDParameter(null)
-    setBinaryRelation(null)
-    setCurrentBinaryRelationOptions(allBinaryRelationOptions)
-  }
 
   const checkThenConfirm = () => {
     const referenceValue = ((referenceValueString: string, sdParameterType: SdParameterType): string | boolean | number | undefined => {
@@ -111,19 +102,11 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
           }
       }
     })(sdParameter.type, binaryRelation)
-    clearModal()
     props.onConfirm(atomNodeType, sdParameter.id, sdParameter.denotation, referenceValue)
   }
 
   return (
-    <ModalBase
-      isOpen={visible}
-      onClose={() => {
-        clearModal()
-        hide()
-      }}
-      modalTitle="Atom node configuration"
-    >
+    <ModalBase isOpen={visible} onClose={remove} modalTitle="Atom node configuration">
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12}>
           <FormControl fullWidth>
@@ -151,25 +134,7 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
               value={binaryRelation ? binaryRelation : ''}
               label="Select binary relation"
               disabled={currentBinaryRelationOptions.length === 1}
-              onChange={(e) => {
-                switch (e.target.value) {
-                  case BinaryRelation.EQ:
-                    setBinaryRelation(BinaryRelation.EQ)
-                    break
-                  case BinaryRelation.LT:
-                    setBinaryRelation(BinaryRelation.LT)
-                    break
-                  case BinaryRelation.LEQ:
-                    setBinaryRelation(BinaryRelation.LEQ)
-                    break
-                  case BinaryRelation.GT:
-                    setBinaryRelation(BinaryRelation.GT)
-                    break
-                  case BinaryRelation.GEQ:
-                    setBinaryRelation(BinaryRelation.GEQ)
-                    break
-                }
-              }}
+              onChange={(e) => setBinaryRelation(e.target.value as BinaryRelation)}
             >
               {currentBinaryRelationOptions.map((currentBinaryRelationOption) => {
                 return <MenuItem value={currentBinaryRelationOption}>{currentBinaryRelationOption}</MenuItem>

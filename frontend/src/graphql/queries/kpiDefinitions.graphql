@@ -4,5 +4,7 @@ query KPIDefinitions {
     userIdentifier
     sdTypeID
     sdTypeSpecification
+    sdInstanceMode
+    selectedSDInstanceUIDs
   }
 }

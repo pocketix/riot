@@ -12,6 +12,7 @@ import {
   NumericGtAtomKpiNode,
   NumericLeqAtomKpiNode,
   NumericLtAtomKpiNode,
+  SdInstanceMode,
   StringEqAtomKpiNode
 } from '../../generated/graphql'
 import { AtomNodeType, EditableTreeNodeDataModel, LogicalOperationNodeType, NodeType } from './components/editable-tree/EditableTree'
@@ -101,6 +102,8 @@ export const kpiDefinitionToKPIDefinitionModel = (kpiDefinition: KpiDefinition):
   return {
     id: kpiDefinition.id,
     userIdentifier: kpiDefinition.userIdentifier,
+    sdInstanceMode: kpiDefinition.sdInstanceMode,
+    selectedSDInstanceUIDs: kpiDefinition.selectedSDInstanceUIDs,
     ...nodeByIdMap[rootNodeId]
   }
 }
@@ -285,12 +288,16 @@ export const kpiDefinitionModelToKPIDefinitionInput = (kpiDefinitionModel: KPIDe
     sdTypeID: sdTypeID,
     sdTypeSpecification: sdTypeSpecification,
     userIdentifier: kpiDefinitionModel.userIdentifier,
-    nodes: editableTreeNodeDataModelToKpiNodeInputs(kpiDefinitionModel)
+    nodes: editableTreeNodeDataModelToKpiNodeInputs(kpiDefinitionModel),
+    sdInstanceMode: kpiDefinitionModel.sdInstanceMode,
+    selectedSDInstanceUIDs: kpiDefinitionModel.selectedSDInstanceUIDs
   }
 }
 
 export const initialKPIDefinitionModel: KPIDefinitionModel = {
   id: '---',
   userIdentifier: 'Feel free to change the user identifier of this KPI definition',
+  sdInstanceMode: SdInstanceMode.All,
+  selectedSDInstanceUIDs: [],
   ...newNode()
 }

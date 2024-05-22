@@ -2,81 +2,147 @@ package graphql
 
 import (
 	"context"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/domainLogicLayer"
+	"log"
 
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql/gsc"
+	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/domainLogicLayer"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
 )
 
 func (r *mutationResolver) CreateSDType(ctx context.Context, input graphQLModel.SDTypeInput) (graphQLModel.SDType, error) {
-	return domainLogicLayer.CreateSDType(input).Unwrap()
+	createSDTypeResult := domainLogicLayer.CreateSDType(input)
+	if createSDTypeResult.IsFailure() {
+		log.Printf("Error occurred (create SD type): %s\n", createSDTypeResult.GetError().Error())
+	}
+	return createSDTypeResult.Unwrap()
 }
 
 func (r *mutationResolver) DeleteSDType(ctx context.Context, id uint32) (bool, error) {
-	err := domainLogicLayer.DeleteSDType(id)
-	return err == nil, err
+	if err := domainLogicLayer.DeleteSDType(id); err != nil {
+		log.Printf("Error occurred (delete SD type): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *mutationResolver) UpdateSDInstance(ctx context.Context, id uint32, input graphQLModel.SDInstanceUpdateInput) (graphQLModel.SDInstance, error) {
-	return domainLogicLayer.UpdateSDInstance(id, input).Unwrap()
+	updateSDInstanceResult := domainLogicLayer.UpdateSDInstance(id, input)
+	if updateSDInstanceResult.IsFailure() {
+		log.Printf("Error occurred (update SD instance): %s\n", updateSDInstanceResult.GetError().Error())
+	}
+	return updateSDInstanceResult.Unwrap()
 }
 
 func (r *mutationResolver) CreateKPIDefinition(ctx context.Context, input graphQLModel.KPIDefinitionInput) (graphQLModel.KPIDefinition, error) {
-	return domainLogicLayer.CreateKPIDefinition(input).Unwrap()
+	createKPIDefinitionResult := domainLogicLayer.CreateKPIDefinition(input)
+	if createKPIDefinitionResult.IsFailure() {
+		log.Printf("Error occurred (create KPI definition): %s\n", createKPIDefinitionResult.GetError().Error())
+	}
+	return createKPIDefinitionResult.Unwrap()
 }
 
 func (r *mutationResolver) UpdateKPIDefinition(ctx context.Context, id uint32, input graphQLModel.KPIDefinitionInput) (graphQLModel.KPIDefinition, error) {
-	return domainLogicLayer.UpdateKPIDefinition(id, input).Unwrap()
+	updateKPIDefinitionResult := domainLogicLayer.UpdateKPIDefinition(id, input)
+	if updateKPIDefinitionResult.IsFailure() {
+		log.Printf("Error occurred (update KPI definition): %s\n", updateKPIDefinitionResult.GetError().Error())
+	}
+	return updateKPIDefinitionResult.Unwrap()
 }
 
 func (r *mutationResolver) DeleteKPIDefinition(ctx context.Context, id uint32) (bool, error) {
-	err := domainLogicLayer.DeleteKPIDefinition(id)
-	return err == nil, err
+	if err := domainLogicLayer.DeleteKPIDefinition(id); err != nil {
+		log.Printf("Error occurred (delete KPI definition): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *mutationResolver) CreateSDInstanceGroup(ctx context.Context, input graphQLModel.SDInstanceGroupInput) (graphQLModel.SDInstanceGroup, error) {
-	return domainLogicLayer.CreateSDInstanceGroup(input).Unwrap()
+	createSDInstanceGroupResult := domainLogicLayer.CreateSDInstanceGroup(input)
+	if createSDInstanceGroupResult.IsFailure() {
+		log.Printf("Error occurred (create SD instance group): %s\n", createSDInstanceGroupResult.GetError().Error())
+	}
+	return createSDInstanceGroupResult.Unwrap()
 }
 
 func (r *mutationResolver) UpdateSDInstanceGroup(ctx context.Context, id uint32, input graphQLModel.SDInstanceGroupInput) (graphQLModel.SDInstanceGroup, error) {
-	return domainLogicLayer.UpdateSDInstanceGroup(id, input).Unwrap()
+	updateSDInstanceGroupResult := domainLogicLayer.UpdateSDInstanceGroup(id, input)
+	if updateSDInstanceGroupResult.IsFailure() {
+		log.Printf("Error occurred (update SD instance group): %s\n", updateSDInstanceGroupResult.GetError().Error())
+	}
+	return updateSDInstanceGroupResult.Unwrap()
 }
 
 func (r *mutationResolver) DeleteSDInstanceGroup(ctx context.Context, id uint32) (bool, error) {
-	err := domainLogicLayer.DeleteSDInstanceGroup(id)
-	return err == nil, err
+	if err := domainLogicLayer.DeleteSDInstanceGroup(id); err != nil {
+		log.Printf("Error occurred (delete SD instance group): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
-	return domainLogicLayer.GetSDType(id).Unwrap()
+	getSDTypeResult := domainLogicLayer.GetSDType(id)
+	if getSDTypeResult.IsFailure() {
+		log.Printf("Error occurred (get SD type): %s\n", getSDTypeResult.GetError().Error())
+	}
+	return getSDTypeResult.Unwrap()
 }
 
 func (r *queryResolver) SdTypes(ctx context.Context) ([]graphQLModel.SDType, error) {
-	return domainLogicLayer.GetSDTypes().Unwrap()
+	getSDTypesResult := domainLogicLayer.GetSDTypes()
+	if getSDTypesResult.IsFailure() {
+		log.Printf("Error occurred (get SD types): %s\n", getSDTypesResult.GetError().Error())
+	}
+	return getSDTypesResult.Unwrap()
 }
 
 func (r *queryResolver) SdInstances(ctx context.Context) ([]graphQLModel.SDInstance, error) {
-	return domainLogicLayer.GetSDInstances().Unwrap()
+	getSDInstancesResult := domainLogicLayer.GetSDInstances()
+	if getSDInstancesResult.IsFailure() {
+		log.Printf("Error occurred (get SD instances): %s\n", getSDInstancesResult.GetError().Error())
+	}
+	return getSDInstancesResult.Unwrap()
 }
 
 func (r *queryResolver) KpiDefinition(ctx context.Context, id uint32) (graphQLModel.KPIDefinition, error) {
-	return domainLogicLayer.GetKPIDefinition(id).Unwrap()
+	getKPIDefinitionResult := domainLogicLayer.GetKPIDefinition(id)
+	if getKPIDefinitionResult.IsFailure() {
+		log.Printf("Error occurred (get KPI definition): %s\n", getKPIDefinitionResult.GetError().Error())
+	}
+	return getKPIDefinitionResult.Unwrap()
 }
 
 func (r *queryResolver) KpiDefinitions(ctx context.Context) ([]graphQLModel.KPIDefinition, error) {
-	return domainLogicLayer.GetKPIDefinitions().Unwrap()
+	getKPIDefinitionsResult := domainLogicLayer.GetKPIDefinitions()
+	if getKPIDefinitionsResult.IsFailure() {
+		log.Printf("Error occurred (get KPI definitions): %s\n", getKPIDefinitionsResult.GetError().Error())
+	}
+	return getKPIDefinitionsResult.Unwrap()
 }
 
 func (r *queryResolver) KpiFulfillmentCheckResults(ctx context.Context) ([]graphQLModel.KPIFulfillmentCheckResult, error) {
-	return domainLogicLayer.GetKPIFulfillmentCheckResults().Unwrap()
+	getKPIFulfillmentCheckResultsResult := domainLogicLayer.GetKPIFulfillmentCheckResults()
+	if getKPIFulfillmentCheckResultsResult.IsFailure() {
+		log.Printf("Error occurred (get KPI fulfillment check results): %s\n", getKPIFulfillmentCheckResultsResult.GetError().Error())
+	}
+	return getKPIFulfillmentCheckResultsResult.Unwrap()
 }
 
 func (r *queryResolver) SdInstanceGroup(ctx context.Context, id uint32) (graphQLModel.SDInstanceGroup, error) {
-	return domainLogicLayer.GetSDInstanceGroup(id).Unwrap()
+	getSDInstanceGroupResult := domainLogicLayer.GetSDInstanceGroup(id)
+	if getSDInstanceGroupResult.IsFailure() {
+		log.Printf("Error occurred (get SD instance group): %s\n", getSDInstanceGroupResult.GetError().Error())
+	}
+	return getSDInstanceGroupResult.Unwrap()
 }
 
 func (r *queryResolver) SdInstanceGroups(ctx context.Context) ([]graphQLModel.SDInstanceGroup, error) {
-	return domainLogicLayer.GetSDInstanceGroups().Unwrap()
+	getSDInstanceGroupsResult := domainLogicLayer.GetSDInstanceGroups()
+	if getSDInstanceGroupsResult.IsFailure() {
+		log.Printf("Error occurred (get SD instance groups): %s\n", getSDInstanceGroupsResult.GetError().Error())
+	}
+	return getSDInstanceGroupsResult.Unwrap()
 }
 
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {

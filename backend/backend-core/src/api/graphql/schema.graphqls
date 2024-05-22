@@ -43,12 +43,19 @@ input SDInstanceUpdateInput {
 
 # ----- KPI definitions and nodes -----
 
+enum SDInstanceMode {
+  ALL
+  SELECTED
+}
+
 type KPIDefinition {
   id: ID!
   sdTypeID: ID!
   sdTypeSpecification: String!
   userIdentifier: String!
   nodes: [KPINode!]!
+  sdInstanceMode: SDInstanceMode!
+  selectedSDInstanceUIDs: [String!]!
 }
 
 interface KPINode {
@@ -146,6 +153,8 @@ input KPIDefinitionInput {
   sdTypeSpecification: String!
   userIdentifier: String!
   nodes: [KPINodeInput!]!
+  sdInstanceMode: SDInstanceMode!
+  selectedSDInstanceUIDs: [String!]!
 }
 
 enum KPINodeType {

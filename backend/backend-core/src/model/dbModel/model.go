@@ -1,13 +1,15 @@
 package dbModel
 
 type KPIDefinitionEntity struct {
-	ID                         uint32                            `gorm:"column:id;primaryKey"`
-	UserIdentifier             string                            `gorm:"column:user_identifier;not null"`
-	RootNodeID                 *uint32                           `gorm:"column:root_node_id;not null"`
-	RootNode                   *KPINodeEntity                    `gorm:"foreignKey:RootNodeID;constraint:OnDelete:CASCADE"`
-	SDTypeID                   uint32                            `gorm:"column:sd_type_id;not null"`
-	SDType                     SDTypeEntity                      `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
-	KPIFulfillmentCheckResults []KPIFulfillmentCheckResultEntity `gorm:"foreignKey:KPIDefinitionID;constraint:OnDelete:CASCADE"`
+	ID                                         uint32                                      `gorm:"column:id;primaryKey"`
+	UserIdentifier                             string                                      `gorm:"column:user_identifier;not null"`
+	RootNodeID                                 *uint32                                     `gorm:"column:root_node_id;not null"`
+	RootNode                                   *KPINodeEntity                              `gorm:"foreignKey:RootNodeID"`
+	SDTypeID                                   uint32                                      `gorm:"column:sd_type_id;not null"`
+	SDType                                     SDTypeEntity                                `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
+	SDInstanceMode                             string                                      `gorm:"column:sd_instance_mode;not null"`
+	KPIFulfillmentCheckResults                 []KPIFulfillmentCheckResultEntity           `gorm:"foreignKey:KPIDefinitionID;constraint:OnDelete:CASCADE"`
+	SDInstanceKPIDefinitionRelationshipRecords []SDInstanceKPIDefinitionRelationshipEntity `gorm:"foreignKey:KPIDefinitionID;constraint:OnDelete:CASCADE"`
 }
 
 func (KPIDefinitionEntity) TableName() string {
@@ -71,14 +73,15 @@ func (SDParameterEntity) TableName() string {
 }
 
 type SDInstanceEntity struct {
-	ID                         uint32                            `gorm:"column:id;primaryKey;not null"`
-	UID                        string                            `gorm:"column:uid;not null;index"` // UID is a separately indexed field
-	ConfirmedByUser            bool                              `gorm:"column:confirmed_by_user;not null"`
-	UserIdentifier             string                            `gorm:"column:user_identifier;not null"`
-	SDTypeID                   uint32                            `gorm:"column:sd_type_id"`
-	SDType                     SDTypeEntity                      `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
-	GroupMembershipRecords     []SDInstanceGroupMembershipEntity `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
-	KPIFulfillmentCheckResults []KPIFulfillmentCheckResultEntity `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
+	ID                                         uint32                                      `gorm:"column:id;primaryKey;not null"`
+	UID                                        string                                      `gorm:"column:uid;not null;index"` // UID is a separately indexed field
+	ConfirmedByUser                            bool                                        `gorm:"column:confirmed_by_user;not null"`
+	UserIdentifier                             string                                      `gorm:"column:user_identifier;not null"`
+	SDTypeID                                   uint32                                      `gorm:"column:sd_type_id"`
+	SDType                                     SDTypeEntity                                `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
+	GroupMembershipRecords                     []SDInstanceGroupMembershipEntity           `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
+	KPIFulfillmentCheckResults                 []KPIFulfillmentCheckResultEntity           `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
+	SDInstanceKPIDefinitionRelationshipRecords []SDInstanceKPIDefinitionRelationshipEntity `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 }
 
 func (SDInstanceEntity) TableName() string {
@@ -86,8 +89,8 @@ func (SDInstanceEntity) TableName() string {
 }
 
 type KPIFulfillmentCheckResultEntity struct {
-	KPIDefinitionID uint32 `gorm:"column:kpi_definition_id;primaryKey;not null;constraint:OnDelete:CASCADE"`
-	SDInstanceID    uint32 `gorm:"column:sd_instance_id;primaryKey;not null;constraint:OnDelete:CASCADE"`
+	KPIDefinitionID uint32 `gorm:"column:kpi_definition_id;primaryKey;not null"`
+	SDInstanceID    uint32 `gorm:"column:sd_instance_id;primaryKey;not null"`
 	Fulfilled       bool   `gorm:"column:fulfilled;not null"`
 }
 
@@ -112,4 +115,10 @@ type SDInstanceGroupMembershipEntity struct {
 
 func (SDInstanceGroupMembershipEntity) TableName() string {
 	return "sd_instance_group_membership"
+}
+
+type SDInstanceKPIDefinitionRelationshipEntity struct {
+	KPIDefinitionID uint32 `gorm:"column:kpi_definition_id;primaryKey;not null"`
+	SDInstanceID    uint32 `gorm:"column:sd_instance_id;primaryKey;not null"`
+	SDInstanceUID   string `gorm:"column:sd_instance_uid;not null"`
 }

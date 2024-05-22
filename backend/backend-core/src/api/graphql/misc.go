@@ -20,9 +20,6 @@ var (
 	KPIFulfillmentCheckResultGraphQLSubscriptionChannel = make(chan graphQLModel.KPIFulfillmentCheckResult)
 )
 
-type Resolver struct {
-}
-
 func SetupGraphQLServer() {
 	graphQLServer := handler.New(gsc.NewExecutableSchema(gsc.Config{Resolvers: new(Resolver)}))
 	graphQLServer.AddTransport(transport.POST{})
