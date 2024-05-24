@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { LogicalOperationNodeType } from './EditableTree'
 import EditableTreeNodeBase from './EditableTreeNodeBase'
 import { EffectFunction } from '../../../../util'
@@ -8,19 +8,6 @@ interface LogicalOperationNodeProps {
   onClick: EffectFunction
 }
 
-const LogicalOperationNode: React.FC<LogicalOperationNodeProps> = (props) => {
-  const logicalOperationDenotation: string = useMemo(() => {
-    switch (props.type) {
-      case LogicalOperationNodeType.AND:
-        return 'AND'
-      case LogicalOperationNodeType.OR:
-        return 'OR'
-      case LogicalOperationNodeType.NOR:
-        return 'NOR'
-    }
-  }, [props.type])
-
-  return <EditableTreeNodeBase treeNodeContents={<p className="font-math text-[40px]">{logicalOperationDenotation}</p>} onClick={props.onClick} />
-}
+const LogicalOperationNode: React.FC<LogicalOperationNodeProps> = (props) => <EditableTreeNodeBase treeNodeContents={<p className="font-math text-[40px]">{props.type}</p>} onClick={props.onClick} />
 
 export default LogicalOperationNode

@@ -1,9 +1,10 @@
 import { AsynchronousBiConsumerFunction, AsynchronousTriConsumerFunction } from '../../../util'
 import NiceModal, { useModal } from '@ebay/nice-modal-react'
 import ModalBase from '../../../page-independent-components/mui-based/ModalBase'
-import { Button, FormControl, Grid, TextField } from '@mui/material'
+import { Button, FormControl, Grid } from '@mui/material'
 import React, { useMemo, useRef, useState } from 'react'
 import ChipBasedMultiSelect from '../../../page-independent-components/mui-based/ChipBasedMultiSelect'
+import MUIBasedTextField from '../../../page-independent-components/mui-based/MUIBasedTextField'
 
 export enum SDInstanceGroupModalMode {
   create,
@@ -39,16 +40,9 @@ export default NiceModal.create<SDInstanceGroupModalProps>((props) => {
     <ModalBase isOpen={visible} onClose={remove} modalTitle={`${props.mode === SDInstanceGroupModalMode.create ? 'Create' : 'Update'} SD instance group`}>
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12}>
-          <TextField
-            fullWidth
-            id="standard-basic"
-            label="User identifier of the SD instance group"
-            variant="outlined"
-            value={userIdentifier}
-            error={userIdentifier.length === 0}
-            onChange={(e) => setUserIdentifier(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-          />
+          <FormControl fullWidth>
+            <MUIBasedTextField label="User identifier of the SD instance group" content={userIdentifier} onContentChange={setUserIdentifier} />
+          </FormControl>
         </Grid>
         <Grid item xs={12}>
           <FormControl fullWidth>

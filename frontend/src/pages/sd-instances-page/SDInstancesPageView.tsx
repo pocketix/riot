@@ -18,25 +18,11 @@ const SDInstancesPageView: React.FC<SDTypesPageViewProps> = (props) => {
     <StandardContentPageTemplate pageTitle="SD instances" anyLoadingOccurs={props.anyLoadingOccurs} anyErrorOccurred={props.anyErrorOccurred}>
       <div className="flex gap-5">
         <FormControlLabel
-          control={
-            <Switch
-              checked={confirmedInstancesDisplayed}
-              onChange={(e) => {
-                setConfirmedInstancesDisplayed(e.target.checked)
-              }}
-            />
-          }
+          control={<Switch checked={confirmedInstancesDisplayed} onChange={(e) => setConfirmedInstancesDisplayed(e.target.checked)} />}
           label="Display SD instances confirmed by user?"
         />
         <FormControlLabel
-          control={
-            <Switch
-              checked={notYetConfirmedInstancesDisplayed}
-              onChange={(e) => {
-                setNotYetConfirmedInstancesDisplayed(e.target.checked)
-              }}
-            />
-          }
+          control={<Switch checked={notYetConfirmedInstancesDisplayed} onChange={(e) => setNotYetConfirmedInstancesDisplayed(e.target.checked)} />}
           label="Display SD instances not yet confirmed by user?"
         />
       </div>

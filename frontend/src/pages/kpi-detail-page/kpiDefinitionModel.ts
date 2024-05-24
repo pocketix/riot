@@ -16,13 +16,12 @@ import {
   StringEqAtomKpiNode
 } from '../../generated/graphql'
 import { AtomNodeType, EditableTreeNodeDataModel, LogicalOperationNodeType, NodeType } from './components/editable-tree/EditableTree'
-import { v4 as uuid } from 'uuid'
 import { KPIDefinitionModel } from './KPIDetailPageController'
-import { ConsumerFunction } from '../../util'
+import { ConsumerFunction, generateNewUUID, SequentialNumberGenerator } from '../../util'
 
 const newNode = (): EditableTreeNodeDataModel => {
   return {
-    name: uuid(),
+    name: generateNewUUID(),
     attributes: {
       nodeType: NodeType.NewNode
     },
@@ -178,18 +177,6 @@ export const crateNewAtomNode = (
   processTree(currentNodeName, node, processNode, true)
 }
 
-class SequentialNumberGenerator {
-  private counter: number
-
-  constructor(startValue: number = 0) {
-    this.counter = startValue
-  }
-
-  getNextNumber(): number {
-    return this.counter++
-  }
-}
-
 const editableTreeNodeDataModelToKpiNodeInput = (
   editableTreeNodeDataModel: EditableTreeNodeDataModel,
   sequentialNumberGenerator: SequentialNumberGenerator,
@@ -290,7 +277,7 @@ export const kpiDefinitionModelToKPIDefinitionInput = (kpiDefinitionModel: KPIDe
     userIdentifier: kpiDefinitionModel.userIdentifier,
     nodes: editableTreeNodeDataModelToKpiNodeInputs(kpiDefinitionModel),
     sdInstanceMode: kpiDefinitionModel.sdInstanceMode,
-    selectedSDInstanceUIDs: kpiDefinitionModel.selectedSDInstanceUIDs
+    selectedSDInstanceUIDs: kpiDefinitionModel.sdInstanceMode === SdInstanceMode.Selected ? kpiDefinitionModel.selectedSDInstanceUIDs : []
   }
 }
 

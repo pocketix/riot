@@ -1,0 +1,20 @@
+query RestOfKPIDefinitionDetailPageData {
+    sdTypes {
+        id
+        denotation
+        parameters {
+            id
+            denotation
+            type
+        }
+    }
+    sdInstances {
+        id
+        uid
+        confirmedByUser
+        userIdentifier
+        type {
+            id
+        }
+    }
+}

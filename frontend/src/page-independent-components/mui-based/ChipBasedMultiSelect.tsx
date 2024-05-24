@@ -1,11 +1,8 @@
-import React, { MutableRefObject } from 'react'
+import React, { MutableRefObject, useMemo } from 'react'
 import { Box, Checkbox, Chip, InputLabel, ListItemText, MenuItem, OutlinedInput, Select } from '@mui/material'
-import { ConsumerFunction } from '../../util'
-
-interface SelectionSubject {
-  id: string
-  name: string
-}
+import { ConsumerFunction, generateNewUUID, SelectionSubject } from '../../util'
+import { SxProps } from '@mui/system'
+import { Theme } from '@mui/material/styles'
 
 interface ChipBasedMultiSelectProps {
   title: string
@@ -14,16 +11,18 @@ interface ChipBasedMultiSelectProps {
   onChange: ConsumerFunction<string[]>
   error?: boolean
   interactionDetectedRef?: MutableRefObject<boolean>
+  sx?: SxProps<Theme>
 }
 
 const ChipBasedMultiSelect: React.FC<ChipBasedMultiSelectProps> = (props) => {
+  const labelID = useMemo(() => `chip-based-multi-select-label-${generateNewUUID()}`, [])
   return (
     <>
-      <InputLabel error={props?.error ?? false} id="chip-based-multi-select">
+      <InputLabel error={props?.error ?? false} id={labelID}>
         {props.title}
       </InputLabel>
       <Select
-        labelId="chip-based-multi-select"
+        labelId={labelID}
         multiple
         value={props.selectedSelectionSubjects.map(({ id }) => id)}
         onChange={(e) => {
@@ -42,6 +41,7 @@ const ChipBasedMultiSelect: React.FC<ChipBasedMultiSelectProps> = (props) => {
             ))}
           </Box>
         )}
+        sx={props.sx ? props.sx : {}}
       >
         {props.allSelectionSubjects.map(({ id, name }) => (
           <MenuItem key={id} value={id}>

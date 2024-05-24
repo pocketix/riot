@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { Button, FormControl, Grid, InputLabel, MenuItem, Select, TextField } from '@mui/material'
+import { Button, FormControl, Grid } from '@mui/material'
 import ModalBase from '../../../../page-independent-components/mui-based/ModalBase'
 import { SdParameter, SdParameterType, SdType } from '../../../../generated/graphql'
 import { AtomNodeType } from '../editable-tree/EditableTree'
 import { TetraConsumerFunction } from '../../../../util'
 import NiceModal, { useModal } from '@ebay/nice-modal-react'
+import StandardSingleSelect from '../../../../page-independent-components/mui-based/StandardSingleSelect'
+import MUIBasedTextField from '../../../../page-independent-components/mui-based/MUIBasedTextField'
 
 interface AtomNodeModalProps {
   sdTypeData: SdType
@@ -110,49 +112,39 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12}>
           <FormControl fullWidth>
-            <InputLabel id="sd-type-parameter-select-field-label">Select SD type parameter</InputLabel>
-            <Select
-              labelId="sd-type-parameter-select-field-label"
-              value={sdParameter ? sdParameter.id : ''}
-              label="Select SD type parameter"
-              onChange={(e) => setSDParameter(props.sdTypeData.parameters.find((p) => p.id === e.target.value))}
-            >
-              {props.sdTypeData &&
-                props.sdTypeData.parameters.map((parameter) => (
-                  <MenuItem key={parameter.id} value={parameter.id}>
-                    {`${parameter.denotation} (of type ${parameter.type})`}
-                  </MenuItem>
-                ))}
-            </Select>
+            <StandardSingleSelect
+              title="Select SD type parameter"
+              allSelectionSubjects={
+                props?.sdTypeData?.parameters.map((parameter) => ({
+                  id: parameter.id,
+                  name: parameter.denotation
+                })) ?? []
+              }
+              selectedSelectionSubjectID={sdParameter ? sdParameter.id : ''}
+              onChange={(selectedSelectionSubjectID) => {
+                const selectedSDParameter = props?.sdTypeData?.parameters.find((p) => p.id === selectedSelectionSubjectID)
+                selectedSDParameter && setSDParameter(selectedSDParameter)
+              }}
+            />
           </FormControl>
         </Grid>
         <Grid item xs={12}>
           <FormControl fullWidth>
-            <InputLabel id="binary-relation-select-field-label">Select binary relation</InputLabel>
-            <Select
-              labelId="binary-relation-select-field-label"
-              value={binaryRelation ? binaryRelation : ''}
-              label="Select binary relation"
-              disabled={currentBinaryRelationOptions.length === 1}
-              onChange={(e) => setBinaryRelation(e.target.value as BinaryRelation)}
-            >
-              {currentBinaryRelationOptions.map((currentBinaryRelationOption) => {
-                return <MenuItem value={currentBinaryRelationOption}>{currentBinaryRelationOption}</MenuItem>
-              })}
-            </Select>
+            <StandardSingleSelect
+              title="Select binary relation"
+              allSelectionSubjects={currentBinaryRelationOptions.map((currentBinaryRelationOption) => ({
+                id: currentBinaryRelationOption,
+                name: currentBinaryRelationOption
+              }))}
+              selectedSelectionSubjectID={binaryRelation ? binaryRelation : ''}
+              onChange={(selectedSelectionSubjectID) => setBinaryRelation(selectedSelectionSubjectID as BinaryRelation)}
+            />
           </FormControl>
         </Grid>
         <Grid item xs={12}>
-          <TextField
-            fullWidth
-            id="standard-basic"
-            label="Reference value"
-            variant="outlined"
-            value={referenceValueString}
-            error={incorrectReferenceValueStringFlag}
-            onChange={(e) => setReferenceValueString(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-          />
+          <FormControl fullWidth>
+            <MUIBasedTextField content={referenceValueString} onContentChange={setReferenceValueString} label="Reference value" error={incorrectReferenceValueStringFlag} />
+          </FormControl>
         </Grid>
         <Grid item xs={6}>
           <Button fullWidth onClick={checkThenConfirm}>

@@ -4,6 +4,7 @@ import { SdTypesQuery } from '../../../generated/graphql'
 import { AsynchronousBiConsumerFunction } from '../../../util'
 import NiceModal, { useModal } from '@ebay/nice-modal-react'
 import ModalBase from '../../../page-independent-components/mui-based/ModalBase'
+import MUIBasedTextField from '../../../page-independent-components/mui-based/MUIBasedTextField'
 
 interface SDTypeModalProps {
   sdTypesQueryData: SdTypesQuery
@@ -59,10 +60,12 @@ export default NiceModal.create<SDTypeModalProps>((props) => {
   return (
     <ModalBase isOpen={visible} onClose={remove} modalTitle="Create SD type definition" vwPercentage={40}>
       <Grid container spacing={2} alignItems="center">
-        <Grid item xs={8}>
-          <TextField fullWidth error={denotationFieldErrorFlag} label="Denotation" value={denotation} onChange={(e) => setDenotation(e.target.value)} helperText={denotationFieldHelperText} />
+        <Grid item xs={5.5}>
+          <FormControl fullWidth>
+            <MUIBasedTextField content={denotation} onContentChange={setDenotation} label="Denotation" error={denotationFieldErrorFlag} helperText={denotationFieldHelperText} />
+          </FormControl>
         </Grid>
-        <Grid item xs={4} />
+        <Grid item xs={6.5} />
         <Grid item xs={12} />
         {parameters.map((parameter, index) => {
           const parameterDenotationFieldError = parameter.denotation.length === 0

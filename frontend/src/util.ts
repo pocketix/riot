@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { v4 } from 'uuid'
 
 /**
  * Truncates the input string to the given maximum length and appends an ellipsis ('...') if truncation occurs.
@@ -31,4 +32,23 @@ export const useChangeURL = () => {
     navigate(newURL)
   }
   return changeURL
+}
+
+export const generateNewUUID = (): string => v4()
+
+export interface SelectionSubject {
+  id: string
+  name: string
+}
+
+export class SequentialNumberGenerator {
+  private counter: number
+
+  constructor(startValue: number = 0) {
+    this.counter = startValue
+  }
+
+  getNextNumber(): number {
+    return this.counter++
+  }
 }

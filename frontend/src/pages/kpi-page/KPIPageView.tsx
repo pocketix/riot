@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import StandardContentPageTemplate, { StandardContentTemplatePageProps } from '../../page-independent-components/StandardContentPageTemplate'
 import { KpiDefinitionsQuery, SdInstanceMode } from '../../generated/graphql'
 import GenericCardTemplate from '../../page-independent-components/GenericCardTemplate'

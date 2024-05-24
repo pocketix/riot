@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react'
 import GenericCardTemplate from '../../../page-independent-components/GenericCardTemplate'
 import { Button } from '@mui/material'
-import { PlainTextField } from '../../../page-independent-components/mui-based/Styled'
 import { AsynchronousBiConsumerFunction, AsynchronousConsumerFunction } from '../../../util'
 import { SdInstancesPageDataQuery } from '../../../generated/graphql'
 import KPIFulfillmentCheckResultSection, { KPIFulfillmentState } from '../../../page-independent-components/KPIFulfillmentCheckResultSection'
+import MUIBasedTextField, { MUIBasedTextFieldType } from '../../../page-independent-components/mui-based/MUIBasedTextField'
 
 interface SDInstanceCardProps {
   id: string
@@ -45,22 +45,19 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
         {props.confirmedByUser && (
           <div className="flex items-baseline gap-1">
             <p className="mb-1 mt-1">User identifier:</p>
-            <PlainTextField
-              sx={{
-                flexGrow: 1
-              }}
-              id="standard-basic"
-              label=""
-              variant="standard"
-              value={userIdentifier}
-              onChange={(e) => setUserIdentifier(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+            <MUIBasedTextField
+              content={userIdentifier}
+              onContentChange={setUserIdentifier}
+              type={MUIBasedTextFieldType.Plain}
               onBlur={async () => {
                 if (userIdentifier === '') {
                   setUserIdentifier(props.userIdentifier)
                   return
                 }
                 await props.updateUserIdentifierOfSdInstance(props.id, userIdentifier)
+              }}
+              sx={{
+                flexGrow: 1
               }}
             />
           </div>

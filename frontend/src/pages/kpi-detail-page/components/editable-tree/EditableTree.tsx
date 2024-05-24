@@ -55,9 +55,9 @@ export enum AtomNodeType {
 }
 
 export enum LogicalOperationNodeType {
-  AND,
-  OR,
-  NOR
+  AND = 'AND',
+  OR = 'OR',
+  NOR = 'NOR'
 }
 
 export interface EditableTreeNodeDataModel extends RawNodeDatum {

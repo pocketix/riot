@@ -9,19 +9,16 @@ import {
   CreateKpiDefinitionMutationVariables,
   KpiDefinitionDetailQuery,
   KpiDefinitionDetailQueryVariables,
+  RestOfKpiDefinitionDetailPageDataQuery,
+  RestOfKpiDefinitionDetailPageDataQueryVariables,
   SdInstanceMode,
-  SdInstancesPageDataQuery,
-  SdInstancesPageDataQueryVariables,
   SdType,
-  SdTypesQuery,
-  SdTypesQueryVariables,
   UpdateKpiDefinitionMutation,
   UpdateKpiDefinitionMutationVariables
 } from '../../generated/graphql'
 import gql from 'graphql-tag'
 import qKPIDefinitionDetail from '../../graphql/queries/kpiDefinitionDetail.graphql'
-import qSDTypes from '../../graphql/queries/sdTypes.graphql'
-import qSDInstancePageData from '../../graphql/queries/sdInstancesPageData.graphql'
+import qRestOfKPIDefinitionDetailPageData from '../../graphql/queries/restOfKPIDefinitionDetailPageData.graphql'
 import {
   changeTypeOfLogicalOperationNode,
   crateNewAtomNode,
@@ -37,7 +34,7 @@ import { useModal } from '@ebay/nice-modal-react'
 import SelectNewNodeTypeModal from './components/modals/SelectNewNodeTypeModal'
 import SelectLogicalOperationTypeModal from './components/modals/SelectLogicalOperationTypeModal'
 import AtomNodeModal, { BinaryRelation } from './components/modals/AtomNodeModal'
-import { useChangeURL } from '../../util'
+import { generateNewUUID, useChangeURL } from '../../util'
 
 export interface KPIDefinitionModel extends EditableTreeNodeDataModel {
   id: string
@@ -54,6 +51,7 @@ const KPIDetailPageController: React.FC = () => {
   const changeURL = useChangeURL()
 
   const { id } = useParams()
+
   const {
     data: kpiDefinitionDetailData,
     loading: kpiDefinitionDetailLoading,
@@ -64,8 +62,12 @@ const KPIDetailPageController: React.FC = () => {
       id: id
     }
   })
-  const { data: sdTypesData, loading: sdTypesLoading, error: sdTypesError } = useQuery<SdTypesQuery, SdTypesQueryVariables>(gql(qSDTypes))
-  const { data: sdInstancesData, loading: sdInstancesLoading, error: sdInstancesError } = useQuery<SdInstancesPageDataQuery, SdInstancesPageDataQueryVariables>(gql(qSDInstancePageData))
+  const {
+    data: restOfKPIDefinitionDetailPageData,
+    loading: restOfKPIDefinitionDetailPageDataLoading,
+    error: restOfKPIDefinitionDetailPageDataError
+  } = useQuery<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>(gql(qRestOfKPIDefinitionDetailPageData))
+
   const [createKPIDefinitionMutation, { loading: createKPIDefinitionLoading, error: createKPIDefinitionError }] = useMutation<CreateKpiDefinitionMutation, CreateKpiDefinitionMutationVariables>(
     gql(mCreateKPIDefinition)
   )
@@ -78,10 +80,13 @@ const KPIDetailPageController: React.FC = () => {
 
   const currentNodeNameRef = useRef('')
 
-  useEffect(() => kpiDefinitionDetailData && setDefinitionModel(kpiDefinitionToKPIDefinitionModel(kpiDefinitionDetailData.kpiDefinition)), [kpiDefinitionDetailData])
+  useEffect(() => kpiDefinitionDetailData?.kpiDefinition && setDefinitionModel(kpiDefinitionToKPIDefinitionModel(kpiDefinitionDetailData.kpiDefinition)), [kpiDefinitionDetailData])
   useEffect(() => {
-    sdTypesData && kpiDefinitionDetailData && setSDTypeData(sdTypesData.sdTypes.find((sdType) => sdType.denotation === kpiDefinitionDetailData.kpiDefinition.sdTypeSpecification))
-  }, [sdTypesData, kpiDefinitionDetailData])
+    if (!restOfKPIDefinitionDetailPageData?.sdTypes || !kpiDefinitionDetailData?.kpiDefinition?.sdTypeSpecification) {
+      return
+    }
+    setSDTypeData(restOfKPIDefinitionDetailPageData.sdTypes.find((sdType) => sdType.denotation === kpiDefinitionDetailData.kpiDefinition.sdTypeSpecification))
+  }, [restOfKPIDefinitionDetailPageData, kpiDefinitionDetailData])
 
   const initiateLogicalOperationNodeModification = (nodeName: string) => {
     currentNodeNameRef.current = nodeName
@@ -186,97 +191,86 @@ const KPIDetailPageController: React.FC = () => {
     removeAtomNodeModal()
   }
 
-  const handleSDTypeSelection = (sdTypeID: string) => {
-    if (!sdTypesData) {
-      return
-    }
-    const selectedSDType = sdTypesData.sdTypes.find((sdType) => sdType.id === sdTypeID)
-    if (!selectedSDType || (sdTypeData && selectedSDType.id === sdTypeData.id)) {
-      return
-    }
-    setSDTypeData(selectedSDType)
-    setDefinitionModel(initialKPIDefinitionModel)
-  }
-
-  const handleSDInstanceModeSelection = (sdInstanceMode: SdInstanceMode) => {
-    setDefinitionModel((definitionModel) =>
-      produce(definitionModel, (draftDefinitionModel) => {
-        draftDefinitionModel.sdInstanceMode = sdInstanceMode
-      })
-    )
-  }
-
-  const onSubmitHandler = async () => {
-    const kpiDefinitionInput = kpiDefinitionModelToKPIDefinitionInput(definitionModel, sdTypeData.id, sdTypeData.denotation)
-    if (id) {
-      await updateKPIDefinitionMutation({
-        variables: {
-          id: id,
-          input: kpiDefinitionInput
-        }
-      })
-    } else {
-      await createKPIDefinitionMutation({
-        variables: {
-          input: kpiDefinitionInput
-        }
-      })
-    }
-    changeURL('/kpi-definitions')
-  }
-
-  const onCancelHandler = () => {
-    changeURL('/kpi-definitions')
-  }
-
-  const updateUserIdentifier = (newUserIdentifier: string) => {
-    setDefinitionModel((definitionModel) =>
-      produce(definitionModel, (draftDefinitionModel) => {
-        draftDefinitionModel.userIdentifier = newUserIdentifier
-      })
-    )
-  }
-
-  const updateSelectedSDInstanceUIDs = (selectedSDInstanceUIDs: string[]) => {
-    setDefinitionModel((definitionModel) =>
-      produce(definitionModel, (draftDefinitionModel) => {
-        draftDefinitionModel.selectedSDInstanceUIDs = selectedSDInstanceUIDs
-      })
-    )
-  }
-
-  const reset = () => {
-    currentNodeNameRef.current = ''
-    setSDTypeData(null)
-    setDefinitionModel(initialKPIDefinitionModel)
-  }
-
-  const canSubmit: boolean = useMemo(() => {
-    return !!sdTypeData && definitionModel.attributes.nodeType !== NodeType.NewNode
-  }, [sdTypeData, definitionModel])
-
   return (
     <KPIDetailPageView
-      pageTitle={`KPI editor – ${id ? 'Create' : 'Edit'} KPI definition`}
-      reset={reset}
+      pageTitle={`KPI editor – ${id ? 'Edit' : 'Create'} KPI definition`}
+      reset={() => {
+        currentNodeNameRef.current = ''
+        setSDTypeData(null)
+        setDefinitionModel(initialKPIDefinitionModel)
+      }}
       kpiDefinitionModel={definitionModel}
-      sdTypesData={sdTypesData}
-      sdInstancesPageData={sdInstancesData}
+      restOfKPIDefinitionDetailPageData={restOfKPIDefinitionDetailPageData}
       sdTypeData={sdTypeData}
-      canSubmit={canSubmit}
-      anyLoadingOccurs={kpiDefinitionDetailLoading || sdTypesLoading || sdInstancesLoading || createKPIDefinitionLoading || updateKPIDefinitionLoading}
-      anyErrorOccurred={!!kpiDefinitionDetailError || !!sdTypesError || !!sdInstancesError || !!createKPIDefinitionError || !!updateKPIDefinitionError}
+      canSubmit={useMemo(() => {
+        return !!sdTypeData && definitionModel.attributes.nodeType !== NodeType.NewNode
+      }, [sdTypeData, definitionModel])}
+      anyLoadingOccurs={kpiDefinitionDetailLoading || restOfKPIDefinitionDetailPageDataLoading || createKPIDefinitionLoading || updateKPIDefinitionLoading}
+      anyErrorOccurred={!!kpiDefinitionDetailError || !!restOfKPIDefinitionDetailPageDataError || !!createKPIDefinitionError || !!updateKPIDefinitionError}
       initiateLogicalOperationNodeModification={initiateLogicalOperationNodeModification}
       initiateNewNodeCreation={initiateNewNodeCreation}
       initiateNewLogicalOperationNodeCreation={initiateNewLogicalOperationNodeCreation}
       initiateNewAtomNodeCreation={initiateNewAtomNodeCreation}
-      handleSDTypeSelection={handleSDTypeSelection}
-      handleSDInstanceModeSelection={handleSDInstanceModeSelection}
+      handleSDTypeSelection={(sdTypeID: string) => {
+        if (!restOfKPIDefinitionDetailPageData?.sdTypes) {
+          return
+        }
+        const selectedSDType = restOfKPIDefinitionDetailPageData.sdTypes.find((sdType) => sdType.id === sdTypeID)
+        if (!selectedSDType || (sdTypeData && selectedSDType.id === sdTypeData.id)) {
+          return
+        }
+        setSDTypeData(selectedSDType)
+        setDefinitionModel((definitionModel) =>
+          produce(definitionModel, (draftDefinitionModel) => {
+            draftDefinitionModel.name = generateNewUUID()
+            draftDefinitionModel.attributes = {
+              nodeType: NodeType.NewNode
+            }
+            draftDefinitionModel.children = []
+          })
+        )
+      }}
+      handleSDInstanceModeSelection={(sdInstanceMode: SdInstanceMode) => {
+        setDefinitionModel((definitionModel) =>
+          produce(definitionModel, (draftDefinitionModel) => {
+            draftDefinitionModel.sdInstanceMode = sdInstanceMode
+          })
+        )
+      }}
       initiateAtomNodeModification={initiateAtomNodeModification}
-      onSubmitHandler={onSubmitHandler}
-      onCancelHandler={onCancelHandler}
-      updateUserIdentifier={updateUserIdentifier}
-      updateSelectedSDInstanceUIDs={updateSelectedSDInstanceUIDs}
+      onSubmitHandler={async () => {
+        const kpiDefinitionInput = kpiDefinitionModelToKPIDefinitionInput(definitionModel, sdTypeData.id, sdTypeData.denotation)
+        if (id) {
+          await updateKPIDefinitionMutation({
+            variables: {
+              id: id,
+              input: kpiDefinitionInput
+            }
+          })
+        } else {
+          await createKPIDefinitionMutation({
+            variables: {
+              input: kpiDefinitionInput
+            }
+          })
+        }
+        changeURL('/kpi-definitions')
+      }}
+      onCancelHandler={() => changeURL('/kpi-definitions')}
+      updateUserIdentifier={(newUserIdentifier: string) => {
+        setDefinitionModel((definitionModel) =>
+          produce(definitionModel, (draftDefinitionModel) => {
+            draftDefinitionModel.userIdentifier = newUserIdentifier
+          })
+        )
+      }}
+      updateSelectedSDInstanceUIDs={(selectedSDInstanceUIDs: string[]) => {
+        setDefinitionModel((definitionModel) =>
+          produce(definitionModel, (draftDefinitionModel) => {
+            draftDefinitionModel.selectedSDInstanceUIDs = selectedSDInstanceUIDs
+          })
+        )
+      }}
     />
   )
 }

@@ -1,9 +1,10 @@
 import React from 'react'
-import { FormControl, Grid, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material'
+import { FormControl, Grid } from '@mui/material'
 import { LogicalOperationNodeType } from '../editable-tree/EditableTree'
 import ModalBase from '../../../../page-independent-components/mui-based/ModalBase'
 import { ConsumerFunction } from '../../../../util'
 import NiceModal, { useModal } from '@ebay/nice-modal-react'
+import StandardSingleSelect from '../../../../page-independent-components/mui-based/StandardSingleSelect'
 
 interface SelectLogicalOperationTypeModalProps {
   onLogicalOperationTypeSelection: ConsumerFunction<LogicalOperationNodeType>
@@ -16,20 +17,28 @@ export default NiceModal.create<SelectLogicalOperationTypeModalProps>((props) =>
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={8.8}>
           <FormControl fullWidth>
-            <InputLabel id="select-field-label">Logical operation type</InputLabel>
-            <Select
-              labelId="select-field-label"
-              value=""
-              label="Logical operation type"
-              onChange={(e: SelectChangeEvent<LogicalOperationNodeType>) => {
-                props.onLogicalOperationTypeSelection(e.target.value as LogicalOperationNodeType)
+            <StandardSingleSelect
+              title="Logical operation type"
+              allSelectionSubjects={[
+                {
+                  id: LogicalOperationNodeType.AND,
+                  name: LogicalOperationNodeType.AND
+                },
+                {
+                  id: LogicalOperationNodeType.OR,
+                  name: LogicalOperationNodeType.OR
+                },
+                {
+                  id: LogicalOperationNodeType.NOR,
+                  name: LogicalOperationNodeType.NOR
+                }
+              ]}
+              selectedSelectionSubjectID=""
+              onChange={(selectedSelectionSubjectID) => {
+                props.onLogicalOperationTypeSelection(selectedSelectionSubjectID as LogicalOperationNodeType)
                 remove()
               }}
-            >
-              <MenuItem value={LogicalOperationNodeType.AND}>AND</MenuItem>
-              <MenuItem value={LogicalOperationNodeType.OR}>OR</MenuItem>
-              <MenuItem value={LogicalOperationNodeType.NOR}>NOR</MenuItem>
-            </Select>
+            />
           </FormControl>
         </Grid>
       </Grid>
