@@ -24,13 +24,13 @@ export type EditableTreeConfiguration = {
 }
 
 export const editableTreeConfiguration: EditableTreeConfiguration = {
-  siblingSeparation: 1,
+  siblingSeparation: 0.8,
   nonSiblingSeparation: 1,
   sizeConfiguration: {
     graphOffsetOnXAxisInPixels: 0,
     graphOffsetOnYAxisInPixels: 0,
     nodeWidthInPixels: 350,
-    nodeHeightInPixels: 140,
+    nodeHeightInPixels: 200,
     foreignObjectOffsetOnXAxisInPixels: -125,
     foreignObjectOffsetOnYAxisInPixels: -40,
     foreignObjectWidthInPixels: 250,
@@ -205,7 +205,7 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
   }, [width, height, treeShown, props.editableTreeNodeData])
 
   return (
-    <div ref={ref} className="h-[600px] w-full border-2 border-[#8f8f8f]">
+    <div ref={ref} className="h-[800px] w-full border-2 border-[#8f8f8f]">
       {treeShown && (
         <Tree
           data={props.editableTreeNodeData}
