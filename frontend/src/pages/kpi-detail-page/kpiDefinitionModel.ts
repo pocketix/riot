@@ -258,16 +258,16 @@ const editableTreeNodeDataModelToKpiNodeInput = (
 
 const editableTreeNodeDataModelToKpiNodeInputs = (editableTreeNodeDataModel: EditableTreeNodeDataModel): KpiNodeInput[] => {
   const sequentialNumberGenerator = new SequentialNumberGenerator(1)
-  const rootKPINodeInput: KpiNodeInput | null = editableTreeNodeDataModelToKpiNodeInput(editableTreeNodeDataModel, sequentialNumberGenerator)
-  if (!rootKPINodeInput) {
-    return []
+  const processNode = (node: EditableTreeNodeDataModel, parentNodeId?: string) => {
+    const kpiNodeInput = editableTreeNodeDataModelToKpiNodeInput(node, sequentialNumberGenerator, parentNodeId)
+    if (kpiNodeInput) {
+      kpiNodeInputs.push(kpiNodeInput)
+      node.children.forEach((child) => processNode(child, kpiNodeInput.id))
+    }
   }
-  const kpiNodeInputs: KpiNodeInput[] = [rootKPINodeInput]
-  const rootKPINodeInputID = rootKPINodeInput.id
-  const childKPINodeInputs = editableTreeNodeDataModel.children
-    .map((child) => editableTreeNodeDataModelToKpiNodeInput(child, sequentialNumberGenerator, rootKPINodeInputID))
-    .filter((kpiNodeInput) => !!kpiNodeInput)
-  return kpiNodeInputs.concat(childKPINodeInputs)
+  let kpiNodeInputs: KpiNodeInput[] = []
+  processNode(editableTreeNodeDataModel)
+  return kpiNodeInputs
 }
 
 export const kpiDefinitionModelToKPIDefinitionInput = (kpiDefinitionModel: KPIDefinitionModel, sdTypeID: string, sdTypeSpecification: string): KpiDefinitionInput => {
