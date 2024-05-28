@@ -18,10 +18,15 @@ var (
 )
 
 func checkKPIFulfilmentThenEnqueueResult(sdInstanceUID string, sdParameters any, kpiDefinition sharedModel.KPIDefinition) {
+	kpiFulfillmentCheckResult := processing.CheckKPIFulfillment(kpiDefinition, &sdParameters)
+	if kpiFulfillmentCheckResult.IsFailure() {
+		log.Printf("Failed to check KPI fulfillment: %s\n", kpiFulfillmentCheckResult.GetError().Error())
+		return
+	}
 	kpiFulfillmentCheckResultISCMessage := sharedModel.KPIFulfillmentCheckResultISCMessage{ // TODO: Consider employing the timestamp...
 		SDInstanceUID:   sdInstanceUID,
 		KPIDefinitionID: sharedUtils.NewOptionalFromPointer(kpiDefinition.ID).GetPayload(),
-		Fulfilled:       processing.CheckKPIFulfillment(kpiDefinition, &sdParameters),
+		Fulfilled:       kpiFulfillmentCheckResult.GetPayload(),
 	}
 	jsonSerializationResult := sharedUtils.SerializeToJSON(kpiFulfillmentCheckResultISCMessage)
 	if jsonSerializationResult.IsFailure() {
