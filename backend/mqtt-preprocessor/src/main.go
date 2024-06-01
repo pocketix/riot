@@ -97,7 +97,7 @@ func generateKPIFulfillmentCheckRequest(uid string, sdType string, parameters an
 	if jsonSerializationResult.IsFailure() {
 		log.Println("Failed to serialize the object representing a KPI fulfillment check request into JSON")
 	}
-	err := rabbitMQClient.EnqueueJSONMessage(sharedConstants.KPIFulfillmentCheckRequestsQueueName, jsonSerializationResult.GetPayload())
+	err := rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.KPIFulfillmentCheckRequestsQueueName), jsonSerializationResult.GetPayload())
 	if err != nil {
 		log.Println("Failed to publish a KPI fulfillment check request message") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
 		return
@@ -115,7 +115,7 @@ func generateSDInstanceRegistrationRequest(uid string, sdType string, timestamp 
 	if jsonSerializationResult.IsFailure() {
 		log.Println("Failed to serialize the object representing a SD instance registration request into JSON")
 	}
-	err := rabbitMQClient.EnqueueJSONMessage(sharedConstants.SDInstanceRegistrationRequestsQueueName, jsonSerializationResult.GetPayload())
+	err := rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.SDInstanceRegistrationRequestsQueueName), jsonSerializationResult.GetPayload())
 	if err != nil {
 		log.Println("Failed to publish a SD instance registration request message") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
 		return

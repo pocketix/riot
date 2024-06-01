@@ -6,6 +6,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-message-processing-unit/src/processing"
+	"github.com/google/uuid"
 	"log"
 	"sync"
 	"time"
@@ -15,6 +16,7 @@ var (
 	rabbitMQClient                           rabbitmq.Client
 	kpiDefinitionsBySDTypeDenotationMap      map[string][]sharedModel.KPIDefinition
 	kpiDefinitionsBySDTypeDenotationMapMutex sync.Mutex
+	unitUUID                                 string
 )
 
 func checkKPIFulfilmentThenEnqueueResult(sdInstanceUID string, sdParameters any, kpiDefinition sharedModel.KPIDefinition) {
@@ -33,7 +35,7 @@ func checkKPIFulfilmentThenEnqueueResult(sdInstanceUID string, sdParameters any,
 		log.Println("Failed to serialize the object representing a KPI fulfillment check result into JSON")
 		return
 	}
-	if err := rabbitMQClient.EnqueueJSONMessage(sharedConstants.KPIFulfillmentCheckResultsQueueName, jsonSerializationResult.GetPayload()); err != nil {
+	if err := rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.KPIFulfillmentCheckResultsQueueName), jsonSerializationResult.GetPayload()); err != nil {
 		log.Println("Failed to publish a KPI fulfillment check result message")
 	}
 }
@@ -64,19 +66,21 @@ func checkForKPIFulfilmentCheckRequests() {
 }
 
 func checkForKPIDefinitionsBySDTypeDenotationMapUpdates() {
-	err := rabbitmq.ConsumeJSONMessages[sharedModel.KPIConfigurationUpdateISCMessage](rabbitMQClient, sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates, func(messagePayload sharedModel.KPIConfigurationUpdateISCMessage) error {
+	err := rabbitmq.ConsumeJSONMessagesFromFanoutExchange[sharedModel.KPIConfigurationUpdateISCMessage](rabbitMQClient, sharedConstants.MainFanoutExchangeName, func(messagePayload sharedModel.KPIConfigurationUpdateISCMessage) error {
+		log.Printf("KPI definitions by SD type denotation map update reached unit %s\n", unitUUID)
 		kpiDefinitionsBySDTypeDenotationMapMutex.Lock()
 		kpiDefinitionsBySDTypeDenotationMap = messagePayload
 		kpiDefinitionsBySDTypeDenotationMapMutex.Unlock()
 		return nil
 	})
 	if err != nil {
-		log.Printf("Consumption of messages from the '%s' queue has failed: %s\n", sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates, err.Error())
+		log.Printf("Consumption of messages from the '%s' fanout exchange has failed: %s\n", sharedConstants.MainFanoutExchangeName, err.Error())
 	}
 }
 
 func main() {
 	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf("sfpdfsd-backend-core", 9090)), "Some dependencies of this application are inaccessible")
+	unitUUID = uuid.New().String()
 	rabbitMQClient = rabbitmq.NewClient()
 	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
 	sharedUtils.WaitForAll(checkForKPIDefinitionsBySDTypeDenotationMapUpdates, checkForKPIFulfilmentCheckRequests)

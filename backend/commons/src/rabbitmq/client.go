@@ -2,7 +2,6 @@ package rabbitmq
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -16,8 +15,10 @@ const (
 )
 
 type Client interface {
-	EnqueueJSONMessage(queueName string, messagePayload []byte) error
-	DeclareStandardQueue(queueName string) error
+	GetChannel() *amqp.Channel
+	PublishJSONMessage(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte) error
+	DeclareQueue(queueName string) error
+	DeclareExchange(exchangeName string, exchangeType ExchangeType) error
 	SetupMessageConsumption(queueName string, messageConsumerFunction func(message amqp.Delivery) error) error
 	Dispose()
 }
@@ -35,18 +36,35 @@ func NewClient() Client {
 	return &ClientImpl{connection: connection, channel: channel}
 }
 
-func (r *ClientImpl) EnqueueJSONMessage(queueName string, messagePayload []byte) error {
+func (r *ClientImpl) GetChannel() *amqp.Channel {
+	return r.channel
+}
+
+func (r *ClientImpl) PublishJSONMessage(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte) error {
 	ctx, cancelFunction := context.WithTimeout(context.Background(), contextTimeoutInSeconds*time.Second)
 	defer cancelFunction()
-	return r.channel.PublishWithContext(ctx, "", queueName, false, false, amqp.Publishing{
+	return r.channel.PublishWithContext(ctx, exchangeNameOptional.GetPayloadOrDefault(""), routingKeyOptional.GetPayloadOrDefault(""), false, false, amqp.Publishing{
 		ContentType: mimeTypeOfJSONData,
 		Body:        messagePayload,
 	})
 }
 
-func (r *ClientImpl) DeclareStandardQueue(queueName string) error {
+func (r *ClientImpl) DeclareQueue(queueName string) error {
 	_, err := r.channel.QueueDeclare(queueName, false, false, false, false, nil)
 	return err
+}
+
+type ExchangeType string
+
+const (
+	Direct  ExchangeType = "direct"
+	Fanout  ExchangeType = "fanout"
+	Topic   ExchangeType = "topic"
+	Headers ExchangeType = "headers"
+)
+
+func (r *ClientImpl) DeclareExchange(exchangeName string, exchangeType ExchangeType) error {
+	return r.channel.ExchangeDeclare(exchangeName, string(exchangeType), false, false, false, false, nil)
 }
 
 func (r *ClientImpl) SetupMessageConsumption(queueName string, messageConsumerFunction func(message amqp.Delivery) error) error {
@@ -77,7 +95,7 @@ func ConsumeJSONMessages[T any](c Client, queueName string, messagePayloadConsum
 	return c.SetupMessageConsumption(queueName, func(message amqp.Delivery) error {
 		messageContentType := message.ContentType
 		if messageContentType != mimeTypeOfJSONData {
-			return errors.New(fmt.Sprintf("Incorrect message content type: %s", messageContentType))
+			return fmt.Errorf("incorrect message content type: %s", messageContentType)
 		}
 		jsonDeserializationResult := sharedUtils.DeserializeFromJSON[T](message.Body)
 		if jsonDeserializationResult.IsFailure() {
@@ -85,4 +103,16 @@ func ConsumeJSONMessages[T any](c Client, queueName string, messagePayloadConsum
 		}
 		return messagePayloadConsumerFunction(jsonDeserializationResult.GetPayload())
 	})
+}
+
+func ConsumeJSONMessagesFromFanoutExchange[T any](c Client, fanoutExchangeName string, messagePayloadConsumerFunction func(messagePayload T) error) error {
+	queue, err := c.GetChannel().QueueDeclare("", false, false, true, false, nil)
+	if err != nil {
+		return err
+	}
+	queueName := queue.Name
+	if err := c.GetChannel().QueueBind(queueName, "", fanoutExchangeName, false, nil); err != nil {
+		return err
+	}
+	return ConsumeJSONMessages[T](c, queueName, messagePayloadConsumerFunction)
 }

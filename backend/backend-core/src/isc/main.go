@@ -74,7 +74,7 @@ func EnqueueMessageRepresentingCurrentSDTypeConfiguration() {
 		if sdTypeDenotationsJSONSerializationResult.IsFailure() {
 			return sdTypeDenotationsJSONSerializationResult.GetError()
 		}
-		return getRabbitMQClient().EnqueueJSONMessage(sharedConstants.SetOfSDTypesUpdatesQueueName, sdTypeDenotationsJSONSerializationResult.GetPayload())
+		return getRabbitMQClient().PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.SetOfSDTypesUpdatesQueueName), sdTypeDenotationsJSONSerializationResult.GetPayload())
 	}(), "[ISC] Failed to enqueue RabbitMQ messages representing current SD type configuration")
 }
 
@@ -94,7 +94,7 @@ func EnqueueMessageRepresentingCurrentSDInstanceConfiguration() {
 		if sdInstancesInfoJSONSerializationResult.IsFailure() {
 			return sdInstancesInfoJSONSerializationResult.GetError()
 		}
-		return getRabbitMQClient().EnqueueJSONMessage(sharedConstants.SetOfSDInstancesUpdatesQueueName, sdInstancesInfoJSONSerializationResult.GetPayload())
+		return getRabbitMQClient().PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.SetOfSDInstancesUpdatesQueueName), sdInstancesInfoJSONSerializationResult.GetPayload())
 	}(), "[ISC] Failed to enqueue RabbitMQ messages representing current SD instance configuration")
 }
 
@@ -117,7 +117,7 @@ func EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration() {
 		if jsonSerializationResult.IsFailure() {
 			return jsonSerializationResult.GetError()
 		}
-		return getRabbitMQClient().EnqueueJSONMessage(sharedConstants.KPIDefinitionsBySDTypeDenotationMapUpdates, jsonSerializationResult.GetPayload())
+		return getRabbitMQClient().PublishJSONMessage(sharedUtils.NewOptionalOf(sharedConstants.MainFanoutExchangeName), sharedUtils.NewEmptyOptional[string](), jsonSerializationResult.GetPayload())
 	}(), "[ISC] Failed to enqueue RabbitMQ messages representing current KPI definition configuration")
 }
 
