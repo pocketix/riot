@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import GenericCardTemplate from '../../../page-independent-components/GenericCardTemplate'
 import { Button } from '@mui/material'
 import { AsynchronousBiConsumerFunction, AsynchronousConsumerFunction } from '../../../util'
-import { SdInstancesPageDataQuery } from '../../../generated/graphql'
+import { SdInstanceMode, SdInstancesPageDataQuery } from '../../../generated/graphql'
 import KPIFulfillmentCheckResultSection, { KPIFulfillmentState } from '../../../page-independent-components/KPIFulfillmentCheckResultSection'
 import MUIBasedTextField, { MUIBasedTextFieldType } from '../../../page-independent-components/mui-based/MUIBasedTextField'
 
@@ -26,8 +26,10 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
   }, [props.sdInstancePageData.kpiFulfillmentCheckResults, props.id])
 
   const kpiDefinitions = useMemo(() => {
-    return props.sdInstancePageData.kpiDefinitions.filter((kpiDefinition) => kpiDefinition.sdTypeID === props.sdTypeID)
-  }, [props.sdInstancePageData.kpiDefinitions, props.sdTypeDenotation])
+    return props.sdInstancePageData.kpiDefinitions.filter((kpiDefinition) => {
+      return kpiDefinition.sdTypeID === props.sdTypeID && (kpiDefinition.sdInstanceMode === SdInstanceMode.All || kpiDefinition.selectedSDInstanceUIDs.indexOf(props.uid) !== -1)
+    })
+  }, [props.sdInstancePageData.kpiDefinitions, props.sdTypeID, props.uid])
 
   const displayFulfillmentCheckResultSection = useMemo(() => props.confirmedByUser && kpiDefinitions.length > 0, [props.confirmedByUser, kpiDefinitions])
 

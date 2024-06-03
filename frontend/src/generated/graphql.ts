@@ -410,12 +410,12 @@ export type RestOfKpiDefinitionDetailPageDataQuery = { __typename?: 'Query', sdT
 export type SdInstanceGroupsPageDataQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdInstanceGroupsPageDataQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string } }>, sdInstanceGroups: Array<{ __typename?: 'SDInstanceGroup', id: string, userIdentifier: string, sdInstanceIDs: Array<string> }>, kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeID: string }>, kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: string, sdInstanceID: string, fulfilled: boolean }> };
+export type SdInstanceGroupsPageDataQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string } }>, sdInstanceGroups: Array<{ __typename?: 'SDInstanceGroup', id: string, userIdentifier: string, sdInstanceIDs: Array<string> }>, kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeID: string, sdInstanceMode: SdInstanceMode, selectedSDInstanceUIDs: Array<string> }>, kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: string, sdInstanceID: string, fulfilled: boolean }> };
 
 export type SdInstancesPageDataQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdInstancesPageDataQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }>, kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: string, sdInstanceID: string, fulfilled: boolean }>, kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeID: string }> };
+export type SdInstancesPageDataQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }>, kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: string, sdInstanceID: string, fulfilled: boolean }>, kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: string, userIdentifier: string, sdTypeID: string, sdInstanceMode: SdInstanceMode, selectedSDInstanceUIDs: Array<string> }> };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 

@@ -18,5 +18,7 @@ query SDInstancesPageData {
     id
     userIdentifier
     sdTypeID
+    sdInstanceMode
+    selectedSDInstanceUIDs
   }
 }

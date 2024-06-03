@@ -10,6 +10,7 @@ import {
   OnKpiFulfillmentCheckedSubscriptionVariables,
   SdInstanceGroupsPageDataQuery,
   SdInstanceGroupsPageDataQueryVariables,
+  SdInstanceMode,
   UpdateSdInstanceGroupMutation,
   UpdateSdInstanceGroupMutationVariables
 } from '../../generated/graphql'
@@ -213,7 +214,16 @@ const SDInstanceGroupsPageController: React.FC = () => {
     )
     const finalSDInstanceGroupsPageData: SDInstanceGroupData[] = data.sdInstanceGroups.map((sdInstanceGroup) => {
       const sdTypeIDs = data.sdInstances.filter((s) => sdInstanceGroup.sdInstanceIDs.some((sdInstanceID) => sdInstanceID === s.id)).map((s) => s.type.id)
-      const kpiDefinitions = data.kpiDefinitions.filter((k) => sdTypeIDs.some((sdTypeID) => sdTypeID === k.sdTypeID))
+      const kpiDefinitions = data.kpiDefinitions.filter((kpiDefinition) => {
+        const correspondingSDType = sdTypeIDs.indexOf(kpiDefinition.sdTypeID) !== -1
+        data.sdInstances.filter((sdInstance) => sdInstanceGroup.sdInstanceIDs.indexOf(sdInstance.id) !== -1)
+        const sdInstanceUIDIntersection = data.sdInstances
+          .filter((sdInstance) => sdInstanceGroup.sdInstanceIDs.indexOf(sdInstance.id) !== -1)
+          .map((sdInstance) => sdInstance.uid)
+          .some((sdInstanceUID) => kpiDefinition.selectedSDInstanceUIDs.indexOf(sdInstanceUID) !== -1)
+        const atLeastOneCorrespondingSDInstanceInGroup = kpiDefinition.sdInstanceMode === SdInstanceMode.All || sdInstanceUIDIntersection
+        return correspondingSDType && atLeastOneCorrespondingSDInstanceInGroup
+      })
       const kpiFulfillmentStateByKPIDefinitionIDMap: { [key: string]: KPIFulfillmentState } = kpiDefinitions.reduce(
         (map, { id }) => ({
           ...map,

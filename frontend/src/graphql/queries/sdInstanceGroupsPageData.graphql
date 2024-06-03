@@ -1,6 +1,7 @@
 query SDInstanceGroupsPageData {
     sdInstances {
         id
+        uid
         confirmedByUser
         userIdentifier
         type {
@@ -16,6 +17,8 @@ query SDInstanceGroupsPageData {
         id
         userIdentifier
         sdTypeID
+        sdInstanceMode
+        selectedSDInstanceUIDs
     }
     kpiFulfillmentCheckResults {
         kpiDefinitionID
