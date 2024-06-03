@@ -44,6 +44,7 @@ func checkForKPIFulfilmentCheckRequests() {
 	err := rabbitmq.ConsumeJSONMessages[sharedModel.KPIFulfillmentCheckRequestISCMessage](rabbitMQClient, sharedConstants.KPIFulfillmentCheckRequestsQueueName, func(messagePayload sharedModel.KPIFulfillmentCheckRequestISCMessage) error {
 		kpiDefinitionsBySDTypeDenotationMapMutex.Lock()
 		kpiDefinitions := kpiDefinitionsBySDTypeDenotationMap[messagePayload.SDTypeSpecification]
+		log.Printf("%d KPI definitions found for the SD type '%s'\n", len(kpiDefinitions), messagePayload.SDTypeSpecification)
 		kpiDefinitionsBySDTypeDenotationMapMutex.Unlock()
 		sdInstanceUID := messagePayload.SDInstanceUID
 		kpiDefinitions = sharedUtils.Filter(kpiDefinitions, func(kpiDefinition sharedModel.KPIDefinition) bool {
@@ -79,7 +80,9 @@ func checkForKPIDefinitionsBySDTypeDenotationMapUpdates() {
 }
 
 func main() {
+	log.Println("Waiting for backend-core...")
 	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf("sfpdfsd-backend-core", 9090)), "Some dependencies of this application are inaccessible")
+	log.Println("backend-core should be up and running...")
 	unitUUID = uuid.New().String()
 	rabbitMQClient = rabbitmq.NewClient()
 	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)

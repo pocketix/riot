@@ -73,7 +73,7 @@ if __name__ == '__main__':
     sd_instance_mode = args.sd_instance_mode
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.username_pw_set("admin", "password")
-    client.connect("localhost", 1883)
+    client.connect("host.docker.internal", 1883)
     client.loop_start()
     print(f"Starting the stress test of bp-bures-SfPDfSD... {messages_per_second} MQTT message(s) per second")
     message_counter = 0

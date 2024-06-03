@@ -69,7 +69,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 	db, err := gorm.Open(postgres.Open(dsn), new(gorm.Config))
 	sharedUtils.TerminateOnError(err, "[RDB client (GORM)]: couldn't connect to the database")
 	session := new(gorm.Session)
-	session.Logger = logger.Default.LogMode(logger.Info)
+	session.Logger = logger.Default.LogMode(logger.Warn)
 	r.db = db.Session(session)
 	sharedUtils.TerminateOnError(r.db.AutoMigrate(
 		new(dbModel.KPIDefinitionEntity),
