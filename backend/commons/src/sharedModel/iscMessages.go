@@ -29,3 +29,5 @@ type SDInstanceInfo struct {
 type SDInstanceConfigurationUpdateISCMessage []SDInstanceInfo
 
 type KPIConfigurationUpdateISCMessage map[string][]KPIDefinition
+
+type MessageProcessingUnitConnectionNotification struct{}

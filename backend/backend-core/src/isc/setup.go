@@ -13,7 +13,7 @@ func getQueueDeclarationErrorMessage(queueName string) string {
 
 func SetupRabbitMQInfrastructureForISC() {
 	sharedUtils.TerminateOnError(getRabbitMQClient().DeclareExchange(sharedConstants.MainFanoutExchangeName, rabbitmq.Fanout), fmt.Sprintf("[ISC setup] Failed to declare the %s exchange", sharedConstants.MainFanoutExchangeName))
-	namesOfQueuesToDeclare := sharedUtils.SliceOf[string](sharedConstants.KPIFulfillmentCheckResultsQueueName, sharedConstants.KPIFulfillmentCheckRequestsQueueName, sharedConstants.SDInstanceRegistrationRequestsQueueName, sharedConstants.SetOfSDTypesUpdatesQueueName, sharedConstants.SetOfSDInstancesUpdatesQueueName)
+	namesOfQueuesToDeclare := sharedUtils.SliceOf[string](sharedConstants.KPIFulfillmentCheckResultsQueueName, sharedConstants.KPIFulfillmentCheckRequestsQueueName, sharedConstants.SDInstanceRegistrationRequestsQueueName, sharedConstants.SetOfSDTypesUpdatesQueueName, sharedConstants.SetOfSDInstancesUpdatesQueueName, sharedConstants.MessageProcessingUnitConnectionNotificationsQueue)
 	sharedUtils.ForEach(namesOfQueuesToDeclare, func(nameOfQueuesToDeclare string) {
 		sharedUtils.TerminateOnError(getRabbitMQClient().DeclareQueue(nameOfQueuesToDeclare), getQueueDeclarationErrorMessage(nameOfQueuesToDeclare))
 	})

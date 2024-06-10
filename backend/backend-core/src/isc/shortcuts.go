@@ -8,6 +8,12 @@ import (
 	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
 )
 
+func consumeMessageProcessingUnitConnectionNotificationJSONMessages(messageProcessingUnitConnectionNotificationConsumerFunction func(messageProcessingUnitConnectionNotification sharedModel.MessageProcessingUnitConnectionNotification) error) {
+	err := rabbitmq.ConsumeJSONMessages[sharedModel.MessageProcessingUnitConnectionNotification](getRabbitMQClient(), sharedConstants.MessageProcessingUnitConnectionNotificationsQueue, messageProcessingUnitConnectionNotificationConsumerFunction)
+	errorMessage := fmt.Sprintf("[ISC] Consumption of messages from the '%s' queue has failed", sharedConstants.MessageProcessingUnitConnectionNotificationsQueue)
+	sharedUtils.TerminateOnError(err, errorMessage)
+}
+
 func consumeSDInstanceRegistrationRequestJSONMessages(sdInstanceRegistrationRequestConsumerFunction func(sdInstanceRegistrationRequest sharedModel.SDInstanceRegistrationRequestISCMessage) error) {
 	err := rabbitmq.ConsumeJSONMessages[sharedModel.SDInstanceRegistrationRequestISCMessage](getRabbitMQClient(), sharedConstants.SDInstanceRegistrationRequestsQueueName, sdInstanceRegistrationRequestConsumerFunction)
 	errorMessage := fmt.Sprintf("[ISC] Consumption of messages from the '%s' queue has failed", sharedConstants.SDInstanceRegistrationRequestsQueueName)

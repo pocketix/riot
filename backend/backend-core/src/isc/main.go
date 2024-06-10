@@ -26,6 +26,13 @@ func getRabbitMQClient() rabbitmq.Client {
 	return rabbitMQClient
 }
 
+func ProcessIncomingMessageProcessingUnitConnectionNotifications() {
+	consumeMessageProcessingUnitConnectionNotificationJSONMessages(func(_ sharedModel.MessageProcessingUnitConnectionNotification) error {
+		EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration()
+		return nil
+	})
+}
+
 func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceGraphQLSubscriptionChannel *chan graphQLModel.SDInstance) {
 	consumeSDInstanceRegistrationRequestJSONMessages(func(sdInstanceRegistrationRequestISCMessage sharedModel.SDInstanceRegistrationRequestISCMessage) error {
 		newSDInstanceUID := sdInstanceRegistrationRequestISCMessage.SDInstanceUID

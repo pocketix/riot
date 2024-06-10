@@ -14,21 +14,11 @@ func waitForDependencies() {
 	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, rabbitMQ, postgreSQL), "Some dependencies of this application are inaccessible")
 }
 
-func setupISC() {
+func kickstartISC() {
 	isc.SetupRabbitMQInfrastructureForISC()
-	isc.EnqueueMessagesRepresentingCurrentSystemConfiguration()
-	// Making sure that instances of 'Message processing units' are working with up-to-date KPI definition per SD type mapping...
-	// TODO: Consider coming up with a cleaner, more conceptually sound solution...
-	go func() {
-		ticker := time.NewTicker(3 * time.Second)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				isc.EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration()
-			}
-		}
-	}()
+	isc.EnqueueMessageRepresentingCurrentSDTypeConfiguration()
+	isc.EnqueueMessageRepresentingCurrentSDInstanceConfiguration()
+	go isc.ProcessIncomingMessageProcessingUnitConnectionNotifications()
 	go isc.ProcessIncomingSDInstanceRegistrationRequests(&graphql.SDInstanceGraphQLSubscriptionChannel)
 	go isc.ProcessIncomingKPIFulfillmentCheckResults(&graphql.KPIFulfillmentCheckResultGraphQLSubscriptionChannel)
 }
@@ -38,6 +28,6 @@ func main() {
 	waitForDependencies()
 	log.Println("Dependencies ready...")
 	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
-	setupISC()
+	kickstartISC()
 	graphql.SetupGraphQLServer()
 }

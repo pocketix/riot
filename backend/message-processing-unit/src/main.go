@@ -67,6 +67,12 @@ func checkForKPIFulfilmentCheckRequests() {
 }
 
 func checkForKPIDefinitionsBySDTypeDenotationMapUpdates() {
+	go func(rabbitMQClient rabbitmq.Client) {
+		time.Sleep(time.Second)
+		if err := rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.MessageProcessingUnitConnectionNotificationsQueue), []byte("{}")); err != nil {
+			log.Printf("Failed to publish the message processing unit connection notification message to the %s queue: %s\n", sharedConstants.MessageProcessingUnitConnectionNotificationsQueue, err.Error())
+		}
+	}(rabbitMQClient)
 	err := rabbitmq.ConsumeJSONMessagesFromFanoutExchange[sharedModel.KPIConfigurationUpdateISCMessage](rabbitMQClient, sharedConstants.MainFanoutExchangeName, func(messagePayload sharedModel.KPIConfigurationUpdateISCMessage) error {
 		log.Printf("KPI definitions by SD type denotation map update reached unit %s\n", unitUUID)
 		kpiDefinitionsBySDTypeDenotationMapMutex.Lock()
