@@ -1,13 +1,13 @@
-module github.com/MichalBures-OG/bp-bures-SfPDfSD-MQTT-preprocessor
+module github.com/MichalBures-OG/bp-bures-RIoT-MQTT-preprocessor
 
 go 1.22
 
 require (
-	github.com/MichalBures-OG/bp-bures-SfPDfSD-commons v0.0.0-00010101000000-000000000000
+	github.com/MichalBures-OG/bp-bures-RIoT-commons v0.0.0-00010101000000-000000000000
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 )
 
-replace github.com/MichalBures-OG/bp-bures-SfPDfSD-commons => ./../commons
+replace github.com/MichalBures-OG/bp-bures-RIoT-commons => ./../commons
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

@@ -1,5 +1,5 @@
 {
-  "name": "bp-bures-sfpdfsd-frontend",
+  "name": "bp-bures-riot-frontend",
   "source": "src/index.html",
   "browserslist": "> 0.5%, last 2 versions, not dead",
   "scripts": {

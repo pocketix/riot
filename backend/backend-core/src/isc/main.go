@@ -3,14 +3,14 @@ package isc
 import (
 	"errors"
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbClient"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/modelMapping/dll2gql"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/modelMapping/dll2gql"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"sync"
 )
 

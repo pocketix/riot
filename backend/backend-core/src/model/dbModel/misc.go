@@ -2,8 +2,8 @@ package dbModel
 
 import (
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/db/dbUtil"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbUtil"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"gorm.io/gorm"
 )
 

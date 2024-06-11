@@ -2,16 +2,16 @@ version: '2'
 
 services:
 
-  sfpdfsd-frontend:
+  riot-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     depends_on:
-        - sfpdfsd-backend-core
+        - riot-backend-core
     ports:
         - "8080:80"
 
-  sfpdfsd-backend-core:
+  riot-backend-core:
     build:
       context: ./backend
       dockerfile: backend-core/Dockerfile
@@ -23,24 +23,24 @@ services:
     #cpu_quota: 1000 # 1% of a single CPU core
     #mem_limit: 32m # 32 MB of RAM
 
-  sfpdfsd-message-processing-unit:
+  riot-message-processing-unit:
     build:
       context: ./backend
       dockerfile: message-processing-unit/Dockerfile
     depends_on:
       - rabbitmq
-      - sfpdfsd-backend-core # 'Backend-core' has to set up the 'RabbitMQ infrastructure'
+      - riot-backend-core # 'Backend-core' has to set up the 'RabbitMQ infrastructure'
     #cpu_quota: 1000 # 1% of a single CPU core
     #mem_limit: 32m # 32 MB of RAM
 
-  sfpdfsd-mqtt-preprocessor:
+  riot-mqtt-preprocessor:
     build:
       context: ./backend
       dockerfile: mqtt-preprocessor/Dockerfile
     depends_on:
       - rabbitmq
       - mosquitto # TODO: Consider getting rid of this 'dependency' (by adding a full-fledged MQTT configuration)
-      - sfpdfsd-backend-core # 'Backend-core' has to set up the 'RabbitMQ infrastructure'
+      - riot-backend-core # 'Backend-core' has to set up the 'RabbitMQ infrastructure'
     #cpu_quota: 1000 # 1% of a single CPU core
     #mem_limit: 32m # 32 MB of RAM
 

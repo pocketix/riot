@@ -1,5 +1,6 @@
-# System for Processing Data from Smart Devices
-a Bachelor thesis project of Michal Bureš
+# RIoT
+- Information system for **R**eal-time **IoT** data processing and state monitoring through user-defined criteria – KPIs
+- a Bachelor thesis project of Michal Bureš, made at BUT FIT
 
 ## Prerequisites
 
@@ -42,12 +43,12 @@ docker-compose up --build -d
 #### Start multiple instances of 'Message processing unit'
 
 To start multiple instance of 'Message processing unit', one uses the parameter `--scale` together with the service
-identifier `sfpdfsd-message-processing-unit` and number of instances he plans to start. The following command can be used
+identifier `riot-message-processing-unit` and number of instances he plans to start. The following command can be used
 to start the system in configuration 1-3-1: 1 instance of '**Backend core**', 3 instances of '**Message processing unit**' and 1 instance
 of '**MQTT preprocessor**'.
 
 ```shell
-docker-compose up --build -d --scale sfpdfsd-message-processing-unit=3
+docker-compose up --build -d --scale riot-message-processing-unit=3
 ```
 
 Notice: For this to benefit the system performance characteristics, one has to simulate the deployment of '**Message processing unit**' instance onto separate nodes (machines) using a resource-constrained containers.

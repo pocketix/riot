@@ -1,8 +1,8 @@
 package dll2db
 
 import (
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dbModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dbModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 )
 
 func ToDBModelEntitiesKPIDefinition(kpiDefinition sharedModel.KPIDefinition) (*dbModel.KPINodeEntity, []*dbModel.KPINodeEntity, []dbModel.LogicalOperationKPINodeEntity, []dbModel.AtomKPINodeEntity) {

@@ -14,7 +14,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -467,7 +467,7 @@ func (ec *executionContext) field_Mutation_createKPIDefinition_args(ctx context.
 	var arg0 graphQLModel.KPIDefinitionInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNKPIDefinitionInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinitionInput(ctx, tmp)
+		arg0, err = ec.unmarshalNKPIDefinitionInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinitionInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -482,7 +482,7 @@ func (ec *executionContext) field_Mutation_createSDInstanceGroup_args(ctx contex
 	var arg0 graphQLModel.SDInstanceGroupInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNSDInstanceGroupInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroupInput(ctx, tmp)
+		arg0, err = ec.unmarshalNSDInstanceGroupInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroupInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -497,7 +497,7 @@ func (ec *executionContext) field_Mutation_createSDType_args(ctx context.Context
 	var arg0 graphQLModel.SDTypeInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNSDTypeInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDTypeInput(ctx, tmp)
+		arg0, err = ec.unmarshalNSDTypeInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDTypeInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -566,7 +566,7 @@ func (ec *executionContext) field_Mutation_updateKPIDefinition_args(ctx context.
 	var arg1 graphQLModel.KPIDefinitionInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNKPIDefinitionInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinitionInput(ctx, tmp)
+		arg1, err = ec.unmarshalNKPIDefinitionInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinitionInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -590,7 +590,7 @@ func (ec *executionContext) field_Mutation_updateSDInstanceGroup_args(ctx contex
 	var arg1 graphQLModel.SDInstanceGroupInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNSDInstanceGroupInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroupInput(ctx, tmp)
+		arg1, err = ec.unmarshalNSDInstanceGroupInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroupInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -614,7 +614,7 @@ func (ec *executionContext) field_Mutation_updateSDInstance_args(ctx context.Con
 	var arg1 graphQLModel.SDInstanceUpdateInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNSDInstanceUpdateInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceUpdateInput(ctx, tmp)
+		arg1, err = ec.unmarshalNSDInstanceUpdateInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -834,7 +834,7 @@ func (ec *executionContext) _BooleanEQAtomKPINode_nodeType(ctx context.Context, 
 	}
 	res := resTmp.(graphQLModel.KPINodeType)
 	fc.Result = res
-	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
+	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_BooleanEQAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1186,7 +1186,7 @@ func (ec *executionContext) _KPIDefinition_nodes(ctx context.Context, field grap
 	}
 	res := resTmp.([]graphQLModel.KPINode)
 	fc.Result = res
-	return ec.marshalNKPINode2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeᚄ(ctx, field.Selections, res)
+	return ec.marshalNKPINode2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_KPIDefinition_nodes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1230,7 +1230,7 @@ func (ec *executionContext) _KPIDefinition_sdInstanceMode(ctx context.Context, f
 	}
 	res := resTmp.(graphQLModel.SDInstanceMode)
 	fc.Result = res
-	return ec.marshalNSDInstanceMode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceMode(ctx, field.Selections, res)
+	return ec.marshalNSDInstanceMode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceMode(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_KPIDefinition_sdInstanceMode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1535,7 +1535,7 @@ func (ec *executionContext) _LogicalOperationKPINode_nodeType(ctx context.Contex
 	}
 	res := resTmp.(graphQLModel.KPINodeType)
 	fc.Result = res
-	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
+	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LogicalOperationKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1579,7 +1579,7 @@ func (ec *executionContext) _LogicalOperationKPINode_type(ctx context.Context, f
 	}
 	res := resTmp.(graphQLModel.LogicalOperationType)
 	fc.Result = res
-	return ec.marshalNLogicalOperationType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐLogicalOperationType(ctx, field.Selections, res)
+	return ec.marshalNLogicalOperationType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐLogicalOperationType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LogicalOperationKPINode_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1623,7 +1623,7 @@ func (ec *executionContext) _Mutation_createSDType(ctx context.Context, field gr
 	}
 	res := resTmp.(graphQLModel.SDType)
 	fc.Result = res
-	return ec.marshalNSDType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDType(ctx, field.Selections, res)
+	return ec.marshalNSDType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createSDType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1741,7 +1741,7 @@ func (ec *executionContext) _Mutation_updateSDInstance(ctx context.Context, fiel
 	}
 	res := resTmp.(graphQLModel.SDInstance)
 	fc.Result = res
-	return ec.marshalNSDInstance2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstance(ctx, field.Selections, res)
+	return ec.marshalNSDInstance2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstance(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateSDInstance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1808,7 +1808,7 @@ func (ec *executionContext) _Mutation_createKPIDefinition(ctx context.Context, f
 	}
 	res := resTmp.(graphQLModel.KPIDefinition)
 	fc.Result = res
-	return ec.marshalNKPIDefinition2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinition(ctx, field.Selections, res)
+	return ec.marshalNKPIDefinition2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createKPIDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1879,7 +1879,7 @@ func (ec *executionContext) _Mutation_updateKPIDefinition(ctx context.Context, f
 	}
 	res := resTmp.(graphQLModel.KPIDefinition)
 	fc.Result = res
-	return ec.marshalNKPIDefinition2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinition(ctx, field.Selections, res)
+	return ec.marshalNKPIDefinition2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateKPIDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2005,7 +2005,7 @@ func (ec *executionContext) _Mutation_createSDInstanceGroup(ctx context.Context,
 	}
 	res := resTmp.(graphQLModel.SDInstanceGroup)
 	fc.Result = res
-	return ec.marshalNSDInstanceGroup2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroup(ctx, field.Selections, res)
+	return ec.marshalNSDInstanceGroup2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroup(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createSDInstanceGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2068,7 +2068,7 @@ func (ec *executionContext) _Mutation_updateSDInstanceGroup(ctx context.Context,
 	}
 	res := resTmp.(graphQLModel.SDInstanceGroup)
 	fc.Result = res
-	return ec.marshalNSDInstanceGroup2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroup(ctx, field.Selections, res)
+	return ec.marshalNSDInstanceGroup2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroup(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateSDInstanceGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2271,7 +2271,7 @@ func (ec *executionContext) _NumericEQAtomKPINode_nodeType(ctx context.Context, 
 	}
 	res := resTmp.(graphQLModel.KPINodeType)
 	fc.Result = res
-	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
+	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_NumericEQAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2532,7 +2532,7 @@ func (ec *executionContext) _NumericGEQAtomKPINode_nodeType(ctx context.Context,
 	}
 	res := resTmp.(graphQLModel.KPINodeType)
 	fc.Result = res
-	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
+	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_NumericGEQAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2793,7 +2793,7 @@ func (ec *executionContext) _NumericGTAtomKPINode_nodeType(ctx context.Context, 
 	}
 	res := resTmp.(graphQLModel.KPINodeType)
 	fc.Result = res
-	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
+	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_NumericGTAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3054,7 +3054,7 @@ func (ec *executionContext) _NumericLEQAtomKPINode_nodeType(ctx context.Context,
 	}
 	res := resTmp.(graphQLModel.KPINodeType)
 	fc.Result = res
-	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
+	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_NumericLEQAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3315,7 +3315,7 @@ func (ec *executionContext) _NumericLTAtomKPINode_nodeType(ctx context.Context, 
 	}
 	res := resTmp.(graphQLModel.KPINodeType)
 	fc.Result = res
-	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
+	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_NumericLTAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3491,7 +3491,7 @@ func (ec *executionContext) _Query_sdType(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(graphQLModel.SDType)
 	fc.Result = res
-	return ec.marshalNSDType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDType(ctx, field.Selections, res)
+	return ec.marshalNSDType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_sdType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3554,7 +3554,7 @@ func (ec *executionContext) _Query_sdTypes(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.([]graphQLModel.SDType)
 	fc.Result = res
-	return ec.marshalNSDType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDTypeᚄ(ctx, field.Selections, res)
+	return ec.marshalNSDType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_sdTypes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3606,7 +3606,7 @@ func (ec *executionContext) _Query_sdInstances(ctx context.Context, field graphq
 	}
 	res := resTmp.([]graphQLModel.SDInstance)
 	fc.Result = res
-	return ec.marshalNSDInstance2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceᚄ(ctx, field.Selections, res)
+	return ec.marshalNSDInstance2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_sdInstances(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3662,7 +3662,7 @@ func (ec *executionContext) _Query_kpiDefinition(ctx context.Context, field grap
 	}
 	res := resTmp.(graphQLModel.KPIDefinition)
 	fc.Result = res
-	return ec.marshalNKPIDefinition2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinition(ctx, field.Selections, res)
+	return ec.marshalNKPIDefinition2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_kpiDefinition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3733,7 +3733,7 @@ func (ec *executionContext) _Query_kpiDefinitions(ctx context.Context, field gra
 	}
 	res := resTmp.([]graphQLModel.KPIDefinition)
 	fc.Result = res
-	return ec.marshalNKPIDefinition2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinitionᚄ(ctx, field.Selections, res)
+	return ec.marshalNKPIDefinition2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinitionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_kpiDefinitions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3793,7 +3793,7 @@ func (ec *executionContext) _Query_kpiFulfillmentCheckResults(ctx context.Contex
 	}
 	res := resTmp.([]graphQLModel.KPIFulfillmentCheckResult)
 	fc.Result = res
-	return ec.marshalNKPIFulfillmentCheckResult2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResultᚄ(ctx, field.Selections, res)
+	return ec.marshalNKPIFulfillmentCheckResult2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResultᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_kpiFulfillmentCheckResults(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3845,7 +3845,7 @@ func (ec *executionContext) _Query_sdInstanceGroup(ctx context.Context, field gr
 	}
 	res := resTmp.(graphQLModel.SDInstanceGroup)
 	fc.Result = res
-	return ec.marshalNSDInstanceGroup2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroup(ctx, field.Selections, res)
+	return ec.marshalNSDInstanceGroup2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroup(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_sdInstanceGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3908,7 +3908,7 @@ func (ec *executionContext) _Query_sdInstanceGroups(ctx context.Context, field g
 	}
 	res := resTmp.([]graphQLModel.SDInstanceGroup)
 	fc.Result = res
-	return ec.marshalNSDInstanceGroup2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroupᚄ(ctx, field.Selections, res)
+	return ec.marshalNSDInstanceGroup2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroupᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_sdInstanceGroups(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4265,7 +4265,7 @@ func (ec *executionContext) _SDInstance_type(ctx context.Context, field graphql.
 	}
 	res := resTmp.(graphQLModel.SDType)
 	fc.Result = res
-	return ec.marshalNSDType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDType(ctx, field.Selections, res)
+	return ec.marshalNSDType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SDInstance_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4537,7 +4537,7 @@ func (ec *executionContext) _SDParameter_type(ctx context.Context, field graphql
 	}
 	res := resTmp.(graphQLModel.SDParameterType)
 	fc.Result = res
-	return ec.marshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterType(ctx, field.Selections, res)
+	return ec.marshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SDParameter_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4669,7 +4669,7 @@ func (ec *executionContext) _SDType_parameters(ctx context.Context, field graphq
 	}
 	res := resTmp.([]graphQLModel.SDParameter)
 	fc.Result = res
-	return ec.marshalNSDParameter2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterᚄ(ctx, field.Selections, res)
+	return ec.marshalNSDParameter2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SDType_parameters(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4806,7 +4806,7 @@ func (ec *executionContext) _StringEQAtomKPINode_nodeType(ctx context.Context, f
 	}
 	res := resTmp.(graphQLModel.KPINodeType)
 	fc.Result = res
-	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
+	return ec.marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_StringEQAtomKPINode_nodeType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4990,7 +4990,7 @@ func (ec *executionContext) _Subscription_onSDInstanceRegistered(ctx context.Con
 				w.Write([]byte{'{'})
 				graphql.MarshalString(field.Alias).MarshalGQL(w)
 				w.Write([]byte{':'})
-				ec.marshalNSDInstance2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstance(ctx, field.Selections, res).MarshalGQL(w)
+				ec.marshalNSDInstance2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstance(ctx, field.Selections, res).MarshalGQL(w)
 				w.Write([]byte{'}'})
 			})
 		case <-ctx.Done():
@@ -5060,7 +5060,7 @@ func (ec *executionContext) _Subscription_onKPIFulfillmentChecked(ctx context.Co
 				w.Write([]byte{'{'})
 				graphql.MarshalString(field.Alias).MarshalGQL(w)
 				w.Write([]byte{':'})
-				ec.marshalNKPIFulfillmentCheckResult2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResult(ctx, field.Selections, res).MarshalGQL(w)
+				ec.marshalNKPIFulfillmentCheckResult2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResult(ctx, field.Selections, res).MarshalGQL(w)
 				w.Write([]byte{'}'})
 			})
 		case <-ctx.Done():
@@ -6900,14 +6900,14 @@ func (ec *executionContext) unmarshalInputKPIDefinitionInput(ctx context.Context
 			it.UserIdentifier = data
 		case "nodes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodes"))
-			data, err := ec.unmarshalNKPINodeInput2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeInputᚄ(ctx, v)
+			data, err := ec.unmarshalNKPINodeInput2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Nodes = data
 		case "sdInstanceMode":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sdInstanceMode"))
-			data, err := ec.unmarshalNSDInstanceMode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceMode(ctx, v)
+			data, err := ec.unmarshalNSDInstanceMode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceMode(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6941,7 +6941,7 @@ func (ec *executionContext) unmarshalInputKPINodeInput(ctx context.Context, obj 
 		switch k {
 		case "type":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			data, err := ec.unmarshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, v)
+			data, err := ec.unmarshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6997,7 +6997,7 @@ func (ec *executionContext) unmarshalInputKPINodeInput(ctx context.Context, obj 
 			it.NumericReferenceValue = data
 		case "logicalOperationType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logicalOperationType"))
-			data, err := ec.unmarshalOLogicalOperationType2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐLogicalOperationType(ctx, v)
+			data, err := ec.unmarshalOLogicalOperationType2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐLogicalOperationType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7099,7 +7099,7 @@ func (ec *executionContext) unmarshalInputSDParameterInput(ctx context.Context, 
 			it.Denotation = data
 		case "type":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			data, err := ec.unmarshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterType(ctx, v)
+			data, err := ec.unmarshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7133,7 +7133,7 @@ func (ec *executionContext) unmarshalInputSDTypeInput(ctx context.Context, obj i
 			it.Denotation = data
 		case "parameters":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parameters"))
-			data, err := ec.unmarshalNSDParameterInput2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterInputᚄ(ctx, v)
+			data, err := ec.unmarshalNSDParameterInput2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8838,11 +8838,11 @@ func (ec *executionContext) marshalNID2ᚕuint32ᚄ(ctx context.Context, sel ast
 	return ret
 }
 
-func (ec *executionContext) marshalNKPIDefinition2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinition(ctx context.Context, sel ast.SelectionSet, v graphQLModel.KPIDefinition) graphql.Marshaler {
+func (ec *executionContext) marshalNKPIDefinition2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinition(ctx context.Context, sel ast.SelectionSet, v graphQLModel.KPIDefinition) graphql.Marshaler {
 	return ec._KPIDefinition(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNKPIDefinition2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinitionᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.KPIDefinition) graphql.Marshaler {
+func (ec *executionContext) marshalNKPIDefinition2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinitionᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.KPIDefinition) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8866,7 +8866,7 @@ func (ec *executionContext) marshalNKPIDefinition2ᚕgithubᚗcomᚋMichalBures�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNKPIDefinition2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinition(ctx, sel, v[i])
+			ret[i] = ec.marshalNKPIDefinition2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinition(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8886,16 +8886,16 @@ func (ec *executionContext) marshalNKPIDefinition2ᚕgithubᚗcomᚋMichalBures�
 	return ret
 }
 
-func (ec *executionContext) unmarshalNKPIDefinitionInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinitionInput(ctx context.Context, v interface{}) (graphQLModel.KPIDefinitionInput, error) {
+func (ec *executionContext) unmarshalNKPIDefinitionInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinitionInput(ctx context.Context, v interface{}) (graphQLModel.KPIDefinitionInput, error) {
 	res, err := ec.unmarshalInputKPIDefinitionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNKPIFulfillmentCheckResult2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResult(ctx context.Context, sel ast.SelectionSet, v graphQLModel.KPIFulfillmentCheckResult) graphql.Marshaler {
+func (ec *executionContext) marshalNKPIFulfillmentCheckResult2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResult(ctx context.Context, sel ast.SelectionSet, v graphQLModel.KPIFulfillmentCheckResult) graphql.Marshaler {
 	return ec._KPIFulfillmentCheckResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNKPIFulfillmentCheckResult2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResultᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.KPIFulfillmentCheckResult) graphql.Marshaler {
+func (ec *executionContext) marshalNKPIFulfillmentCheckResult2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResultᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.KPIFulfillmentCheckResult) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8919,7 +8919,7 @@ func (ec *executionContext) marshalNKPIFulfillmentCheckResult2ᚕgithubᚗcomᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNKPIFulfillmentCheckResult2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResult(ctx, sel, v[i])
+			ret[i] = ec.marshalNKPIFulfillmentCheckResult2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResult(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8939,7 +8939,7 @@ func (ec *executionContext) marshalNKPIFulfillmentCheckResult2ᚕgithubᚗcomᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNKPINode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINode(ctx context.Context, sel ast.SelectionSet, v graphQLModel.KPINode) graphql.Marshaler {
+func (ec *executionContext) marshalNKPINode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINode(ctx context.Context, sel ast.SelectionSet, v graphQLModel.KPINode) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -8949,7 +8949,7 @@ func (ec *executionContext) marshalNKPINode2githubᚗcomᚋMichalBuresᚑOGᚋbp
 	return ec._KPINode(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNKPINode2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.KPINode) graphql.Marshaler {
+func (ec *executionContext) marshalNKPINode2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.KPINode) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8973,7 +8973,7 @@ func (ec *executionContext) marshalNKPINode2ᚕgithubᚗcomᚋMichalBuresᚑOG�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNKPINode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINode(ctx, sel, v[i])
+			ret[i] = ec.marshalNKPINode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINode(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8993,12 +8993,12 @@ func (ec *executionContext) marshalNKPINode2ᚕgithubᚗcomᚋMichalBuresᚑOG�
 	return ret
 }
 
-func (ec *executionContext) unmarshalNKPINodeInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeInput(ctx context.Context, v interface{}) (graphQLModel.KPINodeInput, error) {
+func (ec *executionContext) unmarshalNKPINodeInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeInput(ctx context.Context, v interface{}) (graphQLModel.KPINodeInput, error) {
 	res, err := ec.unmarshalInputKPINodeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNKPINodeInput2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeInputᚄ(ctx context.Context, v interface{}) ([]graphQLModel.KPINodeInput, error) {
+func (ec *executionContext) unmarshalNKPINodeInput2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeInputᚄ(ctx context.Context, v interface{}) ([]graphQLModel.KPINodeInput, error) {
 	var vSlice []interface{}
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -9007,7 +9007,7 @@ func (ec *executionContext) unmarshalNKPINodeInput2ᚕgithubᚗcomᚋMichalBures
 	res := make([]graphQLModel.KPINodeInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNKPINodeInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNKPINodeInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -9015,31 +9015,31 @@ func (ec *executionContext) unmarshalNKPINodeInput2ᚕgithubᚗcomᚋMichalBures
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx context.Context, v interface{}) (graphQLModel.KPINodeType, error) {
+func (ec *executionContext) unmarshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx context.Context, v interface{}) (graphQLModel.KPINodeType, error) {
 	var res graphQLModel.KPINodeType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx context.Context, sel ast.SelectionSet, v graphQLModel.KPINodeType) graphql.Marshaler {
+func (ec *executionContext) marshalNKPINodeType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINodeType(ctx context.Context, sel ast.SelectionSet, v graphQLModel.KPINodeType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNLogicalOperationType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐLogicalOperationType(ctx context.Context, v interface{}) (graphQLModel.LogicalOperationType, error) {
+func (ec *executionContext) unmarshalNLogicalOperationType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐLogicalOperationType(ctx context.Context, v interface{}) (graphQLModel.LogicalOperationType, error) {
 	var res graphQLModel.LogicalOperationType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNLogicalOperationType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐLogicalOperationType(ctx context.Context, sel ast.SelectionSet, v graphQLModel.LogicalOperationType) graphql.Marshaler {
+func (ec *executionContext) marshalNLogicalOperationType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐLogicalOperationType(ctx context.Context, sel ast.SelectionSet, v graphQLModel.LogicalOperationType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNSDInstance2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstance(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDInstance) graphql.Marshaler {
+func (ec *executionContext) marshalNSDInstance2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstance(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDInstance) graphql.Marshaler {
 	return ec._SDInstance(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSDInstance2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDInstance) graphql.Marshaler {
+func (ec *executionContext) marshalNSDInstance2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDInstance) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9063,7 +9063,7 @@ func (ec *executionContext) marshalNSDInstance2ᚕgithubᚗcomᚋMichalBuresᚑO
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSDInstance2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstance(ctx, sel, v[i])
+			ret[i] = ec.marshalNSDInstance2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstance(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9083,11 +9083,11 @@ func (ec *executionContext) marshalNSDInstance2ᚕgithubᚗcomᚋMichalBuresᚑO
 	return ret
 }
 
-func (ec *executionContext) marshalNSDInstanceGroup2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroup(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDInstanceGroup) graphql.Marshaler {
+func (ec *executionContext) marshalNSDInstanceGroup2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroup(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDInstanceGroup) graphql.Marshaler {
 	return ec._SDInstanceGroup(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSDInstanceGroup2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDInstanceGroup) graphql.Marshaler {
+func (ec *executionContext) marshalNSDInstanceGroup2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDInstanceGroup) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9111,7 +9111,7 @@ func (ec *executionContext) marshalNSDInstanceGroup2ᚕgithubᚗcomᚋMichalBure
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSDInstanceGroup2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroup(ctx, sel, v[i])
+			ret[i] = ec.marshalNSDInstanceGroup2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroup(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9131,31 +9131,31 @@ func (ec *executionContext) marshalNSDInstanceGroup2ᚕgithubᚗcomᚋMichalBure
 	return ret
 }
 
-func (ec *executionContext) unmarshalNSDInstanceGroupInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroupInput(ctx context.Context, v interface{}) (graphQLModel.SDInstanceGroupInput, error) {
+func (ec *executionContext) unmarshalNSDInstanceGroupInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceGroupInput(ctx context.Context, v interface{}) (graphQLModel.SDInstanceGroupInput, error) {
 	res, err := ec.unmarshalInputSDInstanceGroupInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNSDInstanceMode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceMode(ctx context.Context, v interface{}) (graphQLModel.SDInstanceMode, error) {
+func (ec *executionContext) unmarshalNSDInstanceMode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceMode(ctx context.Context, v interface{}) (graphQLModel.SDInstanceMode, error) {
 	var res graphQLModel.SDInstanceMode
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSDInstanceMode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceMode(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDInstanceMode) graphql.Marshaler {
+func (ec *executionContext) marshalNSDInstanceMode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceMode(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDInstanceMode) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNSDInstanceUpdateInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceUpdateInput(ctx context.Context, v interface{}) (graphQLModel.SDInstanceUpdateInput, error) {
+func (ec *executionContext) unmarshalNSDInstanceUpdateInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceUpdateInput(ctx context.Context, v interface{}) (graphQLModel.SDInstanceUpdateInput, error) {
 	res, err := ec.unmarshalInputSDInstanceUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSDParameter2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameter(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDParameter) graphql.Marshaler {
+func (ec *executionContext) marshalNSDParameter2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameter(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDParameter) graphql.Marshaler {
 	return ec._SDParameter(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSDParameter2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDParameter) graphql.Marshaler {
+func (ec *executionContext) marshalNSDParameter2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDParameter) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9179,7 +9179,7 @@ func (ec *executionContext) marshalNSDParameter2ᚕgithubᚗcomᚋMichalBuresᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSDParameter2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameter(ctx, sel, v[i])
+			ret[i] = ec.marshalNSDParameter2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameter(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9199,12 +9199,12 @@ func (ec *executionContext) marshalNSDParameter2ᚕgithubᚗcomᚋMichalBuresᚑ
 	return ret
 }
 
-func (ec *executionContext) unmarshalNSDParameterInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterInput(ctx context.Context, v interface{}) (graphQLModel.SDParameterInput, error) {
+func (ec *executionContext) unmarshalNSDParameterInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterInput(ctx context.Context, v interface{}) (graphQLModel.SDParameterInput, error) {
 	res, err := ec.unmarshalInputSDParameterInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNSDParameterInput2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterInputᚄ(ctx context.Context, v interface{}) ([]graphQLModel.SDParameterInput, error) {
+func (ec *executionContext) unmarshalNSDParameterInput2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterInputᚄ(ctx context.Context, v interface{}) ([]graphQLModel.SDParameterInput, error) {
 	var vSlice []interface{}
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -9213,7 +9213,7 @@ func (ec *executionContext) unmarshalNSDParameterInput2ᚕgithubᚗcomᚋMichalB
 	res := make([]graphQLModel.SDParameterInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNSDParameterInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNSDParameterInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -9221,21 +9221,21 @@ func (ec *executionContext) unmarshalNSDParameterInput2ᚕgithubᚗcomᚋMichalB
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterType(ctx context.Context, v interface{}) (graphQLModel.SDParameterType, error) {
+func (ec *executionContext) unmarshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterType(ctx context.Context, v interface{}) (graphQLModel.SDParameterType, error) {
 	var res graphQLModel.SDParameterType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterType(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDParameterType) graphql.Marshaler {
+func (ec *executionContext) marshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterType(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDParameterType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNSDType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDType(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDType) graphql.Marshaler {
+func (ec *executionContext) marshalNSDType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDType(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDType) graphql.Marshaler {
 	return ec._SDType(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSDType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDType) graphql.Marshaler {
+func (ec *executionContext) marshalNSDType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDType) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9259,7 +9259,7 @@ func (ec *executionContext) marshalNSDType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSDType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDType(ctx, sel, v[i])
+			ret[i] = ec.marshalNSDType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDType(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9279,7 +9279,7 @@ func (ec *executionContext) marshalNSDType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋ
 	return ret
 }
 
-func (ec *executionContext) unmarshalNSDTypeInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDTypeInput(ctx context.Context, v interface{}) (graphQLModel.SDTypeInput, error) {
+func (ec *executionContext) unmarshalNSDTypeInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDTypeInput(ctx context.Context, v interface{}) (graphQLModel.SDTypeInput, error) {
 	res, err := ec.unmarshalInputSDTypeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -9642,7 +9642,7 @@ func (ec *executionContext) marshalOID2ᚖuint32(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalOLogicalOperationType2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐLogicalOperationType(ctx context.Context, v interface{}) (*graphQLModel.LogicalOperationType, error) {
+func (ec *executionContext) unmarshalOLogicalOperationType2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐLogicalOperationType(ctx context.Context, v interface{}) (*graphQLModel.LogicalOperationType, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -9651,7 +9651,7 @@ func (ec *executionContext) unmarshalOLogicalOperationType2ᚖgithubᚗcomᚋMic
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOLogicalOperationType2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑSfPDfSDᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐLogicalOperationType(ctx context.Context, sel ast.SelectionSet, v *graphQLModel.LogicalOperationType) graphql.Marshaler {
+func (ec *executionContext) marshalOLogicalOperationType2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐLogicalOperationType(ctx context.Context, sel ast.SelectionSet, v *graphQLModel.LogicalOperationType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

@@ -3,7 +3,7 @@ package sharedModel
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"reflect"
 	"strings"
 )

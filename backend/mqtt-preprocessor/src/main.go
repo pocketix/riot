@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-MQTT-preprocessor/src/model"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-MQTT-preprocessor/src/mqtt"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
+	"github.com/MichalBures-OG/bp-bures-RIoT-MQTT-preprocessor/src/model"
+	"github.com/MichalBures-OG/bp-bures-RIoT-MQTT-preprocessor/src/mqtt"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"log"
 	"sync"
 	"time"
@@ -15,7 +15,7 @@ import (
 
 const (
 	mqttBrokerURI      = "mqtt://mosquitto:1883"
-	mqttClientID       = "bp-bures-SfPDfSD-MQTT-preprocessor"
+	mqttClientID       = "bp-bures-RIoT-MQTT-preprocessor"
 	mqttTopic          = "topic"
 	mqttBrokerUsername = "admin"
 	mqttBrokerPassword = "password"
@@ -173,7 +173,7 @@ func addIncomingMQTTMessageToFIFO(incomingMQTTMessagePayload []byte) {
 }
 
 func main() {
-	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf("mosquitto", 1883), sharedUtils.NewPairOf("sfpdfsd-backend-core", 9090)), "Some dependencies of this application are inaccessible")
+	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf("mosquitto", 1883), sharedUtils.NewPairOf("riot-backend-core", 9090)), "Some dependencies of this application are inaccessible")
 	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
 	rabbitMQClient = rabbitmq.NewClient()
 	mqttClient := mqtt.NewEclipsePahoBasedMqttClient(mqttBrokerURI, mqttClientID, mqttBrokerUsername, mqttBrokerPassword)

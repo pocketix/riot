@@ -16,6 +16,6 @@ RUN go mod download
 # Run unit tests
 RUN go test ./...
 # Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux go build -o SfPDfSD-backend-core src/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o RIoT-backend-core src/main.go
 # Run the executable
-CMD ["/app/backend-core/SfPDfSD-backend-core"]
+CMD ["/app/backend-core/RIoT-backend-core"]

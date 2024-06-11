@@ -1,9 +1,9 @@
 package gql2dll
 
 import (
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 )
 
 func ToDLLModelSDInstanceGroup(sdInstanceGroupInput graphQLModel.SDInstanceGroupInput) dllModel.SDInstanceGroup {

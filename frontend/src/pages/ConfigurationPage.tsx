@@ -19,7 +19,7 @@ const ConfigurationPage: React.FC = () => (
       Password: <strong>password</strong>
     </p>
     <p>
-      Client ID: <strong>bp-bures-SfPDfSD-MQTT-preprocessor</strong>
+      Client ID: <strong>bp-bures-RIoT-MQTT-preprocessor</strong>
     </p>
     <p>
       Topic: <strong>topic</strong>

@@ -2,9 +2,9 @@ package db2dll
 
 import (
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dbModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dbModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 )
 
 func ToDLLModelSDType(sdTypeEntity dbModel.SDTypeEntity) dllModel.SDType {

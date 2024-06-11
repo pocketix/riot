@@ -65,7 +65,7 @@ def generate_message_payload():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='bp-bures-SfPDfSD MQTT stress test script')
+    parser = argparse.ArgumentParser(description='bp-bures-RIoT MQTT stress test script')
     parser.add_argument('--messages-per-second', type=int, default=10, help='Number of MQTT messages to send per second')
     parser.add_argument('--sd-instance-mode', type=lambda s: SDInstanceMode[s.upper()], choices=list(SDInstanceMode), default=SDInstanceMode.ONE, help='SD instance mode: from how many different SD instances should the messages come')
     args = parser.parse_args()
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     client.username_pw_set("admin", "password")
     client.connect("host.docker.internal", 1883)
     client.loop_start()
-    print(f"Starting the stress test of bp-bures-SfPDfSD... {messages_per_second} MQTT message(s) per second")
+    print(f"Starting the stress test of bp-bures-RIoT... {messages_per_second} MQTT message(s) per second")
     message_counter = 0
     try:
         while True:
@@ -86,8 +86,8 @@ if __name__ == '__main__':
             message_counter += 1
             time.sleep(1 / messages_per_second)
     except KeyboardInterrupt:
-        print("Stress test of bp-bures-SfPDfSD stopped by user...")
+        print("Stress test of bp-bures-RIoT stopped by user...")
     finally:
         client.loop_stop()
         client.disconnect()
-    print(f"Stress test of bp-bures-SfPDfSD completed... {message_counter} MQTT message(s) sent...")
+    print(f"Stress test of bp-bures-RIoT completed... {message_counter} MQTT message(s) sent...")

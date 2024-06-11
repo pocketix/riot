@@ -1,8 +1,8 @@
 package dll2gql
 
 import (
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/graphQLModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
 )
 
 func ToGraphQLModelSDInstance(sdInstance dllModel.SDInstance) graphQLModel.SDInstance {

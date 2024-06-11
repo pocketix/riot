@@ -14,6 +14,6 @@ WORKDIR /app/message-processing-unit
 RUN go mod tidy
 RUN go mod download
 # Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux go build -o SfPDfSD-message-processing-unit src/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o RIoT-message-processing-unit src/main.go
 # Run the executable
-CMD ["/app/message-processing-unit/SfPDfSD-message-processing-unit"]
+CMD ["/app/message-processing-unit/RIoT-message-processing-unit"]

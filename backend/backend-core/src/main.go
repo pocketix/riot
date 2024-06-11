@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/api/graphql"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/isc"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/isc"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"log"
 	"time"
 )

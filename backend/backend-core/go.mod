@@ -1,11 +1,11 @@
-module github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core
+module github.com/MichalBures-OG/bp-bures-RIoT-backend-core
 
 go 1.22
 
 require (
 	github.com/99designs/gqlgen v0.17.46
 	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/MichalBures-OG/bp-bures-SfPDfSD-commons v0.0.0-00010101000000-000000000000
+	github.com/MichalBures-OG/bp-bures-RIoT-commons v0.0.0-00010101000000-000000000000
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/gorilla/websocket v1.5.1
 	github.com/rs/cors v1.11.0
@@ -14,7 +14,7 @@ require (
 	gorm.io/gorm v1.25.10
 )
 
-replace github.com/MichalBures-OG/bp-bures-SfPDfSD-commons => ./../commons
+replace github.com/MichalBures-OG/bp-bures-RIoT-commons => ./../commons
 
 require (
 	github.com/agnivade/levenshtein v1.1.1 // indirect

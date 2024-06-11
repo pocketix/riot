@@ -14,6 +14,6 @@ WORKDIR /app/mqtt-preprocessor
 RUN go mod tidy
 RUN go mod download
 # Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux go build -o SfPDfSD-mqtt-preprocessor src/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o RIoT-mqtt-preprocessor src/main.go
 # Run the executable
-CMD ["/app/mqtt-preprocessor/SfPDfSD-mqtt-preprocessor"]
+CMD ["/app/mqtt-preprocessor/RIoT-mqtt-preprocessor"]

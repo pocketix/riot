@@ -1,4 +1,4 @@
-module github.com/MichalBures-OG/bp-bures-SfPDfSD-commons
+module github.com/MichalBures-OG/bp-bures-RIoT-commons
 
 go 1.22
 

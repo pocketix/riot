@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/rabbitmq"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedConstants"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-message-processing-unit/src/processing"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/MichalBures-OG/bp-bures-RIoT-message-processing-unit/src/processing"
 	"github.com/google/uuid"
 	"log"
 	"sync"
@@ -87,7 +87,7 @@ func checkForKPIDefinitionsBySDTypeDenotationMapUpdates() {
 
 func main() {
 	log.Println("Waiting for backend-core...")
-	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf("sfpdfsd-backend-core", 9090)), "Some dependencies of this application are inaccessible")
+	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf("riot-backend-core", 9090)), "Some dependencies of this application are inaccessible")
 	log.Println("backend-core should be up and running...")
 	unitUUID = uuid.New().String()
 	rabbitMQClient = rabbitmq.NewClient()

@@ -3,8 +3,8 @@ package dbClient
 import (
 	"database/sql"
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-SfPDfSD-commons/src/sharedUtils"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
