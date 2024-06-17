@@ -19,15 +19,21 @@ import { ApolloSandbox } from '@apollo/sandbox/react'
 import ConfigurationPage from './pages/ConfigurationPage'
 import SDInstanceGroupsPageController from './pages/sd-instance-groups-page/SDInstanceGroupsPageController'
 
+const backendCoreURL: string = process.env.BACKEND_CORE_URL || 'http://localhost:9090'
+const webSocketBackendCoreURL: string = (() => {
+  const parsedBackendCoreURL = new URL(backendCoreURL)
+  parsedBackendCoreURL.protocol = 'ws:'
+  return parsedBackendCoreURL.toString()
+})()
+
 const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
-  uri: 'http://localhost:9090',
   link: split(
     ({ query }) => {
       const definition = getMainDefinition(query)
       return definition.kind === 'OperationDefinition' && definition.operation === 'subscription'
     },
-    new WebSocketLink({ uri: 'ws://localhost:9090' }),
-    new HttpLink({ uri: 'http://localhost:9090' })
+    new WebSocketLink({ uri: webSocketBackendCoreURL }),
+    new HttpLink({ uri: backendCoreURL })
   ),
   cache: new InMemoryCache(),
   defaultOptions: {
@@ -122,7 +128,7 @@ const Application: React.FC = () => {
                 <Route path={`${kpiDefinitions}/create`} element={<KPIDetailPageController />} />
                 <Route path={`${kpiDefinitions}/:id/edit`} element={<KPIDetailPageController />} />
                 <Route path={configuration} element={<ConfigurationPage />} />
-                <Route path={apolloSandbox} element={<ApolloSandbox initialEndpoint="http://localhost:9090" allowDynamicStyles className="h-full w-full" />} />
+                <Route path={apolloSandbox} element={<ApolloSandbox initialEndpoint={backendCoreURL} allowDynamicStyles className="h-full w-full" />} />
                 <Route path="*" element={<FallbackPage />} />
               </Route>
             </Routes>

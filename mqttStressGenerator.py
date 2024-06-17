@@ -73,13 +73,13 @@ if __name__ == '__main__':
     sd_instance_mode = args.sd_instance_mode
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.username_pw_set("admin", "password")
-    client.connect("host.docker.internal", 1883)
+    client.connect("host.docker.internal", 1883)  # Expects MQTT broker running in Docker on port 1883
     client.loop_start()
     print(f"Starting the stress test of bp-bures-RIoT... {messages_per_second} MQTT message(s) per second")
     message_counter = 0
     try:
         while True:
-            rc = client.publish("topic", generate_message_payload()).rc
+            rc = client.publish("topic", generate_message_payload()).rc  # Publishing messages to the 'topic' topic
             if rc != mqtt.MQTT_ERR_SUCCESS:
                 print(f"Failed to publish message NO {message_counter + 1}: rc = f{rc}")
                 break

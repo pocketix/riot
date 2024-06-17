@@ -34,6 +34,7 @@
     "@graphql-codegen/typescript-operations": "^4.0.1",
     "@graphql-codegen/typescript-react-apollo": "^4.1.0",
     "@mui/material": "^5.14.17",
+    "@types/node": "^20.12.2",
     "graphql": "^16.8.1",
     "graphql-tag": "^2.12.6",
     "immer": "^10.0.4",

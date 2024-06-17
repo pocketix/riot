@@ -10,7 +10,6 @@ import (
 
 const (
 	mimeTypeOfJSONData      = "application/json"
-	urlOfRabbitMQ           = "amqp://guest:guest@rabbitmq:5672/"
 	contextTimeoutInSeconds = 5
 )
 
@@ -29,7 +28,7 @@ type ClientImpl struct {
 }
 
 func NewClient() Client {
-	connection, err := amqp.Dial(urlOfRabbitMQ)
+	connection, err := amqp.Dial(sharedUtils.GetEnvironmentVariableValue("RABBITMQ_URL").GetPayloadOrDefault("amqp://guest:guest@rabbitmq:5672"))
 	sharedUtils.TerminateOnError(err, "[RabbitMQ client] Failed to connect to RabbitMQ")
 	channel, err := connection.Channel()
 	sharedUtils.TerminateOnError(err, "[RabbitMQ client] Failed to open a channel")

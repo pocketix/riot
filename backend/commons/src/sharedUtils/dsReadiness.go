@@ -8,30 +8,30 @@ import (
 	"time"
 )
 
-func WaitForDSs(timeout time.Duration, dsIdentifierPortNumberPairs ...Pair[string, int]) error {
+func WaitForDSs(timeout time.Duration, dsIdentifierPortPairs ...Pair[string, string]) error {
 	inaccessibleDSIdentifiers := make([]string, 0)
 	var inaccessibleDSIdentifiersMutex sync.Mutex
 	wg := new(sync.WaitGroup)
-	wg.Add(len(dsIdentifierPortNumberPairs))
-	for _, dsIdentifierPortNumberPair := range dsIdentifierPortNumberPairs {
-		go func(dsIdentifierPortNumberPair Pair[string, int]) {
+	wg.Add(len(dsIdentifierPortPairs))
+	for _, dsIdentifierPortPair := range dsIdentifierPortPairs {
+		go func(dsIdentifierPortPair Pair[string, string]) {
 			defer wg.Done()
-			dsIdentifier := dsIdentifierPortNumberPair.GetFirst()
-			if !isDSReady(dsIdentifier, dsIdentifierPortNumberPair.GetSecond(), timeout) {
+			dsIdentifier := dsIdentifierPortPair.GetFirst()
+			if !isDSReady(dsIdentifier, dsIdentifierPortPair.GetSecond(), timeout) {
 				inaccessibleDSIdentifiersMutex.Lock()
 				inaccessibleDSIdentifiers = append(inaccessibleDSIdentifiers, dsIdentifier)
 				inaccessibleDSIdentifiersMutex.Unlock()
 			}
-		}(dsIdentifierPortNumberPair)
+		}(dsIdentifierPortPair)
 	}
 	wg.Wait()
 	return Ternary(len(inaccessibleDSIdentifiers) == 0, nil, fmt.Errorf("the following DSs are inaccessible: %s", strings.Join(inaccessibleDSIdentifiers, ", ")))
 }
 
-func isDSReady(dsIdentifier string, portNumber int, timeout time.Duration) bool {
+func isDSReady(dsIdentifier string, port string, timeout time.Duration) bool {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
-		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", dsIdentifier, portNumber))
+		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%s", dsIdentifier, port))
 		if err == nil {
 			_ = conn.Close()
 			return true

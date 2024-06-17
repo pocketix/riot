@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
@@ -8,6 +9,8 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-message-processing-unit/src/processing"
 	"github.com/google/uuid"
 	"log"
+	"net/url"
+	"os"
 	"sync"
 	"time"
 )
@@ -86,9 +89,13 @@ func checkForKPIDefinitionsBySDTypeDenotationMapUpdates() {
 }
 
 func main() {
-	log.Println("Waiting for backend-core...")
-	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf("riot-backend-core", 9090)), "Some dependencies of this application are inaccessible")
-	log.Println("backend-core should be up and running...")
+	log.SetOutput(os.Stderr)
+	log.Println("Waiting for dependencies...")
+	rawBackendCoreURL := sharedUtils.GetEnvironmentVariableValue("BACKEND_CORE_URL").GetPayloadOrDefault("http://riot-backend-core:9090")
+	parsedBackendCoreURL, err := url.Parse(rawBackendCoreURL)
+	sharedUtils.TerminateOnError(err, fmt.Sprintf("Unable to parse the backend-core URL: %s", rawBackendCoreURL))
+	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf(parsedBackendCoreURL.Hostname(), parsedBackendCoreURL.Port())), "Some dependencies of this application are inaccessible")
+	log.Println("Dependencies should be up and running...")
 	unitUUID = uuid.New().String()
 	rabbitMQClient = rabbitmq.NewClient()
 	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)

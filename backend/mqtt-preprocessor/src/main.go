@@ -9,16 +9,10 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"log"
+	"net/url"
+	"os"
 	"sync"
 	"time"
-)
-
-const (
-	mqttBrokerURI      = "mqtt://mosquitto:1883"
-	mqttClientID       = "bp-bures-RIoT-MQTT-preprocessor"
-	mqttTopic          = "topic"
-	mqttBrokerUsername = "admin"
-	mqttBrokerPassword = "password"
 )
 
 var (
@@ -173,11 +167,25 @@ func addIncomingMQTTMessageToFIFO(incomingMQTTMessagePayload []byte) {
 }
 
 func main() {
-	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf("mosquitto", 1883), sharedUtils.NewPairOf("riot-backend-core", 9090)), "Some dependencies of this application are inaccessible")
+	log.SetOutput(os.Stderr)
+	rawMQTTBrokerURL := sharedUtils.GetEnvironmentVariableValue("MQTT_BROKER_URL").GetPayloadOrDefault("mqtt://mosquitto:1883")
+	parsedMQTTBrokerURL, err := url.Parse(rawMQTTBrokerURL)
+	sharedUtils.TerminateOnError(err, fmt.Sprintf("Unable to parse the MQTT broker URL: %s", rawMQTTBrokerURL))
+	rawBackendCoreURL := sharedUtils.GetEnvironmentVariableValue("BACKEND_CORE_URL").GetPayloadOrDefault("http://riot-backend-core:9090")
+	parsedBackendCoreURL, err := url.Parse(rawBackendCoreURL)
+	sharedUtils.TerminateOnError(err, fmt.Sprintf("Unable to parse the backend-core URL: %s", rawBackendCoreURL))
+	mqttBrokerDSPair := sharedUtils.NewPairOf(parsedMQTTBrokerURL.Hostname(), parsedMQTTBrokerURL.Port())
+	backendCoreDSPair := sharedUtils.NewPairOf(parsedBackendCoreURL.Hostname(), parsedBackendCoreURL.Port())
+	log.Println("Waiting for dependencies...")
+	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, mqttBrokerDSPair, backendCoreDSPair), "Some dependencies of this application are inaccessible")
+	log.Println("Dependencies should be up and running...")
 	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
 	rabbitMQClient = rabbitmq.NewClient()
-	mqttClient := mqtt.NewEclipsePahoBasedMqttClient(mqttBrokerURI, mqttClientID, mqttBrokerUsername, mqttBrokerPassword)
-	sharedUtils.TerminateOnError(mqttClient.Connect(), fmt.Sprintf("Failed to connect to the MQTT broker [%s]", mqttBrokerURI))
+	mqttBrokerUsername := sharedUtils.GetEnvironmentVariableValue("MQTT_BROKER_USERNAME").GetPayloadOrDefault("admin")
+	mqttBrokerPassword := sharedUtils.GetEnvironmentVariableValue("MQTT_BROKER_PASSWORD").GetPayloadOrDefault("password")
+	mqttClient := mqtt.NewEclipsePahoBasedMqttClient(parsedMQTTBrokerURL.String(), "bp-bures-RIoT-MQTT-preprocessor", mqttBrokerUsername, mqttBrokerPassword)
+	sharedUtils.TerminateOnError(mqttClient.Connect(), fmt.Sprintf("Failed to connect to the MQTT broker [%s]", rawMQTTBrokerURL))
+	mqttTopic := sharedUtils.GetEnvironmentVariableValue("MQTT_TOPIC").GetPayloadOrDefault("topic")
 	sharedUtils.TerminateOnError(mqttClient.Subscribe(mqttTopic, mqtt.QosAtLeastOnce, addIncomingMQTTMessageToFIFO), fmt.Sprintf("Failed to subscribe to the MQTT topic [%s]", mqttTopic))
 	sharedUtils.WaitForAll(checkForSetOfSDTypesUpdates, checkForSetOfSDInstancesUpdates, checkMQTTMessageFIFO)
 	rabbitMQClient.Dispose()

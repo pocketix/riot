@@ -16,10 +16,6 @@ import (
 	"sync"
 )
 
-const (
-	dsn = "host=postgres user=admin password=password dbname=postgres-db port=5432"
-)
-
 var (
 	rdbClientInstance RelationalDatabaseClient
 	once              sync.Once
@@ -66,7 +62,8 @@ func GetRelationalDatabaseClientInstance() RelationalDatabaseClient {
 }
 
 func (r *relationalDatabaseClientImpl) setup() {
-	db, err := gorm.Open(postgres.Open(dsn), new(gorm.Config))
+	rawPostgresURL := sharedUtils.GetEnvironmentVariableValue("POSTGRES_URL").GetPayloadOrDefault("postgres://admin:password@postgres:5432/postgres-db")
+	db, err := gorm.Open(postgres.Open(rawPostgresURL), new(gorm.Config))
 	sharedUtils.TerminateOnError(err, "[RDB client (GORM)]: couldn't connect to the database")
 	session := new(gorm.Session)
 	session.Logger = logger.Default.LogMode(logger.Warn)
