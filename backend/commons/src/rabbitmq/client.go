@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"sync"
 	"time"
 )
 
@@ -27,11 +28,24 @@ type ClientImpl struct {
 	channel    *amqp.Channel
 }
 
+var (
+	clientCounter = new(sharedUtils.ConcurrentCounter)
+	connection    *amqp.Connection
+	connMux       sync.Mutex
+)
+
+// NewClient is a constructor-like function that returns a new instance of ClientImpl with shared Connection, but a separate Channel.
 func NewClient() Client {
-	connection, err := amqp.Dial(sharedUtils.GetEnvironmentVariableValue("RABBITMQ_URL").GetPayloadOrDefault("amqp://guest:guest@rabbitmq:5672"))
-	sharedUtils.TerminateOnError(err, "[RabbitMQ client] Failed to connect to RabbitMQ")
+	connMux.Lock()
+	defer connMux.Unlock()
+	if clientCounter.GetCount() == 0 {
+		conn, err := amqp.Dial(sharedUtils.GetEnvironmentVariableValue("RABBITMQ_URL").GetPayloadOrDefault("amqp://guest:guest@rabbitmq:5672"))
+		sharedUtils.TerminateOnError(err, "[RabbitMQ client] Failed to connect to RabbitMQ")
+		connection = conn
+	}
 	channel, err := connection.Channel()
 	sharedUtils.TerminateOnError(err, "[RabbitMQ client] Failed to open a channel")
+	clientCounter.Increment()
 	return &ClientImpl{connection: connection, channel: channel}
 }
 
@@ -87,7 +101,10 @@ func (r *ClientImpl) SetupMessageConsumption(queueName string, messageConsumerFu
 
 func (r *ClientImpl) Dispose() {
 	sharedUtils.LogPossibleErrorThenProceed(r.channel.Close(), "Failed to close a channel")
-	sharedUtils.TerminateOnError(r.connection.Close(), "Failed to close the connection to RabbitMQ")
+	if clientCounter.GetCount() == 1 {
+		sharedUtils.TerminateOnError(connection.Close(), "[RabbitMQ] Failed to close the shared connection")
+	}
+	clientCounter.Decrement()
 }
 
 func ConsumeJSONMessages[T any](c Client, queueName string, messagePayloadConsumerFunction func(messagePayload T) error) error {

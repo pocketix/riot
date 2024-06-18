@@ -22,7 +22,7 @@ func CreateKPIDefinition(kpiDefinitionInput graphQLModel.KPIDefinitionInput) sha
 	if persistResult.IsFailure() {
 		return sharedUtils.NewFailureResult[graphQLModel.KPIDefinition](persistResult.GetError())
 	}
-	go isc.EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration()
+	isc.EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration(getDLLRabbitMQClient())
 	id := persistResult.GetPayload()
 	kpiDefinition.ID = &id
 	return sharedUtils.NewSuccessResult[graphQLModel.KPIDefinition](dll2gql.ToGraphQLModelKPIDefinition(kpiDefinition))
@@ -39,7 +39,7 @@ func UpdateKPIDefinition(id uint32, kpiDefinitionInput graphQLModel.KPIDefinitio
 	if persistResult.IsFailure() {
 		return sharedUtils.NewFailureResult[graphQLModel.KPIDefinition](persistResult.GetError())
 	}
-	go isc.EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration()
+	isc.EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration(getDLLRabbitMQClient())
 	return sharedUtils.NewSuccessResult[graphQLModel.KPIDefinition](dll2gql.ToGraphQLModelKPIDefinition(kpiDefinition))
 }
 
@@ -47,7 +47,7 @@ func DeleteKPIDefinition(id uint32) error {
 	if err := dbClient.GetRelationalDatabaseClientInstance().DeleteKPIDefinition(id); err != nil {
 		return err
 	}
-	go isc.EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration()
+	isc.EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration(getDLLRabbitMQClient())
 	return nil
 }
 

@@ -16,7 +16,6 @@ import (
 )
 
 var (
-	rabbitMQClient       rabbitmq.Client
 	sdTypes              = sharedUtils.NewSet[string]()
 	sdTypesMutex         sync.Mutex
 	sdInstances          = sharedUtils.NewSet[sharedModel.SDInstanceInfo]()
@@ -26,6 +25,8 @@ var (
 )
 
 func checkForSetOfSDTypesUpdates() {
+	rabbitMQClient := rabbitmq.NewClient()
+	defer rabbitMQClient.Dispose()
 	err := rabbitmq.ConsumeJSONMessages[sharedModel.SDTypeConfigurationUpdateISCMessage](rabbitMQClient, sharedConstants.SetOfSDTypesUpdatesQueueName, func(messagePayload sharedModel.SDTypeConfigurationUpdateISCMessage) error {
 		updatedSDTypes := sharedUtils.NewSetFromSlice(messagePayload)
 		sdTypesMutex.Lock()
@@ -39,6 +40,8 @@ func checkForSetOfSDTypesUpdates() {
 }
 
 func checkForSetOfSDInstancesUpdates() {
+	rabbitMQClient := rabbitmq.NewClient()
+	defer rabbitMQClient.Dispose()
 	err := rabbitmq.ConsumeJSONMessages[sharedModel.SDInstanceConfigurationUpdateISCMessage](rabbitMQClient, sharedConstants.SetOfSDInstancesUpdatesQueueName, func(messagePayload sharedModel.SDInstanceConfigurationUpdateISCMessage) error {
 		updatedSDInstances := sharedUtils.NewSetFromSlice(messagePayload)
 		sdInstancesMutex.Lock()
@@ -80,7 +83,7 @@ func determineSDInstanceScenario(uid string) sdInstanceScenario {
 	return scenario
 }
 
-func generateKPIFulfillmentCheckRequest(uid string, sdType string, parameters any, timestamp float32) {
+func generateKPIFulfillmentCheckRequest(uid string, sdType string, parameters any, timestamp float32, rabbitMQClient rabbitmq.Client) {
 	kpiFulfillmentCheckRequestISCMessage := sharedModel.KPIFulfillmentCheckRequestISCMessage{
 		Timestamp:           timestamp,
 		SDInstanceUID:       uid,
@@ -99,7 +102,7 @@ func generateKPIFulfillmentCheckRequest(uid string, sdType string, parameters an
 	log.Println("Successfully published a KPI fulfillment check request message") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
 }
 
-func generateSDInstanceRegistrationRequest(uid string, sdType string, timestamp float32) {
+func generateSDInstanceRegistrationRequest(uid string, sdType string, timestamp float32, rabbitMQClient rabbitmq.Client) {
 	sdInstanceRegistrationRequestISCMessage := sharedModel.SDInstanceRegistrationRequestISCMessage{
 		Timestamp:           timestamp,
 		SDInstanceUID:       uid,
@@ -123,7 +126,7 @@ func generateSDInstanceRegistrationRequest(uid string, sdType string, timestamp 
 	sdInstancesMutex.Unlock()
 }
 
-func processMQTTMessagePayload(mqttMessagePayload []byte) {
+func processMQTTMessagePayload(mqttMessagePayload []byte, rabbitMQClient rabbitmq.Client) {
 	jsonDeserializationResult := sharedUtils.DeserializeFromJSON[model.UpstreamMQTTMessageInJSONBasedProprietaryFormatOfLogimic](mqttMessagePayload)
 	if jsonDeserializationResult.IsFailure() {
 		log.Println("Failed to deserialize the JSON payload of MQTT message")
@@ -137,20 +140,22 @@ func processMQTTMessagePayload(mqttMessagePayload []byte) {
 	}
 	switch determineSDInstanceScenario(sd.UID) {
 	case unknownSDInstance:
-		generateSDInstanceRegistrationRequest(sd.UID, sd.Type, messagePayloadObject.Notification.Timestamp)
+		generateSDInstanceRegistrationRequest(sd.UID, sd.Type, messagePayloadObject.Notification.Timestamp, rabbitMQClient)
 	case confirmedSDInstance:
-		generateKPIFulfillmentCheckRequest(sd.UID, sd.Type, sd.Parameters, messagePayloadObject.Notification.Timestamp)
+		generateKPIFulfillmentCheckRequest(sd.UID, sd.Type, sd.Parameters, messagePayloadObject.Notification.Timestamp, rabbitMQClient)
 	case sdInstanceNotYetConfirmedByUser: // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
 		log.Println("Discarding the MQTT message: the SD instance is in the system, but has not yet been confirmed by the user") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
 	}
 }
 
 func checkMQTTMessageFIFO() {
+	rabbitMQClient := rabbitmq.NewClient()
+	defer rabbitMQClient.Dispose()
 	for {
 		mqttMessageFIFOMutex.Lock()
 		if len(mqttMessageFIFO) > 0 {
 			mqttMessagePayload := mqttMessageFIFO[0]
-			processMQTTMessagePayload(mqttMessagePayload)
+			processMQTTMessagePayload(mqttMessagePayload, rabbitMQClient)
 			mqttMessageFIFO = mqttMessageFIFO[1:]
 			mqttMessageFIFOMutex.Unlock()
 		} else {
@@ -180,7 +185,6 @@ func main() {
 	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, mqttBrokerDSPair, backendCoreDSPair), "Some dependencies of this application are inaccessible")
 	log.Println("Dependencies should be up and running...")
 	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
-	rabbitMQClient = rabbitmq.NewClient()
 	mqttBrokerUsername := sharedUtils.GetEnvironmentVariableValue("MQTT_BROKER_USERNAME").GetPayloadOrDefault("admin")
 	mqttBrokerPassword := sharedUtils.GetEnvironmentVariableValue("MQTT_BROKER_PASSWORD").GetPayloadOrDefault("password")
 	mqttClient := mqtt.NewEclipsePahoBasedMqttClient(parsedMQTTBrokerURL.String(), "bp-bures-RIoT-MQTT-preprocessor", mqttBrokerUsername, mqttBrokerPassword)
@@ -188,5 +192,4 @@ func main() {
 	mqttTopic := sharedUtils.GetEnvironmentVariableValue("MQTT_TOPIC").GetPayloadOrDefault("topic")
 	sharedUtils.TerminateOnError(mqttClient.Subscribe(mqttTopic, mqtt.QosAtLeastOnce, addIncomingMQTTMessageToFIFO), fmt.Sprintf("Failed to subscribe to the MQTT topic [%s]", mqttTopic))
 	sharedUtils.WaitForAll(checkForSetOfSDTypesUpdates, checkForSetOfSDInstancesUpdates, checkMQTTMessageFIFO)
-	rabbitMQClient.Dispose()
 }

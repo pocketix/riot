@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/isc"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"log"
 	"net/url"
@@ -24,9 +25,11 @@ func waitForDependencies() {
 }
 
 func kickstartISC() {
-	isc.SetupRabbitMQInfrastructureForISC()
-	isc.EnqueueMessageRepresentingCurrentSDTypeConfiguration()
-	isc.EnqueueMessageRepresentingCurrentSDInstanceConfiguration()
+	rabbitMQClient := rabbitmq.NewClient()
+	defer rabbitMQClient.Dispose()
+	isc.SetupRabbitMQInfrastructureForISC(rabbitMQClient)
+	isc.EnqueueMessageRepresentingCurrentSDTypeConfiguration(rabbitMQClient)
+	isc.EnqueueMessageRepresentingCurrentSDInstanceConfiguration(rabbitMQClient)
 	go isc.ProcessIncomingMessageProcessingUnitConnectionNotifications()
 	go isc.ProcessIncomingSDInstanceRegistrationRequests(&graphql.SDInstanceGraphQLSubscriptionChannel)
 	go isc.ProcessIncomingKPIFulfillmentCheckResults(&graphql.KPIFulfillmentCheckResultGraphQLSubscriptionChannel)

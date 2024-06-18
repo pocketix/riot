@@ -31,6 +31,6 @@ func UpdateSDInstance(id uint32, sdInstanceUpdateInput graphQLModel.SDInstanceUp
 	if persistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDInstance(sdInstance); persistResult.IsFailure() {
 		return sharedUtils.NewFailureResult[graphQLModel.SDInstance](persistResult.GetError())
 	}
-	go isc.EnqueueMessageRepresentingCurrentSDInstanceConfiguration()
+	isc.EnqueueMessageRepresentingCurrentSDInstanceConfiguration(getDLLRabbitMQClient())
 	return sharedUtils.NewSuccessResult[graphQLModel.SDInstance](dll2gql.ToGraphQLModelSDInstance(sdInstance))
 }

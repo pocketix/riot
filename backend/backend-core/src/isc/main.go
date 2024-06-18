@@ -11,29 +11,20 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
-	"sync"
 )
-
-var (
-	rabbitMQClient rabbitmq.Client
-	once           sync.Once
-)
-
-func getRabbitMQClient() rabbitmq.Client {
-	once.Do(func() {
-		rabbitMQClient = rabbitmq.NewClient()
-	})
-	return rabbitMQClient
-}
 
 func ProcessIncomingMessageProcessingUnitConnectionNotifications() {
+	rabbitMQClient := rabbitmq.NewClient()
+	defer rabbitMQClient.Dispose()
 	consumeMessageProcessingUnitConnectionNotificationJSONMessages(func(_ sharedModel.MessageProcessingUnitConnectionNotification) error {
-		EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration()
+		EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration(rabbitMQClient)
 		return nil
-	})
+	}, rabbitMQClient)
 }
 
 func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceGraphQLSubscriptionChannel *chan graphQLModel.SDInstance) {
+	rabbitMQClient := rabbitmq.NewClient()
+	defer rabbitMQClient.Dispose()
 	consumeSDInstanceRegistrationRequestJSONMessages(func(sdInstanceRegistrationRequestISCMessage sharedModel.SDInstanceRegistrationRequestISCMessage) error {
 		newSDInstanceUID := sdInstanceRegistrationRequestISCMessage.SDInstanceUID
 		newSDInstanceSDTypeSpecification := sdInstanceRegistrationRequestISCMessage.SDTypeSpecification
@@ -47,10 +38,12 @@ func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceGraphQLSubscription
 			return fmt.Errorf("failed to persist a new SD instance with UID = %s and SD type specification = %s: %w", newSDInstanceUID, newSDInstanceSDTypeSpecification, newSDInstancePersistError)
 		}
 		return nil
-	})
+	}, rabbitMQClient)
 }
 
 func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultGraphQLSubscriptionChannel *chan graphQLModel.KPIFulfillmentCheckResult) {
+	rabbitMQClient := rabbitmq.NewClient()
+	defer rabbitMQClient.Dispose()
 	consumeKPIFulfillmentCheckResultJSONMessages(func(kpiFulfillmentCheckResultISCMessage sharedModel.KPIFulfillmentCheckResultISCMessage) error {
 		kpiDefinitionID := kpiFulfillmentCheckResultISCMessage.KPIDefinitionID
 		sdInstanceUID := kpiFulfillmentCheckResultISCMessage.SDInstanceUID
@@ -65,10 +58,10 @@ func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultGraphQLS
 			return fmt.Errorf("failed to persist a KPI fulfillment check result with KPI definition ID = %d, SD instance UID = %s and fulfillment status = %t: %w", kpiDefinitionID, sdInstanceUID, fulfilled, kpiFulfillmentCheckResultPersistError)
 		}
 		return nil
-	})
+	}, rabbitMQClient)
 }
 
-func EnqueueMessageRepresentingCurrentSDTypeConfiguration() {
+func EnqueueMessageRepresentingCurrentSDTypeConfiguration(rabbitMQClient rabbitmq.Client) {
 	sharedUtils.TerminateOnError(func() error {
 		sdTypesLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDTypes()
 		if sdTypesLoadResult.IsFailure() {
@@ -81,11 +74,11 @@ func EnqueueMessageRepresentingCurrentSDTypeConfiguration() {
 		if sdTypeDenotationsJSONSerializationResult.IsFailure() {
 			return sdTypeDenotationsJSONSerializationResult.GetError()
 		}
-		return getRabbitMQClient().PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.SetOfSDTypesUpdatesQueueName), sdTypeDenotationsJSONSerializationResult.GetPayload())
+		return rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.SetOfSDTypesUpdatesQueueName), sdTypeDenotationsJSONSerializationResult.GetPayload())
 	}(), "[ISC] Failed to enqueue RabbitMQ messages representing current SD type configuration")
 }
 
-func EnqueueMessageRepresentingCurrentSDInstanceConfiguration() {
+func EnqueueMessageRepresentingCurrentSDInstanceConfiguration(rabbitMQClient rabbitmq.Client) {
 	sharedUtils.TerminateOnError(func() error {
 		sdInstancesLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstances()
 		if sdInstancesLoadResult.IsFailure() {
@@ -101,11 +94,11 @@ func EnqueueMessageRepresentingCurrentSDInstanceConfiguration() {
 		if sdInstancesInfoJSONSerializationResult.IsFailure() {
 			return sdInstancesInfoJSONSerializationResult.GetError()
 		}
-		return getRabbitMQClient().PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.SetOfSDInstancesUpdatesQueueName), sdInstancesInfoJSONSerializationResult.GetPayload())
+		return rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.SetOfSDInstancesUpdatesQueueName), sdInstancesInfoJSONSerializationResult.GetPayload())
 	}(), "[ISC] Failed to enqueue RabbitMQ messages representing current SD instance configuration")
 }
 
-func EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration() {
+func EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration(rabbitMQClient rabbitmq.Client) {
 	sharedUtils.TerminateOnError(func() error {
 		kpiDefinitionsLoadResult := dbClient.GetRelationalDatabaseClientInstance().LoadKPIDefinitions()
 		if kpiDefinitionsLoadResult.IsFailure() {
@@ -124,12 +117,12 @@ func EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration() {
 		if jsonSerializationResult.IsFailure() {
 			return jsonSerializationResult.GetError()
 		}
-		return getRabbitMQClient().PublishJSONMessage(sharedUtils.NewOptionalOf(sharedConstants.MainFanoutExchangeName), sharedUtils.NewEmptyOptional[string](), jsonSerializationResult.GetPayload())
+		return rabbitMQClient.PublishJSONMessage(sharedUtils.NewOptionalOf(sharedConstants.MainFanoutExchangeName), sharedUtils.NewEmptyOptional[string](), jsonSerializationResult.GetPayload())
 	}(), "[ISC] Failed to enqueue RabbitMQ messages representing current KPI definition configuration")
 }
 
-func EnqueueMessagesRepresentingCurrentSystemConfiguration() {
-	EnqueueMessageRepresentingCurrentSDTypeConfiguration()
-	EnqueueMessageRepresentingCurrentSDInstanceConfiguration()
-	EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration()
+func EnqueueMessagesRepresentingCurrentSystemConfiguration(rabbitMQClient rabbitmq.Client) {
+	EnqueueMessageRepresentingCurrentSDTypeConfiguration(rabbitMQClient)
+	EnqueueMessageRepresentingCurrentSDInstanceConfiguration(rabbitMQClient)
+	EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration(rabbitMQClient)
 }
