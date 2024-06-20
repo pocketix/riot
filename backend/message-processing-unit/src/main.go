@@ -54,7 +54,8 @@ func checkForKPIFulfilmentCheckRequests() {
 		kpiDefinitionsBySDTypeDenotationMapMutex.Unlock()
 		sdInstanceUID := messagePayload.SDInstanceUID
 		kpiDefinitions = sharedUtils.Filter(kpiDefinitions, func(kpiDefinition sharedModel.KPIDefinition) bool {
-			return kpiDefinition.SDInstanceMode == sharedModel.ALL || sharedUtils.NewSetFromSlice(kpiDefinition.SelectedSDInstanceUIDs).Contains(sdInstanceUID)
+			selectedSDInstanceUIDSet := sharedUtils.NewSetFromSlice(kpiDefinition.SelectedSDInstanceUIDs)
+			return kpiDefinition.SDInstanceMode == sharedModel.ALL || selectedSDInstanceUIDSet.Contains(sdInstanceUID)
 		})
 		var wg sync.WaitGroup
 		wg.Add(len(kpiDefinitions))
