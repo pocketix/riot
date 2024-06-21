@@ -117,7 +117,7 @@ func EnqueueMessageRepresentingCurrentKPIDefinitionConfiguration(rabbitMQClient 
 		if jsonSerializationResult.IsFailure() {
 			return jsonSerializationResult.GetError()
 		}
-		return rabbitMQClient.PublishJSONMessage(sharedUtils.NewOptionalOf(sharedConstants.MainFanoutExchangeName), sharedUtils.NewEmptyOptional[string](), jsonSerializationResult.GetPayload())
+		return rabbitMQClient.PublishJSONMessage(sharedUtils.NewOptionalOf(sharedConstants.BuiltInFanoutExchangeName), sharedUtils.NewEmptyOptional[string](), jsonSerializationResult.GetPayload())
 	}(), "[ISC] Failed to enqueue RabbitMQ messages representing current KPI definition configuration")
 }
 

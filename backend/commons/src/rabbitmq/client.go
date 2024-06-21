@@ -9,82 +9,94 @@ import (
 	"time"
 )
 
-const (
-	mimeTypeOfJSONData      = "application/json"
-	contextTimeoutInSeconds = 5
+type connectionManager struct {
+	conn        *amqp.Connection
+	mu          sync.Mutex
+	clientCount int
+	url         string
+}
+
+var (
+	connectionManagerInstance *connectionManager = nil
+	once                      sync.Once
 )
+
+func getConnectionManagerInstance() *connectionManager {
+	once.Do(func() {
+		urlOptional := sharedUtils.GetEnvironmentVariableValue("RABBITMQ_URL")
+		connectionManagerInstance = &connectionManager{
+			url: urlOptional.GetPayloadOrDefault("amqp://guest:guest@rabbitmq:5672"),
+		}
+	})
+	return connectionManagerInstance
+}
+
+func (c *connectionManager) connect() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.conn == nil || c.conn.IsClosed() {
+		conn, err := amqp.Dial(c.url)
+		sharedUtils.TerminateOnError(err, "[RabbitMQ client] Failed to connect to RabbitMQ")
+		c.conn = conn
+	}
+	c.clientCount++
+}
+
+func (c *connectionManager) release() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.clientCount--
+	if c.clientCount == 0 && c.conn != nil {
+		sharedUtils.LogPossibleErrorThenProceed(c.conn.Close(), "[RabbitMQ client] Failed to close RabbitMQ connection")
+		c.conn = nil
+	}
+}
 
 type Client interface {
 	GetChannel() *amqp.Channel
 	PublishJSONMessage(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte) error
 	DeclareQueue(queueName string) error
-	DeclareExchange(exchangeName string, exchangeType ExchangeType) error
 	SetupMessageConsumption(queueName string, messageConsumerFunction func(message amqp.Delivery) error) error
 	Dispose()
 }
 
 type ClientImpl struct {
-	connection *amqp.Connection
-	channel    *amqp.Channel
+	channel *amqp.Channel
 }
 
-var (
-	clientCounter = new(sharedUtils.ConcurrentCounter)
-	connection    *amqp.Connection
-	connMux       sync.Mutex
-)
-
-// NewClient is a constructor-like function that returns a new instance of ClientImpl with shared Connection, but a separate Channel.
 func NewClient() Client {
-	connMux.Lock()
-	defer connMux.Unlock()
-	if clientCounter.GetCount() == 0 {
-		conn, err := amqp.Dial(sharedUtils.GetEnvironmentVariableValue("RABBITMQ_URL").GetPayloadOrDefault("amqp://guest:guest@rabbitmq:5672"))
-		sharedUtils.TerminateOnError(err, "[RabbitMQ client] Failed to connect to RabbitMQ")
-		connection = conn
-	}
-	channel, err := connection.Channel()
+	cm := getConnectionManagerInstance()
+	cm.connect()
+	channel, err := cm.conn.Channel()
 	sharedUtils.TerminateOnError(err, "[RabbitMQ client] Failed to open a channel")
-	clientCounter.Increment()
-	return &ClientImpl{connection: connection, channel: channel}
+	return &ClientImpl{channel: channel}
 }
 
-func (r *ClientImpl) GetChannel() *amqp.Channel {
-	return r.channel
+func (c *ClientImpl) GetChannel() *amqp.Channel {
+	return c.channel
 }
 
-func (r *ClientImpl) PublishJSONMessage(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte) error {
-	ctx, cancelFunction := context.WithTimeout(context.Background(), contextTimeoutInSeconds*time.Second)
+func (c *ClientImpl) PublishJSONMessage(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte) error {
+	ctx, cancelFunction := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFunction()
-	return r.channel.PublishWithContext(ctx, exchangeNameOptional.GetPayloadOrDefault(""), routingKeyOptional.GetPayloadOrDefault(""), false, false, amqp.Publishing{
-		ContentType: mimeTypeOfJSONData,
+	exchangeName := exchangeNameOptional.GetPayloadOrDefault("")
+	routingKey := routingKeyOptional.GetPayloadOrDefault("")
+	return c.channel.PublishWithContext(ctx, exchangeName, routingKey, false, false, amqp.Publishing{
+		ContentType: "application/json",
 		Body:        messagePayload,
 	})
 }
 
-func (r *ClientImpl) DeclareQueue(queueName string) error {
-	_, err := r.channel.QueueDeclare(queueName, false, false, false, false, nil)
+func (c *ClientImpl) DeclareQueue(queueName string) error {
+	_, err := c.channel.QueueDeclare(queueName, false, false, false, false, nil)
 	return err
 }
 
-type ExchangeType string
-
-const (
-	Direct  ExchangeType = "direct"
-	Fanout  ExchangeType = "fanout"
-	Topic   ExchangeType = "topic"
-	Headers ExchangeType = "headers"
-)
-
-func (r *ClientImpl) DeclareExchange(exchangeName string, exchangeType ExchangeType) error {
-	return r.channel.ExchangeDeclare(exchangeName, string(exchangeType), false, false, false, false, nil)
-}
-
-func (r *ClientImpl) SetupMessageConsumption(queueName string, messageConsumerFunction func(message amqp.Delivery) error) error {
-	if err := r.channel.Qos(1, 0, false); err != nil {
+func (c *ClientImpl) SetupMessageConsumption(queueName string, messageConsumerFunction func(message amqp.Delivery) error) error {
+	if err := c.channel.Qos(1, 0, false); err != nil {
 		return err
 	}
-	messageChannel, err := r.channel.Consume(queueName, "", false, false, false, false, nil)
+	messageChannel, err := c.channel.Consume(queueName, "", false, false, false, false, nil)
 	if err != nil {
 		return err
 	}
@@ -99,18 +111,15 @@ func (r *ClientImpl) SetupMessageConsumption(queueName string, messageConsumerFu
 	return nil
 }
 
-func (r *ClientImpl) Dispose() {
-	sharedUtils.LogPossibleErrorThenProceed(r.channel.Close(), "Failed to close a channel")
-	if clientCounter.GetCount() == 1 {
-		sharedUtils.TerminateOnError(connection.Close(), "[RabbitMQ] Failed to close the shared connection")
-	}
-	clientCounter.Decrement()
+func (c *ClientImpl) Dispose() {
+	sharedUtils.LogPossibleErrorThenProceed(c.channel.Close(), "[RabbitMQ client] Failed to close a channel")
+	getConnectionManagerInstance().release()
 }
 
-func ConsumeJSONMessages[T any](c Client, queueName string, messagePayloadConsumerFunction func(messagePayload T) error) error {
-	return c.SetupMessageConsumption(queueName, func(message amqp.Delivery) error {
+func ConsumeJSONMessages[T any](client Client, queueName string, messagePayloadConsumerFunction func(messagePayload T) error) error {
+	return client.SetupMessageConsumption(queueName, func(message amqp.Delivery) error {
 		messageContentType := message.ContentType
-		if messageContentType != mimeTypeOfJSONData {
+		if messageContentType != "application/json" {
 			return fmt.Errorf("incorrect message content type: %s", messageContentType)
 		}
 		jsonDeserializationResult := sharedUtils.DeserializeFromJSON[T](message.Body)
@@ -121,14 +130,14 @@ func ConsumeJSONMessages[T any](c Client, queueName string, messagePayloadConsum
 	})
 }
 
-func ConsumeJSONMessagesFromFanoutExchange[T any](c Client, fanoutExchangeName string, messagePayloadConsumerFunction func(messagePayload T) error) error {
-	queue, err := c.GetChannel().QueueDeclare("", false, false, true, false, nil)
+func ConsumeJSONMessagesFromFanoutExchange[T any](client Client, fanoutExchangeName string, messagePayloadConsumerFunction func(messagePayload T) error) error {
+	queue, err := client.GetChannel().QueueDeclare("", false, false, true, false, nil)
 	if err != nil {
 		return err
 	}
 	queueName := queue.Name
-	if err := c.GetChannel().QueueBind(queueName, "", fanoutExchangeName, false, nil); err != nil {
+	if err := client.GetChannel().QueueBind(queueName, "", fanoutExchangeName, false, nil); err != nil {
 		return err
 	}
-	return ConsumeJSONMessages[T](c, queueName, messagePayloadConsumerFunction)
+	return ConsumeJSONMessages[T](client, queueName, messagePayloadConsumerFunction)
 }

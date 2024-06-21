@@ -9,8 +9,8 @@ import (
 )
 
 func consumeMessageProcessingUnitConnectionNotificationJSONMessages(messageProcessingUnitConnectionNotificationConsumerFunction func(messageProcessingUnitConnectionNotification sharedModel.MessageProcessingUnitConnectionNotification) error, rabbitMQClient rabbitmq.Client) {
-	err := rabbitmq.ConsumeJSONMessages[sharedModel.MessageProcessingUnitConnectionNotification](rabbitMQClient, sharedConstants.MessageProcessingUnitConnectionNotificationsQueue, messageProcessingUnitConnectionNotificationConsumerFunction)
-	errorMessage := fmt.Sprintf("[ISC] Consumption of messages from the '%s' queue has failed", sharedConstants.MessageProcessingUnitConnectionNotificationsQueue)
+	err := rabbitmq.ConsumeJSONMessages[sharedModel.MessageProcessingUnitConnectionNotification](rabbitMQClient, sharedConstants.MessageProcessingUnitConnectionNotificationsQueueName, messageProcessingUnitConnectionNotificationConsumerFunction)
+	errorMessage := fmt.Sprintf("[ISC] Consumption of messages from the '%s' queue has failed", sharedConstants.MessageProcessingUnitConnectionNotificationsQueueName)
 	sharedUtils.TerminateOnError(err, errorMessage)
 }
 
