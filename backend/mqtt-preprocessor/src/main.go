@@ -8,6 +8,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/google/uuid"
 	"log"
 	"net/url"
 	"os"
@@ -187,7 +188,8 @@ func main() {
 	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
 	mqttBrokerUsername := sharedUtils.GetEnvironmentVariableValue("MQTT_BROKER_USERNAME").GetPayloadOrDefault("admin")
 	mqttBrokerPassword := sharedUtils.GetEnvironmentVariableValue("MQTT_BROKER_PASSWORD").GetPayloadOrDefault("password")
-	mqttClient := mqtt.NewEclipsePahoBasedMqttClient(parsedMQTTBrokerURL.String(), "bp-bures-RIoT-MQTT-preprocessor", mqttBrokerUsername, mqttBrokerPassword)
+	mqttClientID := fmt.Sprintf("RIoT-%s", uuid.New().String()[:8])
+	mqttClient := mqtt.NewEclipsePahoBasedMqttClient(parsedMQTTBrokerURL.String(), mqttClientID, mqttBrokerUsername, mqttBrokerPassword)
 	sharedUtils.TerminateOnError(mqttClient.Connect(), fmt.Sprintf("Failed to connect to the MQTT broker [%s]", rawMQTTBrokerURL))
 	mqttTopic := sharedUtils.GetEnvironmentVariableValue("MQTT_TOPIC").GetPayloadOrDefault("topic")
 	sharedUtils.TerminateOnError(mqttClient.Subscribe(mqttTopic, mqtt.QosAtLeastOnce, addIncomingMQTTMessageToFIFO), fmt.Sprintf("Failed to subscribe to the MQTT topic [%s]", mqttTopic))

@@ -101,7 +101,6 @@ const ApplicationLayout: React.FC = () => {
         <CustomLinkButton route={`/${sdTypes}`} text="SD type definitions" iconIdentifier="home_iot_device" />
         <CustomLinkButton route={`/${kpiDefinitions}`} text="KPI definitions" iconIdentifier="rule" />
         <div className="mt-auto flex flex-col gap-4">
-          <CustomLinkButton route={`/${configuration}`} text="System configuration" iconIdentifier="settings" />
           <CustomLinkButton route={`/${apolloSandbox}`} text="Apollo Sandbox" iconIdentifier="labs" />
         </div>
       </div>
@@ -127,7 +126,6 @@ const Application: React.FC = () => {
                 <Route path={kpiDefinitions} element={<KPIPageController />} />
                 <Route path={`${kpiDefinitions}/create`} element={<KPIDetailPageController />} />
                 <Route path={`${kpiDefinitions}/:id/edit`} element={<KPIDetailPageController />} />
-                <Route path={configuration} element={<ConfigurationPage />} />
                 <Route path={apolloSandbox} element={<ApolloSandbox initialEndpoint={backendCoreURL} allowDynamicStyles className="h-full w-full" />} />
                 <Route path="*" element={<FallbackPage />} />
               </Route>

@@ -1,8 +1,10 @@
 package mqtt
 
 import (
+	"crypto/tls"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
+	"time"
 )
 
 const (
@@ -28,6 +30,16 @@ func NewEclipsePahoBasedMqttClient(brokerUri string, clientId string, username s
 	opts.SetClientID(clientId)
 	opts.SetUsername(username)
 	opts.SetPassword(password)
+	opts.SetKeepAlive(30 * time.Second)
+	opts.SetTLSConfig(&tls.Config{
+		InsecureSkipVerify: true,
+	})
+	opts.SetOnConnectHandler(func(client mqtt.Client) {
+		log.Println("MQTT client connected successfully")
+	})
+	opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
+		log.Printf("MQTT connection lost: %s\n", err.Error())
+	})
 	client := mqtt.NewClient(opts)
 	return &eclipsePahoBasedMqttClientImpl{client: client}
 }
