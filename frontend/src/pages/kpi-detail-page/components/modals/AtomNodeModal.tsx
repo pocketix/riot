@@ -69,17 +69,17 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
           } else if (lowerCaseReferenceValueString === 'false') {
             return false
           } else {
-            return undefined
+            return null
           }
         case SdParameterType.Number:
           if (/^-?\d+(\.\d+)?$/.test(referenceValueString)) {
             return parseFloat(referenceValueString)
           } else {
-            return undefined
+            return null
           }
       }
     })(referenceValueString, sdParameter.type)
-    if (!referenceValue) {
+    if (referenceValue === null) {
       setIncorrectReferenceValueStringFlag(true)
       return
     }
