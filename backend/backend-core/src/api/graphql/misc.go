@@ -34,7 +34,7 @@ func SetupGraphQLServer() {
 	graphQLServer.Use(extension.Introspection{})
 	router := chi.NewRouter()
 	router.Handle("/", cors.New(cors.Options{
-		AllowedOrigins:   sharedUtils.SliceOf("http://localhost:1234", "http://localhost:8080"),
+		AllowedOrigins:   sharedUtils.SliceOf("*"),
 		AllowCredentials: true,
 		Debug:            false,
 	}).Handler(graphQLServer))
