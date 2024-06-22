@@ -55,10 +55,10 @@ const KPIFulfillmentCheckResultLabel: React.FC<KPIFulfillmentCheckResultLabelPro
     }
   }, [props.kpiFulfillmentState])
   return (
-    <div key={props.kpiDefinitionID} className="flex items-center gap-1.5 rounded-[5px] px-2 py-2">
-      <p className="font-bold">{props.kpiDefinitionUserIdentifier}</p>
+    <div key={props.kpiDefinitionID} className="flex max-w-[100%] items-center gap-1.5 rounded-[5px] px-2 py-2">
+      <p className="truncate font-bold">{props.kpiDefinitionUserIdentifier}</p>
       <div
-        className="h-5 w-5 rounded-full border-[2px] border-black"
+        className="h-5 w-5 min-w-[20px] rounded-full border-[2px] border-black"
         style={{
           backgroundColor: bgColorHex
         }}

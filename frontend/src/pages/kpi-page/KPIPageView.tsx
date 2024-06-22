@@ -23,8 +23,9 @@ const KPIPageView: React.FC<KPIPageViewProps> = (props) => {
               <GenericCardTemplate // TODO: Consider creating a separate component out of this...
                 onEdit={() => changeURL(`${kpiDefinition.id}/edit`)}
                 onDelete={() => props.initiateKPIDefinitionDeletion(kpiDefinition.id)}
+                className="max-w-[500px]"
               >
-                <p>
+                <p className="truncate">
                   User identifier: <strong>{kpiDefinition.userIdentifier}</strong>
                 </p>
                 <p>

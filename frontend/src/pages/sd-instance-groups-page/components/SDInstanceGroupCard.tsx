@@ -29,7 +29,7 @@ const SDInstanceGroupCard: React.FC<SDInstanceGroupCardProps> = (props) => {
         <p className="text-[24px]">SD instances:</p>
         <ul>
           {props.sdInstanceData.map((sdInstanceDataItem) => (
-            <li key={sdInstanceDataItem.id} className="text-[24px] font-bold">
+            <li key={sdInstanceDataItem.id} className="truncate text-[24px] font-bold">
               {sdInstanceDataItem.userIdentifier}
             </li>
           ))}

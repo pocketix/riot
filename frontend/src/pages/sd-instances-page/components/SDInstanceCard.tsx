@@ -64,7 +64,7 @@ const SDInstanceCard: React.FC<SDInstanceCardProps> = (props) => {
             />
           </div>
         )}
-        <p className="mb-1 mt-1">
+        <p className="mb-1 mt-1 truncate">
           UID: <strong className="font-bold">{props.uid}</strong>
         </p>
         <p className="mb-1 mt-1">
