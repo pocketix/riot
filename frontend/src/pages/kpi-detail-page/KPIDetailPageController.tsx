@@ -227,6 +227,7 @@ const KPIDetailPageController: React.FC = () => {
               nodeType: NodeType.NewNode
             }
             draftDefinitionModel.children = []
+            draftDefinitionModel.selectedSDInstanceUIDs = []
           })
         )
       }}

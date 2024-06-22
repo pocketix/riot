@@ -116,12 +116,14 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
                 }}
                 title="Selected SD instances"
                 allSelectionSubjects={
-                  props?.restOfKPIDefinitionDetailPageData?.sdInstances.map((sdInstance) => {
-                    return {
-                      id: sdInstance.id,
-                      name: sdInstance.userIdentifier
-                    }
-                  }) ?? []
+                  props?.restOfKPIDefinitionDetailPageData?.sdInstances
+                    .filter((sdInstance) => props?.sdTypeData?.id && sdInstance.type.id === props.sdTypeData.id)
+                    .map((sdInstance) => {
+                      return {
+                        id: sdInstance.id,
+                        name: sdInstance.userIdentifier
+                      }
+                    }) ?? []
                 }
                 selectedSelectionSubjects={
                   props?.restOfKPIDefinitionDetailPageData?.sdInstances
