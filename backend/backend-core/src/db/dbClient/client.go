@@ -120,7 +120,7 @@ func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition shared
 		}
 		return nil
 	}); err != nil {
-		sharedUtils.NewFailureResult[uint32](err)
+		return sharedUtils.NewFailureResult[uint32](err)
 	}
 	sdInstanceKPIDefinitionRelationshipEntities := sharedUtils.Map(referencedSDInstances, func(sdInstanceEntity dbModel.SDInstanceEntity) dbModel.SDInstanceKPIDefinitionRelationshipEntity {
 		return dbModel.SDInstanceKPIDefinitionRelationshipEntity{
@@ -138,7 +138,7 @@ func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition shared
 		}
 		return nil
 	}); err != nil {
-		sharedUtils.NewFailureResult[uint32](err)
+		return sharedUtils.NewFailureResult[uint32](err)
 	}
 	return sharedUtils.NewSuccessResult[uint32](kpiDefinitionEntity.ID)
 }
