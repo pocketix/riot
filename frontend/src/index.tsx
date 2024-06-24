@@ -22,9 +22,11 @@ import SDInstanceGroupsPageController from './pages/sd-instance-groups-page/SDIn
 const backendCoreURL: string = process.env.BACKEND_CORE_URL || 'http://localhost:9090'
 const webSocketBackendCoreURL: string = (() => {
   const parsedBackendCoreURL = new URL(backendCoreURL)
-  parsedBackendCoreURL.protocol = 'ws:'
+  parsedBackendCoreURL.protocol = parsedBackendCoreURL.protocol.endsWith('s:') ? 'wss:' : 'ws:'
   return parsedBackendCoreURL.toString()
 })()
+
+console.info(`RIoT frontend is set to communicate with RIoT backend running at: ${backendCoreURL}, ${webSocketBackendCoreURL}`)
 
 const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   link: split(
