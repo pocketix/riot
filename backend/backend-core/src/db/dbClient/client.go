@@ -13,6 +13,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"log"
 	"sync"
 )
 
@@ -86,6 +87,15 @@ func (r *relationalDatabaseClientImpl) setup() {
 func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition sharedModel.KPIDefinition) sharedUtils.Result[uint32] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	kpiDefinitionID := sharedUtils.NewOptionalFromPointer(kpiDefinition.ID).GetPayloadOrDefault(0)
+	idsOfKPINodeEntitiesFormingTheKPIDefinition := sharedUtils.EmptySlice[uint32]()
+	if kpiDefinitionID != 0 {
+		getIDsOfKPINodeEntitiesFormingTheKPIDefinitionResult := dbModel.GetIDsOfKPINodeEntitiesFormingTheKPIDefinition(r.db, kpiDefinitionID)
+		if getIDsOfKPINodeEntitiesFormingTheKPIDefinitionResult.IsFailure() {
+			return sharedUtils.NewFailureResult[uint32](getIDsOfKPINodeEntitiesFormingTheKPIDefinitionResult.GetError())
+		}
+		idsOfKPINodeEntitiesFormingTheKPIDefinition = getIDsOfKPINodeEntitiesFormingTheKPIDefinitionResult.GetPayload()
+	}
 	kpiNodeEntity, kpiNodeEntities, logicalOperationNodeEntities, atomNodeEntities := dll2db.ToDBModelEntitiesKPIDefinition(kpiDefinition)
 	referencedSDInstancesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDInstanceEntity](r.db, dbUtil.Where("uid IN (?)", kpiDefinition.SelectedSDInstanceUIDs))
 	if referencedSDInstancesLoadResult.IsFailure() {
@@ -93,7 +103,7 @@ func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition shared
 	}
 	referencedSDInstances := referencedSDInstancesLoadResult.GetPayload()
 	kpiDefinitionEntity := dbModel.KPIDefinitionEntity{
-		ID:             sharedUtils.NewOptionalFromPointer(kpiDefinition.ID).GetPayloadOrDefault(0),
+		ID:             kpiDefinitionID,
 		SDTypeID:       kpiDefinition.SDTypeID,
 		UserIdentifier: kpiDefinition.UserIdentifier,
 		RootNode:       kpiNodeEntity,
@@ -139,6 +149,9 @@ func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition shared
 		return nil
 	}); err != nil {
 		return sharedUtils.NewFailureResult[uint32](err)
+	}
+	if err := dbUtil.DeleteEntitiesBasedOnSliceOfIds[dbModel.KPINodeEntity](r.db, idsOfKPINodeEntitiesFormingTheKPIDefinition); err != nil {
+		log.Printf("Warning: Best-effort cleanup operation (deleting redundant KPI node records after KPI definition update) failed: %s\n", err.Error())
 	}
 	return sharedUtils.NewSuccessResult[uint32](kpiDefinitionEntity.ID)
 }

@@ -37,11 +37,3 @@ func (s SDTypeEntity) AfterDelete(tx *gorm.DB) error {
 	}
 	return nil
 }
-
-func (k KPIDefinitionEntity) BeforeUpdate(tx *gorm.DB) error {
-	idsOfKPINodeEntitiesFormingTheDefinitionResult := GetIDsOfKPINodeEntitiesFormingTheKPIDefinition(tx, k.ID)
-	if idsOfKPINodeEntitiesFormingTheDefinitionResult.IsFailure() {
-		return idsOfKPINodeEntitiesFormingTheDefinitionResult.GetError()
-	}
-	return dbUtil.DeleteEntitiesBasedOnSliceOfIds[KPINodeEntity](tx, idsOfKPINodeEntitiesFormingTheDefinitionResult.GetPayload())
-}
