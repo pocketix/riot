@@ -6,3 +6,6 @@ scrape_configs:
     static_configs:
       - targets: ['rabbitmq:15692']
     metrics_path: /metrics/per-object
+  - job_name: 'mqtt-prometheus-exporter'
+    static_configs:
+      - targets: ["mqtt-prometheus-exporter:9000"]

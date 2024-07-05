@@ -114,3 +114,13 @@ services:
       - "./docker/prometheus.yml:/etc/prometheus/prometheus.yml"
     ports:
       - "9091:9090"
+
+  mqtt-prometheus-exporter:
+    image: kpetrem/mqtt-exporter
+    ports:
+      - "9000:9000"
+    environment:
+      MQTT_ADDRESS: mosquitto
+      MQTT_TOPIC: topic
+      MQTT_USERNAME: admin
+      MQTT_PASSWORD: password
