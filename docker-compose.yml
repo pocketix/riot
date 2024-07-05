@@ -92,5 +92,25 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     ports:
-      - "5672:5672" # RabbitMQ itself
-      - "15672:15672" # Management console
+      - "5672:5672" # Main (amqp)
+      - "15672:15672" # Management
+      - "15692:15692" # Prometheus
+
+  grafana:
+    image: grafana/grafana-enterprise
+    volumes:
+      - ./docker/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: password
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - "./docker/prometheus.yml:/etc/prometheus/prometheus.yml"
+    ports:
+      - "9091:9090"
