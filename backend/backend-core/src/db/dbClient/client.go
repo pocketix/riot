@@ -14,7 +14,9 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"log"
+	"strings"
 	"sync"
+	"time"
 )
 
 var (
@@ -64,8 +66,18 @@ func GetRelationalDatabaseClientInstance() RelationalDatabaseClient {
 
 func (r *relationalDatabaseClientImpl) setup() {
 	rawPostgresURL := sharedUtils.GetEnvironmentVariableValue("POSTGRES_URL").GetPayloadOrDefault("postgres://admin:password@postgres:5432/postgres-db")
-	db, err := gorm.Open(postgres.Open(rawPostgresURL), new(gorm.Config))
-	sharedUtils.TerminateOnError(err, "[RDB client (GORM)]: couldn't connect to the database")
+	var db *gorm.DB
+	var err error
+	for {
+		db, err = gorm.Open(postgres.Open(rawPostgresURL), new(gorm.Config))
+		if err != nil && strings.Contains(err.Error(), "SQLSTATE 57P03") {
+			fmt.Println("[RDB client (GORM)]: Database seems to be starting up, retrying connection in 5 seconds...")
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		sharedUtils.TerminateOnError(err, "[RDB client (GORM)]: couldn't connect to the database")
+		break
+	}
 	session := new(gorm.Session)
 	session.Logger = logger.Default.LogMode(logger.Warn)
 	r.db = db.Session(session)
