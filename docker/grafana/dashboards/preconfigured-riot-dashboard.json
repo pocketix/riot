@@ -68,7 +68,7 @@
       },
       "id": 10,
       "panels": [],
-      "title": "RabbitMQ – rate of message publishing into queues",
+      "title": "RabbitMQ – queue filling rate",
       "type": "row"
     },
     {
@@ -132,7 +132,7 @@
           "editorMode": "code",
           "expr": "irate(rabbitmq_queue_messages{queue=\"kpi-fulfillment-check-requests\"}[1m])",
           "instant": false,
-          "legendFormat": "Per second rate of message publishing into the 'kpi-fulfillment-check-requests' queue",
+          "legendFormat": "Per second rate of 'kpi-fulfillment-check-requests' queue filling",
           "range": true,
           "refId": "A"
         }
@@ -201,7 +201,7 @@
           "editorMode": "code",
           "expr": "irate(rabbitmq_queue_messages{queue=\"kpi-fulfillment-check-results\"}[1m])",
           "instant": false,
-          "legendFormat": "Per second rate of message publishing into the 'kpi-fulfillment-check-results' queue",
+          "legendFormat": "Per second rate of 'kpi-fulfillment-check-results' queue filling",
           "range": true,
           "refId": "A"
         }
@@ -270,7 +270,7 @@
           "editorMode": "code",
           "expr": "irate(rabbitmq_queue_messages{queue=\"sd-instance-registration-requests\"}[1m])",
           "instant": false,
-          "legendFormat": "Per second rate of message publishing into the 'sd-instance-registration-requests' queue",
+          "legendFormat": "Per second rate of 'sd-instance-registration-requests' queue filling",
           "range": true,
           "refId": "A"
         }
@@ -365,7 +365,7 @@
           "editorMode": "code",
           "expr": "irate(rabbitmq_queue_messages{queue=\"kpi-fulfillment-check-requests\"}[1m])",
           "instant": false,
-          "legendFormat": "Per second rate of message publishing into the 'kpi-fulfillment-check-requests' queue",
+          "legendFormat": "Per second rate of 'kpi-fulfillment-check-requests' queue filling",
           "range": true,
           "refId": "A"
         }
@@ -460,7 +460,7 @@
           "editorMode": "code",
           "expr": "irate(rabbitmq_queue_messages{queue=\"kpi-fulfillment-check-results\"}[1m])",
           "instant": false,
-          "legendFormat": "Per second rate of message publishing into the 'kpi-fulfillment-check-results' queue",
+          "legendFormat": "Per second rate of 'kpi-fulfillment-check-results' queue filling",
           "range": true,
           "refId": "A"
         }
@@ -555,7 +555,7 @@
           "editorMode": "code",
           "expr": "irate(rabbitmq_queue_messages{queue=\"sd-instance-registration-requests\"}[1m])",
           "instant": false,
-          "legendFormat": "Per second rate of message publishing into the 'sd-instance-registration-requests' queue",
+          "legendFormat": "Per second rate of 'sd-instance-registration-requests' queue filling",
           "range": true,
           "refId": "A"
         }
