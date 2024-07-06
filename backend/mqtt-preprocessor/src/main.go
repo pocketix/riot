@@ -97,10 +97,9 @@ func generateKPIFulfillmentCheckRequest(uid string, sdType string, parameters an
 	}
 	err := rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.KPIFulfillmentCheckRequestsQueueName), jsonSerializationResult.GetPayload())
 	if err != nil {
-		log.Println("Failed to publish a KPI fulfillment check request message") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
+		log.Println("Failed to publish a KPI fulfillment check request message")
 		return
 	}
-	log.Println("Successfully published a KPI fulfillment check request message") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
 }
 
 func generateSDInstanceRegistrationRequest(uid string, sdType string, timestamp float32, rabbitMQClient rabbitmq.Client) {
@@ -115,10 +114,9 @@ func generateSDInstanceRegistrationRequest(uid string, sdType string, timestamp 
 	}
 	err := rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.SDInstanceRegistrationRequestsQueueName), jsonSerializationResult.GetPayload())
 	if err != nil {
-		log.Println("Failed to publish a SD instance registration request message") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
+		log.Println("Failed to publish a SD instance registration request message")
 		return
 	}
-	log.Println("Successfully published a SD instance registration request message") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
 	sdInstancesMutex.Lock()
 	sdInstances.Add(sharedModel.SDInstanceInfo{
 		SDInstanceUID:   uid,
@@ -136,7 +134,6 @@ func processMQTTMessagePayload(mqttMessagePayload []byte, rabbitMQClient rabbitm
 	messagePayloadObject := jsonDeserializationResult.GetPayload()
 	sd := messagePayloadObject.Data.SDArray[0]
 	if !mqttMessageSDTypeCorrespondsToSDTypeDefinitions(sd.Type) {
-		log.Println("Discarding the MQTT message: the SD type does not correspond to the current SD type definitions") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
 		return
 	}
 	switch determineSDInstanceScenario(sd.UID) {
@@ -144,8 +141,6 @@ func processMQTTMessagePayload(mqttMessagePayload []byte, rabbitMQClient rabbitm
 		generateSDInstanceRegistrationRequest(sd.UID, sd.Type, messagePayloadObject.Notification.Timestamp, rabbitMQClient)
 	case confirmedSDInstance:
 		generateKPIFulfillmentCheckRequest(sd.UID, sd.Type, sd.Parameters, messagePayloadObject.Notification.Timestamp, rabbitMQClient)
-	case sdInstanceNotYetConfirmedByUser: // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
-		log.Println("Discarding the MQTT message: the SD instance is in the system, but has not yet been confirmed by the user") // TODO: This is here for debug purposes. Get rid of this line once it becomes unnecessary.
 	}
 }
 
