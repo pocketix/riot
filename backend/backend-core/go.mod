@@ -7,6 +7,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/MichalBures-OG/bp-bures-RIoT-commons v0.0.0-00010101000000-000000000000
 	github.com/go-chi/chi/v5 v5.0.12
+	github.com/google/go-cmp v0.6.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/rs/cors v1.11.0
 	github.com/vektah/gqlparser/v2 v2.5.11
