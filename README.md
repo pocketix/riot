@@ -17,13 +17,20 @@
       - 8080
   - Complementary services
     - Mosquitto MQTT broker
-      - 9001
+      - 9001 (optional)
       - 1883
     - PostgreSQL relational database
       - 5432
     - RabbitMQ messaging and streaming broker
       - 5672
-      - 15672
+      - 15672 (optional)
+      - 15692 (optional)
+    - Prometheus (optional, useful for monitoring)
+      - 9091
+    - MQTT Prometheus Exporter (optional, useful for monitoring)
+      - 9000
+    - Grafana (optional, useful for monitoring)
+      - 3000
     - pgAdmin database administration tool (optional, useful mainly for debugging purposes)
       - 8081
 
