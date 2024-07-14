@@ -68,12 +68,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='bp-bures-RIoT MQTT stress test script')
     parser.add_argument('--messages-per-second', type=int, default=10, help='Number of MQTT messages to send per second (1-200: number outside this range means \'unlimited\' message rate)')
     parser.add_argument('--sd-instance-mode', type=lambda s: SDInstanceMode[s.upper()], choices=list(SDInstanceMode), default=SDInstanceMode.ONE, help='SD instance mode: from how many different SD instances should the messages come')
+    parser.add_argument('--mqtt-broker-hostname', type=str, default='host.docker.internal', help='MQTT broker hostname')
+    parser.add_argument('--mqtt-broker-port', type=int, default=1883, help='MQTT broker port')
+    parser.add_argument('--mqtt-broker-username', type=str, default='admin', help='MQTT broker username')
+    parser.add_argument('--mqtt-broker-password', type=str, default='password', help='MQTT broker password')
+    parser.add_argument('--mqtt-topic', type=str, default='topic', help='MQTT topic')
     args = parser.parse_args()
     messages_per_second = args.messages_per_second
     sd_instance_mode = args.sd_instance_mode
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-    client.username_pw_set("admin", "password")
-    client.connect("host.docker.internal", 1883)  # Expects MQTT broker running in Docker on port 1883
+    client.username_pw_set(args.mqtt_broker_username, args.mqtt_broker_password)
+    client.connect(args.mqtt_broker_hostname, args.mqtt_broker_port)
     client.loop_start()
     if 0 < messages_per_second < 201:
         print(f"Starting the stress test of bp-bures-RIoT... {messages_per_second} MQTT message(s) per second")
@@ -81,9 +86,10 @@ if __name__ == '__main__':
         print(f"Starting the stress test of bp-bures-RIoT... 'unlimited' MQTT message rate")
     print(f"SD instance mode: {str(sd_instance_mode)}")
     message_counter = 0
+    topic = args.mqtt_topic
     try:
         while True:
-            rc = client.publish("topic", generate_message_payload()).rc  # Publishing messages to the 'topic' topic
+            rc = client.publish(topic, generate_message_payload()).rc
             if rc != mqtt.MQTT_ERR_SUCCESS:
                 print(f"Failed to publish message NO {message_counter + 1}: rc = f{rc}")
                 break
