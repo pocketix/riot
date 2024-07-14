@@ -26,7 +26,7 @@ var (
 
 type RelationalDatabaseClient interface {
 	setup()
-	PersistKPIDefinition(kpiDefinition sharedModel.KPIDefinition) sharedUtils.Result[uint32] // TODO: Is ID enough?
+	PersistKPIDefinition(kpiDefinition sharedModel.KPIDefinition) sharedUtils.Result[uint32]
 	LoadKPIDefinition(id uint32) sharedUtils.Result[sharedModel.KPIDefinition]
 	LoadKPIDefinitions() sharedUtils.Result[[]sharedModel.KPIDefinition]
 	DeleteKPIDefinition(id uint32) error
@@ -35,7 +35,7 @@ type RelationalDatabaseClient interface {
 	LoadSDTypeBasedOnDenotation(denotation string) sharedUtils.Result[dllModel.SDType]
 	LoadSDTypes() sharedUtils.Result[[]dllModel.SDType]
 	DeleteSDType(id uint32) error
-	PersistSDInstance(sdInstance dllModel.SDInstance) sharedUtils.Result[uint32] // TODO: Is ID enough?
+	PersistSDInstance(sdInstance dllModel.SDInstance) sharedUtils.Result[uint32]
 	PersistNewSDInstance(uid string, sdTypeSpecification string) sharedUtils.Result[dllModel.SDInstance]
 	LoadSDInstance(id uint32) sharedUtils.Result[dllModel.SDInstance]
 	LoadSDInstanceBasedOnUID(uid string) sharedUtils.Result[sharedUtils.Optional[dllModel.SDInstance]]

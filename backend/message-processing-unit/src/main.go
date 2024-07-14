@@ -50,7 +50,6 @@ func checkForKPIFulfilmentCheckRequests() {
 	err := rabbitmq.ConsumeJSONMessages[sharedModel.KPIFulfillmentCheckRequestISCMessage](rabbitMQClient, sharedConstants.KPIFulfillmentCheckRequestsQueueName, func(messagePayload sharedModel.KPIFulfillmentCheckRequestISCMessage) error {
 		kpiDefinitionsBySDTypeDenotationMapMutex.Lock()
 		kpiDefinitions := kpiDefinitionsBySDTypeDenotationMap[messagePayload.SDTypeSpecification]
-		log.Printf("%d KPI definitions found for the SD type '%s'\n", len(kpiDefinitions), messagePayload.SDTypeSpecification)
 		kpiDefinitionsBySDTypeDenotationMapMutex.Unlock()
 		sdInstanceUID := messagePayload.SDInstanceUID
 		kpiDefinitions = sharedUtils.Filter(kpiDefinitions, func(kpiDefinition sharedModel.KPIDefinition) bool {

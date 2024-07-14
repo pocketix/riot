@@ -60,7 +60,7 @@ func GetKPIDefinitions() sharedUtils.Result[[]graphQLModel.KPIDefinition] {
 }
 
 func GetKPIDefinition(id uint32) sharedUtils.Result[graphQLModel.KPIDefinition] {
-	// TODO: Searching for target KPI definition on business-logic layer (suboptimal)
+	// FIXME: Searching for target KPI definition on domain-logic layer (suboptimal)
 	loadResult := dbClient.GetRelationalDatabaseClientInstance().LoadKPIDefinitions()
 	if loadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[graphQLModel.KPIDefinition](loadResult.GetError())
