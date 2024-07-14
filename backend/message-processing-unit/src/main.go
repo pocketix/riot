@@ -21,9 +21,7 @@ var (
 	unitUUID                                 string
 )
 
-func checkKPIFulfilmentThenEnqueueResult(sdInstanceUID string, sdParameters any, kpiDefinition sharedModel.KPIDefinition) {
-	rabbitMQClient := rabbitmq.NewClient()
-	defer rabbitMQClient.Dispose()
+func checkKPIFulfilmentThenEnqueueResult(sdInstanceUID string, sdParameters any, kpiDefinition sharedModel.KPIDefinition, rabbitMQClient rabbitmq.Client) {
 	kpiFulfillmentCheckResult := processing.CheckKPIFulfillment(kpiDefinition, &sdParameters)
 	if kpiFulfillmentCheckResult.IsFailure() {
 		log.Printf("Failed to check KPI fulfillment: %s\n", kpiFulfillmentCheckResult.GetError().Error())
@@ -56,15 +54,9 @@ func checkForKPIFulfilmentCheckRequests() {
 			selectedSDInstanceUIDSet := sharedUtils.NewSetFromSlice(kpiDefinition.SelectedSDInstanceUIDs)
 			return kpiDefinition.SDInstanceMode == sharedModel.ALL || selectedSDInstanceUIDSet.Contains(sdInstanceUID)
 		})
-		var wg sync.WaitGroup
-		wg.Add(len(kpiDefinitions))
-		for _, kpiDefinition := range kpiDefinitions {
-			go func(kpiDefinition sharedModel.KPIDefinition) { // TODO: Consider replacing 'unlimited' number of gorountines by worker pool
-				defer wg.Done()
-				checkKPIFulfilmentThenEnqueueResult(sdInstanceUID, messagePayload.Parameters, kpiDefinition)
-			}(kpiDefinition)
+		for _, kpiDefinition := range kpiDefinitions { // TODO: Consider replacing sequential processing by a worker pool
+			checkKPIFulfilmentThenEnqueueResult(sdInstanceUID, messagePayload.Parameters, kpiDefinition, rabbitMQClient)
 		}
-		wg.Wait()
 		return nil
 	})
 	if err != nil {
