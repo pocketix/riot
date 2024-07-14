@@ -73,7 +73,7 @@ type QueryResolver interface {
 }
 type SubscriptionResolver interface {
 	OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error)
-	OnKPIFulfillmentChecked(ctx context.Context) (<-chan graphQLModel.KPIFulfillmentCheckResult, error)
+	OnKPIFulfillmentChecked(ctx context.Context) (<-chan graphQLModel.KPIFulfillmentCheckResultTuple, error)
 }
 
 type executableSchema struct {
@@ -411,6 +411,10 @@ type KPIFulfillmentCheckResult {
   fulfilled: Boolean!
 }
 
+type KPIFulfillmentCheckResultTuple {
+  kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!
+}
+
 # ----- SD instance groups -----
 
 type SDInstanceGroup {
@@ -451,7 +455,7 @@ type Mutation {
 
 type Subscription {
   onSDInstanceRegistered: SDInstance!
-  onKPIFulfillmentChecked: KPIFulfillmentCheckResult!
+  onKPIFulfillmentChecked: KPIFulfillmentCheckResultTuple!
 }
 `, BuiltIn: false},
 }
@@ -1417,6 +1421,58 @@ func (ec *executionContext) fieldContext_KPIFulfillmentCheckResult_fulfilled(_ c
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _KPIFulfillmentCheckResultTuple_kpiFulfillmentCheckResults(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.KPIFulfillmentCheckResultTuple) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_KPIFulfillmentCheckResultTuple_kpiFulfillmentCheckResults(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.KpiFulfillmentCheckResults, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]graphQLModel.KPIFulfillmentCheckResult)
+	fc.Result = res
+	return ec.marshalNKPIFulfillmentCheckResult2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResultᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_KPIFulfillmentCheckResultTuple_kpiFulfillmentCheckResults(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "KPIFulfillmentCheckResultTuple",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "kpiDefinitionID":
+				return ec.fieldContext_KPIFulfillmentCheckResult_kpiDefinitionID(ctx, field)
+			case "sdInstanceID":
+				return ec.fieldContext_KPIFulfillmentCheckResult_sdInstanceID(ctx, field)
+			case "fulfilled":
+				return ec.fieldContext_KPIFulfillmentCheckResult_fulfilled(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type KPIFulfillmentCheckResult", field.Name)
 		},
 	}
 	return fc, nil
@@ -5052,7 +5108,7 @@ func (ec *executionContext) _Subscription_onKPIFulfillmentChecked(ctx context.Co
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan graphQLModel.KPIFulfillmentCheckResult):
+		case res, ok := <-resTmp.(<-chan graphQLModel.KPIFulfillmentCheckResultTuple):
 			if !ok {
 				return nil
 			}
@@ -5060,7 +5116,7 @@ func (ec *executionContext) _Subscription_onKPIFulfillmentChecked(ctx context.Co
 				w.Write([]byte{'{'})
 				graphql.MarshalString(field.Alias).MarshalGQL(w)
 				w.Write([]byte{':'})
-				ec.marshalNKPIFulfillmentCheckResult2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResult(ctx, field.Selections, res).MarshalGQL(w)
+				ec.marshalNKPIFulfillmentCheckResultTuple2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResultTuple(ctx, field.Selections, res).MarshalGQL(w)
 				w.Write([]byte{'}'})
 			})
 		case <-ctx.Done():
@@ -5077,14 +5133,10 @@ func (ec *executionContext) fieldContext_Subscription_onKPIFulfillmentChecked(_ 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "kpiDefinitionID":
-				return ec.fieldContext_KPIFulfillmentCheckResult_kpiDefinitionID(ctx, field)
-			case "sdInstanceID":
-				return ec.fieldContext_KPIFulfillmentCheckResult_sdInstanceID(ctx, field)
-			case "fulfilled":
-				return ec.fieldContext_KPIFulfillmentCheckResult_fulfilled(ctx, field)
+			case "kpiFulfillmentCheckResults":
+				return ec.fieldContext_KPIFulfillmentCheckResultTuple_kpiFulfillmentCheckResults(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type KPIFulfillmentCheckResult", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type KPIFulfillmentCheckResultTuple", field.Name)
 		},
 	}
 	return fc, nil
@@ -7459,6 +7511,45 @@ func (ec *executionContext) _KPIFulfillmentCheckResult(ctx context.Context, sel 
 	return out
 }
 
+var kPIFulfillmentCheckResultTupleImplementors = []string{"KPIFulfillmentCheckResultTuple"}
+
+func (ec *executionContext) _KPIFulfillmentCheckResultTuple(ctx context.Context, sel ast.SelectionSet, obj *graphQLModel.KPIFulfillmentCheckResultTuple) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, kPIFulfillmentCheckResultTupleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("KPIFulfillmentCheckResultTuple")
+		case "kpiFulfillmentCheckResults":
+			out.Values[i] = ec._KPIFulfillmentCheckResultTuple_kpiFulfillmentCheckResults(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var logicalOperationKPINodeImplementors = []string{"LogicalOperationKPINode", "KPINode"}
 
 func (ec *executionContext) _LogicalOperationKPINode(ctx context.Context, sel ast.SelectionSet, obj *graphQLModel.LogicalOperationKPINode) graphql.Marshaler {
@@ -8937,6 +9028,10 @@ func (ec *executionContext) marshalNKPIFulfillmentCheckResult2ᚕgithubᚗcomᚋ
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNKPIFulfillmentCheckResultTuple2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIFulfillmentCheckResultTuple(ctx context.Context, sel ast.SelectionSet, v graphQLModel.KPIFulfillmentCheckResultTuple) graphql.Marshaler {
+	return ec._KPIFulfillmentCheckResultTuple(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNKPINode2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPINode(ctx context.Context, sel ast.SelectionSet, v graphQLModel.KPINode) graphql.Marshaler {

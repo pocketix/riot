@@ -40,7 +40,7 @@ type RelationalDatabaseClient interface {
 	LoadSDInstance(id uint32) sharedUtils.Result[dllModel.SDInstance]
 	LoadSDInstanceBasedOnUID(uid string) sharedUtils.Result[sharedUtils.Optional[dllModel.SDInstance]]
 	LoadSDInstances() sharedUtils.Result[[]dllModel.SDInstance]
-	PersistKPIFulFulfillmentCheckResult(kpiDefinitionID uint32, sdInstanceUID string, fulfilled bool) sharedUtils.Result[dllModel.KPIFulfillmentCheckResult]
+	PersistKPIFulFulfillmentCheckResultTuple(sdInstanceUID string, kpiDefinitionIDs []uint32, fulfillmentStatuses []bool) sharedUtils.Result[[]dllModel.KPIFulfillmentCheckResult]
 	LoadKPIFulFulfillmentCheckResult(kpiDefinitionID uint32, sdInstanceID uint32) sharedUtils.Result[sharedUtils.Optional[dllModel.KPIFulfillmentCheckResult]]
 	LoadKPIFulFulfillmentCheckResults() sharedUtils.Result[[]dllModel.KPIFulfillmentCheckResult]
 	LoadSDInstanceGroups() sharedUtils.Result[[]dllModel.SDInstanceGroup]
@@ -362,31 +362,42 @@ func (r *relationalDatabaseClientImpl) LoadSDInstances() sharedUtils.Result[[]dl
 	return sharedUtils.NewSuccessResult[[]dllModel.SDInstance](sharedUtils.Map(sdInstanceEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelSDInstance))
 }
 
-func (r *relationalDatabaseClientImpl) PersistKPIFulFulfillmentCheckResult(kpiDefinitionID uint32, sdInstanceUID string, fulfilled bool) sharedUtils.Result[dllModel.KPIFulfillmentCheckResult] {
+func (r *relationalDatabaseClientImpl) PersistKPIFulFulfillmentCheckResultTuple(sdInstanceUID string, kpiDefinitionIDs []uint32, fulfillmentStatuses []bool) sharedUtils.Result[[]dllModel.KPIFulfillmentCheckResult] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	referencedKPIDefinitionEntityExistsCheckResult := dbUtil.DoesSuchEntityExist[dbModel.KPIDefinitionEntity](r.db, dbUtil.Where("id = ?", kpiDefinitionID))
-	if referencedKPIDefinitionEntityExistsCheckResult.IsFailure() {
-		return sharedUtils.NewFailureResult[dllModel.KPIFulfillmentCheckResult](referencedKPIDefinitionEntityExistsCheckResult.GetError())
+	referencedKPIDefinitionEntitiesExistCheckResult := dbUtil.DoIDsExist[dbModel.KPIDefinitionEntity](r.db, kpiDefinitionIDs)
+	if referencedKPIDefinitionEntitiesExistCheckResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]dllModel.KPIFulfillmentCheckResult](referencedKPIDefinitionEntitiesExistCheckResult.GetError())
 	}
-	if referencedKPIDefinitionEntityExists := referencedKPIDefinitionEntityExistsCheckResult.GetPayload(); !referencedKPIDefinitionEntityExists {
-		return sharedUtils.NewFailureResult[dllModel.KPIFulfillmentCheckResult](ErrOperationWouldLeadToForeignKeyIntegrityBreach)
+	if referencedKPIDefinitionEntitiesExist := referencedKPIDefinitionEntitiesExistCheckResult.GetPayload(); !referencedKPIDefinitionEntitiesExist {
+		return sharedUtils.NewFailureResult[[]dllModel.KPIFulfillmentCheckResult](ErrOperationWouldLeadToForeignKeyIntegrityBreach)
 	}
 	referencedSDInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](r.db, dbUtil.Where("uid = ?", sdInstanceUID))
 	if referencedSDInstanceEntityLoadResult.IsFailure() {
 		referencedSDInstanceEntityLoadError := referencedSDInstanceEntityLoadResult.GetError()
 		err := sharedUtils.Ternary(errors.Is(referencedSDInstanceEntityLoadError, gorm.ErrRecordNotFound), ErrOperationWouldLeadToForeignKeyIntegrityBreach, referencedSDInstanceEntityLoadError)
-		return sharedUtils.NewFailureResult[dllModel.KPIFulfillmentCheckResult](err)
+		return sharedUtils.NewFailureResult[[]dllModel.KPIFulfillmentCheckResult](err)
 	}
-	kpiFulfillmentCheckEntity := dbModel.KPIFulfillmentCheckResultEntity{
-		KPIDefinitionID: kpiDefinitionID,
-		SDInstanceID:    referencedSDInstanceEntityLoadResult.GetPayload().ID,
-		Fulfilled:       fulfilled,
+	referencedSDInstanceEntityID := referencedSDInstanceEntityLoadResult.GetPayload().ID
+	kpiFulfillmentCheckResultEntities := make([]dbModel.KPIFulfillmentCheckResultEntity, 0)
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		for index, kpiDefinitionID := range kpiDefinitionIDs {
+			kpiFulfillmentCheckResultEntity := dbModel.KPIFulfillmentCheckResultEntity{
+				KPIDefinitionID: kpiDefinitionID,
+				SDInstanceID:    referencedSDInstanceEntityID,
+				Fulfilled:       fulfillmentStatuses[index],
+			}
+			if err := dbUtil.PersistEntityIntoDB(r.db, &kpiFulfillmentCheckResultEntity); err != nil {
+				return err
+			}
+			kpiFulfillmentCheckResultEntities = append(kpiFulfillmentCheckResultEntities, kpiFulfillmentCheckResultEntity)
+		}
+		return nil
+	})
+	if err != nil {
+		return sharedUtils.NewFailureResult[[]dllModel.KPIFulfillmentCheckResult](err)
 	}
-	if err := dbUtil.PersistEntityIntoDB(r.db, &kpiFulfillmentCheckEntity); err != nil {
-		return sharedUtils.NewFailureResult[dllModel.KPIFulfillmentCheckResult](err)
-	}
-	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelKPIFulfillmentCheckResult(kpiFulfillmentCheckEntity))
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(kpiFulfillmentCheckResultEntities, db2dll.ToDLLModelKPIFulfillmentCheckResult))
 }
 
 func (r *relationalDatabaseClientImpl) LoadKPIFulFulfillmentCheckResult(kpiDefinitionID uint32, sdInstanceID uint32) sharedUtils.Result[sharedUtils.Optional[dllModel.KPIFulfillmentCheckResult]] {

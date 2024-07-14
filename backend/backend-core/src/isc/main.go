@@ -41,21 +41,28 @@ func ProcessIncomingSDInstanceRegistrationRequests(sdInstanceGraphQLSubscription
 	}, rabbitMQClient)
 }
 
-func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultGraphQLSubscriptionChannel *chan graphQLModel.KPIFulfillmentCheckResult) {
+func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultGraphQLSubscriptionChannel *chan graphQLModel.KPIFulfillmentCheckResultTuple) {
 	rabbitMQClient := rabbitmq.NewClient()
 	defer rabbitMQClient.Dispose()
-	consumeKPIFulfillmentCheckResultJSONMessages(func(kpiFulfillmentCheckResultISCMessage sharedModel.KPIFulfillmentCheckResultISCMessage) error {
-		kpiDefinitionID := kpiFulfillmentCheckResultISCMessage.KPIDefinitionID
-		sdInstanceUID := kpiFulfillmentCheckResultISCMessage.SDInstanceUID
-		fulfilled := kpiFulfillmentCheckResultISCMessage.Fulfilled
-		kpiFulfillmentCheckResultPersistResult := dbClient.GetRelationalDatabaseClientInstance().PersistKPIFulFulfillmentCheckResult(kpiDefinitionID, sdInstanceUID, fulfilled)
-		if kpiFulfillmentCheckResultPersistResult.IsSuccess() {
+	consumeKPIFulfillmentCheckResultJSONMessages(func(kpiFulfillmentCheckResultTuple sharedModel.KPIFulfillmentCheckResultTupleISCMessage) error {
+		sdInstanceUID := kpiFulfillmentCheckResultTuple[0].SDInstanceUID
+		kpiDefinitionIDs := make([]uint32, 0)
+		fulfillmentStatuses := make([]bool, 0)
+		for _, kpiFulfillmentCheckResult := range kpiFulfillmentCheckResultTuple {
+			kpiDefinitionIDs = append(kpiDefinitionIDs, kpiFulfillmentCheckResult.KPIDefinitionID)
+			fulfillmentStatuses = append(fulfillmentStatuses, kpiFulfillmentCheckResult.Fulfilled)
+		}
+		kpiFulfillmentCheckResultTuplePersistResult := dbClient.GetRelationalDatabaseClientInstance().PersistKPIFulFulfillmentCheckResultTuple(sdInstanceUID, kpiDefinitionIDs, fulfillmentStatuses)
+		if kpiFulfillmentCheckResultTuplePersistResult.IsSuccess() {
+			gqlKPIFulfillmentCheckResultTuple := graphQLModel.KPIFulfillmentCheckResultTuple{
+				KpiFulfillmentCheckResults: sharedUtils.Map(kpiFulfillmentCheckResultTuplePersistResult.GetPayload(), dll2gql.ToGraphQLModelKPIFulfillmentCheckResult),
+			}
 			select {
-			case *kpiFulfillmentCheckResultGraphQLSubscriptionChannel <- dll2gql.ToGraphQLModelKPIFulfillmentCheckResult(kpiFulfillmentCheckResultPersistResult.GetPayload()):
+			case *kpiFulfillmentCheckResultGraphQLSubscriptionChannel <- gqlKPIFulfillmentCheckResultTuple:
 			default:
 			}
-		} else if kpiFulfillmentCheckResultPersistError := kpiFulfillmentCheckResultPersistResult.GetError(); !errors.Is(kpiFulfillmentCheckResultPersistError, dbClient.ErrOperationWouldLeadToForeignKeyIntegrityBreach) {
-			return fmt.Errorf("failed to persist a KPI fulfillment check result with KPI definition ID = %d, SD instance UID = %s and fulfillment status = %t: %w", kpiDefinitionID, sdInstanceUID, fulfilled, kpiFulfillmentCheckResultPersistError)
+		} else if kpiFulfillmentCheckResultTuplePersistError := kpiFulfillmentCheckResultTuplePersistResult.GetError(); !errors.Is(kpiFulfillmentCheckResultTuplePersistError, dbClient.ErrOperationWouldLeadToForeignKeyIntegrityBreach) {
+			return fmt.Errorf("failed to persist KPI fulfillment check result tuple: %w", kpiFulfillmentCheckResultTuplePersistError)
 		}
 		return nil
 	}, rabbitMQClient)

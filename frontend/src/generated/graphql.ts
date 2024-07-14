@@ -59,6 +59,11 @@ export type KpiFulfillmentCheckResult = {
   sdInstanceID: Scalars['ID']['output'];
 };
 
+export type KpiFulfillmentCheckResultTuple = {
+  __typename?: 'KPIFulfillmentCheckResultTuple';
+  kpiFulfillmentCheckResults: Array<KpiFulfillmentCheckResult>;
+};
+
 export type KpiNode = {
   id: Scalars['ID']['output'];
   nodeType: KpiNodeType;
@@ -313,7 +318,7 @@ export type StringEqAtomKpiNode = AtomKpiNode & KpiNode & {
 
 export type Subscription = {
   __typename?: 'Subscription';
-  onKPIFulfillmentChecked: KpiFulfillmentCheckResult;
+  onKPIFulfillmentChecked: KpiFulfillmentCheckResultTuple;
   onSDInstanceRegistered: SdInstance;
 };
 
@@ -425,7 +430,7 @@ export type SdTypesQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?:
 export type OnKpiFulfillmentCheckedSubscriptionVariables = Exact<{ [key: string]: never; }>;
 
 
-export type OnKpiFulfillmentCheckedSubscription = { __typename?: 'Subscription', onKPIFulfillmentChecked: { __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: string, sdInstanceID: string, fulfilled: boolean } };
+export type OnKpiFulfillmentCheckedSubscription = { __typename?: 'Subscription', onKPIFulfillmentChecked: { __typename?: 'KPIFulfillmentCheckResultTuple', kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: string, sdInstanceID: string, fulfilled: boolean }> } };
 
 export type OnSdInstanceRegisteredSubscriptionVariables = Exact<{ [key: string]: never; }>;
 

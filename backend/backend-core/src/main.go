@@ -32,7 +32,7 @@ func kickstartISC() {
 	isc.EnqueueMessageRepresentingCurrentSDInstanceConfiguration(rabbitMQClient)
 	go isc.ProcessIncomingMessageProcessingUnitConnectionNotifications()
 	go isc.ProcessIncomingSDInstanceRegistrationRequests(&graphql.SDInstanceGraphQLSubscriptionChannel)
-	go isc.ProcessIncomingKPIFulfillmentCheckResults(&graphql.KPIFulfillmentCheckResultGraphQLSubscriptionChannel)
+	go isc.ProcessIncomingKPIFulfillmentCheckResults(&graphql.KPIFulfillmentCheckResulTupleGraphQLSubscriptionChannel)
 }
 
 func main() {

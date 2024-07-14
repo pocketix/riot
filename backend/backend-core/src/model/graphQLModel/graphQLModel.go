@@ -68,6 +68,10 @@ type KPIFulfillmentCheckResult struct {
 	Fulfilled       bool   `json:"fulfilled"`
 }
 
+type KPIFulfillmentCheckResultTuple struct {
+	KpiFulfillmentCheckResults []KPIFulfillmentCheckResult `json:"kpiFulfillmentCheckResults"`
+}
+
 type KPINodeInput struct {
 	Type                     KPINodeType           `json:"type"`
 	ID                       uint32                `json:"id"`

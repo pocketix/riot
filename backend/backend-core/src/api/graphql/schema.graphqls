@@ -188,6 +188,10 @@ type KPIFulfillmentCheckResult {
   fulfilled: Boolean!
 }
 
+type KPIFulfillmentCheckResultTuple {
+  kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!
+}
+
 # ----- SD instance groups -----
 
 type SDInstanceGroup {
@@ -228,5 +232,5 @@ type Mutation {
 
 type Subscription {
   onSDInstanceRegistered: SDInstance!
-  onKPIFulfillmentChecked: KPIFulfillmentCheckResult!
+  onKPIFulfillmentChecked: KPIFulfillmentCheckResultTuple!
 }

@@ -1,7 +1,9 @@
 subscription OnKPIFulfillmentChecked {
     onKPIFulfillmentChecked {
-        kpiDefinitionID
-        sdInstanceID
-        fulfilled
+        kpiFulfillmentCheckResults {
+            kpiDefinitionID
+            sdInstanceID
+            fulfilled
+        }
     }
 }

@@ -149,8 +149,8 @@ func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-ch
 	return SDInstanceGraphQLSubscriptionChannel, nil
 }
 
-func (r *subscriptionResolver) OnKPIFulfillmentChecked(ctx context.Context) (<-chan graphQLModel.KPIFulfillmentCheckResult, error) {
-	return KPIFulfillmentCheckResultGraphQLSubscriptionChannel, nil
+func (r *subscriptionResolver) OnKPIFulfillmentChecked(ctx context.Context) (<-chan graphQLModel.KPIFulfillmentCheckResultTuple, error) {
+	return KPIFulfillmentCheckResulTupleGraphQLSubscriptionChannel, nil
 }
 
 func (r *Resolver) Mutation() gsc.MutationResolver { return &mutationResolver{r} }

@@ -21,27 +21,6 @@ var (
 	unitUUID                                 string
 )
 
-func checkKPIFulfilmentThenEnqueueResult(sdInstanceUID string, sdParameters any, kpiDefinition sharedModel.KPIDefinition, rabbitMQClient rabbitmq.Client) {
-	kpiFulfillmentCheckResult := processing.CheckKPIFulfillment(kpiDefinition, &sdParameters)
-	if kpiFulfillmentCheckResult.IsFailure() {
-		log.Printf("Failed to check KPI fulfillment: %s\n", kpiFulfillmentCheckResult.GetError().Error())
-		return
-	}
-	kpiFulfillmentCheckResultISCMessage := sharedModel.KPIFulfillmentCheckResultISCMessage{ // TODO: Consider employing the timestamp...
-		SDInstanceUID:   sdInstanceUID,
-		KPIDefinitionID: sharedUtils.NewOptionalFromPointer(kpiDefinition.ID).GetPayload(),
-		Fulfilled:       kpiFulfillmentCheckResult.GetPayload(),
-	}
-	jsonSerializationResult := sharedUtils.SerializeToJSON(kpiFulfillmentCheckResultISCMessage)
-	if jsonSerializationResult.IsFailure() {
-		log.Println("Failed to serialize the object representing a KPI fulfillment check result into JSON")
-		return
-	}
-	if err := rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.KPIFulfillmentCheckResultsQueueName), jsonSerializationResult.GetPayload()); err != nil {
-		log.Println("Failed to publish a KPI fulfillment check result message")
-	}
-}
-
 func checkForKPIFulfilmentCheckRequests() {
 	rabbitMQClient := rabbitmq.NewClient()
 	defer rabbitMQClient.Dispose()
@@ -54,8 +33,26 @@ func checkForKPIFulfilmentCheckRequests() {
 			selectedSDInstanceUIDSet := sharedUtils.NewSetFromSlice(kpiDefinition.SelectedSDInstanceUIDs)
 			return kpiDefinition.SDInstanceMode == sharedModel.ALL || selectedSDInstanceUIDSet.Contains(sdInstanceUID)
 		})
+		kpiFulfillmentCheckResults := sharedUtils.EmptySlice[sharedModel.KPIFulfillmentCheckResultISCMessage]()
 		for _, kpiDefinition := range kpiDefinitions { // TODO: Consider replacing sequential processing by a worker pool
-			checkKPIFulfilmentThenEnqueueResult(sdInstanceUID, messagePayload.Parameters, kpiDefinition, rabbitMQClient)
+			kpiFulfillmentCheckResult := processing.CheckKPIFulfillment(kpiDefinition, &messagePayload.Parameters)
+			if kpiFulfillmentCheckResult.IsFailure() {
+				log.Printf("Failed to check KPI fulfillment: %s\n", kpiFulfillmentCheckResult.GetError().Error())
+				continue
+			}
+			kpiFulfillmentCheckResults = append(kpiFulfillmentCheckResults, sharedModel.KPIFulfillmentCheckResultISCMessage{ // TODO: Consider employing the timestamp...
+				SDInstanceUID:   sdInstanceUID,
+				KPIDefinitionID: sharedUtils.NewOptionalFromPointer(kpiDefinition.ID).GetPayload(),
+				Fulfilled:       kpiFulfillmentCheckResult.GetPayload(),
+			})
+		}
+		jsonSerializationResult := sharedUtils.SerializeToJSON(kpiFulfillmentCheckResults)
+		if jsonSerializationResult.IsFailure() {
+			log.Printf("Failed to serialize the object representing a KPI fulfillment check result tuple into JSON: %s\n", jsonSerializationResult.GetError().Error())
+			return nil
+		}
+		if err := rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.KPIFulfillmentCheckResultsQueueName), jsonSerializationResult.GetPayload()); err != nil {
+			log.Printf("Failed to publish a KPI fulfillment check result tuple message: %s\n", err.Error())
 		}
 		return nil
 	})

@@ -1,5 +1,7 @@
 package sharedModel
 
+type KPIFulfillmentCheckResultTupleISCMessage []KPIFulfillmentCheckResultISCMessage
+
 type KPIFulfillmentCheckResultISCMessage struct {
 	SDInstanceUID   string `json:"sdInstanceUID"`
 	KPIDefinitionID uint32 `json:"kpiDefinitionID"`

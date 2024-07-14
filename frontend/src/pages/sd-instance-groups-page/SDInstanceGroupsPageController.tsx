@@ -177,18 +177,19 @@ const SDInstanceGroupsPageController: React.FC = () => {
     }
     setSDInstanceGroupsPageData((sdInstanceGroupsPageData) =>
       produce(sdInstanceGroupsPageData, (draftSDInstanceGroupsPageData) => {
-        const { kpiDefinitionID, sdInstanceID, fulfilled } = onKPIFulfillmentCheckedData.onKPIFulfillmentChecked
-        const kpiFulfillmentCheckResultIndex = draftSDInstanceGroupsPageData.kpiFulfillmentCheckResults.findIndex((k) => k.kpiDefinitionID === kpiDefinitionID && k.sdInstanceID === sdInstanceID)
-        const kpiFulfillmentCheckResult = {
-          kpiDefinitionID,
-          sdInstanceID,
-          fulfilled
-        }
-        if (kpiFulfillmentCheckResultIndex !== -1) {
-          draftSDInstanceGroupsPageData.kpiFulfillmentCheckResults[kpiFulfillmentCheckResultIndex] = kpiFulfillmentCheckResult
-        } else {
-          draftSDInstanceGroupsPageData.kpiFulfillmentCheckResults.push(kpiFulfillmentCheckResult)
-        }
+        onKPIFulfillmentCheckedData.onKPIFulfillmentChecked.kpiFulfillmentCheckResults.forEach(({ kpiDefinitionID, sdInstanceID, fulfilled }) => {
+          const kpiFulfillmentCheckResultIndex = draftSDInstanceGroupsPageData.kpiFulfillmentCheckResults.findIndex((k) => k.kpiDefinitionID === kpiDefinitionID && k.sdInstanceID === sdInstanceID)
+          const kpiFulfillmentCheckResult = {
+            kpiDefinitionID,
+            sdInstanceID,
+            fulfilled
+          }
+          if (kpiFulfillmentCheckResultIndex !== -1) {
+            draftSDInstanceGroupsPageData.kpiFulfillmentCheckResults[kpiFulfillmentCheckResultIndex] = kpiFulfillmentCheckResult
+          } else {
+            draftSDInstanceGroupsPageData.kpiFulfillmentCheckResults.push(kpiFulfillmentCheckResult)
+          }
+        })
       })
     )
   }, [onKPIFulfillmentCheckedData])
