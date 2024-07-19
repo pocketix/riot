@@ -11,6 +11,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"log"
 )
 
 func ProcessIncomingMessageProcessingUnitConnectionNotifications() {
@@ -45,6 +46,10 @@ func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultGraphQLS
 	rabbitMQClient := rabbitmq.NewClient()
 	defer rabbitMQClient.Dispose()
 	consumeKPIFulfillmentCheckResultJSONMessages(func(kpiFulfillmentCheckResultTuple sharedModel.KPIFulfillmentCheckResultTupleISCMessage) error {
+		if len(kpiFulfillmentCheckResultTuple) == 0 {
+			log.Printf("Warning: Got an enpty tuple of KPI fulfillment check results... that shouldn't happen...")
+			return nil
+		}
 		sdInstanceUID := kpiFulfillmentCheckResultTuple[0].SDInstanceUID
 		kpiDefinitionIDs := make([]uint32, 0)
 		fulfillmentStatuses := make([]bool, 0)
