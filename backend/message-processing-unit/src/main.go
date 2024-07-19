@@ -33,6 +33,9 @@ func checkForKPIFulfilmentCheckRequests() {
 			selectedSDInstanceUIDSet := sharedUtils.NewSetFromSlice(kpiDefinition.SelectedSDInstanceUIDs)
 			return kpiDefinition.SDInstanceMode == sharedModel.ALL || selectedSDInstanceUIDSet.Contains(sdInstanceUID)
 		})
+		if len(kpiDefinitions) == 0 {
+			return nil
+		}
 		kpiFulfillmentCheckResults := sharedUtils.EmptySlice[sharedModel.KPIFulfillmentCheckResultISCMessage]()
 		for _, kpiDefinition := range kpiDefinitions { // TODO: Consider replacing sequential processing by a worker pool
 			kpiFulfillmentCheckResult := processing.CheckKPIFulfillment(kpiDefinition, &messagePayload.Parameters)
