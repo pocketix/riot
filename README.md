@@ -71,4 +71,8 @@ You can access the system through its [frontend](http://localhost:8080).
 Remember that while running the system this way is fine for functionality testing, it may lead to suboptimal performance characteristics, as
 the system running on a single node (machine) in 1-1-1 configuration does not represent an optimal deployment.
 
+## License notice
+
+This is an open-source project, licensed under the [MIT License](https://choosealicense.com/licenses/mit/).
+
 ![](frontend/resources/images/homepage-graphics.jpg)
