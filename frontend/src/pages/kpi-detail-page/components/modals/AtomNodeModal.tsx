@@ -117,7 +117,7 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
               allSelectionSubjects={
                 props?.sdTypeData?.parameters.map((parameter) => ({
                   id: parameter.id,
-                  name: parameter.denotation
+                  name: `${parameter.denotation} – ${parameter.type.toString()}`
                 })) ?? []
               }
               selectedSelectionSubjectID={sdParameter ? sdParameter.id : ''}
