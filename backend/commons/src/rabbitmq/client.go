@@ -55,6 +55,7 @@ func (c *connectionManager) release() {
 type Client interface {
 	GetChannel() *amqp.Channel
 	PublishJSONMessage(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte) error
+	PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte, correlationId string) error
 	DeclareQueue(queueName string) error
 	SetupMessageConsumption(queueName string, messageConsumerFunction func(message amqp.Delivery) error) error
 	Dispose()
@@ -84,6 +85,19 @@ func (c *ClientImpl) PublishJSONMessage(exchangeNameOptional sharedUtils.Optiona
 	return c.channel.PublishWithContext(ctx, exchangeName, routingKey, false, false, amqp.Publishing{
 		ContentType: "application/json",
 		Body:        messagePayload,
+	})
+}
+
+func (c *ClientImpl) PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte, correlationId string) error {
+	ctx, cancelFunction := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunction()
+	exchangeName := exchangeNameOptional.GetPayloadOrDefault("")
+	routingKey := routingKeyOptional.GetPayloadOrDefault("")
+	return c.channel.PublishWithContext(ctx, exchangeName, routingKey, false, false, amqp.Publishing{
+		ContentType:   "application/json",
+		Body:          messagePayload,
+		CorrelationId: correlationId,
+		ReplyTo:       routingKey,
 	})
 }
 
@@ -127,6 +141,20 @@ func ConsumeJSONMessages[T any](client Client, queueName string, messagePayloadC
 			return jsonDeserializationResult.GetError()
 		}
 		return messagePayloadConsumerFunction(jsonDeserializationResult.GetPayload())
+	})
+}
+
+func ConsumeJSONMessagesWithAccessToDelivery[T any](client Client, queueName string, messagePayloadConsumerFunction func(messagePayload T, delivery amqp.Delivery) error) error {
+	return client.SetupMessageConsumption(queueName, func(message amqp.Delivery) error {
+		messageContentType := message.ContentType
+		if messageContentType != "application/json" {
+			return fmt.Errorf("incorrect message content type: %s", messageContentType)
+		}
+		jsonDeserializationResult := sharedUtils.DeserializeFromJSON[T](message.Body)
+		if jsonDeserializationResult.IsFailure() {
+			return jsonDeserializationResult.GetError()
+		}
+		return messagePayloadConsumerFunction(jsonDeserializationResult.GetPayload(), message)
 	})
 }
 
