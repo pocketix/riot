@@ -8,4 +8,6 @@ const (
 	SDInstanceRegistrationRequestsQueueName               = "sd-instance-registration-requests"
 	SetOfSDInstancesUpdatesQueueName                      = "set-of-sd-instances-updates"
 	SetOfSDTypesUpdatesQueueName                          = "set-of-sd-types-updates"
+	TimeSeriesStoreDataQueueName                          = "time-series-store-data"
+	TimeSeriesReadRequestQueueName                        = "time-series-read-request"
 )

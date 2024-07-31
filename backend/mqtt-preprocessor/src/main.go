@@ -133,6 +133,22 @@ func processMQTTMessagePayload(mqttMessagePayload []byte, rabbitMQClient rabbitm
 	}
 	messagePayloadObject := jsonDeserializationResult.GetPayload()
 	sd := messagePayloadObject.Data.SDArray[0]
+
+	inputData := sharedModel.InputData{
+		Timestamp:           messagePayloadObject.Notification.Timestamp,
+		SDInstanceUID:       sd.UID,
+		SDTypeSpecification: sd.Type,
+		Parameters:          sd.Parameters,
+	}
+	jsonSerializationResult := sharedUtils.SerializeToJSON(inputData)
+	log.Println(inputData)
+
+	err := rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesStoreDataQueueName), jsonSerializationResult.GetPayload())
+	if err != nil {
+		log.Println("Failed to publish a time series store request message")
+		return
+	}
+
 	if !mqttMessageSDTypeCorrespondsToSDTypeDefinitions(sd.Type) {
 		return
 	}
