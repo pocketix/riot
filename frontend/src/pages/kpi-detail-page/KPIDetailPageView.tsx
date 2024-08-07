@@ -118,6 +118,7 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
                 allSelectionSubjects={
                   props?.restOfKPIDefinitionDetailPageData?.sdInstances
                     .filter((sdInstance) => props?.sdTypeData?.id && sdInstance.type.id === props.sdTypeData.id)
+                    .filter((sdInstance) => sdInstance.confirmedByUser)
                     .map((sdInstance) => {
                       return {
                         id: sdInstance.id,
