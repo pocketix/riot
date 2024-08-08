@@ -218,10 +218,10 @@ func (r *relationalDatabaseClientImpl) DeleteKPIDefinition(id uint32) error {
 		return idsOfKPINodeEntitiesFormingTheDefinitionResult.GetError()
 	}
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := dbUtil.DeleteEntitiesBasedOnSliceOfIds[dbModel.KPINodeEntity](tx, idsOfKPINodeEntitiesFormingTheDefinitionResult.GetPayload()); err != nil {
+		if err := dbUtil.DeleteCertainEntityBasedOnId[dbModel.KPIDefinitionEntity](tx, id); err != nil {
 			return err
 		}
-		if err := dbUtil.DeleteCertainEntityBasedOnId[dbModel.KPIDefinitionEntity](tx, id); err != nil {
+		if err := dbUtil.DeleteEntitiesBasedOnSliceOfIds[dbModel.KPINodeEntity](tx, idsOfKPINodeEntitiesFormingTheDefinitionResult.GetPayload()); err != nil {
 			return err
 		}
 		return nil
