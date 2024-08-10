@@ -34,7 +34,7 @@ type OutputData struct {
 	Time       time.Time              `json:"time"`       // Time of the current data sample
 	DeviceID   string                 `json:"deviceId"`   // Device identifier
 	DeviceType string                 `json:"deviceType"` // Device type
-	Other      map[string]interface{} `json:"-"`
+	Data       map[string]interface{} `json:"data"`
 }
 
 // ReadRequestBody represents the request body for the statistics endpoint.
@@ -144,10 +144,10 @@ func (r *ReadRequestBody) MarshalJSON() ([]byte, error) {
 
 // MarshalJSON marshals the OutputData struct to JSON.
 func (outputData OutputData) MarshalJSON() ([]byte, error) {
-	data := make(map[string]interface{}, len(outputData.Other)+5)
+	data := make(map[string]interface{}, len(outputData.Data)+5)
 
 	// copy status fields
-	for k, v := range outputData.Other {
+	for k, v := range outputData.Data {
 		data[k] = v
 	}
 	// add known keys

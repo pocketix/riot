@@ -81,6 +81,10 @@ func (r *mutationResolver) DeleteSDInstanceGroup(ctx context.Context, id uint32)
 	return true, nil
 }
 
+func (r *mutationResolver) StatisticsMutate(ctx context.Context, inputData graphQLModel.InputData) (bool, error) {
+	return domainLogicLayer.Save(inputData).Unwrap()
+}
+
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
 	getSDTypeResult := domainLogicLayer.GetSDType(id)
 	if getSDTypeResult.IsFailure() {
@@ -143,6 +147,11 @@ func (r *queryResolver) SdInstanceGroups(ctx context.Context) ([]graphQLModel.SD
 		log.Printf("Error occurred (get SD instance groups): %s\n", getSDInstanceGroupsResult.GetError().Error())
 	}
 	return getSDInstanceGroupsResult.Unwrap()
+}
+
+func (r *queryResolver) StatisticsQuery(ctx context.Context, request graphQLModel.StatisticsInput) ([]graphQLModel.OutputData, error) {
+	data := domainLogicLayer.Query(request)
+	return data.Unwrap()
 }
 
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {

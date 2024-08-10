@@ -59,7 +59,7 @@ func consumeInputMessages(rabbitMQClient rabbitmq.Client, influx internal.Influx
 }
 
 func consumeReadRequests(rabbitMQClient rabbitmq.Client, influx internal.Influx2Client) error {
-	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.ReadRequestBody](rabbitMQClient, sharedConstants.TimeSeriesReadRequestQueueName, func(readRequestBody sharedModel.ReadRequestBody, delivery amqp.Delivery) error {
+	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.ReadRequestBody](rabbitMQClient, sharedConstants.TimeSeriesReadRequestQueueName, "", func(readRequestBody sharedModel.ReadRequestBody, delivery amqp.Delivery) error {
 		data, retrieveDataError := influx.Query(readRequestBody)
 
 		jsonData, _ := json.Marshal(data)

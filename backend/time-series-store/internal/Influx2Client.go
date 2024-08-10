@@ -178,7 +178,7 @@ func mapToOutputData(influxOutput map[string]interface{}) sharedModel.OutputData
 	delete(influxOutput, "deviceId")
 	delete(influxOutput, "deviceType")
 
-	outputData.Other = influxOutput
+	outputData.Data = influxOutput
 
 	return outputData
 }

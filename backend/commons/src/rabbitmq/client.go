@@ -58,6 +58,7 @@ type Client interface {
 	PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte, correlationId string) error
 	DeclareQueue(queueName string) error
 	SetupMessageConsumption(queueName string, messageConsumerFunction func(message amqp.Delivery) error) error
+	SetupMessageConsumptionWithCorrelationId(queueName string, correlationId string, messageConsumerFunction func(message amqp.Delivery) error) error
 	Dispose()
 }
 
@@ -125,6 +126,29 @@ func (c *ClientImpl) SetupMessageConsumption(queueName string, messageConsumerFu
 	return nil
 }
 
+func (c *ClientImpl) SetupMessageConsumptionWithCorrelationId(queueName string, correlationId string, messageConsumerFunction func(message amqp.Delivery) error) error {
+	if err := c.channel.Qos(1, 0, false); err != nil {
+		return err
+	}
+	messageChannel, err := c.channel.Consume(queueName, "", false, false, false, false, nil)
+	if err != nil {
+		return err
+	}
+	for message := range messageChannel {
+		if message.CorrelationId != correlationId {
+			continue
+		}
+
+		if err := messageConsumerFunction(message); err != nil {
+			return err
+		}
+		if err := message.Ack(false); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (c *ClientImpl) Dispose() {
 	sharedUtils.LogPossibleErrorThenProceed(c.channel.Close(), "[RabbitMQ client] Failed to close a channel")
 	getConnectionManagerInstance().release()
@@ -144,8 +168,8 @@ func ConsumeJSONMessages[T any](client Client, queueName string, messagePayloadC
 	})
 }
 
-func ConsumeJSONMessagesWithAccessToDelivery[T any](client Client, queueName string, messagePayloadConsumerFunction func(messagePayload T, delivery amqp.Delivery) error) error {
-	return client.SetupMessageConsumption(queueName, func(message amqp.Delivery) error {
+func ConsumeJSONMessagesWithAccessToDelivery[T any](client Client, queueName string, correlationId string, messagePayloadConsumerFunction func(messagePayload T, delivery amqp.Delivery) error) error {
+	messageConsumerFunction := func(message amqp.Delivery) error {
 		messageContentType := message.ContentType
 		if messageContentType != "application/json" {
 			return fmt.Errorf("incorrect message content type: %s", messageContentType)
@@ -155,7 +179,13 @@ func ConsumeJSONMessagesWithAccessToDelivery[T any](client Client, queueName str
 			return jsonDeserializationResult.GetError()
 		}
 		return messagePayloadConsumerFunction(jsonDeserializationResult.GetPayload(), message)
-	})
+	}
+
+	if correlationId == "" {
+		return client.SetupMessageConsumption(queueName, messageConsumerFunction)
+	} else {
+		return client.SetupMessageConsumptionWithCorrelationId(queueName, correlationId, messageConsumerFunction)
+	}
 }
 
 func ConsumeJSONMessagesFromFanoutExchange[T any](client Client, fanoutExchangeName string, messagePayloadConsumerFunction func(messagePayload T) error) error {
