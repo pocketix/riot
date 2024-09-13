@@ -9,7 +9,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"github.com/goccy/go-json"
 	amqp "github.com/rabbitmq/amqp091-go"
-	"github.com/xjohnp00/jiap/backend/shared/time-series-store/internal"
+	internal "github.com/xjohnp00/jiap/backend/shared/time-series-store/src/internal"
 	"os"
 )
 
