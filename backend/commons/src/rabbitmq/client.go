@@ -55,8 +55,10 @@ func (c *connectionManager) release() {
 type Client interface {
 	GetChannel() *amqp.Channel
 	PublishJSONMessage(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte) error
+	PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte, correlationId string) error
 	DeclareQueue(queueName string) error
 	SetupMessageConsumption(queueName string, messageConsumerFunction func(message amqp.Delivery) error) error
+	SetupMessageConsumptionWithCorrelationId(queueName string, correlationId string, messageConsumerFunction func(message amqp.Delivery) error) error
 	Dispose()
 }
 
@@ -87,6 +89,19 @@ func (c *ClientImpl) PublishJSONMessage(exchangeNameOptional sharedUtils.Optiona
 	})
 }
 
+func (c *ClientImpl) PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte, correlationId string) error {
+	ctx, cancelFunction := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunction()
+	exchangeName := exchangeNameOptional.GetPayloadOrDefault("")
+	routingKey := routingKeyOptional.GetPayloadOrDefault("")
+	return c.channel.PublishWithContext(ctx, exchangeName, routingKey, false, false, amqp.Publishing{
+		ContentType:   "application/json",
+		Body:          messagePayload,
+		CorrelationId: correlationId,
+		ReplyTo:       routingKey,
+	})
+}
+
 func (c *ClientImpl) DeclareQueue(queueName string) error {
 	_, err := c.channel.QueueDeclare(queueName, false, false, false, false, nil)
 	return err
@@ -101,6 +116,29 @@ func (c *ClientImpl) SetupMessageConsumption(queueName string, messageConsumerFu
 		return err
 	}
 	for message := range messageChannel {
+		if err := messageConsumerFunction(message); err != nil {
+			return err
+		}
+		if err := message.Ack(false); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *ClientImpl) SetupMessageConsumptionWithCorrelationId(queueName string, correlationId string, messageConsumerFunction func(message amqp.Delivery) error) error {
+	if err := c.channel.Qos(1, 0, false); err != nil {
+		return err
+	}
+	messageChannel, err := c.channel.Consume(queueName, "", false, false, false, false, nil)
+	if err != nil {
+		return err
+	}
+	for message := range messageChannel {
+		if message.CorrelationId != correlationId {
+			continue
+		}
+
 		if err := messageConsumerFunction(message); err != nil {
 			return err
 		}
@@ -128,6 +166,26 @@ func ConsumeJSONMessages[T any](client Client, queueName string, messagePayloadC
 		}
 		return messagePayloadConsumerFunction(jsonDeserializationResult.GetPayload())
 	})
+}
+
+func ConsumeJSONMessagesWithAccessToDelivery[T any](client Client, queueName string, correlationId string, messagePayloadConsumerFunction func(messagePayload T, delivery amqp.Delivery) error) error {
+	messageConsumerFunction := func(message amqp.Delivery) error {
+		messageContentType := message.ContentType
+		if messageContentType != "application/json" {
+			return fmt.Errorf("incorrect message content type: %s", messageContentType)
+		}
+		jsonDeserializationResult := sharedUtils.DeserializeFromJSON[T](message.Body)
+		if jsonDeserializationResult.IsFailure() {
+			return jsonDeserializationResult.GetError()
+		}
+		return messagePayloadConsumerFunction(jsonDeserializationResult.GetPayload(), message)
+	}
+
+	if correlationId == "" {
+		return client.SetupMessageConsumption(queueName, messageConsumerFunction)
+	} else {
+		return client.SetupMessageConsumptionWithCorrelationId(queueName, correlationId, messageConsumerFunction)
+	}
 }
 
 func ConsumeJSONMessagesFromFanoutExchange[T any](client Client, fanoutExchangeName string, messagePayloadConsumerFunction func(messagePayload T) error) error {

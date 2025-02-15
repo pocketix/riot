@@ -205,6 +205,125 @@ input SDInstanceGroupInput {
   sdInstanceIDs: [ID!]!
 }
 
+# ----- Statistics
+
+scalar Date
+
+type SimpleSensors {
+  sensors: [String!]!
+}
+
+type SensorsWithFields {
+  sensors: [SensorField!]!
+}
+
+type SensorField {
+  key: String!
+  values: [String!]!
+}
+
+enum StatisticsOperation {
+  MEAN
+  MIN
+  MAX
+  FIRST
+  SUM
+  LAST
+  NONE
+  COUNT
+  INTEGRAL
+  MEDIAN
+  MODE
+  QUANTILE
+  REDUCE
+  SKEW
+  SPREAD
+  STDDEV
+  TIMEWEIGHTEDAVG
+}
+
+"""
+Data used for querying the selected bucket
+"""
+input StatisticsInput {
+  """
+  Sensors to be queried
+  """
+  sensors: SensorsInput!
+  """
+  Start of the querying window
+  """
+  from: Date
+  """
+  End of the querying window
+  """
+  to: Date
+  """
+  Amount of minutes to aggregate by
+  For example if the queried range has 1 hour and aggregateMinutes is set to 10 the aggregation will result in 6 points
+  """
+  aggregateMinutes: Int
+  """
+  Timezone override default UTC.
+  For more details why and how this affects queries see: https://www.influxdata.com/blog/time-zones-in-flux/.
+  In most cases you can ignore this and some edge aggregations can be influenced.
+  If you need a precise result or the aggregation uses high amount of minutes provide the target time zone.
+  """
+  timezone: String
+  """
+  Aggregation operator to use, if needed
+  """
+  operation: StatisticsOperation
+}
+
+"""
+Sensors to be queried
+"""
+input SensorsInput {
+  """
+  Simple definition, returns all available sensor fields
+  """
+  simpleSensors: [String]
+  """
+  Return only the requested sensor fields
+  """
+  sensorsWithFields: [SensorFieldInput]
+}
+
+"""
+Return only the requested sensor fields
+"""
+input SensorFieldInput {
+  key: String!
+  fields: [String!]!
+}
+
+scalar StatisticsParameterValue
+
+type StatisticsField {
+  key: String!
+  value: StatisticsParameterValue!
+}
+
+type OutputData {
+  time: Date!
+  deviceId: String!
+  deviceType: String
+  data: StatisticsField!
+}
+
+input StatisticsFieldInput {
+  key: String!
+  value: StatisticsParameterValue!
+}
+
+input InputData {
+  time: Date!
+  deviceId: String!
+  deviceType: String
+  data: StatisticsFieldInput!
+}
+
 # ----- Queries, mutations and subscriptions -----
 
 type Query {
@@ -216,6 +335,7 @@ type Query {
   kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!
   sdInstanceGroup(id: ID!): SDInstanceGroup!
   sdInstanceGroups: [SDInstanceGroup!]!
+  statisticsQuery(request: StatisticsInput!): [OutputData!]!
 }
 
 type Mutation {
@@ -228,6 +348,7 @@ type Mutation {
   createSDInstanceGroup(input: SDInstanceGroupInput!): SDInstanceGroup!
   updateSDInstanceGroup(id: ID!, input: SDInstanceGroupInput!): SDInstanceGroup!
   deleteSDInstanceGroup(id: ID!): Boolean!
+  statisticsMutate(inputData: InputData!): Boolean!
 }
 
 type Subscription {

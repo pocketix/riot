@@ -12,7 +12,16 @@ func getQueueDeclarationErrorMessage(queueName string) string {
 }
 
 func SetupRabbitMQInfrastructureForISC(rabbitMQClient rabbitmq.Client) {
-	namesOfQueuesToDeclare := sharedUtils.SliceOf[string](sharedConstants.KPIFulfillmentCheckResultsQueueName, sharedConstants.KPIFulfillmentCheckRequestsQueueName, sharedConstants.SDInstanceRegistrationRequestsQueueName, sharedConstants.SetOfSDTypesUpdatesQueueName, sharedConstants.SetOfSDInstancesUpdatesQueueName, sharedConstants.MessageProcessingUnitConnectionNotificationsQueueName)
+	namesOfQueuesToDeclare := sharedUtils.SliceOf[string](
+		sharedConstants.KPIFulfillmentCheckResultsQueueName,
+		sharedConstants.KPIFulfillmentCheckRequestsQueueName,
+		sharedConstants.SDInstanceRegistrationRequestsQueueName,
+		sharedConstants.SetOfSDTypesUpdatesQueueName,
+		sharedConstants.SetOfSDInstancesUpdatesQueueName,
+		sharedConstants.MessageProcessingUnitConnectionNotificationsQueueName,
+		sharedConstants.TimeSeriesStoreDataQueueName,
+		sharedConstants.TimeSeriesReadRequestQueueName,
+	)
 	sharedUtils.ForEach(namesOfQueuesToDeclare, func(nameOfQueuesToDeclare string) {
 		sharedUtils.TerminateOnError(rabbitMQClient.DeclareQueue(nameOfQueuesToDeclare), getQueueDeclarationErrorMessage(nameOfQueuesToDeclare))
 	})

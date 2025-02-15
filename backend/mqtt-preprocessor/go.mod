@@ -5,6 +5,7 @@ go 1.22
 require (
 	github.com/MichalBures-OG/bp-bures-RIoT-commons v0.0.0-00010101000000-000000000000
 	github.com/eclipse/paho.mqtt.golang v1.4.3
+	github.com/google/uuid v1.6.0
 )
 
 replace github.com/MichalBures-OG/bp-bures-RIoT-commons => ./../commons
