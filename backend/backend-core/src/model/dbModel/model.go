@@ -165,7 +165,7 @@ type SDCommandEntity struct {
 	Denotation  string                      `gorm:"column:denotation;not null"`
 	Type        string                      `gorm:"column:type;not null"`
 	Payload     string                      `gorm:"column:payload;not null"`
-	Invocations []SDCommandInvocationEntity `gorm:"foreignKey:SDCommandID;constraint:OnDelete:CASCADE"`
+	Invocations []SDCommandInvocationEntity `gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
 }
 
 func (SDCommandEntity) TableName() string {
