@@ -114,6 +114,10 @@ services:
     environment:
       BACKEND_CORE_URL: ${BACKEND_CORE_URL}
       RABBITMQ_URL: ${RABBITMQ_URL}
+      INFLUX_ORGANIZATION: home
+      INFLUX_BUCKET: bucket
+      INFLUX_URL: http://influx:8086
+      INFLUX_TOKEN: Fgp2ozMxmkYnUBkzwLpkx6ydOVXyQqF4-ZPctGjv8-xkirYPYRvoBtrpAHMCr_joYoJMOqZjl8djjuyOx-MR_A==
     depends_on:
       - rabbitmq
       - riot-backend-core # 'Backend-core' has to set up the 'RabbitMQ infrastructure'
