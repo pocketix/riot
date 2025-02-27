@@ -40,7 +40,7 @@ type OutputData struct {
 // ReadRequestBody represents the request body for the statistics endpoint.
 type ReadRequestBody struct {
 	Sensors          Sensors    `json:"sensors"`
-	Operation        Operation  `json:"operation"`
+	Operation        Operation  `json:"operation,omitempty"`
 	Timezone         string     `json:"timezone,omitempty"`
 	From             *time.Time `json:"from,omitempty"`
 	To               *time.Time `json:"to,omitempty"`
@@ -67,69 +67,61 @@ func (outputData *OutputData) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// UnmarshalJSON unmarshals JSON to the ReadRequestBody struct.
+// UnmarshalJSON customizes the JSON unmarshaling for ReadRequestBody.
 func (r *ReadRequestBody) UnmarshalJSON(data []byte) error {
 	type Alias ReadRequestBody
 	aux := &struct {
-		Sensors interface{} `json:"sensors"`
+		From    string          `json:"from"`
+		To      string          `json:"to"`
+		Sensors json.RawMessage `json:"sensors"` // Delay parsing sensors
 		Alias
 	}{
 		Alias: (Alias)(*r),
 	}
 
-	var z map[string]interface{}
-
-	if err := json.Unmarshal(data, &z); err != nil {
-		fmt.Println(string(data[:]))
-		panic(err)
-	}
-
-	convertedFrom, _ := time.Parse(time.RFC3339, z["from"].(string))
-	convertedTo, _ := time.Parse(time.RFC3339, z["to"].(string))
-
-	r.From = &convertedFrom
-	r.To = &convertedTo
-	r.AggregateMinutes = int(z["aggregateMinutes"].(float64))
-	r.Timezone = z["timezone"].(string)
-	r.Operation = Operation(z["operation"].(string))
-
+	// Unmarshal into aux
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
 
-	switch v := aux.Sensors.(type) {
-	case map[string]interface{}:
-		sensorsWithFields := SensorsWithFields{}
-		for key, value := range v {
-			if values, ok := value.([]interface{}); ok {
-				fields := make([]string, len(values))
-				for i, val := range values {
-					if field, ok := val.(string); ok {
-						fields[i] = field
-					} else {
-						return fmt.Errorf("unexpected field type: %T", val)
-					}
-				}
-				sensorsWithFields[key] = fields
-			} else {
-				return fmt.Errorf("unexpected sensor type: %T", value)
-			}
+	// Parse time fields safely
+	if aux.From != "" {
+		fromTime, err := time.Parse(time.RFC3339, aux.From)
+		if err != nil {
+			return fmt.Errorf("invalid 'from' time format: %s", aux.From)
 		}
-		r.Sensors = sensorsWithFields
-	case []interface{}:
-		simpleSensors := make([]string, len(v))
-		for i, sensor := range v {
-			if s, ok := sensor.(string); ok {
-				simpleSensors[i] = s
-			} else {
-				return fmt.Errorf("unexpected sensor type: %T", sensor)
-			}
-		}
-		r.Sensors = SimpleSensors(simpleSensors)
-	default:
-		return fmt.Errorf("unsupported sensors type: %T", aux.Sensors)
+		r.From = &fromTime
 	}
-	return nil
+
+	if aux.To != "" {
+		toTime, err := time.Parse(time.RFC3339, aux.To)
+		if err != nil {
+			return fmt.Errorf("invalid 'to' time format: %s", aux.To)
+		}
+		r.To = &toTime
+	}
+
+	// Assign other fields
+	r.Operation = aux.Operation
+	r.Timezone = aux.Timezone
+	r.AggregateMinutes = aux.AggregateMinutes
+
+	// Try to parse Sensors as SimpleSensors
+	var simpleSensors SimpleSensors
+	if err := json.Unmarshal(aux.Sensors, &simpleSensors); err == nil {
+		r.Sensors = simpleSensors
+		return nil
+	}
+
+	// Try to parse Sensors as SensorsWithFields
+	var sensorsWithFields SensorsWithFields
+	if err := json.Unmarshal(aux.Sensors, &sensorsWithFields); err == nil {
+		r.Sensors = sensorsWithFields
+		return nil
+	}
+
+	// If neither format works, return an error
+	return fmt.Errorf("unsupported sensors format: %s", string(aux.Sensors))
 }
 
 // MarshalJSON marshals ReadRequestBody to JSON.

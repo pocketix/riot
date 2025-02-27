@@ -1,6 +1,7 @@
 package domainLogicLayer
 
 import (
+	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
@@ -24,26 +25,39 @@ func randInt(min int, max int) int {
 }
 
 func Query(input graphQLModel.StatisticsInput) sharedUtils.Result[[]graphQLModel.OutputData] {
+	fmt.Println("Received input in statistics: ", input)
+
+	request := sharedUtils.SerializeToJSON(input)
+	fmt.Println("Received input in request: ", input)
+	fmt.Printf("%s\n", request.GetPayload())
+
 	rabbitMQClient := getDLLRabbitMQClient()
 
 	correlationId := randomString(32)
 
 	var output sharedUtils.Result[[]graphQLModel.OutputData]
+	done := make(chan struct{})
 
-	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[[]graphQLModel.OutputData](rabbitMQClient, sharedConstants.TimeSeriesReadRequestQueueName, "", func(outputData []graphQLModel.OutputData, delivery amqp.Delivery) error {
-		output = sharedUtils.NewSuccessResult[[]graphQLModel.OutputData](outputData)
-		return nil
-	})
+	go func() {
+		err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[[]graphQLModel.OutputData](rabbitMQClient, sharedConstants.TimeSeriesReadRequestQueueName, correlationId, func(outputData []graphQLModel.OutputData, delivery amqp.Delivery) error {
+			output = sharedUtils.NewSuccessResult[[]graphQLModel.OutputData](outputData)
+			close(done)
+			return nil
+		})
+
+		if err != nil {
+			close(done)
+			sharedUtils.NewFailureResult[graphQLModel.KPIDefinition](err)
+		}
+	}()
+
+	err := rabbitMQClient.PublishJSONMessageRPC(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesReadRequestQueueName), request.GetPayload(), correlationId)
 
 	if err != nil {
 		sharedUtils.NewFailureResult[graphQLModel.KPIDefinition](err)
 	}
 
-	err = rabbitMQClient.PublishJSONMessageRPC(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesReadRequestQueueName), sharedUtils.SerializeToJSON(input).GetPayload(), correlationId)
-
-	if err != nil {
-		sharedUtils.NewFailureResult[graphQLModel.KPIDefinition](err)
-	}
+	<-done
 
 	return output
 }

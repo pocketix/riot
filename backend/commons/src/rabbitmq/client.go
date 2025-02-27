@@ -94,6 +94,7 @@ func (c *ClientImpl) PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Opti
 	defer cancelFunction()
 	exchangeName := exchangeNameOptional.GetPayloadOrDefault("")
 	routingKey := routingKeyOptional.GetPayloadOrDefault("")
+	fmt.Printf("Publishing message with RPC: %s", messagePayload)
 	return c.channel.PublishWithContext(ctx, exchangeName, routingKey, false, false, amqp.Publishing{
 		ContentType:   "application/json",
 		Body:          messagePayload,

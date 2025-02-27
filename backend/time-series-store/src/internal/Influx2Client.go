@@ -65,6 +65,8 @@ func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) ([]sh
 		outputData = append(outputData, mapToOutputData(result.Record().Values()))
 	}
 
+	fmt.Printf("%s\n", outputData)
+
 	return outputData, nil
 }
 

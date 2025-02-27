@@ -20,11 +20,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	fmt.Println("Time Series Store Starting")
+
 	influx, influxErrors, _ := internal.NewInflux2Client(environment.InfluxUrl, environment.InfluxToken, environment.InfluxOrg, environment.InfluxBucket)
 
 	rabbitMQClient := rabbitmq.NewClient()
 	defer rabbitMQClient.Dispose()
 	defer influx.Close()
+
+	fmt.Println("Time Series Store Ready")
 
 	sharedUtils.WaitForAll(
 		func() {
@@ -61,16 +65,21 @@ func consumeInputMessages(rabbitMQClient rabbitmq.Client, influx internal.Influx
 func consumeReadRequests(rabbitMQClient rabbitmq.Client, influx internal.Influx2Client) error {
 	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.ReadRequestBody](rabbitMQClient, sharedConstants.TimeSeriesReadRequestQueueName, "", func(readRequestBody sharedModel.ReadRequestBody, delivery amqp.Delivery) error {
 		data, retrieveDataError := influx.Query(readRequestBody)
+		fmt.Printf("NotMarshalled data %s", data)
 
-		jsonData, _ := json.Marshal(data)
 		if retrieveDataError != nil {
 			fmt.Println(retrieveDataError.Error())
-			err := rabbitMQClient.PublishJSONMessageRPC(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesReadRequestQueueName), jsonData, delivery.ReplyTo)
-
-			if err != nil {
-				return err
-			}
 			return retrieveDataError
+		}
+
+		jsonData, _ := json.Marshal(data)
+		fmt.Printf("Marshalled data %s", jsonData)
+
+		err := rabbitMQClient.PublishJSONMessageRPC(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesReadRequestQueueName), jsonData, delivery.ReplyTo)
+
+		if err != nil {
+			fmt.Printf("Error: %s", err)
+			return err
 		}
 		return nil
 	})
