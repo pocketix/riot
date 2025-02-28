@@ -251,7 +251,8 @@ export type Query = {
   sdInstances: Array<SdInstance>;
   sdType: SdType;
   sdTypes: Array<SdType>;
-  statisticsQuery: Array<OutputData>;
+  statisticsQuerySensorsWithFields: Array<OutputData>;
+  statisticsQuerySimpleSensors: Array<OutputData>;
 };
 
 
@@ -270,8 +271,15 @@ export type QuerySdTypeArgs = {
 };
 
 
-export type QueryStatisticsQueryArgs = {
-  request: StatisticsInput;
+export type QueryStatisticsQuerySensorsWithFieldsArgs = {
+  request?: InputMaybe<StatisticsInput>;
+  sensors: SensorsWithFields;
+};
+
+
+export type QueryStatisticsQuerySimpleSensorsArgs = {
+  request?: InputMaybe<StatisticsInput>;
+  sensors: SimpleSensors;
 };
 
 export type SdInstance = {
@@ -336,33 +344,16 @@ export type SdTypeInput = {
 };
 
 export type SensorField = {
-  __typename?: 'SensorField';
-  key: Scalars['String']['output'];
-  values: Array<Scalars['String']['output']>;
-};
-
-/** Return only the requested sensor fields */
-export type SensorFieldInput = {
-  fields: Array<Scalars['String']['input']>;
   key: Scalars['String']['input'];
-};
-
-/** Sensors to be queried */
-export type SensorsInput = {
-  /** Return only the requested sensor fields */
-  sensorsWithFields?: InputMaybe<Array<InputMaybe<SensorFieldInput>>>;
-  /** Simple definition, returns all available sensor fields */
-  simpleSensors?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  values: Array<Scalars['String']['input']>;
 };
 
 export type SensorsWithFields = {
-  __typename?: 'SensorsWithFields';
   sensors: Array<SensorField>;
 };
 
 export type SimpleSensors = {
-  __typename?: 'SimpleSensors';
-  sensors: Array<Scalars['String']['output']>;
+  sensors: Array<Scalars['String']['input']>;
 };
 
 export type StatisticsField = {
@@ -387,8 +378,6 @@ export type StatisticsInput = {
   from?: InputMaybe<Scalars['Date']['input']>;
   /** Aggregation operator to use, if needed */
   operation?: InputMaybe<StatisticsOperation>;
-  /** Sensors to be queried */
-  sensors: SensorsInput;
   /**
    * Timezone override default UTC.
    * For more details why and how this affects queries see: https://www.influxdata.com/blog/time-zones-in-flux/.

@@ -69,7 +69,6 @@ func consumeReadRequests(rabbitMQClient rabbitmq.Client, influx internal.Influx2
 		"",
 		func(readRequestBody sharedModel.ReadRequestBody, delivery amqp.Delivery) error {
 			data, retrieveDataError := influx.Query(readRequestBody)
-			fmt.Printf("NotMarshalled data %s\n", data)
 
 			if retrieveDataError != nil {
 				fmt.Println(retrieveDataError.Error())
@@ -77,7 +76,6 @@ func consumeReadRequests(rabbitMQClient rabbitmq.Client, influx internal.Influx2
 			}
 
 			jsonData, err := json.Marshal(data)
-			fmt.Printf("Marshalled data %s\n", jsonData)
 
 			if err != nil {
 				fmt.Printf("Error During Marshall: %s", err)

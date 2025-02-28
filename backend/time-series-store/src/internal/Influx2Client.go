@@ -34,6 +34,7 @@ func NewInflux2Client(endpoint string, token string, organization string, bucket
 }
 
 func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) ([]sharedModel.OutputData, error) {
+	fmt.Printf("Handling query with body %s\n", body)
 	aggregation := createAggregation(body)
 	timeRange := convertTimeToQueryTimePart(body)
 	filter := createFilter(body)
@@ -65,15 +66,12 @@ func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) ([]sh
 		outputData = append(outputData, mapToOutputData(result.Record().Values()))
 	}
 
-	fmt.Printf("%s\n", outputData)
-
 	return outputData, nil
 }
 
 func (influx2Client Influx2Client) Write(data sharedModel.InputData) {
 	if parameters, ok := data.Parameters.(map[string]interface{}); ok {
 		point := influxdb2.NewPoint(data.SDInstanceUID, map[string]string{"deviceType": data.SDTypeSpecification}, parameters, time.Unix(int64(data.Timestamp), 0))
-		fmt.Println(point)
 		influx2Client.writeApi.WritePoint(point)
 	} else {
 		fmt.Println("parameterAsAny is not a map[string]interface{}")
@@ -119,6 +117,7 @@ func convertTimeToQueryTimePart(body sharedModel.ReadRequestBody) string {
 func createFilter(body sharedModel.ReadRequestBody) string {
 	var filterStrings []string
 
+	fmt.Printf("Getting sensors: %s\n", body.Sensors)
 	if sharedModel.AreSimpleSensors(body.Sensors) {
 		simpleSensors := body.Sensors.(sharedModel.SimpleSensors)
 		for _, sensor := range simpleSensors {
@@ -171,14 +170,20 @@ func mapToOutputData(influxOutput map[string]interface{}) sharedModel.OutputData
 		Table:      influxOutput["table"].(int64),
 		Time:       influxOutput["time"].(time.Time),
 		DeviceID:   influxOutput["deviceId"].(string),
-		DeviceType: influxOutput["deviceType"].(string),
+		DeviceType: "",
+	}
+
+	if value, exists := influxOutput["deviceType"]; exists {
+		outputData.DeviceType = value.(string)
+		delete(influxOutput, "deviceType")
+	} else {
+		outputData.DeviceType = ""
 	}
 
 	delete(influxOutput, "result")
 	delete(influxOutput, "table")
 	delete(influxOutput, "time")
 	delete(influxOutput, "deviceId")
-	delete(influxOutput, "deviceType")
 
 	outputData.Data = influxOutput
 

@@ -17,8 +17,14 @@ type SensorsWithFields map[string][]string
 
 // AreSimpleSensors checks if the sensors are of type SimpleSensors.
 func AreSimpleSensors(sensors interface{}) bool {
-	_, ok := sensors.(SimpleSensors)
-	return ok
+	switch sensors.(type) {
+	case SimpleSensors:
+		return true
+	case []string:
+		return true
+	default:
+		return false
+	}
 }
 
 // Operation represents aggregation operations.

@@ -44,10 +44,10 @@ func (this BooleanEQAtomKPINode) GetSdParameterSpecification() string {
 }
 
 type InputData struct {
-	Time       string               `json:"time"`
-	DeviceID   string               `json:"deviceId"`
-	DeviceType *string              `json:"deviceType,omitempty"`
-	Data       StatisticsFieldInput `json:"data"`
+	Time       string  `json:"time"`
+	DeviceID   string  `json:"deviceId"`
+	DeviceType *string `json:"deviceType,omitempty"`
+	Data       string  `json:"data"`
 }
 
 type KPIDefinition struct {
@@ -212,10 +212,10 @@ func (this NumericLTAtomKPINode) GetSdParameterSpecification() string {
 }
 
 type OutputData struct {
-	Time       string          `json:"time"`
-	DeviceID   string          `json:"deviceId"`
-	DeviceType *string         `json:"deviceType,omitempty"`
-	Data       StatisticsField `json:"data"`
+	Time       string  `json:"time"`
+	DeviceID   string  `json:"deviceId"`
+	DeviceType *string `json:"deviceType,omitempty"`
+	Data       string  `json:"data"`
 }
 
 type Query struct {
@@ -272,20 +272,6 @@ type SensorField struct {
 	Values []string `json:"values"`
 }
 
-// Return only the requested sensor fields
-type SensorFieldInput struct {
-	Key    string   `json:"key"`
-	Fields []string `json:"fields"`
-}
-
-// Sensors to be queried
-type SensorsInput struct {
-	// Simple definition, returns all available sensor fields
-	SimpleSensors []*string `json:"simpleSensors,omitempty"`
-	// Return only the requested sensor fields
-	SensorsWithFields []*SensorFieldInput `json:"sensorsWithFields,omitempty"`
-}
-
 type SensorsWithFields struct {
 	Sensors []SensorField `json:"sensors"`
 }
@@ -294,20 +280,8 @@ type SimpleSensors struct {
 	Sensors []string `json:"sensors"`
 }
 
-type StatisticsField struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
-type StatisticsFieldInput struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
 // Data used for querying the selected bucket
 type StatisticsInput struct {
-	// Sensors to be queried
-	Sensors SensorsInput `json:"sensors"`
 	// Start of the querying window
 	From *string `json:"from,omitempty"`
 	// End of the querying window
