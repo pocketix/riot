@@ -6,7 +6,6 @@ toolchain go1.22.4
 
 require (
 	github.com/MichalBures-OG/bp-bures-RIoT-commons v0.0.0-00010101000000-000000000000
-	github.com/goccy/go-json v0.10.2
 	github.com/influxdata/influxdb-client-go/v2 v2.13.0
 	github.com/rabbitmq/amqp091-go v1.10.0
 )

@@ -90,11 +90,12 @@ func (c *ClientImpl) PublishJSONMessage(exchangeNameOptional sharedUtils.Optiona
 }
 
 func (c *ClientImpl) PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte, correlationId string) error {
+	fmt.Printf("Publishing JSON RPC message %s\n", messagePayload)
 	ctx, cancelFunction := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFunction()
 	exchangeName := exchangeNameOptional.GetPayloadOrDefault("")
 	routingKey := routingKeyOptional.GetPayloadOrDefault("")
-	fmt.Printf("Publishing message with RPC: %s", messagePayload)
+	fmt.Printf("Publishing message with RPC: %s\n", messagePayload)
 	return c.channel.PublishWithContext(ctx, exchangeName, routingKey, false, false, amqp.Publishing{
 		ContentType:   "application/json",
 		Body:          messagePayload,

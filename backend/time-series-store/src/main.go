@@ -1,15 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
-	"github.com/goccy/go-json"
 	amqp "github.com/rabbitmq/amqp091-go"
-	internal "github.com/xjohnp00/jiap/backend/shared/time-series-store/src/internal"
+	"github.com/xjohnp00/jiap/backend/shared/time-series-store/src/internal"
 	"os"
 )
 
@@ -65,17 +65,22 @@ func consumeInputMessages(rabbitMQClient rabbitmq.Client, influx internal.Influx
 func consumeReadRequests(rabbitMQClient rabbitmq.Client, influx internal.Influx2Client) error {
 	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.ReadRequestBody](rabbitMQClient, sharedConstants.TimeSeriesReadRequestQueueName, "", func(readRequestBody sharedModel.ReadRequestBody, delivery amqp.Delivery) error {
 		data, retrieveDataError := influx.Query(readRequestBody)
-		fmt.Printf("NotMarshalled data %s", data)
+		fmt.Printf("NotMarshalled data %s\n", data)
 
 		if retrieveDataError != nil {
 			fmt.Println(retrieveDataError.Error())
 			return retrieveDataError
 		}
 
-		jsonData, _ := json.Marshal(data)
-		fmt.Printf("Marshalled data %s", jsonData)
+		jsonData, err := json.Marshal(data)
+		fmt.Printf("Marshalled data %s\n", jsonData)
 
-		err := rabbitMQClient.PublishJSONMessageRPC(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesReadRequestQueueName), jsonData, delivery.ReplyTo)
+		if err != nil {
+			fmt.Printf("Error During Marshall: %s", err)
+			return nil
+		}
+
+		err = rabbitMQClient.PublishJSONMessageRPC(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesReadRequestQueueName), jsonData, delivery.CorrelationId)
 
 		if err != nil {
 			fmt.Printf("Error: %s", err)
