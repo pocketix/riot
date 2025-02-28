@@ -55,7 +55,7 @@ func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) ([]sh
 		return nil, err
 	}
 
-	var outputData []sharedModel.OutputData
+	outputData := []sharedModel.OutputData{}
 
 	if result.Err() != nil {
 		return nil, result.Err()
