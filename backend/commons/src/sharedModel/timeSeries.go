@@ -47,26 +47,6 @@ type ReadRequestBody struct {
 	AggregateMinutes int        `json:"aggregateMinutes,omitempty"`
 }
 
-// UnmarshalJSON unmarshals JSON to the OutputData struct.
-func (outputData *OutputData) UnmarshalJSON(data []byte) error {
-	type Alias OutputData
-	aux := &struct {
-		Time string `json:"time"`
-		*Alias
-	}{
-		Alias: (*Alias)(outputData),
-	}
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-	parsedTime, err := time.Parse(time.RFC3339, aux.Time)
-	if err != nil {
-		return err
-	}
-	outputData.Time = parsedTime
-	return nil
-}
-
 // UnmarshalJSON customizes the JSON unmarshaling for ReadRequestBody.
 func (r *ReadRequestBody) UnmarshalJSON(data []byte) error {
 	type Alias ReadRequestBody
@@ -132,24 +112,6 @@ func (r *ReadRequestBody) MarshalJSON() ([]byte, error) {
 		r.Sensors = []string{}
 	}
 	return json.Marshal(&struct{ Alias }{Alias: (Alias)(*r)})
-}
-
-// MarshalJSON marshals the OutputData struct to JSON.
-func (outputData OutputData) MarshalJSON() ([]byte, error) {
-	data := make(map[string]interface{}, len(outputData.Data)+5)
-
-	// copy status fields
-	for k, v := range outputData.Data {
-		data[k] = v
-	}
-	// add known keys
-	data["time"] = outputData.Time.Format(time.RFC3339)
-	data["deviceId"] = outputData.DeviceID
-	data["deviceType"] = outputData.DeviceType
-	data["result"] = outputData.Result
-	data["table"] = outputData.Table
-
-	return json.Marshal(data)
 }
 
 // MarshalJSON marshals SimpleSensors to JSON.
