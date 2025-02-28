@@ -55,7 +55,7 @@ func (c *connectionManager) release() {
 type Client interface {
 	GetChannel() *amqp.Channel
 	PublishJSONMessage(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte) error
-	PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte, correlationId string) error
+	PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte, correlationId string, replyTo sharedUtils.Optional[string]) error
 	DeclareQueue(queueName string) error
 	SetupMessageConsumption(queueName string, messageConsumerFunction func(message amqp.Delivery) error) error
 	SetupMessageConsumptionWithCorrelationId(queueName string, correlationId string, messageConsumerFunction func(message amqp.Delivery) error) error
@@ -89,18 +89,20 @@ func (c *ClientImpl) PublishJSONMessage(exchangeNameOptional sharedUtils.Optiona
 	})
 }
 
-func (c *ClientImpl) PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte, correlationId string) error {
+func (c *ClientImpl) PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte, correlationId string, replyToOptional sharedUtils.Optional[string]) error {
 	fmt.Printf("Publishing JSON RPC message %s\n", messagePayload)
 	ctx, cancelFunction := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFunction()
 	exchangeName := exchangeNameOptional.GetPayloadOrDefault("")
 	routingKey := routingKeyOptional.GetPayloadOrDefault("")
+	replyTo := replyToOptional.GetPayloadOrDefault("")
+
 	fmt.Printf("Publishing message with RPC: %s\n", messagePayload)
 	return c.channel.PublishWithContext(ctx, exchangeName, routingKey, false, false, amqp.Publishing{
 		ContentType:   "application/json",
 		Body:          messagePayload,
 		CorrelationId: correlationId,
-		ReplyTo:       routingKey,
+		ReplyTo:       replyTo,
 	})
 }
 
@@ -129,15 +131,23 @@ func (c *ClientImpl) SetupMessageConsumption(queueName string, messageConsumerFu
 }
 
 func (c *ClientImpl) SetupMessageConsumptionWithCorrelationId(queueName string, correlationId string, messageConsumerFunction func(message amqp.Delivery) error) error {
+	fmt.Printf("Waiting for message with correlationId %s\n", correlationId)
+	consumerName := fmt.Sprintf("%s-consumer", correlationId)
 	if err := c.channel.Qos(1, 0, false); err != nil {
 		return err
 	}
-	messageChannel, err := c.channel.Consume(queueName, "", false, false, false, false, nil)
+	messageChannel, err := c.channel.Consume(queueName, consumerName, false, false, false, false, nil)
 	if err != nil {
 		return err
 	}
 	for message := range messageChannel {
+		fmt.Printf("Seeing message %s correlationId %s from a consumer %s\n", message.Body, message.CorrelationId, consumerName)
 		if message.CorrelationId != correlationId {
+			// Return the message back to the queue if it has a wrong correlation ID
+			if err := message.Nack(false, true); err != nil {
+				return err
+			}
+			fmt.Println("Skipping")
 			continue
 		}
 
@@ -145,6 +155,11 @@ func (c *ClientImpl) SetupMessageConsumptionWithCorrelationId(queueName string, 
 			return err
 		}
 		if err := message.Ack(false); err != nil {
+			return err
+		}
+
+		err := c.channel.Cancel(consumerName, true)
+		if err != nil {
 			return err
 		}
 	}

@@ -25,10 +25,7 @@ func randInt(min int, max int) int {
 }
 
 func Query(input graphQLModel.StatisticsInput) sharedUtils.Result[[]graphQLModel.OutputData] {
-	fmt.Println("Received input in statistics: ", input)
-
 	request := sharedUtils.SerializeToJSON(input)
-	fmt.Println("Received input in request: ", input)
 	fmt.Printf("%s\n", request.GetPayload())
 
 	rabbitMQClient := getDLLRabbitMQClient()
@@ -39,11 +36,16 @@ func Query(input graphQLModel.StatisticsInput) sharedUtils.Result[[]graphQLModel
 	done := make(chan struct{})
 
 	go func() {
-		err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[[]graphQLModel.OutputData](rabbitMQClient, sharedConstants.TimeSeriesReadRequestQueueName, correlationId, func(outputData []graphQLModel.OutputData, delivery amqp.Delivery) error {
-			output = sharedUtils.NewSuccessResult[[]graphQLModel.OutputData](outputData)
-			close(done)
-			return nil
-		})
+		err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[[]graphQLModel.OutputData](
+			rabbitMQClient,
+			sharedConstants.TimeSeriesReadRequestBackendCoreResponseQueueName,
+			correlationId,
+			func(outputData []graphQLModel.OutputData, delivery amqp.Delivery) error {
+				output = sharedUtils.NewSuccessResult[[]graphQLModel.OutputData](outputData)
+				close(done)
+				return nil
+			},
+		)
 
 		if err != nil {
 			close(done)
@@ -51,7 +53,13 @@ func Query(input graphQLModel.StatisticsInput) sharedUtils.Result[[]graphQLModel
 		}
 	}()
 
-	err := rabbitMQClient.PublishJSONMessageRPC(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesReadRequestQueueName), request.GetPayload(), correlationId)
+	err := rabbitMQClient.PublishJSONMessageRPC(
+		sharedUtils.NewEmptyOptional[string](),
+		sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesReadRequestQueueName),
+		request.GetPayload(),
+		correlationId,
+		sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesReadRequestBackendCoreResponseQueueName),
+	)
 
 	if err != nil {
 		sharedUtils.NewFailureResult[graphQLModel.KPIDefinition](err)

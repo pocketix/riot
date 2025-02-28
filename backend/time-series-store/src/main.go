@@ -63,31 +63,42 @@ func consumeInputMessages(rabbitMQClient rabbitmq.Client, influx internal.Influx
 }
 
 func consumeReadRequests(rabbitMQClient rabbitmq.Client, influx internal.Influx2Client) error {
-	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.ReadRequestBody](rabbitMQClient, sharedConstants.TimeSeriesReadRequestQueueName, "", func(readRequestBody sharedModel.ReadRequestBody, delivery amqp.Delivery) error {
-		data, retrieveDataError := influx.Query(readRequestBody)
-		fmt.Printf("NotMarshalled data %s\n", data)
+	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.ReadRequestBody](
+		rabbitMQClient,
+		sharedConstants.TimeSeriesReadRequestQueueName,
+		"",
+		func(readRequestBody sharedModel.ReadRequestBody, delivery amqp.Delivery) error {
+			data, retrieveDataError := influx.Query(readRequestBody)
+			fmt.Printf("NotMarshalled data %s\n", data)
 
-		if retrieveDataError != nil {
-			fmt.Println(retrieveDataError.Error())
-			return retrieveDataError
-		}
+			if retrieveDataError != nil {
+				fmt.Println(retrieveDataError.Error())
+				return retrieveDataError
+			}
 
-		jsonData, err := json.Marshal(data)
-		fmt.Printf("Marshalled data %s\n", jsonData)
+			jsonData, err := json.Marshal(data)
+			fmt.Printf("Marshalled data %s\n", jsonData)
 
-		if err != nil {
-			fmt.Printf("Error During Marshall: %s", err)
+			if err != nil {
+				fmt.Printf("Error During Marshall: %s", err)
+				return nil
+			}
+
+			err = rabbitMQClient.PublishJSONMessageRPC(
+				sharedUtils.NewEmptyOptional[string](),
+				sharedUtils.NewOptionalOf(delivery.ReplyTo),
+				jsonData,
+				delivery.CorrelationId,
+				sharedUtils.NewEmptyOptional[string](),
+			)
+
+			if err != nil {
+				fmt.Printf("Error: %s", err)
+				return err
+			}
 			return nil
-		}
-
-		err = rabbitMQClient.PublishJSONMessageRPC(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesReadRequestQueueName), jsonData, delivery.CorrelationId)
-
-		if err != nil {
-			fmt.Printf("Error: %s", err)
-			return err
-		}
-		return nil
-	})
+		},
+	)
 	return err
 }
 
