@@ -12,6 +12,8 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  Date: { input: any; output: any; }
+  StatisticsParameterValue: { input: any; output: any; }
 };
 
 export type AtomKpiNode = {
@@ -30,6 +32,13 @@ export type BooleanEqAtomKpiNode = AtomKpiNode & KpiNode & {
   parentNodeID?: Maybe<Scalars['ID']['output']>;
   sdParameterID: Scalars['ID']['output'];
   sdParameterSpecification: Scalars['String']['output'];
+};
+
+export type InputData = {
+  data: StatisticsFieldInput;
+  deviceId: Scalars['String']['input'];
+  deviceType?: InputMaybe<Scalars['String']['input']>;
+  time: Scalars['Date']['input'];
 };
 
 export type KpiDefinition = {
@@ -115,6 +124,7 @@ export type Mutation = {
   deleteKPIDefinition: Scalars['Boolean']['output'];
   deleteSDInstanceGroup: Scalars['Boolean']['output'];
   deleteSDType: Scalars['Boolean']['output'];
+  statisticsMutate: Scalars['Boolean']['output'];
   updateKPIDefinition: KpiDefinition;
   updateSDInstance: SdInstance;
   updateSDInstanceGroup: SdInstanceGroup;
@@ -148,6 +158,11 @@ export type MutationDeleteSdInstanceGroupArgs = {
 
 export type MutationDeleteSdTypeArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationStatisticsMutateArgs = {
+  inputData: InputData;
 };
 
 
@@ -218,6 +233,14 @@ export type NumericLtAtomKpiNode = AtomKpiNode & KpiNode & {
   sdParameterSpecification: Scalars['String']['output'];
 };
 
+export type OutputData = {
+  __typename?: 'OutputData';
+  data: StatisticsField;
+  deviceId: Scalars['String']['output'];
+  deviceType?: Maybe<Scalars['String']['output']>;
+  time: Scalars['Date']['output'];
+};
+
 export type Query = {
   __typename?: 'Query';
   kpiDefinition: KpiDefinition;
@@ -228,6 +251,8 @@ export type Query = {
   sdInstances: Array<SdInstance>;
   sdType: SdType;
   sdTypes: Array<SdType>;
+  statisticsQuerySensorsWithFields: Array<OutputData>;
+  statisticsQuerySimpleSensors: Array<OutputData>;
 };
 
 
@@ -243,6 +268,18 @@ export type QuerySdInstanceGroupArgs = {
 
 export type QuerySdTypeArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryStatisticsQuerySensorsWithFieldsArgs = {
+  request?: InputMaybe<StatisticsInput>;
+  sensors: SensorsWithFields;
+};
+
+
+export type QueryStatisticsQuerySimpleSensorsArgs = {
+  request?: InputMaybe<StatisticsInput>;
+  sensors: SimpleSensors;
 };
 
 export type SdInstance = {
@@ -305,6 +342,72 @@ export type SdTypeInput = {
   denotation: Scalars['String']['input'];
   parameters: Array<SdParameterInput>;
 };
+
+export type SensorField = {
+  key: Scalars['String']['input'];
+  values: Array<Scalars['String']['input']>;
+};
+
+export type SensorsWithFields = {
+  sensors: Array<SensorField>;
+};
+
+export type SimpleSensors = {
+  sensors: Array<Scalars['String']['input']>;
+};
+
+export type StatisticsField = {
+  __typename?: 'StatisticsField';
+  key: Scalars['String']['output'];
+  value: Scalars['StatisticsParameterValue']['output'];
+};
+
+export type StatisticsFieldInput = {
+  key: Scalars['String']['input'];
+  value: Scalars['StatisticsParameterValue']['input'];
+};
+
+/** Data used for querying the selected bucket */
+export type StatisticsInput = {
+  /**
+   * Amount of minutes to aggregate by
+   * For example if the queried range has 1 hour and aggregateMinutes is set to 10 the aggregation will result in 6 points
+   */
+  aggregateMinutes?: InputMaybe<Scalars['Int']['input']>;
+  /** Start of the querying window */
+  from?: InputMaybe<Scalars['Date']['input']>;
+  /** Aggregation operator to use, if needed */
+  operation?: InputMaybe<StatisticsOperation>;
+  /**
+   * Timezone override default UTC.
+   * For more details why and how this affects queries see: https://www.influxdata.com/blog/time-zones-in-flux/.
+   * In most cases you can ignore this and some edge aggregations can be influenced.
+   * If you need a precise result or the aggregation uses high amount of minutes provide the target time zone.
+   */
+  timezone?: InputMaybe<Scalars['String']['input']>;
+  /** End of the querying window */
+  to?: InputMaybe<Scalars['Date']['input']>;
+};
+
+export enum StatisticsOperation {
+  Count = 'COUNT',
+  First = 'FIRST',
+  Integral = 'INTEGRAL',
+  Last = 'LAST',
+  Max = 'MAX',
+  Mean = 'MEAN',
+  Median = 'MEDIAN',
+  Min = 'MIN',
+  Mode = 'MODE',
+  None = 'NONE',
+  Quantile = 'QUANTILE',
+  Reduce = 'REDUCE',
+  Skew = 'SKEW',
+  Spread = 'SPREAD',
+  Stddev = 'STDDEV',
+  Sum = 'SUM',
+  Timeweightedavg = 'TIMEWEIGHTEDAVG'
+}
 
 export type StringEqAtomKpiNode = AtomKpiNode & KpiNode & {
   __typename?: 'StringEQAtomKPINode';

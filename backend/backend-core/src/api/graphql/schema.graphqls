@@ -209,47 +209,43 @@ input SDInstanceGroupInput {
 
 scalar Date
 
-type SimpleSensors {
+input SimpleSensors {
   sensors: [String!]!
 }
 
-type SensorsWithFields {
+input SensorsWithFields {
   sensors: [SensorField!]!
 }
 
-type SensorField {
+input SensorField {
   key: String!
   values: [String!]!
 }
 
 enum StatisticsOperation {
-  MEAN
-  MIN
-  MAX
-  FIRST
-  SUM
-  LAST
-  NONE
-  COUNT
-  INTEGRAL
-  MEDIAN
-  MODE
-  QUANTILE
-  REDUCE
-  SKEW
-  SPREAD
-  STDDEV
-  TIMEWEIGHTEDAVG
+  mean
+  min
+  max
+  first
+  sum
+  last
+  none
+  count
+  integral
+  median
+  mode
+  quantile
+  reduce
+  skew
+  spread
+  stddev
+  timeweightedavg
 }
 
 """
 Data used for querying the selected bucket
 """
 input StatisticsInput {
-  """
-  Sensors to be queried
-  """
-  sensors: SensorsInput!
   """
   Start of the querying window
   """
@@ -276,52 +272,21 @@ input StatisticsInput {
   operation: StatisticsOperation
 }
 
-"""
-Sensors to be queried
-"""
-input SensorsInput {
-  """
-  Simple definition, returns all available sensor fields
-  """
-  simpleSensors: [String]
-  """
-  Return only the requested sensor fields
-  """
-  sensorsWithFields: [SensorFieldInput]
-}
 
-"""
-Return only the requested sensor fields
-"""
-input SensorFieldInput {
-  key: String!
-  fields: [String!]!
-}
-
-scalar StatisticsParameterValue
-
-type StatisticsField {
-  key: String!
-  value: StatisticsParameterValue!
-}
+scalar JSON
 
 type OutputData {
   time: Date!
   deviceId: String!
   deviceType: String
-  data: StatisticsField!
-}
-
-input StatisticsFieldInput {
-  key: String!
-  value: StatisticsParameterValue!
+  data: JSON!
 }
 
 input InputData {
   time: Date!
   deviceId: String!
   deviceType: String
-  data: StatisticsFieldInput!
+  data: JSON!
 }
 
 # ----- Queries, mutations and subscriptions -----
@@ -335,7 +300,8 @@ type Query {
   kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!
   sdInstanceGroup(id: ID!): SDInstanceGroup!
   sdInstanceGroups: [SDInstanceGroup!]!
-  statisticsQuery(request: StatisticsInput!): [OutputData!]!
+  statisticsQuerySimpleSensors(request: StatisticsInput sensors: SimpleSensors!): [OutputData!]!
+  statisticsQuerySensorsWithFields(request: StatisticsInput sensors: SensorsWithFields!): [OutputData!]!
 }
 
 type Mutation {
