@@ -2,6 +2,7 @@ package domainLogicLayer
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
@@ -36,13 +37,16 @@ func Query(input sharedModel.ReadRequestBody) sharedUtils.Result[[]graphQLModel.
 	outputChannel := make(chan sharedUtils.Result[[]sharedModel.OutputData])
 
 	go func() {
-		err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[[]sharedModel.OutputData](
+		err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.ReadRequestResponseOrError](
 			rabbitMQClient,
 			sharedConstants.TimeSeriesReadRequestBackendCoreResponseQueueName,
 			correlationId,
-			func(outputData []sharedModel.OutputData, delivery amqp.Delivery) error {
-				output := sharedUtils.NewSuccessResult[[]sharedModel.OutputData](outputData)
-				outputChannel <- output
+			func(readRequestResponseOrError sharedModel.ReadRequestResponseOrError, delivery amqp.Delivery) error {
+				if readRequestResponseOrError.Error != "" {
+					outputChannel <- sharedUtils.NewFailureResult[[]sharedModel.OutputData](errors.New(readRequestResponseOrError.Error))
+				} else {
+					outputChannel <- sharedUtils.NewSuccessResult[[]sharedModel.OutputData](readRequestResponseOrError.Data)
+				}
 
 				close(outputChannel)
 				return nil
@@ -70,7 +74,7 @@ func Query(input sharedModel.ReadRequestBody) sharedUtils.Result[[]graphQLModel.
 	result := <-outputChannel
 
 	if result.IsFailure() {
-		return sharedUtils.NewFailureResult[[]graphQLModel.OutputData](err)
+		return sharedUtils.NewFailureResult[[]graphQLModel.OutputData](result.GetError())
 	}
 
 	convertedResult, err := ConvertOutputData(result.GetPayload())

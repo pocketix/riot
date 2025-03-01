@@ -33,3 +33,8 @@ type SDInstanceConfigurationUpdateISCMessage []SDInstanceInfo
 type KPIConfigurationUpdateISCMessage map[string][]KPIDefinition
 
 type MessageProcessingUnitConnectionNotification struct{}
+
+type ReadRequestResponseOrError struct {
+	Data  []OutputData `json:"data,omitempty"`
+	Error string       `json:"error,omitempty"`
+}

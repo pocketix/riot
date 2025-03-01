@@ -74,15 +74,20 @@ func consumeReadRequests(rabbitMQClient rabbitmq.Client, influx internal.Influx2
 				fmt.Println(result.GetError())
 			}
 
-			fmt.Printf("%s\n", result)
-			jsonData := make([]byte, 0)
-			var err error
-
-			if result.IsSuccess() {
-				jsonData, err = json.Marshal(result.GetPayload())
+			responseWithData := sharedModel.ReadRequestResponseOrError{
+				Data:  nil,
+				Error: "",
 			}
 
-			fmt.Printf("%s\n", jsonData)
+			if result.IsSuccess() {
+				responseWithData.Data = result.GetPayload()
+			}
+
+			if result.IsFailure() {
+				responseWithData.Error = result.GetError().Error()
+			}
+
+			jsonData, err := json.Marshal(responseWithData)
 
 			if err != nil {
 				fmt.Printf("Error During Marshall: %s", err)
