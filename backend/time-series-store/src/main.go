@@ -68,18 +68,24 @@ func consumeReadRequests(rabbitMQClient rabbitmq.Client, influx internal.Influx2
 		sharedConstants.TimeSeriesReadRequestQueueName,
 		"",
 		func(readRequestBody sharedModel.ReadRequestBody, delivery amqp.Delivery) error {
-			data, retrieveDataError := influx.Query(readRequestBody)
+			result := influx.Query(readRequestBody)
 
-			if retrieveDataError != nil {
-				fmt.Println(retrieveDataError.Error())
-				return retrieveDataError
+			if result.IsFailure() {
+				fmt.Println(result.GetError())
 			}
 
-			jsonData, err := json.Marshal(data)
+			fmt.Printf("%s\n", result)
+			jsonData := make([]byte, 0)
+			var err error
+
+			if result.IsSuccess() {
+				jsonData, err = json.Marshal(result.GetPayload())
+			}
+
+			fmt.Printf("%s\n", jsonData)
 
 			if err != nil {
 				fmt.Printf("Error During Marshall: %s", err)
-				return nil
 			}
 
 			err = rabbitMQClient.PublishJSONMessageRPC(

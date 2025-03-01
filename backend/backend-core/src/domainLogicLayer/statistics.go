@@ -70,14 +70,12 @@ func Query(input sharedModel.ReadRequestBody) sharedUtils.Result[[]graphQLModel.
 	result := <-outputChannel
 
 	if result.IsFailure() {
-		fmt.Println(result.GetError())
 		return sharedUtils.NewFailureResult[[]graphQLModel.OutputData](err)
 	}
 
 	convertedResult, err := ConvertOutputData(result.GetPayload())
 
 	if err != nil {
-		fmt.Println(err)
 		return sharedUtils.NewFailureResult[[]graphQLModel.OutputData](err)
 	}
 

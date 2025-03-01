@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	sharedModel "github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	"strings"
@@ -33,7 +34,7 @@ func NewInflux2Client(endpoint string, token string, organization string, bucket
 	return influx2Client, influx2Client.writeApi.Errors(), nil
 }
 
-func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) ([]sharedModel.OutputData, error) {
+func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) sharedUtils.Result[[]sharedModel.OutputData] {
 	aggregation := createAggregation(body)
 	timeRange := convertTimeToQueryTimePart(body)
 	filter := createFilter(body)
@@ -58,20 +59,20 @@ func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) ([]sh
 	result, err := influx2Client.queryApi.Query(context.Background(), query)
 
 	if err != nil {
-		return nil, err
+		return sharedUtils.NewFailureResult[[]sharedModel.OutputData](err)
 	}
 
 	outputData := []sharedModel.OutputData{}
 
 	if result.Err() != nil {
-		return nil, result.Err()
+		return sharedUtils.NewFailureResult[[]sharedModel.OutputData](result.Err())
 	}
 
 	for result.Next() {
 		outputData = append(outputData, mapToOutputData(result.Record().Values()))
 	}
 
-	return outputData, nil
+	return sharedUtils.NewSuccessResult[[]sharedModel.OutputData](outputData)
 }
 
 func (influx2Client Influx2Client) Write(data sharedModel.InputData) {
