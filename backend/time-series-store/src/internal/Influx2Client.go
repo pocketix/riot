@@ -34,19 +34,24 @@ func NewInflux2Client(endpoint string, token string, organization string, bucket
 }
 
 func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) ([]sharedModel.OutputData, error) {
-	fmt.Printf("Handling query with body %s\n", body)
 	aggregation := createAggregation(body)
 	timeRange := convertTimeToQueryTimePart(body)
 	filter := createFilter(body)
+	imports := ""
 
-	query := fmt.Sprintf("from(bucket: \"%s\")\n"+
+	if body.Timezone != "" {
+		imports = "import \"timezone\""
+	}
+
+	query := fmt.Sprintf("%s\n\n"+ // imports
+		"from(bucket: \"%s\")\n"+
 		"  %s\n"+ // time range
 		"  %s\n"+ // filter
 		"  %s\n"+ // aggregation
 		"  |> drop(columns: [\"_start\", \"_stop\"])\n"+
 		"  |> pivot(columnKey: [\"_field\"], rowKey: [\"_measurement\", \"_time\"], valueColumn: \"_value\")\n"+
 		"  |> rename(columns: {_time: \"time\", _measurement: \"deviceId\"})\n"+
-		"  |> group(columns: [\"measurement\"], mode: \"by\")", influx2Client.bucket, timeRange, filter, aggregation)
+		"  |> group(columns: [\"measurement\"], mode: \"by\")", imports, influx2Client.bucket, timeRange, filter, aggregation)
 
 	fmt.Println(query)
 
@@ -86,11 +91,11 @@ func (influx2Client Influx2Client) Close() {
 
 func convertTimeToQueryTimePart(body sharedModel.ReadRequestBody) string {
 	if body.From != nil && body.To == nil {
-		currentDate := body.From.AddDate(0, 0, 30)
+		currentDate := time.Now()
 
 		currentDateString := currentDate.Format(time.RFC3339)
 
-		return fmt.Sprintf("|> range(start: %s, stop: %s)", body.From, currentDateString)
+		return fmt.Sprintf("|> range(start: %s, stop: %s)", body.From.Format(time.RFC3339), currentDateString)
 	}
 
 	if body.From == nil && body.To != nil {
@@ -98,7 +103,7 @@ func convertTimeToQueryTimePart(body sharedModel.ReadRequestBody) string {
 
 		thirtyDaysAgoString := thirtyDaysAgo.Format(time.RFC3339)
 
-		return fmt.Sprintf("|> range(start: %s, stop: %s)", thirtyDaysAgoString, body.To)
+		return fmt.Sprintf("|> range(start: %s, stop: %s)", thirtyDaysAgoString, body.To.Format(time.RFC3339))
 	}
 
 	if body.From == nil && body.To == nil {
@@ -157,7 +162,7 @@ func createAggregation(body sharedModel.ReadRequestBody) string {
 			zone = fmt.Sprintf(", location: timezone.location(name: \"%s\")", body.Timezone)
 		}
 
-		aggregation = fmt.Sprintf("|> aggregateWindow(every: %xm, fn: %s, createEmpty: false%s)", body.AggregateMinutes, body.Operation, zone)
+		aggregation = fmt.Sprintf("|> aggregateWindow(every: %dm, fn: %s, createEmpty: false%s)", body.AggregateMinutes, body.Operation, zone)
 	}
 
 	return aggregation

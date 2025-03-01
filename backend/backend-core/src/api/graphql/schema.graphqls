@@ -223,23 +223,23 @@ input SensorField {
 }
 
 enum StatisticsOperation {
-  MEAN
-  MIN
-  MAX
-  FIRST
-  SUM
-  LAST
-  NONE
-  COUNT
-  INTEGRAL
-  MEDIAN
-  MODE
-  QUANTILE
-  REDUCE
-  SKEW
-  SPREAD
-  STDDEV
-  TIMEWEIGHTEDAVG
+  mean
+  min
+  max
+  first
+  sum
+  last
+  none
+  count
+  integral
+  median
+  mode
+  quantile
+  reduce
+  skew
+  spread
+  stddev
+  timeweightedavg
 }
 
 """
