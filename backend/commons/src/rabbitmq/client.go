@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -90,7 +91,9 @@ func (c *ClientImpl) PublishJSONMessage(exchangeNameOptional sharedUtils.Optiona
 }
 
 func (c *ClientImpl) PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Optional[string], routingKeyOptional sharedUtils.Optional[string], messagePayload []byte, correlationId string, replyToOptional sharedUtils.Optional[string]) error {
-	ctx, cancelFunction := context.WithTimeout(context.Background(), 5*time.Second)
+	timeout := 10 * time.Second
+	ctx, cancelFunction := context.WithTimeout(context.Background(), timeout)
+	expiration := strconv.Itoa(int(timeout / time.Millisecond))
 	defer cancelFunction()
 	exchangeName := exchangeNameOptional.GetPayloadOrDefault("")
 	routingKey := routingKeyOptional.GetPayloadOrDefault("")
@@ -101,6 +104,7 @@ func (c *ClientImpl) PublishJSONMessageRPC(exchangeNameOptional sharedUtils.Opti
 		Body:          messagePayload,
 		CorrelationId: correlationId,
 		ReplyTo:       replyTo,
+		Expiration:    expiration,
 	})
 }
 
@@ -133,32 +137,57 @@ func (c *ClientImpl) SetupMessageConsumptionWithCorrelationId(queueName string, 
 	if err := c.channel.Qos(1, 0, false); err != nil {
 		return err
 	}
+
 	messageChannel, err := c.channel.Consume(queueName, consumerName, false, false, false, false, nil)
 	if err != nil {
 		return err
 	}
-	for message := range messageChannel {
-		fmt.Printf("Seeing message correlationId %s from a consumer %s\n", message.CorrelationId, consumerName)
-		if message.CorrelationId != correlationId {
-			// Return the message back to the queue if it has a wrong correlation ID
-			if err := message.Nack(false, true); err != nil {
+
+	// Timeout after a time, so you don't ping-pong with a request. Most likely the API won't even care after this time
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	for {
+		select {
+		case message, ok := <-messageChannel:
+			if !ok {
+				return fmt.Errorf("message channel closed")
+			}
+
+			fmt.Printf("Seeing message correlationId %s from a consumer %s\n", message.CorrelationId, consumerName)
+
+			if message.CorrelationId != correlationId {
+				// Return the message back to the queue if it has a wrong correlation ID
+				if err := message.Nack(false, true); err != nil {
+					return err
+				}
+				continue
+			}
+
+			if err := message.Ack(false); err != nil {
 				return err
 			}
-			continue
-		}
 
-		if err := message.Ack(false); err != nil {
-			return err
-		}
-		err := c.channel.Cancel(consumerName, true)
-		if err != nil {
-			return err
-		}
-		if err := messageConsumerFunction(message); err != nil {
-			return err
+			err := c.channel.Cancel(consumerName, true)
+			if err != nil {
+				return err
+			}
+
+			if err := messageConsumerFunction(message); err != nil {
+				return err
+			}
+
+			return nil // Exit after processing
+
+		case <-ctx.Done():
+			fmt.Println("Timeout reached. Stopping message consumption.")
+			err := c.channel.Cancel(consumerName, true) // Stop consuming
+			if err != nil {
+				return err
+			}
+			return fmt.Errorf("message consumption timed out after 100 seconds")
 		}
 	}
-	return nil
 }
 
 func (c *ClientImpl) Dispose() {

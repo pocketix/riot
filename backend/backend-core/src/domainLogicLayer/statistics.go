@@ -54,8 +54,8 @@ func Query(input sharedModel.ReadRequestBody) sharedUtils.Result[[]graphQLModel.
 		)
 
 		if err != nil {
+			outputChannel <- sharedUtils.NewFailureResult[[]sharedModel.OutputData](err)
 			close(outputChannel)
-			sharedUtils.NewFailureResult[[]graphQLModel.OutputData](err)
 		}
 	}()
 
