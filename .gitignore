@@ -8,8 +8,13 @@
 /docker/postgres-data
 
 # Ignore some front-end directories
-frontend/dist/
-frontend/.parcel-cache/
+frontend-old/dist/
+frontend-old/.parcel-cache/
+frontend-old/node_modules
+
+frontend/.DS_Store
+frontend/*.local
+frontend/.vscode/*
 frontend/node_modules
 
 # Ignore backend executables
