@@ -14,7 +14,7 @@ export default function App() {
   return (
     <>
       <DarkModeProvider>
-        <GlobalStyles />
+        {/* <GlobalStyles /> */}
         <BrowserRouter>
           <Routes>
             <Route element={<AppLayout />}>

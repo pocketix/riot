@@ -29,12 +29,12 @@ const Main = styled.main`
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 4rem 1.5rem;
+  /* padding: 4rem 1.5rem; */
   overflow-y: auto;
   grid-area: main;
 
   @media (min-width: ${breakpoints.md}) {
-    padding: 6rem 4rem;
+    /* padding: 6rem 4rem; */
     align-items: flex-start;
     justify-content: flex-start;
   }

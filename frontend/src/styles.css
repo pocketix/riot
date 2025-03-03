@@ -1,6 +1,6 @@
 .sparkle-1 {
   position: fixed;
-  z-index: 10;
+  z-index: 0;
   width: 400px;
   height: 200px;
   top: -5em;
@@ -16,7 +16,7 @@
 
 .sparkle-2 {
   position: fixed;
-  z-index: 10;
+  z-index: 0;
   width: 400px;
   height: 200px;
   top: 18em;
@@ -33,7 +33,7 @@
 
 .sparkle-3 {
   position: fixed;
-  z-index: 10;
+  z-index: 0;
   width: 400px;
   height: 200px;
   bottom: -5em;
