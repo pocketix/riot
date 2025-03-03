@@ -161,12 +161,12 @@ func (UserEntity) TableName() string {
 }
 
 type SDCommandEntity struct {
-	ID          uint32                      `gorm:"column:id;primaryKey;not null"`
+	ID           uint32                      `gorm:"column:id;primaryKey;not null"`
 	SDInstanceID uint32                      `gorm:"column:sd_instance_id;not null"` // Nová vazba na konkrétní SDInstance
-	Denotation  string                      `gorm:"column:denotation;not null"`
-	Type        string                      `gorm:"column:type;not null"`
-	Payload     string                      `gorm:"column:payload;not null"`
-	Invocations []SDCommandInvocationEntity `gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
+	Denotation   string                      `gorm:"column:denotation;not null"`
+	Type         string                      `gorm:"column:type;not null"`
+	Payload      string                      `gorm:"column:payload;not null"`
+	Invocations  []SDCommandInvocationEntity `gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
 }
 
 func (SDCommandEntity) TableName() string {
