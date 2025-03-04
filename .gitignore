@@ -19,3 +19,4 @@ frontend/node_modules
 
 # Ignore backend executables
 backend/bin
+frontend/.env

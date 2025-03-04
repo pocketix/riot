@@ -1,8 +1,8 @@
 import styled from 'styled-components';
+import GlobalStyles from '../GlobalStyles';
 
 export const Container = styled.div`
   position: relative;
-  color: black;
   margin: 8px;
   display: flex;
   flex-direction: column;

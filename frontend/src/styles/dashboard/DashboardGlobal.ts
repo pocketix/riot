@@ -18,6 +18,8 @@ export const DashboardRoot = styled.div`
     width: 100%;
     overflow: hidden;
     height: fit-content;
+    overflow-y: auto;
+    max-height: 100vh;
     min-height: calc(100vh - 60px); /* Subtract the height of the navbar */
 `;
 

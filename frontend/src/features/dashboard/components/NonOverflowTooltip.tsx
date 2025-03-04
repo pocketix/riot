@@ -1,29 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import styled from "styled-components";
+import { ToolTipContainer } from "./cards/ChartGlobals";
 
 // https://github.com/plouc/nivo/issues/580
 
-const ToolTipContainer = styled.div<{ $offsetHorizontal: number; $offsetVertical: number }>`
-    position: relative;
-    left: ${(props) => props.$offsetHorizontal}px;
-    right: 0;
-    top: ${(props) => props.$offsetVertical}px;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    justify-content: center;
-    background-color: white;
-    border-radius: 5px;
-    padding: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Corrected property */
-    z-index: 1000;
-    font-size: 12px;
-    line-height: 16px;
-`;
-
 export interface NonOverflowTooltipProps {
     point: { x: number; y: number };
+    isDarkMode: boolean;
     container: React.RefObject<HTMLDivElement> | null;
     children: React.ReactNode;
 }
@@ -83,7 +66,7 @@ export function NonOverflowTooltip(props: NonOverflowTooltipProps) {
     }, [tooltipSize.height, props.point.y, containerSize.height]);
 
     return (
-        <ToolTipContainer
+        <ToolTipContainer $isDarkMode={props.isDarkMode}
             ref={ref}
             $offsetHorizontal={offsetHorizontal}
             $offsetVertical={offsetVertical}

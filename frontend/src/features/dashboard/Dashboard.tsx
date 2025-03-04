@@ -12,6 +12,7 @@ import { BulletCard } from "./components/cards/BulletCard";
 import { toast } from "sonner";
 import { RestoreLayoutDialog } from "./components/RestoreLayoutDialog";
 import { TableCard } from "./components/cards/TableCard";
+import { Card } from "./components/ui/card";
 
 const Dashboard = () => {
     const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), []);
@@ -366,7 +367,7 @@ const Dashboard = () => {
                     }}
                 >
                     {layouts![currentBreakpoint].map((item) => (
-                        <Tile key={item.i} highlight={highlightedCardID === item.i}>
+                        <Card key={item.i} className={`${highlightedCardID === item.i ? "z-10" : ""}`}>
                             {item.i === "1" ? (
                                 <TableCard
                                     key={item.i}
@@ -426,7 +427,7 @@ const Dashboard = () => {
                                     setHighlightedCardID={setHighlightedCardID}
                                 />
                             )}
-                        </Tile>
+                        </Card>
                     ))}
                 </ResponsiveGridLayout>
             </MainGrid>

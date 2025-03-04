@@ -1,13 +1,16 @@
 import { Container, DragHandle } from "../../../../styles/dashboard/CardGlobal";
 import { AiOutlineDrag } from "react-icons/ai";
-import { BulletTooltipProps, ResponsiveBullet } from '@nivo/bullet';
+import { ResponsiveBullet } from '@nivo/bullet';
 import styled from 'styled-components';
 // import { Layout } from '@/types/Layout';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { NonOverflowTooltip } from '../NonOverflowTooltip';
 import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog';
 import { Layout } from 'react-grid-layout';
 import { AccessibilityContainer } from './AccessibilityContainer';
+import GlobalStyles from "@/styles/GlobalStyles";
+import { useDarkMode } from "@/context/DarkModeContext";
+import { lightTheme, darkTheme } from "./ChartThemes";
+import { ToolTipContainer } from "./ChartGlobals";
 
 // Styled components
 export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -22,26 +25,6 @@ export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
     transition: opacity 0.3s;
     border-radius: 12px;
 `;
-
-const ToolTipContainer = styled.div<{ $offsetHorizontal: number; $offsetVertical: number }>`
-    position: relative;
-    left: ${(props) => props.$offsetHorizontal}px;
-    right: 0;
-    top: ${(props) => props.$offsetVertical}px;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    justify-content: center;
-    background-color: white;
-    border-radius: 5px;
-    padding: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Corrected property */
-    z-index: 1000;
-    font-size: 12px;
-    line-height: 16px;
-`;
-
 
 interface BulletCardProps {
     cardID: string;
@@ -59,6 +42,7 @@ interface BulletCardProps {
 
 export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID }: BulletCardProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const { isDarkMode } = useDarkMode();
 
     const [highlight, setHighlight] = useState<'width' | 'height' | null>(null);
 
@@ -136,15 +120,16 @@ export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint,
                     titleOffsetY={-10}
                     measureSize={0.2}
                     rangeColors="nivo"
+                    theme={isDarkMode ? darkTheme : lightTheme}
                     tooltip={() => {
                         return (
-                            <ToolTipContainer $offsetHorizontal={0} $offsetVertical={0}>
+                            <ToolTipContainer $offsetHorizontal={0} $offsetVertical={0} $isDarkMode={isDarkMode}>
                                 <div className="flex flex-col">
                                     <div>
-                                        <span className='text-gray-600'>Value: </span><span className='font-bold'>{data[0].measures}</span>
+                                        <span>Value: </span><span className='font-bold'>{data[0].measures}</span>
                                     </div>
                                     <div>
-                                        <span className='text-gray-600'>Target: </span><span className='font-bold'>{data[0].markers}</span>
+                                        <span>Target: </span><span className='font-bold'>{data[0].markers}</span>
                                     </div>
                                 </div>
                             </ToolTipContainer>

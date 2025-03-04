@@ -9,6 +9,8 @@ import { NonOverflowTooltip } from '../NonOverflowTooltip';
 import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog';
 import { Layout } from 'react-grid-layout';
 import { AccessibilityContainer } from './AccessibilityContainer';
+import { useDarkMode } from '@/context/DarkModeContext';
+import { darkTheme, lightTheme } from './ChartThemes';
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -21,7 +23,6 @@ export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
     flex-grow: 1;
     overflow-y: hidden;
     overflow-x: hidden;
-    background-color: white;
     opacity: ${props => props.$editModeEnabled ? 0.25 : 1};
     transition: opacity 0.3s;
     border-radius: 12px;
@@ -43,6 +44,7 @@ interface ChartCardProps {
 
 export const ChartCard = ({ cardID, title, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID }: ChartCardProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const { isDarkMode } = useDarkMode();
 
     const [highlight, setHighlight] = useState<'width' | 'height' | null>(null);
 
@@ -103,10 +105,11 @@ export const ChartCard = ({ cardID, title, layout, setLayout, cols, breakPoint, 
                 {containerRef && (
                     <NonOverflowTooltip
                         point={{ x: point.x, y: point.y }}
+                        isDarkMode={isDarkMode}
                         container={containerRef as React.RefObject<HTMLDivElement>}
                     >
-                        <div><span className='text-gray-600'>Time: </span><span className='font-bold'>{point.data.xFormatted}</span></div>
-                        <div><span className='text-gray-600'>Temperature: </span><span className='font-bold'>{point.data.yFormatted}</span></div>
+                        <div>Time: <span className='font-bold'>{point.data.xFormatted}</span></div>
+                        <div>Temperature: <span className='font-bold'>{point.data.yFormatted}</span></div>
                     </NonOverflowTooltip >
                 )}
             </>
@@ -167,6 +170,7 @@ export const ChartCard = ({ cardID, title, layout, setLayout, cols, breakPoint, 
                     enableTouchCrosshair={true}
                     useMesh={true}
                     tooltip={CustomTooltip}
+                    theme={isDarkMode ? darkTheme : lightTheme}
                 />
             </ChartContainer>
             {editModeEnabled &&

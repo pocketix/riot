@@ -2,6 +2,8 @@ import { ResponsiveBullet } from '@nivo/bullet'
 import { ResponsiveLine } from '@nivo/line'
 import styled from 'styled-components'
 import { Card } from '../ui/card'
+import { useDarkMode } from '@/context/DarkModeContext'
+import { darkTheme, lightTheme } from '../cards/ChartThemes'
 
 export const VisualizationGalleryContainer = styled.div`
     display: flex;
@@ -17,6 +19,7 @@ export interface VisualizationGalleryProps {
 }
 
 export function VisualizationGallery({ setSelectedVisualization, selectedVisualization }: VisualizationGalleryProps) {
+    const { isDarkMode } = useDarkMode();
 
     const dataLine = [
         {
@@ -102,6 +105,7 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
                     pointLabelYOffset={-12}
                     enableTouchCrosshair={true}
                     useMesh={false}
+                    theme={isDarkMode ? darkTheme : lightTheme}
                 />
             </Card>
             <Card className={`${selectedVisualization === "bullet" ? "border-2 border-blue-500" : "border-2"} h-[70px] box-border`} onClick={() => setSelectedVisualization("bullet")}>
@@ -112,6 +116,7 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
                     titleAlign="start"
                     titleOffsetX={-30}
                     measureSize={0.2}
+                    theme={isDarkMode ? darkTheme : lightTheme}
                     tooltip={() => null}
                 />
             </Card>
