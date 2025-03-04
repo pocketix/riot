@@ -60,7 +60,7 @@ type SDTypeEntity struct {
 	ID         uint32              `gorm:"column:id;primaryKey;not null"`
 	Denotation string              `gorm:"column:denotation;not null;index"` // Denotation is a separately indexed field
 	Parameters []SDParameterEntity `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
-	//Commands   []SDCommandEntity   `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
+	Commands   []SDCommandEntity   `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
 }
 
 func (SDTypeEntity) TableName() string {
@@ -80,7 +80,7 @@ func (SDParameterEntity) TableName() string {
 
 type SDInstanceEntity struct {
 	ID                                         uint32                                      `gorm:"column:id;primaryKey;not null"`
-	UID                                        string                                      `gorm:"column:uid;not null;index"` // UID is a separately indexed field
+	UID                                        string                                      `gorm:"column:uid;not null;index"`
 	ConfirmedByUser                            bool                                        `gorm:"column:confirmed_by_user;not null"`
 	UserIdentifier                             string                                      `gorm:"column:user_identifier;not null"`
 	SDTypeID                                   uint32                                      `gorm:"column:sd_type_id"`
@@ -88,7 +88,7 @@ type SDInstanceEntity struct {
 	GroupMembershipRecords                     []SDInstanceGroupMembershipEntity           `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 	KPIFulfillmentCheckResults                 []KPIFulfillmentCheckResultEntity           `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 	SDInstanceKPIDefinitionRelationshipRecords []SDInstanceKPIDefinitionRelationshipEntity `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
-	Commands                                   []SDCommandEntity                           `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"` // Nová vazba na konkrétní příkazy
+	CommandInvocations                         []SDCommandInvocationEntity                 `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"` // Kazda instace daného smart device má své specialni invokace pro commads
 }
 
 func (SDInstanceEntity) TableName() string {
@@ -161,12 +161,11 @@ func (UserEntity) TableName() string {
 }
 
 type SDCommandEntity struct {
-	ID           uint32                      `gorm:"column:id;primaryKey;not null"`
-	SDInstanceID uint32                      `gorm:"column:sd_instance_id;not null"` // Nová vazba na konkrétní SDInstance
-	Denotation   string                      `gorm:"column:denotation;not null"`
-	Type         string                      `gorm:"column:type;not null"`
-	Payload      string                      `gorm:"column:payload;not null"`
-	Invocations  []SDCommandInvocationEntity `gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
+	ID         uint32                      `gorm:"column:id;primaryKey;not null"`
+	SDTypeID   uint32                      `gorm:"column:sd_type_id;not null"` //Jeden typ smart device mám stejnou sadu commadů
+	Denotation string                      `gorm:"column:denotation;not null"`
+	Type       string                      `gorm:"column:type;not null"`
+	Payload    string                      `gorm:"column:payload;not null"`
 }
 
 func (SDCommandEntity) TableName() string {
@@ -174,13 +173,15 @@ func (SDCommandEntity) TableName() string {
 }
 
 type SDCommandInvocationEntity struct {
-	ID             uint32 `gorm:"column:id;primaryKey;not null"`
+	ID             uint32    `gorm:"column:id;primaryKey;not null"`
 	InvocationTime time.Time
-	Payload        string `gorm:"column:payload;not null"`
-	UserId         uint32 `gorm:"column:user_id"`
-	CommandID      uint32 `gorm:"column:command_id;not null"` // Nová vazba na SDCommandEntity
+	Payload        string    `gorm:"column:payload;not null"`
+	UserId         uint32    `gorm:"column:user_id"`
+	CommandID      uint32    `gorm:"column:command_id;not null"` // Vazba na command
+	SDInstanceID   uint32    `gorm:"column:sd_instance_id;not null"` // Nová vazba na konkrétní instanci
 }
 
 func (SDCommandInvocationEntity) TableName() string {
 	return "command_invocation"
 }
+

@@ -3,20 +3,12 @@ package dllModel
 import "github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 
 type SDInstance struct {
-	ID              sharedUtils.Optional[uint32]
-	UID             string
-	ConfirmedByUser bool
-	UserIdentifier  string
-	SDType          SDType
-	Commands        []SDCommand // Vazba na příkazy
-}
-
-type SDCommand struct {
-	ID          uint32
-	Denotation  string
-	Type        string
-	Payload     string
-	Invocations []SDCommandInvocation // Vazba na historii spuštění příkazu
+	ID                 sharedUtils.Optional[uint32]
+	UID                string
+	ConfirmedByUser    bool
+	UserIdentifier     string
+	SDType             SDType
+	CommandInvocations []SDCommandInvocation
 }
 
 type SDCommandInvocation struct {
@@ -24,4 +16,6 @@ type SDCommandInvocation struct {
 	InvocationTime string
 	Payload        string
 	UserID         uint32
+	CommandID      uint32    // Který příkaz byl volán
+	SDInstanceID   uint32    // Ke které instanci zařízení patří invokace
 }

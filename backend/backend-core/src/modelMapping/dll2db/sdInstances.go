@@ -8,38 +8,26 @@ import (
 
 func ToDBModelEntitySDInstance(sdInstance dllModel.SDInstance) dbModel.SDInstanceEntity {
 	return dbModel.SDInstanceEntity{
-		ID:              sdInstance.ID.GetPayloadOrDefault(0),
-		UID:             sdInstance.UID,
-		ConfirmedByUser: sdInstance.ConfirmedByUser,
-		UserIdentifier:  sdInstance.UserIdentifier,
-		SDTypeID:        sdInstance.SDType.ID.GetPayloadOrDefault(0),
-		Commands:        ToDBModelSDCommands(sdInstance.Commands), // Mapování Commands
+		ID:                 sdInstance.ID.GetPayloadOrDefault(0),
+		UID:                sdInstance.UID,
+		ConfirmedByUser:    sdInstance.ConfirmedByUser,
+		UserIdentifier:     sdInstance.UserIdentifier,
+		SDTypeID:           sdInstance.SDType.ID.GetPayloadOrDefault(0),
+		CommandInvocations: ToDBModelSDCommandInvocations(sdInstance.CommandInvocations), // Mapování invokací
 	}
 }
 
-func ToDBModelSDCommands(commands []dllModel.SDCommand) []dbModel.SDCommandEntity {
-	dbCommands := make([]dbModel.SDCommandEntity, len(commands))
-	for i, cmd := range commands {
-		dbCommands[i] = dbModel.SDCommandEntity{
-			ID:          cmd.ID,
-			Denotation:  cmd.Denotation,
-			Type:        cmd.Type,
-			Payload:     cmd.Payload,
-			Invocations: ToDBModelSDCommandInvocations(cmd.Invocations), // Mapování invokací
-		}
-	}
-	return dbCommands
-}
-
-func ToDBModelSDCommandInvocations(invocations []dllModel.SDCommandInvocation) []dbModel.SDCommandInvocationEntity {
-	dbInvocations := make([]dbModel.SDCommandInvocationEntity, len(invocations))
-	for i, inv := range invocations {
+func ToDBModelSDCommandInvocations(commandInvocations []dllModel.SDCommandInvocation) []dbModel.SDCommandInvocationEntity {
+	dbInvocations := make([]dbModel.SDCommandInvocationEntity, len(commandInvocations))
+	for i, inv := range commandInvocations {
 		invocationTime, _ := time.Parse("2006-01-02T15:04:05Z07:00", inv.InvocationTime)
 		dbInvocations[i] = dbModel.SDCommandInvocationEntity{
 			ID:             inv.ID,
 			InvocationTime: invocationTime,
 			Payload:        inv.Payload,
 			UserId:         inv.UserID,
+			CommandID:      inv.CommandID,
+			SDInstanceID: 	inv.SDInstanceID,
 		}
 	}
 	return dbInvocations
