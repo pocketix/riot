@@ -1,18 +1,13 @@
-import { moveWidget } from '../../../../lib/dashboard/LayoutArrows';
-import { Container, DragHandle } from "../../../../styles/dashboard/CardGlobal";
+import { Container, DragHandle } from "@/styles/dashboard/CardGlobal";
 import { AiOutlineDrag } from "react-icons/ai";
-import { ResponsiveLine, PointTooltipProps } from '@nivo/line';
 import styled from 'styled-components';
 // import { Layout } from '@/types/Layout';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { NonOverflowTooltip } from '../NonOverflowTooltip';
 import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog';
 import { Layout } from 'react-grid-layout';
 import { AccessibilityContainer } from './AccessibilityContainer';
 import { TableCardInfo } from '@/types/TableCardInfo';
-import { values } from 'lodash';
 import { SdParameterType } from '@/generated/graphql';
-import { Separator } from '@radix-ui/react-separator';
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`

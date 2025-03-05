@@ -1,4 +1,4 @@
-import { Container, DragHandle } from "../../../../styles/dashboard/CardGlobal";
+import { Container, DragHandle } from "@/styles/dashboard/CardGlobal";
 import { AiOutlineDrag } from "react-icons/ai";
 import { ResponsiveBullet } from '@nivo/bullet';
 import styled from 'styled-components';
@@ -7,7 +7,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog';
 import { Layout } from 'react-grid-layout';
 import { AccessibilityContainer } from './AccessibilityContainer';
-import GlobalStyles from "@/styles/GlobalStyles";
 import { useDarkMode } from "@/context/DarkModeContext";
 import { lightTheme, darkTheme } from "./ChartThemes";
 import { ToolTipContainer } from "./ChartGlobals";

@@ -1,18 +1,18 @@
 // Imports necessary for the react-grid-layout library
-import "../../../node_modules/react-grid-layout/css/styles.css";
-import "../../../node_modules/react-resizable/css/styles.css";
+import "@/../node_modules/react-grid-layout/css/styles.css";
+import "@/../node_modules/react-resizable/css/styles.css";
 
 import { WidthProvider, Responsive, Layouts, Layout } from "react-grid-layout";
 import { useEffect, useState, useRef, useMemo } from "react";
-import { Tile, DashboardRoot, Navbar, MainGrid } from "../../styles/dashboard/DashboardGlobal";
-import { Button } from "./components/ui/button";
+import { Tile, DashboardRoot, Navbar, MainGrid } from "@/styles/dashboard/DashboardGlobal";
+import { Button } from "@/components/ui/button";
 import { ChartCard } from "./components/cards/ChartCard";
 import { AddItemModal } from "./components/AddItem";
 import { BulletCard } from "./components/cards/BulletCard";
 import { toast } from "sonner";
 import { RestoreLayoutDialog } from "./components/RestoreLayoutDialog";
 import { TableCard } from "./components/cards/TableCard";
-import { Card } from "./components/ui/card";
+import { Card } from "@/components/ui/card";
 import { MyHandle } from "./components/cards/DragHandle";
 
 const Dashboard = () => {

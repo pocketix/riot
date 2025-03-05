@@ -7,9 +7,9 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "./ui/alert-dialog"
+} from "@/components/ui/alert-dialog"
 import { useState, useRef, useEffect } from "react";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 
 export interface RestoreLayoutDialogProps {
     onSuccess: () => void

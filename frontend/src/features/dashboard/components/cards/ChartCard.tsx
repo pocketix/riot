@@ -1,5 +1,4 @@
-import { moveWidget } from '../../../../lib/dashboard/LayoutArrows';
-import { Container, DragHandle } from "../../../../styles/dashboard/CardGlobal";
+import { Container, DragHandle } from "@/styles/dashboard/CardGlobal";
 import { AiOutlineDrag } from "react-icons/ai";
 import { ResponsiveLine, PointTooltipProps } from '@nivo/line';
 import styled from 'styled-components';

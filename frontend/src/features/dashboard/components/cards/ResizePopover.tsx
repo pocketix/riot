@@ -1,12 +1,12 @@
-import { Button } from "../ui/button"
+import { Button } from "@/components/ui/button"
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "../ui/popover"
+} from "@/components/ui/popover"
 import { Arrow } from "@/styles/dashboard/CardGlobal";
 import { FiMinusSquare, FiPlusSquare } from "react-icons/fi";
-import { Separator } from "../ui/separator";
+import { Separator } from "@/components/ui/separator";
 
 export interface ResizePopoverProps {
     children?: React.ReactNode;

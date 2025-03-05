@@ -1,7 +1,7 @@
 import { Layout } from "react-grid-layout";
 import { FaLongArrowAltDown, FaLongArrowAltUp, FaLongArrowAltLeft, FaLongArrowAltRight } from "react-icons/fa";
-import { Arrow, ArrowContainer } from "../../../../styles/dashboard/CardGlobal";
-import { moveWidget } from '../../../../lib/dashboard/LayoutArrows';
+import { Arrow, ArrowContainer } from "@/styles/dashboard/CardGlobal";
+import { moveWidget } from '@/lib/dashboard/LayoutArrows';
 import { ResizePopover } from "./ResizePopover";
 import { TbBorderBottomPlus, TbBorderRightPlus } from "react-icons/tb";
 import { useMemo, useState } from "react";

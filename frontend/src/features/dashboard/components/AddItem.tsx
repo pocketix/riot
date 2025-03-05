@@ -1,4 +1,4 @@
-import { Button } from "./ui/button"
+import { Button } from "@/components/ui/button"
 import {
     Dialog,
     DialogContent,
@@ -7,7 +7,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "./ui/dialog"
+} from "@/components/ui/dialog"
 import { FaPlus } from "react-icons/fa6";
 import { AddItemForm } from "./AddItemForm";
 import { useState } from "react";

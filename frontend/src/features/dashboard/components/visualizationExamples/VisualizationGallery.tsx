@@ -1,7 +1,7 @@
 import { ResponsiveBullet } from '@nivo/bullet'
 import { ResponsiveLine } from '@nivo/line'
 import styled from 'styled-components'
-import { Card } from '../ui/card'
+import { Card } from '@/components/ui/card'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
 

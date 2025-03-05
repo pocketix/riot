@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { ResponsiveLine } from "@nivo/line";
-import { Card } from "../ui/card";
-import { Input } from "../ui/input";
-import { Checkbox } from "../ui/checkbox";
-import { Label } from "../ui/label";
-import { Button } from "../ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 export interface LineChartBuilderProps {
   onDataSubmit: (data: any) => void;
