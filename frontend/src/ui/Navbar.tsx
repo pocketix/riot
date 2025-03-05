@@ -59,7 +59,7 @@ const NavItem = styled(NavLink)`
     flex-direction: row;
     justify-content: flex-start;
     gap: 1rem;
-    width: 100%;
+    width: 250px;
     padding: 0.6rem 2.4rem;
     transition: all 0.3s ease-in-out;
     font-size: 1rem;

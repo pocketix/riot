@@ -2,17 +2,19 @@ import styled from "styled-components";
 import DarkModeToggle from "../../ui/DarkModeToggle";
 import LanguageSwitcher from "../../ui/LanguageSwitcher";
 import { breakpoints } from "@/styles/Breakpoints";
+import { FaArrowRight } from "react-icons/fa";
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
 `;
 
 const SettingsItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid var(--color-grey-300);
+  padding: 0.6rem 0.3rem;
 
   span {
     font-size: 1rem;
@@ -21,7 +23,7 @@ const SettingsItem = styled.div`
 
   @media (min-width: ${breakpoints.md}) {
     span {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
     }
   }
 `;
@@ -38,7 +40,12 @@ export default function GeneralSettings() {
         <LanguageSwitcher />
       </SettingsItem>
       <SettingsItem>
-        <span>Developer mode</span>
+        <span>Developer mode (Apollo Sanxbox)</span>
+        <FaArrowRight />
+      </SettingsItem>
+      <SettingsItem>
+        <span>KPI editor</span>
+        <FaArrowRight />
       </SettingsItem>
     </Container>
   );
