@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { RestoreLayoutDialog } from "./components/RestoreLayoutDialog";
 import { TableCard } from "./components/cards/TableCard";
 import { Card } from "./components/ui/card";
+import { MyHandle } from "./components/cards/DragHandle";
 
 const Dashboard = () => {
     const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), []);
@@ -311,7 +312,7 @@ const Dashboard = () => {
     return (
         <DashboardRoot>
             <Navbar>
-                <h3>Dashboard</h3>
+                <h3 className="text-primary">Dashboard</h3>
                 <div className="flex gap-2">
                     {editMode && (
                         <RestoreLayoutDialog onSuccess={handleRestoreLayout} />
@@ -342,6 +343,7 @@ const Dashboard = () => {
                     containerPadding={[10, 10]}
                     compactType={"vertical"}
                     verticalCompact={true}
+                    resizeHandle={<MyHandle editMode={editMode} />}
                     onLayoutChange={(layout, layouts) => layoutChanged(layout, layouts)}
                     onDrag={(_layouts, _layout, _newItem, _placeholder, _event, element) => {
                         const { top, bottom } = element.getBoundingClientRect();

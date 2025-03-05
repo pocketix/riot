@@ -168,7 +168,7 @@ export const TableCard = ({ cardID, title, layout, setLayout, cols, breakPoint, 
         <Container key={cardID} className={`${cardID}`}>
             {editModeEnabled &&
                 <DragHandle>
-                    <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 bg-white rounded-lg border-2" />
+                    <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 border-2 rounded-lg" />
                 </DragHandle>
             }
             {editModeEnabled && (

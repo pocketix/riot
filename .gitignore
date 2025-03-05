@@ -16,7 +16,7 @@ frontend/.DS_Store
 frontend/*.local
 frontend/.vscode/*
 frontend/node_modules
+frontend/.env
 
 # Ignore backend executables
 backend/bin
-frontend/.env

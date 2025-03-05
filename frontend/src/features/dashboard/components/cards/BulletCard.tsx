@@ -103,7 +103,7 @@ export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint,
         <Container key={cardID} className={`${cardID}`}>
             {editModeEnabled &&
                 <DragHandle>
-                    <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 bg-white rounded-lg border-2" />
+                    <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 rounded-lg border-2" />
                 </DragHandle>
             }
             {editModeEnabled && (
