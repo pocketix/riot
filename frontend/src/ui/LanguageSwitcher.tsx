@@ -3,17 +3,17 @@ import styled from "styled-components";
 
 const Select = styled.select`
   padding: 0.5rem;
-  font-size: 1.4rem;
-  border: 1px solid var(--color-grey-300);
+  font-size: 1.1rem;
+  border: 1px solid hsl(var(--color-grey-300));
   border-radius: 8px;
-  background: var(--color-grey-100);
-  color: var(--color-grey-900);
+  background: hsl(var(--color-grey-100));
+  color: hsl(var(--color-grey-900));
   cursor: pointer;
   text-transform: capitalize;
 
   &:focus {
     outline: none;
-    border-color: var(--color-grey-500);
+    border-color: hsl(var(--color-grey-500));
   }
 `;
 

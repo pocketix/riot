@@ -7,7 +7,7 @@ const StyledPage = styled.div`
   flex-direction: column;
   flex-grow: 1;
   padding: 2rem;
-  color: var(--color-white);
+  color: hsl(var(--color-white));
   overflow: hidden;
 `;
 

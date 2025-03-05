@@ -6,10 +6,10 @@ const StyledPageNotFound = styled.main`
   height: 100vh;
   background-image: linear-gradient(
     to bottom,
-    var(--primary),
-    var(--secondary)
+    hsl(var(--primary)),
+    hsl(var(--secondary))
   );
-  color: var(--color-white);
+  color: hsl(var(--color-white));
   display: flex;
   flex-direction: column;
   align-items: center;

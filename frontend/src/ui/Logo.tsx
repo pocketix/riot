@@ -1,16 +1,16 @@
+import { breakpoints } from "@/styles/Breakpoints";
 import styled from "styled-components";
-import { breakpoints } from "../styles/GlobalStyles";
 
 const StyledLogo = styled.div`
-  text-align: center;
   display: none;
+  margin: 0 auto;
   @media (min-width: ${breakpoints.md}) {
     display: block;
   }
 `;
 
 const Img = styled.img`
-  height: 9.6rem;
+  height: 7.6rem;
   width: auto;
 `;
 

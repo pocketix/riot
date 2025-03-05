@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 const StyledEmptyMessage = styled.div`
-  color: var(--color-white);
+  color: hsl(var(--color-white));
   text-align: center;
   font-size: 1.6rem;
 `;

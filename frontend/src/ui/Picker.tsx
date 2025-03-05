@@ -9,12 +9,12 @@ const PickerContainer = styled.div`
 
 const PickerButton = styled.button`
   width: 100%;
-  padding: 0.8rem;
-  font-size: 1.6rem;
-  border: 1px solid var(--color-grey-300);
-  border-radius: 8px;
-  background: var(--color-grey-100);
-  color: var(--color-grey-900);
+  padding: 0.6rem; /* Reduced padding */
+  font-size: 1.2rem; /* Smaller font size */
+  border: 1px solid hsl(var(--color-grey-300));
+  border-radius: 6px; /* Slightly smaller border-radius */
+  background: hsl(var(--color-grey-100));
+  color: hsl(var(--color-grey-900));
   cursor: pointer;
   text-transform: capitalize;
   display: flex;
@@ -23,7 +23,7 @@ const PickerButton = styled.button`
 
   &:focus {
     outline: none;
-    border-color: var(--color-grey-500);
+    border-color: hsl(var(--color-grey-500));
   }
 `;
 
@@ -32,29 +32,29 @@ const Dropdown = styled.ul`
   top: 100%;
   left: 0;
   width: 100%;
-  background: var(--color-grey-200);
-  border-radius: 8px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  background: hsl(var(--color-grey-200));
+  border-radius: 6px; /* Adjusted */
+  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.1); /* Slightly softer shadow */
   z-index: 10;
   list-style: none;
   padding: 0;
   margin: 0;
-  max-height: 200px;
+  max-height: 160px; /* Reduced height */
   overflow-y: auto;
 `;
 
 const DropdownItem = styled.li<{ $active: boolean }>`
-  padding: 1rem;
-  font-size: 1.4rem;
+  padding: 0.8rem; /* Reduced padding */
+  font-size: 1.1rem; /* Adjusted font size */
   cursor: pointer;
   text-transform: capitalize;
   background: ${({ $active }) =>
-    $active ? "var(--color-grey-300)" : "var(--color-grey-200)"};
-  color: var(--color-grey-900);
+    $active ? "hsl(var(--color-grey-300))" : "hsl(var(--color-grey-200))"};
+  color: hsl(var(--color-grey-900));
   transition: background 0.2s ease-in-out;
 
   &:hover {
-    background: var(--color-grey-400);
+    background: hsl(var(--color-grey-400));
   }
 `;
 

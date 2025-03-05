@@ -1,18 +1,18 @@
+import { breakpoints } from "@/styles/Breakpoints";
 import styled from "styled-components";
-import { breakpoints } from "../styles/GlobalStyles";
 
 const TabsContainer = styled.div`
   display: flex;
   justify-content: flex-start;
   width: 100%;
   backdrop-filter: blur(12px);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 
   @media (min-width: 768px) {
     width: max-content;
     align-self: flex-start;
     border-radius: 12px;
-    gap: 1rem;
+    gap: 0.7rem;
   }
 `;
 
@@ -22,7 +22,7 @@ const TabButton = styled.button<{ $active: boolean }>`
   font-size: 1.6rem;
   font-weight: 500;
   color: ${({ $active }) =>
-    $active ? "var(--color-grey-900)" : "var(--color-grey-500)"};
+    $active ? "hsl(var(--color-grey-900))" : "hsl(var(--color-grey-500))"};
   background: transparent;
   border: none;
   text-align: center;
@@ -36,15 +36,15 @@ const TabButton = styled.button<{ $active: boolean }>`
   transition: all 0.3s ease-in-out;
 
   &:hover {
-    color: var(--color-grey-900);
+    color: hsl(var(--color-grey-900));
   }
 
   @media (min-width: ${breakpoints.md}) {
-    padding: 0.5rem 1.5rem;
-    font-size: 1.4rem;
+    padding: 0.5rem 1rem;
+    font-size: 1.1rem;
     border-radius: 5px;
     background: ${({ $active }) =>
-      $active ? "var(--color-grey-300)" : "transparent"};
+      $active ? "hsl(var(--color-grey-300))" : "transparent"};
   }
 `;
 

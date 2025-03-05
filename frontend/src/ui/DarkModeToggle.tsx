@@ -6,11 +6,11 @@ const ToggleButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-white);
+  color: hsl(var(--color-white));
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 3rem;
+  font-size: 2.2rem;
 `;
 
 export default function DarkModeToggle() {

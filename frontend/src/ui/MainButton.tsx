@@ -5,7 +5,7 @@ const GradientButton = styled.button`
   padding: 0.8rem 3rem;
   font-size: 1.6rem;
   font-weight: 600;
-  color: var(--color-white);
+  color: hsl(var(--color-white));
   border: none;
   border-radius: 25px;
   background: rgba(255, 255, 255, 0.1);
@@ -38,8 +38,8 @@ const GradientButton = styled.button`
     padding: 2px;
     background: linear-gradient(
       90deg,
-      var(--color-neon-1),
-      var(--color-neon-2)
+      hsl(var(--color-neon-1)),
+      hsl(var(--color-neon-2))
     );
     -webkit-mask: linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);

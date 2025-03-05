@@ -12,9 +12,9 @@ const StyledPage = styled.div`
   flex-direction: column;
   flex-grow: 1;
   padding: 2rem;
-  color: var(--color-grey-900);
+  color: hsl(var(--color-grey-900));
   overflow: hidden;
-  gap: 2rem;
+  gap: 1.2rem;
 `;
 
 const SettingsContainer = styled.div`

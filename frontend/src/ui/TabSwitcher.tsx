@@ -1,7 +1,7 @@
 import { useMediaQuery } from "react-responsive";
 import Tabs from "./Tabs";
 import Picker from "./Picker";
-import { breakpoints } from "../styles/GlobalStyles";
+import { breakpoints } from "@/styles/Breakpoints";
 
 interface TabSwitcherProps {
   activeTab: string;

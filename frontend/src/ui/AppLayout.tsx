@@ -1,17 +1,17 @@
 import { Outlet } from "react-router-dom";
 import styled from "styled-components";
 import Navbar from "./Navbar";
-import { breakpoints } from "../styles/GlobalStyles";
+import { breakpoints } from "@/styles/Breakpoints";
 
 const StyledAppLayout = styled.div`
   height: 100vh;
   background-image: linear-gradient(
     to bottom,
-    var(--primary),
-    var(--secondary)
+    hsl(var(--primary-background)),
+    hsl(var(--secondary-background))
   );
-  background-color: var(--primary);
-  color: var(--color-grey-900);
+  background-color: hsl(var(--primary-background));
+  color: hsl(var(--color-grey-900));
   display: grid;
   grid-template-rows: 1fr auto;
   grid-template-areas:
@@ -29,7 +29,6 @@ const Main = styled.main`
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  /* padding: 4rem 1.5rem; */
   overflow-y: auto;
   grid-area: main;
 

@@ -1,5 +1,4 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import GlobalStyles from "./styles/GlobalStyles";
 import AppLayout from "./ui/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Devices from "./pages/Devices";
@@ -14,7 +13,6 @@ export default function App() {
   return (
     <>
       <DarkModeProvider>
-        {/* <GlobalStyles /> */}
         <BrowserRouter>
           <Routes>
             <Route element={<AppLayout />}>
