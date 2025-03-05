@@ -16,7 +16,7 @@ const SettingsItem = styled.div`
 
   span {
     font-size: 1rem;
-    color: hsl(var(--color-grey-900));
+    color: var(--color-grey-900);
   }
 
   @media (min-width: ${breakpoints.md}) {

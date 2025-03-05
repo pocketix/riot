@@ -13,13 +13,11 @@ const NavbarContainer = styled.div`
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 0.5rem;
-  gap: 0.6rem;
+  padding: 0.6rem 0.3rem;
   border-top: 2px solid rgba(0, 129, 241, 0.3);
   position: relative;
   bottom: 0;
   width: 100%;
-  z-index: 1000;
 
   @media (min-width: ${breakpoints.md}) {
     flex-direction: column;
@@ -37,12 +35,14 @@ const NavItem = styled(NavLink)`
   align-items: center;
   justify-content: flex-start;
   text-decoration: none;
-  color: hsl(var(--color-white));
+  color: var(--color-white);
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
+  width: 20%;
+  text-align: center;
 
   &.active {
-    color: hsl(var(--color-neon-1));
+    color: var(--color-neon-1);
   }
 
   & svg {
@@ -82,7 +82,7 @@ const NavItem = styled(NavLink)`
 const StyledNavbar = styled.div`
   display: flex;
   flex-direction: column;
-  background-color: hsl(var(--secondary));
+  background-color: var(--secondary);
 
   @media (min-width: ${breakpoints.md}) {
     border-right: 2px solid rgba(0, 129, 241, 0.3);

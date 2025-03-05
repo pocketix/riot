@@ -1,4 +1,3 @@
-import { breakpoints } from "@/styles/Breakpoints";
 import styled from "styled-components";
 
 const TabsContainer = styled.div`
@@ -18,12 +17,16 @@ const TabsContainer = styled.div`
 
 const TabButton = styled.button<{ $active: boolean }>`
   position: relative;
-  padding: 0.5rem 2rem;
-  font-size: 1.6rem;
+  padding: 0.3rem 1rem;
+  font-size: 1.1rem;
   font-weight: 500;
+
   color: ${({ $active }) =>
-    $active ? "hsl(var(--color-grey-900))" : "hsl(var(--color-grey-500))"};
-  background: transparent;
+    $active ? "var(--color-grey-900)" : "var(--color-grey-500)"};
+  background: ${({ $active }) =>
+    $active ? "var(--color-grey-300)" : "transparent"};
+
+  border-radius: 5px;
   border: none;
   text-align: center;
   cursor: pointer;
@@ -37,14 +40,6 @@ const TabButton = styled.button<{ $active: boolean }>`
 
   &:hover {
     color: hsl(var(--color-grey-900));
-  }
-
-  @media (min-width: ${breakpoints.md}) {
-    padding: 0.5rem 1rem;
-    font-size: 1.1rem;
-    border-radius: 5px;
-    background: ${({ $active }) =>
-      $active ? "hsl(var(--color-grey-300))" : "transparent"};
   }
 `;
 

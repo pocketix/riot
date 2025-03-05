@@ -1,4 +1,3 @@
-import MainButton from "../../ui/MainButton";
 import styled from "styled-components";
 import EmptyMessage from "../../ui/EmptyMessage";
 
@@ -18,7 +17,6 @@ export default function DeviceTypes() {
     return (
       <EmptyMessageWrapper>
         <EmptyMessage>No types of devices have been found.</EmptyMessage>
-        <MainButton onClick={() => {}}>Define new type</MainButton>
       </EmptyMessageWrapper>
     );
   return <div>Device Types</div>;

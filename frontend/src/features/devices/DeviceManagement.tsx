@@ -1,4 +1,3 @@
-import MainButton from "../../ui/MainButton";
 import styled from "styled-components";
 import EmptyMessage from "../../ui/EmptyMessage";
 
@@ -18,7 +17,6 @@ export default function DeviceManagement() {
     return (
       <EmptyMessageWrapper>
         <EmptyMessage>No devices have been found.</EmptyMessage>
-        <MainButton onClick={() => {}}>Add device</MainButton>
       </EmptyMessageWrapper>
     );
   return <div>Device Mangement</div>;
