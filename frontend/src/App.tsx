@@ -7,7 +7,7 @@ import Automations from "./pages/Automations";
 import Settings from "./pages/Settings";
 import PageNotFound from "./pages/PageNotFound";
 import { DarkModeProvider } from "./context/DarkModeContext";
-import DeviceTypes from "./features/devices/DeviceTypes";
+import ApolloSandboxPage from "./pages/ApolloSandboxPage";
 
 export default function App() {
   return (
@@ -21,7 +21,10 @@ export default function App() {
               <Route path="members" element={<Members />} />
               <Route path="automations" element={<Automations />} />
               <Route path="settings" element={<Settings />} />
-              <Route path="settings/deviceTypes" element={<DeviceTypes />} />
+              <Route
+                path="settings/apollo-sandbox"
+                element={<ApolloSandboxPage />}
+              />
             </Route>
             <Route path="*" element={<PageNotFound />} />
           </Routes>

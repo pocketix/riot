@@ -3,6 +3,7 @@ import DarkModeToggle from "../../ui/DarkModeToggle";
 import LanguageSwitcher from "../../ui/LanguageSwitcher";
 import { breakpoints } from "@/styles/Breakpoints";
 import { FaArrowRight } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const Container = styled.div`
   display: flex;
@@ -25,10 +26,15 @@ const SettingsItem = styled.div`
     span {
       font-size: 1.3rem;
     }
+    &:nth-child(3),
+    &:nth-child(4) {
+      cursor: pointer;
+    }
   }
 `;
 
 export default function GeneralSettings() {
+  const navigate = useNavigate();
   return (
     <Container>
       <SettingsItem>
@@ -39,7 +45,7 @@ export default function GeneralSettings() {
         <span>Language</span>
         <LanguageSwitcher />
       </SettingsItem>
-      <SettingsItem>
+      <SettingsItem onClick={() => navigate("/settings/apollo-sandbox")}>
         <span>Developer mode (Apollo Sanxbox)</span>
         <FaArrowRight />
       </SettingsItem>
