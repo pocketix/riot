@@ -44,10 +44,10 @@ func (this BooleanEQAtomKPINode) GetSdParameterSpecification() string {
 }
 
 type InputData struct {
-	Time       string               `json:"time"`
-	DeviceID   string               `json:"deviceId"`
-	DeviceType *string              `json:"deviceType,omitempty"`
-	Data       StatisticsFieldInput `json:"data"`
+	Time       string  `json:"time"`
+	DeviceID   string  `json:"deviceId"`
+	DeviceType *string `json:"deviceType,omitempty"`
+	Data       string  `json:"data"`
 }
 
 type KPIDefinition struct {
@@ -212,10 +212,10 @@ func (this NumericLTAtomKPINode) GetSdParameterSpecification() string {
 }
 
 type OutputData struct {
-	Time       string          `json:"time"`
-	DeviceID   string          `json:"deviceId"`
-	DeviceType *string         `json:"deviceType,omitempty"`
-	Data       StatisticsField `json:"data"`
+	Time       string  `json:"time"`
+	DeviceID   string  `json:"deviceId"`
+	DeviceType *string `json:"deviceType,omitempty"`
+	Data       string  `json:"data"`
 }
 
 type Query struct {
@@ -248,42 +248,34 @@ type SDInstanceUpdateInput struct {
 type SDParameter struct {
 	ID         uint32          `json:"id"`
 	Denotation string          `json:"denotation"`
+	Label      *string         `json:"label,omitempty"`
 	Type       SDParameterType `json:"type"`
 }
 
 type SDParameterInput struct {
 	Denotation string          `json:"denotation"`
+	Label      *string         `json:"label,omitempty"`
 	Type       SDParameterType `json:"type"`
 }
 
 type SDType struct {
 	ID         uint32        `json:"id"`
 	Denotation string        `json:"denotation"`
+	Label      *string       `json:"label,omitempty"`
+	Icon       *string       `json:"icon,omitempty"`
 	Parameters []SDParameter `json:"parameters"`
 }
 
 type SDTypeInput struct {
 	Denotation string             `json:"denotation"`
+	Label      *string            `json:"label,omitempty"`
+	Icon       *string            `json:"icon,omitempty"`
 	Parameters []SDParameterInput `json:"parameters"`
 }
 
 type SensorField struct {
 	Key    string   `json:"key"`
 	Values []string `json:"values"`
-}
-
-// Return only the requested sensor fields
-type SensorFieldInput struct {
-	Key    string   `json:"key"`
-	Fields []string `json:"fields"`
-}
-
-// Sensors to be queried
-type SensorsInput struct {
-	// Simple definition, returns all available sensor fields
-	SimpleSensors []*string `json:"simpleSensors,omitempty"`
-	// Return only the requested sensor fields
-	SensorsWithFields []*SensorFieldInput `json:"sensorsWithFields,omitempty"`
 }
 
 type SensorsWithFields struct {
@@ -294,20 +286,8 @@ type SimpleSensors struct {
 	Sensors []string `json:"sensors"`
 }
 
-type StatisticsField struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
-type StatisticsFieldInput struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
 // Data used for querying the selected bucket
 type StatisticsInput struct {
-	// Sensors to be queried
-	Sensors SensorsInput `json:"sensors"`
 	// Start of the querying window
 	From *string `json:"from,omitempty"`
 	// End of the querying window
@@ -531,23 +511,23 @@ func (e SDParameterType) MarshalGQL(w io.Writer) {
 type StatisticsOperation string
 
 const (
-	StatisticsOperationMean            StatisticsOperation = "MEAN"
-	StatisticsOperationMin             StatisticsOperation = "MIN"
-	StatisticsOperationMax             StatisticsOperation = "MAX"
-	StatisticsOperationFirst           StatisticsOperation = "FIRST"
-	StatisticsOperationSum             StatisticsOperation = "SUM"
-	StatisticsOperationLast            StatisticsOperation = "LAST"
-	StatisticsOperationNone            StatisticsOperation = "NONE"
-	StatisticsOperationCount           StatisticsOperation = "COUNT"
-	StatisticsOperationIntegral        StatisticsOperation = "INTEGRAL"
-	StatisticsOperationMedian          StatisticsOperation = "MEDIAN"
-	StatisticsOperationMode            StatisticsOperation = "MODE"
-	StatisticsOperationQuantile        StatisticsOperation = "QUANTILE"
-	StatisticsOperationReduce          StatisticsOperation = "REDUCE"
-	StatisticsOperationSkew            StatisticsOperation = "SKEW"
-	StatisticsOperationSpread          StatisticsOperation = "SPREAD"
-	StatisticsOperationStddev          StatisticsOperation = "STDDEV"
-	StatisticsOperationTimeweightedavg StatisticsOperation = "TIMEWEIGHTEDAVG"
+	StatisticsOperationMean            StatisticsOperation = "mean"
+	StatisticsOperationMin             StatisticsOperation = "min"
+	StatisticsOperationMax             StatisticsOperation = "max"
+	StatisticsOperationFirst           StatisticsOperation = "first"
+	StatisticsOperationSum             StatisticsOperation = "sum"
+	StatisticsOperationLast            StatisticsOperation = "last"
+	StatisticsOperationNone            StatisticsOperation = "none"
+	StatisticsOperationCount           StatisticsOperation = "count"
+	StatisticsOperationIntegral        StatisticsOperation = "integral"
+	StatisticsOperationMedian          StatisticsOperation = "median"
+	StatisticsOperationMode            StatisticsOperation = "mode"
+	StatisticsOperationQuantile        StatisticsOperation = "quantile"
+	StatisticsOperationReduce          StatisticsOperation = "reduce"
+	StatisticsOperationSkew            StatisticsOperation = "skew"
+	StatisticsOperationSpread          StatisticsOperation = "spread"
+	StatisticsOperationStddev          StatisticsOperation = "stddev"
+	StatisticsOperationTimeweightedavg StatisticsOperation = "timeweightedavg"
 )
 
 var AllStatisticsOperation = []StatisticsOperation{

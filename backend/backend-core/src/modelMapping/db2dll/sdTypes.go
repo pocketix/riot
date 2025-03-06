@@ -11,10 +11,13 @@ func ToDLLModelSDType(sdTypeEntity dbModel.SDTypeEntity) dllModel.SDType {
 	return dllModel.SDType{
 		ID:         sharedUtils.NewOptionalOf[uint32](sdTypeEntity.ID),
 		Denotation: sdTypeEntity.Denotation,
+		Label:      sharedUtils.NewOptionalOf[string](sdTypeEntity.Label),
+		Icon:       sharedUtils.NewOptionalOf[string](sdTypeEntity.Icon),
 		Parameters: sharedUtils.Map(sdTypeEntity.Parameters, func(sdParameterEntity dbModel.SDParameterEntity) dllModel.SDParameter {
 			return dllModel.SDParameter{
 				ID:         sharedUtils.NewOptionalOf[uint32](sdParameterEntity.ID),
 				Denotation: sdParameterEntity.Denotation,
+				Label:      sharedUtils.NewOptionalOf[string](sdParameterEntity.Label),
 				Type: func(sdParameterType string) dllModel.SDParameterType {
 					switch sdParameterType {
 					case "string":

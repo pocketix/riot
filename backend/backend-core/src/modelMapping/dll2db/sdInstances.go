@@ -1,9 +1,10 @@
 package dll2db
 
 import (
+	"time"
+
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dbModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
-	"time"
 )
 
 func ToDBModelEntitySDInstance(sdInstance dllModel.SDInstance) dbModel.SDInstanceEntity {
@@ -27,7 +28,7 @@ func ToDBModelSDCommandInvocations(commandInvocations []dllModel.SDCommandInvoca
 			Payload:        inv.Payload,
 			UserId:         inv.UserID,
 			CommandID:      inv.CommandID,
-			SDInstanceID: 	inv.SDInstanceID,
+			SDInstanceID:   inv.SDInstanceID,
 		}
 	}
 	return dbInvocations

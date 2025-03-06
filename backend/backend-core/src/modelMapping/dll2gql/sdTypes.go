@@ -8,13 +8,19 @@ import (
 )
 
 func ToGraphQLModelSDType(sdType dllModel.SDType) graphQLModel.SDType {
+	label := sdType.Label.GetPayload()
+	icon := sdType.Icon.GetPayload()
 	return graphQLModel.SDType{
 		ID:         sdType.ID.GetPayload(),
 		Denotation: sdType.Denotation,
+		Label:      &label,
+		Icon:       &icon,
 		Parameters: sharedUtils.Map(sdType.Parameters, func(sdParameter dllModel.SDParameter) graphQLModel.SDParameter {
+			label := sdParameter.Label.GetPayload()
 			return graphQLModel.SDParameter{
 				ID:         sdParameter.ID.GetPayload(),
 				Denotation: sdParameter.Denotation,
+				Label:      &label,
 				Type: func(sdParameterType dllModel.SDParameterType) graphQLModel.SDParameterType {
 					switch sdParameterType {
 					case dllModel.SDParameterTypeString:

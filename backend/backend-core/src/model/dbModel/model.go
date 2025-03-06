@@ -60,6 +60,8 @@ func (AtomKPINodeEntity) TableName() string {
 type SDTypeEntity struct {
 	ID         uint32              `gorm:"column:id;primaryKey;not null"`
 	Denotation string              `gorm:"column:denotation;not null;index"` // Denotation is a separately indexed field
+	Label      string              `gorm:"column:label"`
+	Icon       string              `gorm:"column:icon"`
 	Parameters []SDParameterEntity `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
 	Commands   []SDCommandEntity   `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
 }
@@ -72,6 +74,7 @@ type SDParameterEntity struct {
 	ID         uint32 `gorm:"column:id;primaryKey;not null"`
 	SDTypeID   uint32 `gorm:"column:sd_type_id;not null"`
 	Denotation string `gorm:"column:denotation;not null"`
+	Label      string `gorm:"column:label"`
 	Type       string `gorm:"column:type;not null"`
 }
 
@@ -89,7 +92,7 @@ type SDInstanceEntity struct {
 	GroupMembershipRecords                     []SDInstanceGroupMembershipEntity           `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 	KPIFulfillmentCheckResults                 []KPIFulfillmentCheckResultEntity           `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 	SDInstanceKPIDefinitionRelationshipRecords []SDInstanceKPIDefinitionRelationshipEntity `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
-	CommandInvocations                         []SDCommandInvocationEntity                 `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"` // Each instance of a given smart device has its own special invocations for commands
+	CommandInvocations                         []SDCommandInvocationEntity                 `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"` // Each instance has special command invocatios
 }
 
 func (SDInstanceEntity) TableName() string {
@@ -163,7 +166,7 @@ func (UserEntity) TableName() string {
 
 type SDCommandEntity struct {
 	ID         uint32 `gorm:"column:id;primaryKey;not null"`
-	SDTypeID   uint32 `gorm:"column:sd_type_id;not null"` // Each device type has its own set of commands
+	SDTypeID   uint32 `gorm:"column:sd_type_id;not null"` // One type of smart device has the same set of commands
 	Denotation string `gorm:"column:denotation;not null"`
 	Type       string `gorm:"column:type;not null"`
 	Payload    string `gorm:"column:payload;not null"`
