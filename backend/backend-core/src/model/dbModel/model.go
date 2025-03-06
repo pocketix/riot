@@ -59,6 +59,8 @@ func (AtomKPINodeEntity) TableName() string {
 type SDTypeEntity struct {
 	ID         uint32              `gorm:"column:id;primaryKey;not null"`
 	Denotation string              `gorm:"column:denotation;not null;index"` // Denotation is a separately indexed field
+	Label      string              `gorm:"column:label"`
+	Icon       string              `gorm:"column:icon"`
 	Parameters []SDParameterEntity `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
 	Commands   []SDCommandEntity   `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
 }
@@ -71,6 +73,7 @@ type SDParameterEntity struct {
 	ID         uint32 `gorm:"column:id;primaryKey;not null"`
 	SDTypeID   uint32 `gorm:"column:sd_type_id;not null"`
 	Denotation string `gorm:"column:denotation;not null"`
+	Label      string `gorm:"column:label"`
 	Type       string `gorm:"column:type;not null"`
 }
 
@@ -161,11 +164,11 @@ func (UserEntity) TableName() string {
 }
 
 type SDCommandEntity struct {
-	ID         uint32                      `gorm:"column:id;primaryKey;not null"`
-	SDTypeID   uint32                      `gorm:"column:sd_type_id;not null"` //Jeden typ smart device mám stejnou sadu commadů
-	Denotation string                      `gorm:"column:denotation;not null"`
-	Type       string                      `gorm:"column:type;not null"`
-	Payload    string                      `gorm:"column:payload;not null"`
+	ID         uint32 `gorm:"column:id;primaryKey;not null"`
+	SDTypeID   uint32 `gorm:"column:sd_type_id;not null"` //Jeden typ smart device mám stejnou sadu commadů
+	Denotation string `gorm:"column:denotation;not null"`
+	Type       string `gorm:"column:type;not null"`
+	Payload    string `gorm:"column:payload;not null"`
 }
 
 func (SDCommandEntity) TableName() string {
@@ -173,15 +176,14 @@ func (SDCommandEntity) TableName() string {
 }
 
 type SDCommandInvocationEntity struct {
-	ID             uint32    `gorm:"column:id;primaryKey;not null"`
+	ID             uint32 `gorm:"column:id;primaryKey;not null"`
 	InvocationTime time.Time
-	Payload        string    `gorm:"column:payload;not null"`
-	UserId         uint32    `gorm:"column:user_id"`
-	CommandID      uint32    `gorm:"column:command_id;not null"` // Vazba na command
-	SDInstanceID   uint32    `gorm:"column:sd_instance_id;not null"` // Nová vazba na konkrétní instanci
+	Payload        string `gorm:"column:payload;not null"`
+	UserId         uint32 `gorm:"column:user_id"`
+	CommandID      uint32 `gorm:"column:command_id;not null"`     // Vazba na command
+	SDInstanceID   uint32 `gorm:"column:sd_instance_id;not null"` // Nová vazba na konkrétní instanci
 }
 
 func (SDCommandInvocationEntity) TableName() string {
 	return "command_invocation"
 }
-
