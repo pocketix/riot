@@ -6,6 +6,7 @@ import { useState } from "react";
 import GeneralSettings from "../features/settings/GeneralSettings";
 import PersonalInfoSettings from "../features/settings/PersonalInfoSettings";
 import DeviceTypesSettings from "../features/settings/DeviceTypesSettings";
+import { useTranslation } from "react-i18next";
 
 const StyledPage = styled.div`
   display: flex;
@@ -27,6 +28,7 @@ const SettingsContainer = styled.div`
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("general");
+  const { t } = useTranslation();
 
   // Map active tab to components
   const renderTabContent = () => {
@@ -44,7 +46,7 @@ export default function Settings() {
 
   return (
     <StyledPage>
-      <Heading>Settings</Heading>
+      <Heading>{t("settings")}</Heading>
       <TabSwitcher
         activeTab={activeTab}
         setActiveTab={setActiveTab}

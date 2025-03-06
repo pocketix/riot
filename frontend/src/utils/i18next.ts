@@ -9,6 +9,8 @@ const resources = {
       members: "Members",
       automations: "Automations",
       settings: "Settings",
+      darkMode: "Use dark mode",
+      language: "Language",
     },
   },
   cz: {
@@ -18,6 +20,8 @@ const resources = {
       members: "Uživatelé",
       automations: "Automatizace",
       settings: "Nastavení",
+      darkMode: "Použít tmavý režim",
+      language: "Jazyk",
     },
   },
 };

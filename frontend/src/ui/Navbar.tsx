@@ -46,7 +46,6 @@ const NavItem = styled(NavLink)`
   }
 
   & svg {
-    margin-bottom: 0.4rem;
     width: 1.4rem;
     height: 1.4rem;
   }
@@ -60,7 +59,7 @@ const NavItem = styled(NavLink)`
     justify-content: flex-start;
     gap: 1rem;
     width: 250px;
-    padding: 0.6rem 2.4rem;
+    padding: 0.8rem 2.4rem;
     transition: all 0.3s ease-in-out;
     font-size: 1rem;
     letter-spacing: 0.1rem;
@@ -71,10 +70,11 @@ const NavItem = styled(NavLink)`
     }
 
     &.active {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: var(--color-grey-300);
+      font-weight: 600;
     }
     &:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: var(--color-grey-300);
     }
   }
 `;
