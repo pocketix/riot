@@ -149,15 +149,8 @@ func (r *queryResolver) SdInstanceGroups(ctx context.Context) ([]graphQLModel.SD
 	return getSDInstanceGroupsResult.Unwrap()
 }
 
-func (r *queryResolver) StatisticsQuerySimpleSensors(ctx context.Context, request *graphQLModel.StatisticsInput, sensors graphQLModel.SimpleSensors) ([]graphQLModel.OutputData, error) {
-	convertedRequest, _ := domainLogicLayer.MapStatisticsInputToReadRequestBody(request, &sensors, nil)
-	data := domainLogicLayer.Query(*convertedRequest)
-	return data.Unwrap()
-}
-
-func (r *queryResolver) StatisticsQuerySensorsWithFields(ctx context.Context, request *graphQLModel.StatisticsInput, sensors graphQLModel.SensorsWithFields) ([]graphQLModel.OutputData, error) {
-	convertedRequest, _ := domainLogicLayer.MapStatisticsInputToReadRequestBody(request, nil, &sensors)
-	data := domainLogicLayer.Query(*convertedRequest)
+func (r *queryResolver) StatisticsQuery(ctx context.Context, request graphQLModel.StatisticsInput) ([]graphQLModel.OutputData, error) {
+	data := domainLogicLayer.Query(request)
 	return data.Unwrap()
 }
 

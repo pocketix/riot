@@ -22,7 +22,7 @@ func ToDLLModelSDCommandInvocations(commandInvocations []dbModel.SDCommandInvoca
 	for i, inv := range commandInvocations {
 		dllInvocations[i] = dllModel.SDCommandInvocation{
 			ID:             inv.ID,
-			InvocationTime: inv.InvocationTime.Format("2006-01-02T15:04:05Z07:00"), // Převod `time.Time` na string
+			InvocationTime: inv.InvocationTime.Format("2006-01-02T15:04:05Z07:00"), // Conversion `time.Time` to string
 			Payload:        inv.Payload,
 			UserID:         inv.UserId,
 			CommandID:      inv.CommandID,

@@ -16,6 +16,6 @@ type SDCommandInvocation struct {
 	InvocationTime string
 	Payload        string
 	UserID         uint32
-	CommandID      uint32    // Který příkaz byl volán
-	SDInstanceID   uint32    // Ke které instanci zařízení patří invokace
+	CommandID      uint32 // Which command was called
+	SDInstanceID   uint32 // To which device instance the invocation belongs
 }

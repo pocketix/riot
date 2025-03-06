@@ -1,8 +1,9 @@
 package dbModel
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type KPIDefinitionEntity struct {
@@ -88,7 +89,7 @@ type SDInstanceEntity struct {
 	GroupMembershipRecords                     []SDInstanceGroupMembershipEntity           `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 	KPIFulfillmentCheckResults                 []KPIFulfillmentCheckResultEntity           `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 	SDInstanceKPIDefinitionRelationshipRecords []SDInstanceKPIDefinitionRelationshipEntity `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
-	CommandInvocations                         []SDCommandInvocationEntity                 `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"` // Kazda instace daného smart device má své specialni invokace pro commads
+	CommandInvocations                         []SDCommandInvocationEntity                 `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"` // Each instance of a given smart device has its own special invocations for commands
 }
 
 func (SDInstanceEntity) TableName() string {
@@ -161,11 +162,11 @@ func (UserEntity) TableName() string {
 }
 
 type SDCommandEntity struct {
-	ID         uint32                      `gorm:"column:id;primaryKey;not null"`
-	SDTypeID   uint32                      `gorm:"column:sd_type_id;not null"` //Jeden typ smart device mám stejnou sadu commadů
-	Denotation string                      `gorm:"column:denotation;not null"`
-	Type       string                      `gorm:"column:type;not null"`
-	Payload    string                      `gorm:"column:payload;not null"`
+	ID         uint32 `gorm:"column:id;primaryKey;not null"`
+	SDTypeID   uint32 `gorm:"column:sd_type_id;not null"` // Each device type has its own set of commands
+	Denotation string `gorm:"column:denotation;not null"`
+	Type       string `gorm:"column:type;not null"`
+	Payload    string `gorm:"column:payload;not null"`
 }
 
 func (SDCommandEntity) TableName() string {
@@ -173,15 +174,14 @@ func (SDCommandEntity) TableName() string {
 }
 
 type SDCommandInvocationEntity struct {
-	ID             uint32    `gorm:"column:id;primaryKey;not null"`
+	ID             uint32 `gorm:"column:id;primaryKey;not null"`
 	InvocationTime time.Time
-	Payload        string    `gorm:"column:payload;not null"`
-	UserId         uint32    `gorm:"column:user_id"`
-	CommandID      uint32    `gorm:"column:command_id;not null"` // Vazba na command
-	SDInstanceID   uint32    `gorm:"column:sd_instance_id;not null"` // Nová vazba na konkrétní instanci
+	Payload        string `gorm:"column:payload;not null"`
+	UserId         uint32 `gorm:"column:user_id"`
+	CommandID      uint32 `gorm:"column:command_id;not null"`     // Binding to command
+	SDInstanceID   uint32 `gorm:"column:sd_instance_id;not null"` // New link to a specific instance
 }
 
 func (SDCommandInvocationEntity) TableName() string {
 	return "command_invocation"
 }
-

@@ -13,7 +13,7 @@ func ToDBModelEntitySDInstance(sdInstance dllModel.SDInstance) dbModel.SDInstanc
 		ConfirmedByUser:    sdInstance.ConfirmedByUser,
 		UserIdentifier:     sdInstance.UserIdentifier,
 		SDTypeID:           sdInstance.SDType.ID.GetPayloadOrDefault(0),
-		CommandInvocations: ToDBModelSDCommandInvocations(sdInstance.CommandInvocations), // Mapování invokací
+		CommandInvocations: ToDBModelSDCommandInvocations(sdInstance.CommandInvocations), // Invocations mapping
 	}
 }
 

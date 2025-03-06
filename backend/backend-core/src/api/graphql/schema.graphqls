@@ -13,7 +13,7 @@ type SDParameter {
 }
 
 type SDType {
-  id: ID!
+  id: ID
   denotation: String!
   parameters: [SDParameter!]!
 }
@@ -28,12 +28,22 @@ input SDTypeInput {
   parameters: [SDParameterInput!]!
 }
 
-type SDInstance {
+type SDCommandInvocation {
   id: ID!
+  invocationTime: String!
+  payload: String!
+  userId: ID!
+  commandId: ID!
+  sdInstanceId: ID!
+}
+
+type SDInstance {
+  id: ID
   uid: String!
   confirmedByUser: Boolean!
   userIdentifier: String!
   type: SDType!
+  commandInvocations: [SDCommandInvocation!]!
 }
 
 input SDInstanceUpdateInput {
@@ -209,43 +219,47 @@ input SDInstanceGroupInput {
 
 scalar Date
 
-input SimpleSensors {
+type SimpleSensors {
   sensors: [String!]!
 }
 
-input SensorsWithFields {
+type SensorsWithFields {
   sensors: [SensorField!]!
 }
 
-input SensorField {
+type SensorField {
   key: String!
   values: [String!]!
 }
 
 enum StatisticsOperation {
-  mean
-  min
-  max
-  first
-  sum
-  last
-  none
-  count
-  integral
-  median
-  mode
-  quantile
-  reduce
-  skew
-  spread
-  stddev
-  timeweightedavg
+  MEAN
+  MIN
+  MAX
+  FIRST
+  SUM
+  LAST
+  NONE
+  COUNT
+  INTEGRAL
+  MEDIAN
+  MODE
+  QUANTILE
+  REDUCE
+  SKEW
+  SPREAD
+  STDDEV
+  TIMEWEIGHTEDAVG
 }
 
 """
 Data used for querying the selected bucket
 """
 input StatisticsInput {
+  """
+  Sensors to be queried
+  """
+  sensors: SensorsInput!
   """
   Start of the querying window
   """
@@ -272,21 +286,52 @@ input StatisticsInput {
   operation: StatisticsOperation
 }
 
+"""
+Sensors to be queried
+"""
+input SensorsInput {
+  """
+  Simple definition, returns all available sensor fields
+  """
+  simpleSensors: [String]
+  """
+  Return only the requested sensor fields
+  """
+  sensorsWithFields: [SensorFieldInput]
+}
 
-scalar JSON
+"""
+Return only the requested sensor fields
+"""
+input SensorFieldInput {
+  key: String!
+  fields: [String!]!
+}
+
+scalar StatisticsParameterValue
+
+type StatisticsField {
+  key: String!
+  value: StatisticsParameterValue!
+}
 
 type OutputData {
   time: Date!
   deviceId: String!
   deviceType: String
-  data: JSON!
+  data: StatisticsField!
+}
+
+input StatisticsFieldInput {
+  key: String!
+  value: StatisticsParameterValue!
 }
 
 input InputData {
   time: Date!
   deviceId: String!
   deviceType: String
-  data: JSON!
+  data: StatisticsFieldInput!
 }
 
 # ----- Queries, mutations and subscriptions -----
@@ -300,8 +345,7 @@ type Query {
   kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!
   sdInstanceGroup(id: ID!): SDInstanceGroup!
   sdInstanceGroups: [SDInstanceGroup!]!
-  statisticsQuerySimpleSensors(request: StatisticsInput sensors: SimpleSensors!): [OutputData!]!
-  statisticsQuerySensorsWithFields(request: StatisticsInput sensors: SensorsWithFields!): [OutputData!]!
+  statisticsQuery(request: StatisticsInput!): [OutputData!]!
 }
 
 type Mutation {

@@ -71,8 +71,7 @@ type QueryResolver interface {
 	KpiFulfillmentCheckResults(ctx context.Context) ([]graphQLModel.KPIFulfillmentCheckResult, error)
 	SdInstanceGroup(ctx context.Context, id uint32) (graphQLModel.SDInstanceGroup, error)
 	SdInstanceGroups(ctx context.Context) ([]graphQLModel.SDInstanceGroup, error)
-	StatisticsQuerySimpleSensors(ctx context.Context, request *graphQLModel.StatisticsInput, sensors graphQLModel.SimpleSensors) ([]graphQLModel.OutputData, error)
-	StatisticsQuerySensorsWithFields(ctx context.Context, request *graphQLModel.StatisticsInput, sensors graphQLModel.SensorsWithFields) ([]graphQLModel.OutputData, error)
+	StatisticsQuery(ctx context.Context, request graphQLModel.StatisticsInput) ([]graphQLModel.OutputData, error)
 }
 type SubscriptionResolver interface {
 	OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error)
@@ -111,9 +110,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSDInstanceUpdateInput,
 		ec.unmarshalInputSDParameterInput,
 		ec.unmarshalInputSDTypeInput,
-		ec.unmarshalInputSensorField,
-		ec.unmarshalInputSensorsWithFields,
-		ec.unmarshalInputSimpleSensors,
+		ec.unmarshalInputSensorFieldInput,
+		ec.unmarshalInputSensorsInput,
+		ec.unmarshalInputStatisticsFieldInput,
 		ec.unmarshalInputStatisticsInput,
 	)
 	first := true
@@ -440,43 +439,47 @@ input SDInstanceGroupInput {
 
 scalar Date
 
-input SimpleSensors {
+type SimpleSensors {
   sensors: [String!]!
 }
 
-input SensorsWithFields {
+type SensorsWithFields {
   sensors: [SensorField!]!
 }
 
-input SensorField {
+type SensorField {
   key: String!
   values: [String!]!
 }
 
 enum StatisticsOperation {
-  mean
-  min
-  max
-  first
-  sum
-  last
-  none
-  count
-  integral
-  median
-  mode
-  quantile
-  reduce
-  skew
-  spread
-  stddev
-  timeweightedavg
+  MEAN
+  MIN
+  MAX
+  FIRST
+  SUM
+  LAST
+  NONE
+  COUNT
+  INTEGRAL
+  MEDIAN
+  MODE
+  QUANTILE
+  REDUCE
+  SKEW
+  SPREAD
+  STDDEV
+  TIMEWEIGHTEDAVG
 }
 
 """
 Data used for querying the selected bucket
 """
 input StatisticsInput {
+  """
+  Sensors to be queried
+  """
+  sensors: SensorsInput!
   """
   Start of the querying window
   """
@@ -503,21 +506,52 @@ input StatisticsInput {
   operation: StatisticsOperation
 }
 
+"""
+Sensors to be queried
+"""
+input SensorsInput {
+  """
+  Simple definition, returns all available sensor fields
+  """
+  simpleSensors: [String]
+  """
+  Return only the requested sensor fields
+  """
+  sensorsWithFields: [SensorFieldInput]
+}
 
-scalar JSON
+"""
+Return only the requested sensor fields
+"""
+input SensorFieldInput {
+  key: String!
+  fields: [String!]!
+}
+
+scalar StatisticsParameterValue
+
+type StatisticsField {
+  key: String!
+  value: StatisticsParameterValue!
+}
 
 type OutputData {
   time: Date!
   deviceId: String!
   deviceType: String
-  data: JSON!
+  data: StatisticsField!
+}
+
+input StatisticsFieldInput {
+  key: String!
+  value: StatisticsParameterValue!
 }
 
 input InputData {
   time: Date!
   deviceId: String!
   deviceType: String
-  data: JSON!
+  data: StatisticsFieldInput!
 }
 
 # ----- Queries, mutations and subscriptions -----
@@ -531,8 +565,7 @@ type Query {
   kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!
   sdInstanceGroup(id: ID!): SDInstanceGroup!
   sdInstanceGroups: [SDInstanceGroup!]!
-  statisticsQuerySimpleSensors(request: StatisticsInput sensors: SimpleSensors!): [OutputData!]!
-  statisticsQuerySensorsWithFields(request: StatisticsInput sensors: SensorsWithFields!): [OutputData!]!
+  statisticsQuery(request: StatisticsInput!): [OutputData!]!
 }
 
 type Mutation {
@@ -797,51 +830,18 @@ func (ec *executionContext) field_Query_sdType_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_statisticsQuerySensorsWithFields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_statisticsQuery_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *graphQLModel.StatisticsInput
+	var arg0 graphQLModel.StatisticsInput
 	if tmp, ok := rawArgs["request"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("request"))
-		arg0, err = ec.unmarshalOStatisticsInput2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐStatisticsInput(ctx, tmp)
+		arg0, err = ec.unmarshalNStatisticsInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐStatisticsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["request"] = arg0
-	var arg1 graphQLModel.SensorsWithFields
-	if tmp, ok := rawArgs["sensors"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sensors"))
-		arg1, err = ec.unmarshalNSensorsWithFields2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorsWithFields(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sensors"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_statisticsQuerySimpleSensors_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *graphQLModel.StatisticsInput
-	if tmp, ok := rawArgs["request"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("request"))
-		arg0, err = ec.unmarshalOStatisticsInput2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐStatisticsInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["request"] = arg0
-	var arg1 graphQLModel.SimpleSensors
-	if tmp, ok := rawArgs["sensors"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sensors"))
-		arg1, err = ec.unmarshalNSimpleSensors2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSimpleSensors(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sensors"] = arg1
 	return args, nil
 }
 
@@ -3887,9 +3887,9 @@ func (ec *executionContext) _OutputData_data(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(graphQLModel.StatisticsField)
 	fc.Result = res
-	return ec.marshalNJSON2string(ctx, field.Selections, res)
+	return ec.marshalNStatisticsField2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐStatisticsField(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OutputData_data(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3899,7 +3899,13 @@ func (ec *executionContext) fieldContext_OutputData_data(_ context.Context, fiel
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type JSON does not have child fields")
+			switch field.Name {
+			case "key":
+				return ec.fieldContext_StatisticsField_key(ctx, field)
+			case "value":
+				return ec.fieldContext_StatisticsField_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type StatisticsField", field.Name)
 		},
 	}
 	return fc, nil
@@ -4374,8 +4380,8 @@ func (ec *executionContext) fieldContext_Query_sdInstanceGroups(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_statisticsQuerySimpleSensors(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_statisticsQuerySimpleSensors(ctx, field)
+func (ec *executionContext) _Query_statisticsQuery(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_statisticsQuery(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -4388,7 +4394,7 @@ func (ec *executionContext) _Query_statisticsQuerySimpleSensors(ctx context.Cont
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().StatisticsQuerySimpleSensors(rctx, fc.Args["request"].(*graphQLModel.StatisticsInput), fc.Args["sensors"].(graphQLModel.SimpleSensors))
+		return ec.resolvers.Query().StatisticsQuery(rctx, fc.Args["request"].(graphQLModel.StatisticsInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4405,7 +4411,7 @@ func (ec *executionContext) _Query_statisticsQuerySimpleSensors(ctx context.Cont
 	return ec.marshalNOutputData2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐOutputDataᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_statisticsQuerySimpleSensors(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_statisticsQuery(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -4432,72 +4438,7 @@ func (ec *executionContext) fieldContext_Query_statisticsQuerySimpleSensors(ctx 
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_statisticsQuerySimpleSensors_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_statisticsQuerySensorsWithFields(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_statisticsQuerySensorsWithFields(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().StatisticsQuerySensorsWithFields(rctx, fc.Args["request"].(*graphQLModel.StatisticsInput), fc.Args["sensors"].(graphQLModel.SensorsWithFields))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]graphQLModel.OutputData)
-	fc.Result = res
-	return ec.marshalNOutputData2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐOutputDataᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_statisticsQuerySensorsWithFields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "time":
-				return ec.fieldContext_OutputData_time(ctx, field)
-			case "deviceId":
-				return ec.fieldContext_OutputData_deviceId(ctx, field)
-			case "deviceType":
-				return ec.fieldContext_OutputData_deviceType(ctx, field)
-			case "data":
-				return ec.fieldContext_OutputData_data(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type OutputData", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_statisticsQuerySensorsWithFields_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_statisticsQuery_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5260,6 +5201,276 @@ func (ec *executionContext) fieldContext_SDType_parameters(_ context.Context, fi
 				return ec.fieldContext_SDParameter_type(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDParameter", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SensorField_key(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SensorField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SensorField_key(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Key, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SensorField_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SensorField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SensorField_values(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SensorField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SensorField_values(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Values, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SensorField_values(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SensorField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SensorsWithFields_sensors(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SensorsWithFields) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SensorsWithFields_sensors(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sensors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]graphQLModel.SensorField)
+	fc.Result = res
+	return ec.marshalNSensorField2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorFieldᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SensorsWithFields_sensors(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SensorsWithFields",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "key":
+				return ec.fieldContext_SensorField_key(ctx, field)
+			case "values":
+				return ec.fieldContext_SensorField_values(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SensorField", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SimpleSensors_sensors(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SimpleSensors) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SimpleSensors_sensors(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sensors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SimpleSensors_sensors(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SimpleSensors",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StatisticsField_key(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.StatisticsField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StatisticsField_key(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Key, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StatisticsField_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StatisticsField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StatisticsField_value(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.StatisticsField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StatisticsField_value(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNStatisticsParameterValue2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StatisticsField_value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StatisticsField",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type StatisticsParameterValue does not have child fields")
 		},
 	}
 	return fc, nil
@@ -7468,7 +7679,7 @@ func (ec *executionContext) unmarshalInputInputData(ctx context.Context, obj int
 			it.DeviceType = data
 		case "data":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("data"))
-			data, err := ec.unmarshalNJSON2string(ctx, v)
+			data, err := ec.unmarshalNStatisticsFieldInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐStatisticsFieldInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7760,14 +7971,14 @@ func (ec *executionContext) unmarshalInputSDTypeInput(ctx context.Context, obj i
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSensorField(ctx context.Context, obj interface{}) (graphQLModel.SensorField, error) {
-	var it graphQLModel.SensorField
+func (ec *executionContext) unmarshalInputSensorFieldInput(ctx context.Context, obj interface{}) (graphQLModel.SensorFieldInput, error) {
+	var it graphQLModel.SensorFieldInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"key", "values"}
+	fieldsInOrder := [...]string{"key", "fields"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7781,67 +7992,81 @@ func (ec *executionContext) unmarshalInputSensorField(ctx context.Context, obj i
 				return it, err
 			}
 			it.Key = data
-		case "values":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("values"))
+		case "fields":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fields"))
 			data, err := ec.unmarshalNString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Values = data
+			it.Fields = data
 		}
 	}
 
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSensorsWithFields(ctx context.Context, obj interface{}) (graphQLModel.SensorsWithFields, error) {
-	var it graphQLModel.SensorsWithFields
+func (ec *executionContext) unmarshalInputSensorsInput(ctx context.Context, obj interface{}) (graphQLModel.SensorsInput, error) {
+	var it graphQLModel.SensorsInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"sensors"}
+	fieldsInOrder := [...]string{"simpleSensors", "sensorsWithFields"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "sensors":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sensors"))
-			data, err := ec.unmarshalNSensorField2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorFieldᚄ(ctx, v)
+		case "simpleSensors":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("simpleSensors"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Sensors = data
+			it.SimpleSensors = data
+		case "sensorsWithFields":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sensorsWithFields"))
+			data, err := ec.unmarshalOSensorFieldInput2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorFieldInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SensorsWithFields = data
 		}
 	}
 
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSimpleSensors(ctx context.Context, obj interface{}) (graphQLModel.SimpleSensors, error) {
-	var it graphQLModel.SimpleSensors
+func (ec *executionContext) unmarshalInputStatisticsFieldInput(ctx context.Context, obj interface{}) (graphQLModel.StatisticsFieldInput, error) {
+	var it graphQLModel.StatisticsFieldInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"sensors"}
+	fieldsInOrder := [...]string{"key", "value"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "sensors":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sensors"))
-			data, err := ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+		case "key":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Sensors = data
+			it.Key = data
+		case "value":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			data, err := ec.unmarshalNStatisticsParameterValue2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Value = data
 		}
 	}
 
@@ -7855,13 +8080,20 @@ func (ec *executionContext) unmarshalInputStatisticsInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"from", "to", "aggregateMinutes", "timezone", "operation"}
+	fieldsInOrder := [...]string{"sensors", "from", "to", "aggregateMinutes", "timezone", "operation"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "sensors":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sensors"))
+			data, err := ec.unmarshalNSensorsInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorsInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Sensors = data
 		case "from":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
 			data, err := ec.unmarshalODate2ᚖstring(ctx, v)
@@ -8971,7 +9203,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "statisticsQuerySimpleSensors":
+		case "statisticsQuery":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -8980,29 +9212,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_statisticsQuerySimpleSensors(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "statisticsQuerySensorsWithFields":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_statisticsQuerySensorsWithFields(ctx, field)
+				res = ec._Query_statisticsQuery(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -9226,6 +9436,172 @@ func (ec *executionContext) _SDType(ctx context.Context, sel ast.SelectionSet, o
 			}
 		case "parameters":
 			out.Values[i] = ec._SDType_parameters(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var sensorFieldImplementors = []string{"SensorField"}
+
+func (ec *executionContext) _SensorField(ctx context.Context, sel ast.SelectionSet, obj *graphQLModel.SensorField) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sensorFieldImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SensorField")
+		case "key":
+			out.Values[i] = ec._SensorField_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "values":
+			out.Values[i] = ec._SensorField_values(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var sensorsWithFieldsImplementors = []string{"SensorsWithFields"}
+
+func (ec *executionContext) _SensorsWithFields(ctx context.Context, sel ast.SelectionSet, obj *graphQLModel.SensorsWithFields) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sensorsWithFieldsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SensorsWithFields")
+		case "sensors":
+			out.Values[i] = ec._SensorsWithFields_sensors(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var simpleSensorsImplementors = []string{"SimpleSensors"}
+
+func (ec *executionContext) _SimpleSensors(ctx context.Context, sel ast.SelectionSet, obj *graphQLModel.SimpleSensors) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, simpleSensorsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SimpleSensors")
+		case "sensors":
+			out.Values[i] = ec._SimpleSensors_sensors(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var statisticsFieldImplementors = []string{"StatisticsField"}
+
+func (ec *executionContext) _StatisticsField(ctx context.Context, sel ast.SelectionSet, obj *graphQLModel.StatisticsField) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, statisticsFieldImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("StatisticsField")
+		case "key":
+			out.Values[i] = ec._StatisticsField_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "value":
+			out.Values[i] = ec._StatisticsField_value(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -9758,21 +10134,6 @@ func (ec *executionContext) unmarshalNInputData2githubᚗcomᚋMichalBuresᚑOG�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNJSON2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNJSON2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) marshalNKPIDefinition2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐKPIDefinition(ctx context.Context, sel ast.SelectionSet, v graphQLModel.KPIDefinition) graphql.Marshaler {
 	return ec._KPIDefinition(ctx, sel, &v)
 }
@@ -10271,36 +10632,86 @@ func (ec *executionContext) unmarshalNSDTypeInput2githubᚗcomᚋMichalBuresᚑO
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNSensorField2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorField(ctx context.Context, v interface{}) (graphQLModel.SensorField, error) {
-	res, err := ec.unmarshalInputSensorField(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
+func (ec *executionContext) marshalNSensorField2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorField(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SensorField) graphql.Marshaler {
+	return ec._SensorField(ctx, sel, &v)
 }
 
-func (ec *executionContext) unmarshalNSensorField2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorFieldᚄ(ctx context.Context, v interface{}) ([]graphQLModel.SensorField, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
+func (ec *executionContext) marshalNSensorField2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SensorField) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
 	}
-	var err error
-	res := make([]graphQLModel.SensorField, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNSensorField2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorField(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSensorField2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorField(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
 		}
 	}
-	return res, nil
+
+	return ret
 }
 
-func (ec *executionContext) unmarshalNSensorsWithFields2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorsWithFields(ctx context.Context, v interface{}) (graphQLModel.SensorsWithFields, error) {
-	res, err := ec.unmarshalInputSensorsWithFields(ctx, v)
+func (ec *executionContext) unmarshalNSensorsInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorsInput(ctx context.Context, v interface{}) (graphQLModel.SensorsInput, error) {
+	res, err := ec.unmarshalInputSensorsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNSimpleSensors2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSimpleSensors(ctx context.Context, v interface{}) (graphQLModel.SimpleSensors, error) {
-	res, err := ec.unmarshalInputSimpleSensors(ctx, v)
+func (ec *executionContext) marshalNStatisticsField2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐStatisticsField(ctx context.Context, sel ast.SelectionSet, v graphQLModel.StatisticsField) graphql.Marshaler {
+	return ec._StatisticsField(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNStatisticsFieldInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐStatisticsFieldInput(ctx context.Context, v interface{}) (graphQLModel.StatisticsFieldInput, error) {
+	res, err := ec.unmarshalInputStatisticsFieldInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNStatisticsInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐStatisticsInput(ctx context.Context, v interface{}) (graphQLModel.StatisticsInput, error) {
+	res, err := ec.unmarshalInputStatisticsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNStatisticsParameterValue2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNStatisticsParameterValue2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -10709,11 +11120,31 @@ func (ec *executionContext) marshalOLogicalOperationType2ᚖgithubᚗcomᚋMicha
 	return v
 }
 
-func (ec *executionContext) unmarshalOStatisticsInput2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐStatisticsInput(ctx context.Context, v interface{}) (*graphQLModel.StatisticsInput, error) {
+func (ec *executionContext) unmarshalOSensorFieldInput2ᚕᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorFieldInput(ctx context.Context, v interface{}) ([]*graphQLModel.SensorFieldInput, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputStatisticsInput(ctx, v)
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*graphQLModel.SensorFieldInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOSensorFieldInput2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorFieldInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOSensorFieldInput2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSensorFieldInput(ctx context.Context, v interface{}) (*graphQLModel.SensorFieldInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputSensorFieldInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -10731,6 +11162,38 @@ func (ec *executionContext) marshalOStatisticsOperation2ᚖgithubᚗcomᚋMichal
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOString2ᚖstring(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOString2ᚖstring(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
