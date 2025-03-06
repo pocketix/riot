@@ -190,6 +190,7 @@ func mapToOutputData(influxOutput map[string]interface{}) sharedModel.OutputData
 	delete(influxOutput, "table")
 	delete(influxOutput, "time")
 	delete(influxOutput, "deviceId")
+	delete(influxOutput, "host")
 
 	outputData.Data = influxOutput
 
