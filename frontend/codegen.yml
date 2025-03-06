@@ -1,0 +1,10 @@
+schema: "https://tyrion.fit.vutbr.cz/riot/api"
+documents:
+  - "src/graphql/*.ts"
+  - "src/graphql/*.tsx"
+generates:
+  src/generated/graphql.tsx:
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-react-apollo"
