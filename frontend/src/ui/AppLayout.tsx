@@ -57,6 +57,10 @@ const Container = styled.div`
   max-width: 480px;
   margin: 0 auto;
 
+  @media (min-width: ${breakpoints.sm}) {
+    max-width: 768px;
+  }
+
   @media (min-width: ${breakpoints.md}) {
     max-width: 1300px;
   }

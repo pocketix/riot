@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import GeneralSettings from "../features/settings/GeneralSettings";
 import PersonalInfoSettings from "../features/settings/PersonalInfoSettings";
-import DeviceTypesSettings from "../features/settings/DeviceTypesSettings";
+import DeviceTypesSettings from "../features/settings/DeviceTypes/DeviceTypesSettings";
 import { useTranslation } from "react-i18next";
 
 const StyledPage = styled.div`
@@ -16,14 +16,7 @@ const StyledPage = styled.div`
   color: hsl(var(--color-grey-900));
   overflow: hidden;
   gap: 1.2rem;
-`;
-
-const SettingsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  border-radius: 8px;
-  overflow: hidden;
-  gap: 2rem;
+  overflow-y: auto;
 `;
 
 export default function Settings() {
@@ -52,7 +45,7 @@ export default function Settings() {
         setActiveTab={setActiveTab}
         tabs={["general", "personal info", "device types"]}
       />
-      <SettingsContainer>{renderTabContent()}</SettingsContainer>
+      {renderTabContent()}
     </StyledPage>
   );
 }
