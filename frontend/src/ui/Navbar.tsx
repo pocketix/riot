@@ -50,6 +50,10 @@ const NavItem = styled(NavLink)`
     height: 1.4rem;
   }
 
+  &.active svg {
+    color: var(--color-neon-1);
+  }
+
   @media (min-width: ${breakpoints.sm}) {
     font-size: 1rem;
   }
@@ -58,12 +62,11 @@ const NavItem = styled(NavLink)`
     flex-direction: row;
     justify-content: flex-start;
     gap: 1rem;
-    width: 250px;
-    padding: 0.8rem 2.4rem;
+    width: 220px;
+    padding: 0.8rem 2rem;
     transition: all 0.3s ease-in-out;
     font-size: 1rem;
-    letter-spacing: 0.1rem;
-    margin-right: 1.2rem;
+    letter-spacing: 0.05rem;
 
     &:nth-child(3) {
       order: -1;
@@ -71,10 +74,14 @@ const NavItem = styled(NavLink)`
 
     &.active {
       background-color: var(--color-grey-300);
-      font-weight: 600;
     }
     &:hover {
       background-color: var(--color-grey-300);
+    }
+    & svg {
+      width: 1.5rem;
+      height: 1.5rem;
+      color: var(--color-grey-400);
     }
   }
 `;

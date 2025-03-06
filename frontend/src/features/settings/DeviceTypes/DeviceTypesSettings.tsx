@@ -7,7 +7,6 @@ import DeviceTypeCard from "./DeviceTypeCard";
 import Heading from "@/ui/Heading";
 import { Button } from "@/components/ui/button";
 import { breakpoints } from "@/styles/Breakpoints";
-import { Italic } from "lucide-react";
 
 const Container = styled.div`
   display: flex;
@@ -24,6 +23,7 @@ const Header = styled.div`
 const Grid = styled.div`
   display: grid;
   gap: 1.5rem;
+  align-items: start;
   justify-content: center;
   grid-template-columns: 1fr;
 
