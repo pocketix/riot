@@ -40,7 +40,7 @@ func main() {
 	log.Println("Waiting for dependencies...")
 	waitForDependencies()
 	log.Println("Dependencies ready...")
-	//sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
+	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
 	kickstartISC()
 	graphql.SetupGraphQLServer()
 }
