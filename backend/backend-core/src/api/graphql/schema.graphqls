@@ -13,7 +13,7 @@ type SDParameter {
 }
 
 type SDType {
-  id: ID
+  id: ID!
   denotation: String!
   parameters: [SDParameter!]!
 }
@@ -38,7 +38,7 @@ type SDCommandInvocation {
 }
 
 type SDInstance {
-  id: ID
+  id: ID!
   uid: String!
   confirmedByUser: Boolean!
   userIdentifier: String!
