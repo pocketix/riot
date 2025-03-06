@@ -240,22 +240,28 @@ enum SDParameterType {
 type SDParameter {
   id: ID!
   denotation: String!
+  label: String
   type: SDParameterType!
 }
 
 type SDType {
   id: ID!
   denotation: String!
+  label: String
+  icon: String
   parameters: [SDParameter!]!
 }
 
 input SDParameterInput {
   denotation: String!
+  label: String
   type: SDParameterType!
 }
 
 input SDTypeInput {
   denotation: String!
+  label: String
+  icon: String
   parameters: [SDParameterInput!]!
 }
 
@@ -1852,6 +1858,10 @@ func (ec *executionContext) fieldContext_Mutation_createSDType(ctx context.Conte
 				return ec.fieldContext_SDType_id(ctx, field)
 			case "denotation":
 				return ec.fieldContext_SDType_denotation(ctx, field)
+			case "label":
+				return ec.fieldContext_SDType_label(ctx, field)
+			case "icon":
+				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
 			}
@@ -3948,6 +3958,10 @@ func (ec *executionContext) fieldContext_Query_sdType(ctx context.Context, field
 				return ec.fieldContext_SDType_id(ctx, field)
 			case "denotation":
 				return ec.fieldContext_SDType_denotation(ctx, field)
+			case "label":
+				return ec.fieldContext_SDType_label(ctx, field)
+			case "icon":
+				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
 			}
@@ -4011,6 +4025,10 @@ func (ec *executionContext) fieldContext_Query_sdTypes(_ context.Context, field 
 				return ec.fieldContext_SDType_id(ctx, field)
 			case "denotation":
 				return ec.fieldContext_SDType_denotation(ctx, field)
+			case "label":
+				return ec.fieldContext_SDType_label(ctx, field)
+			case "icon":
+				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
 			}
@@ -4852,6 +4870,10 @@ func (ec *executionContext) fieldContext_SDInstance_type(_ context.Context, fiel
 				return ec.fieldContext_SDType_id(ctx, field)
 			case "denotation":
 				return ec.fieldContext_SDType_denotation(ctx, field)
+			case "label":
+				return ec.fieldContext_SDType_label(ctx, field)
+			case "icon":
+				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
 			}
@@ -5081,6 +5103,47 @@ func (ec *executionContext) fieldContext_SDParameter_denotation(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _SDParameter_label(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDParameter) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDParameter_label(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Label, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDParameter_label(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDParameter",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _SDParameter_type(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDParameter) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SDParameter_type(ctx, field)
 	if err != nil {
@@ -5213,6 +5276,88 @@ func (ec *executionContext) fieldContext_SDType_denotation(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _SDType_label(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDType_label(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Label, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDType_label(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDType_icon(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDType_icon(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Icon, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDType_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _SDType_parameters(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SDType_parameters(ctx, field)
 	if err != nil {
@@ -5256,6 +5401,8 @@ func (ec *executionContext) fieldContext_SDType_parameters(_ context.Context, fi
 				return ec.fieldContext_SDParameter_id(ctx, field)
 			case "denotation":
 				return ec.fieldContext_SDParameter_denotation(ctx, field)
+			case "label":
+				return ec.fieldContext_SDParameter_label(ctx, field)
 			case "type":
 				return ec.fieldContext_SDParameter_type(ctx, field)
 			}
@@ -7699,7 +7846,7 @@ func (ec *executionContext) unmarshalInputSDParameterInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"denotation", "type"}
+	fieldsInOrder := [...]string{"denotation", "label", "type"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7713,6 +7860,13 @@ func (ec *executionContext) unmarshalInputSDParameterInput(ctx context.Context, 
 				return it, err
 			}
 			it.Denotation = data
+		case "label":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Label = data
 		case "type":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
 			data, err := ec.unmarshalNSDParameterType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterType(ctx, v)
@@ -7733,7 +7887,7 @@ func (ec *executionContext) unmarshalInputSDTypeInput(ctx context.Context, obj i
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"denotation", "parameters"}
+	fieldsInOrder := [...]string{"denotation", "label", "icon", "parameters"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7747,6 +7901,20 @@ func (ec *executionContext) unmarshalInputSDTypeInput(ctx context.Context, obj i
 				return it, err
 			}
 			it.Denotation = data
+		case "label":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Label = data
+		case "icon":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Icon = data
 		case "parameters":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parameters"))
 			data, err := ec.unmarshalNSDParameterInput2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterInputᚄ(ctx, v)
@@ -9175,6 +9343,8 @@ func (ec *executionContext) _SDParameter(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "label":
+			out.Values[i] = ec._SDParameter_label(ctx, field, obj)
 		case "type":
 			out.Values[i] = ec._SDParameter_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -9224,6 +9394,10 @@ func (ec *executionContext) _SDType(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "label":
+			out.Values[i] = ec._SDType_label(ctx, field, obj)
+		case "icon":
+			out.Values[i] = ec._SDType_icon(ctx, field, obj)
 		case "parameters":
 			out.Values[i] = ec._SDType_parameters(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

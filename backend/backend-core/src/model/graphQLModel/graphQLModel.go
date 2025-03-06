@@ -248,22 +248,28 @@ type SDInstanceUpdateInput struct {
 type SDParameter struct {
 	ID         uint32          `json:"id"`
 	Denotation string          `json:"denotation"`
+	Label      *string         `json:"label,omitempty"`
 	Type       SDParameterType `json:"type"`
 }
 
 type SDParameterInput struct {
 	Denotation string          `json:"denotation"`
+	Label      *string         `json:"label,omitempty"`
 	Type       SDParameterType `json:"type"`
 }
 
 type SDType struct {
 	ID         uint32        `json:"id"`
 	Denotation string        `json:"denotation"`
+	Label      *string       `json:"label,omitempty"`
+	Icon       *string       `json:"icon,omitempty"`
 	Parameters []SDParameter `json:"parameters"`
 }
 
 type SDTypeInput struct {
 	Denotation string             `json:"denotation"`
+	Label      *string            `json:"label,omitempty"`
+	Icon       *string            `json:"icon,omitempty"`
 	Parameters []SDParameterInput `json:"parameters"`
 }
 
