@@ -71,7 +71,7 @@ services:
       - ./docker/mosquitto-log:/mosquitto/log
 
   postgres:
-    image: postgres:17
+    image: postgres:16
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -114,9 +114,9 @@ services:
     environment:
       BACKEND_CORE_URL: ${BACKEND_CORE_URL}
       RABBITMQ_URL: ${RABBITMQ_URL}
-      INFLUX_ORGANIZATION: jiap
-      INFLUX_BUCKET: jiap-time-series
-      INFLUX_URL: http://influxdb:8086
+      INFLUX_ORGANIZATION: home
+      INFLUX_BUCKET: bucket
+      INFLUX_URL: http://influx:8086
       INFLUX_TOKEN: Fgp2ozMxmkYnUBkzwLpkx6ydOVXyQqF4-ZPctGjv8-xkirYPYRvoBtrpAHMCr_joYoJMOqZjl8djjuyOx-MR_A==
     depends_on:
       - rabbitmq
