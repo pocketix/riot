@@ -6,13 +6,13 @@ const TabsContainer = styled.div`
   width: 100%;
   backdrop-filter: blur(12px);
   margin-bottom: 1rem;
-
-  @media (min-width: 768px) {
-    width: max-content;
-    align-self: flex-start;
-    border-radius: 12px;
-    gap: 0.7rem;
-  }
+  padding: 0.1rem;
+  border: 1px solid var(--color-grey-300);
+  transition: all 0.3s ease-in-out;
+  width: max-content;
+  align-self: flex-start;
+  border-radius: 12px;
+  gap: 0.7rem;
 `;
 
 const TabButton = styled.button<{ $active: boolean }>`
@@ -26,7 +26,7 @@ const TabButton = styled.button<{ $active: boolean }>`
   background: ${({ $active }) =>
     $active ? "var(--color-grey-300)" : "transparent"};
 
-  border-radius: 5px;
+  border-radius: 10px;
   border: none;
   text-align: center;
   cursor: pointer;

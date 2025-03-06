@@ -18,5 +18,8 @@ frontend/.vscode/*
 frontend/node_modules
 frontend/.env
 
+frontend/codegen.yml
+frontend/src/generated/graphql.tsx
+
 # Ignore backend executables
 backend/bin
