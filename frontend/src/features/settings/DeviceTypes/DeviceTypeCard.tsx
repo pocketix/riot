@@ -4,6 +4,7 @@ import { FaEdit, FaList, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { SdTypesQuery } from "@/generated/graphql";
 import { Button } from "@/components/ui/button";
 import { IoIosCloudOutline } from "react-icons/io";
+import { getIcon } from "@/utils/getIcon";
 
 const Card = styled.div`
   background: var(--color-grey-0);
@@ -55,9 +56,6 @@ const ButtonGroup = styled.div`
   margin-top: 10px;
 `;
 
-type DeviceTypeCardProps = {
-  deviceType: SdTypesQuery["sdTypes"][0];
-};
 const DetailsButton = styled.button`
   background: var(--color-grey-400);
   color: var(--color-white);
@@ -74,19 +72,22 @@ const DetailsButton = styled.button`
   }
 `;
 
+type DeviceTypeCardProps = {
+  deviceType: SdTypesQuery["sdTypes"][0];
+};
+
 export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
   const [showAll, setShowAll] = useState(false);
-  const { denotation, parameters } = deviceType;
+  const { denotation, icon, parameters } = deviceType;
   const visibleParams = parameters.slice(0, 2);
   const hiddenParams = parameters.slice(2);
+  const IconComponent = getIcon(icon || "");
 
   return (
     <Card>
       <Header>
         <Title>Weather station</Title>
-        <Icon>
-          <IoIosCloudOutline />
-        </Icon>
+        <Icon>{IconComponent ? <IconComponent /> : "x"}</Icon>
       </Header>
       <p>Denotation: {denotation}</p>
       <p>Parameters:</p>
