@@ -42,7 +42,7 @@ export default function DeviceTypesSettings() {
     SdTypesQueryVariables
   >(GET_SD_TYPES);
 
-  console.log("SD Types Data:", JSON.stringify(data, null, 2));
+  // console.log("SD Types Data:", JSON.stringify(data, null, 2));
 
   if (loading) return <Spinner />;
   if (!data?.sdTypes?.length) return <p>No device types found.</p>;

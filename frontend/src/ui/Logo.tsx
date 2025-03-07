@@ -19,18 +19,14 @@ const Img = styled.img`
 function Logo() {
   const { isDarkMode } = useDarkMode();
   const isMobile = useMediaQuery({ maxWidth: parseInt(breakpoints.sm) - 1 });
-  let logo;
-  if (isMobile) {
-    logo = "riot-phone.svg";
-  } else {
-    isDarkMode ? (logo = "riot-light.svg") : (logo = "riot-dark.svg");
-  }
 
-  return (
-    <StyledLogo>
-      <Img src={logo} alt="Logo" />
-    </StyledLogo>
-  );
+  const logo = isMobile
+    ? "/riot-phone.svg"
+    : isDarkMode
+    ? "/riot-light.svg"
+    : "/riot-dark.svg";
+
+  return <StyledLogo>{logo && <Img src={logo} alt="Logo" />}</StyledLogo>;
 }
 
 export default Logo;

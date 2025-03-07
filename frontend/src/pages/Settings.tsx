@@ -1,11 +1,7 @@
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import Heading from "../ui/Heading";
 import TabSwitcher from "../ui/TabSwitcher";
-import { useState } from "react";
-
-import GeneralSettings from "../features/settings/GeneralSettings";
-import PersonalInfoSettings from "../features/settings/PersonalInfoSettings";
-import DeviceTypesSettings from "../features/settings/DeviceTypes/DeviceTypesSettings";
 import { useTranslation } from "react-i18next";
 
 const StyledPage = styled.div`
@@ -17,37 +13,32 @@ const StyledPage = styled.div`
   gap: 1.2rem;
   overflow-y: auto;
   width: 100%;
+  height: 100%;
   align-self: center;
   max-width: 1300px;
 `;
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState("general");
   const { t } = useTranslation();
+  const location = useLocation();
 
-  // Map active tab to components
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case "general":
-        return <GeneralSettings />;
-      case "personal info":
-        return <PersonalInfoSettings />;
-      case "device types":
-        return <DeviceTypesSettings />;
-      default:
-        return null;
-    }
-  };
+  // If user is on /settings, redirect to /settings/general
+  if (location.pathname === "/settings") {
+    return <Navigate to="/settings/general" replace />;
+  }
 
   return (
     <StyledPage>
       <Heading>{t("settings")}</Heading>
       <TabSwitcher
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        tabs={["general", "personal info", "device types"]}
+        activeTab={location.pathname.split("/").pop() || "general"}
+        tabs={[
+          { name: "general", path: "/settings/general" },
+          { name: "personal info", path: "/settings/personal-info" },
+          { name: "device types", path: "/settings/device-types" },
+        ]}
       />
-      {renderTabContent()}
+      <Outlet />
     </StyledPage>
   );
 }

@@ -5,20 +5,15 @@ import { breakpoints } from "@/styles/Breakpoints";
 
 interface TabSwitcherProps {
   activeTab: string;
-  setActiveTab: (tab: string) => void;
-  tabs: string[];
+  tabs: { name: string; path: string }[];
 }
 
-export default function TabSwitcher({
-  activeTab,
-  setActiveTab,
-  tabs,
-}: TabSwitcherProps) {
+export default function TabSwitcher({ activeTab, tabs }: TabSwitcherProps) {
   const isMobile = useMediaQuery({ maxWidth: parseInt(breakpoints.md) - 1 });
 
   return isMobile ? (
-    <Picker activeTab={activeTab} setActiveTab={setActiveTab} tabs={tabs} />
+    <Picker activeTab={activeTab} tabs={tabs} />
   ) : (
-    <Tabs activeTab={activeTab} setActiveTab={setActiveTab} tabs={tabs} />
+    <Tabs tabs={tabs} />
   );
 }

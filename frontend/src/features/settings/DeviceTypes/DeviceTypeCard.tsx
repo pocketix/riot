@@ -34,6 +34,7 @@ const Title = styled.h3`
 const Icon = styled.div`
   width: 40px;
   height: 40px;
+  aspect-ratio: 1/1;
   background: var(--color-grey-200);
   border-radius: 50%;
   display: flex;
@@ -78,16 +79,16 @@ type DeviceTypeCardProps = {
 
 export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
   const [showAll, setShowAll] = useState(false);
-  const { denotation, icon, parameters } = deviceType;
+  const { denotation, label, icon, parameters } = deviceType;
   const visibleParams = parameters.slice(0, 2);
   const hiddenParams = parameters.slice(2);
-  const IconComponent = getIcon(icon || "");
+  const IconComponent = getIcon(icon || "TbQuestionMark");
 
   return (
     <Card>
       <Header>
-        <Title>Weather station</Title>
-        <Icon>{IconComponent ? <IconComponent /> : "x"}</Icon>
+        <Title>{label}</Title>
+        <Icon>{IconComponent && <IconComponent />}</Icon>
       </Header>
       <p>Denotation: {denotation}</p>
       <p>Parameters:</p>
