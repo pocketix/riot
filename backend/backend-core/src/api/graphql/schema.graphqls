@@ -9,22 +9,28 @@ enum SDParameterType {
 type SDParameter {
   id: ID!
   denotation: String!
+  label: String
   type: SDParameterType!
 }
 
 type SDType {
   id: ID!
   denotation: String!
+  label: String
+  icon: String
   parameters: [SDParameter!]!
 }
 
 input SDParameterInput {
   denotation: String!
+  label: String
   type: SDParameterType!
 }
 
 input SDTypeInput {
   denotation: String!
+  label: String
+  icon: String
   parameters: [SDParameterInput!]!
 }
 

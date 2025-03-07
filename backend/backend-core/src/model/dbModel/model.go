@@ -1,9 +1,8 @@
 package dbModel
 
 import (
-	"time"
-
 	"gorm.io/gorm"
+	"time"
 )
 
 type KPIDefinitionEntity struct {
