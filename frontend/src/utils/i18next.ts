@@ -1,29 +1,11 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import enTranslation from "@/utils/locales/en.json";
+import czTranslation from "@/utils/locales/cz.json";
 
 const resources = {
-  en: {
-    translation: {
-      home: "Home",
-      devices: "Devices",
-      members: "Members",
-      automations: "Automations",
-      settings: "Settings",
-      darkMode: "Use dark mode",
-      language: "Language",
-    },
-  },
-  cz: {
-    translation: {
-      home: "Domů",
-      devices: "Zařízení",
-      members: "Uživatelé",
-      automations: "Automatizace",
-      settings: "Nastavení",
-      darkMode: "Použít tmavý režim",
-      language: "Jazyk",
-    },
-  },
+  en: { translation: enTranslation },
+  cz: { translation: czTranslation },
 };
 
 // Get stored language or default to English

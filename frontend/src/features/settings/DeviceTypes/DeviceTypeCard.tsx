@@ -1,10 +1,10 @@
-import { useState } from "react";
 import styled from "styled-components";
-import { FaEdit, FaList, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaList } from "react-icons/fa";
 import { SdTypesQuery } from "@/generated/graphql";
 import { Button } from "@/components/ui/button";
-import { IoIosCloudOutline } from "react-icons/io";
 import { getIcon } from "@/utils/getIcon";
+import { TbTrash } from "react-icons/tb";
+import { useNavigate } from "react-router-dom";
 
 const Card = styled.div`
   background: var(--color-grey-0);
@@ -15,7 +15,7 @@ const Card = styled.div`
   min-width: 300px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1rem;
   box-shadow: 0px 2px 6px var(--color-grey-200);
 `;
 
@@ -43,34 +43,9 @@ const Icon = styled.div`
   font-size: 1.2rem;
 `;
 
-const ParameterList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  border-top: 1px solid var(--color-grey-300);
-  padding-top: 5px;
-`;
-
 const ButtonGroup = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-top: 10px;
-`;
-
-const DetailsButton = styled.button`
-  background: var(--color-grey-400);
-  color: var(--color-white);
-  border: none;
-  padding: 8px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-
-  &:hover {
-    background: var(--color-grey-300);
-  }
 `;
 
 type DeviceTypeCardProps = {
@@ -78,10 +53,9 @@ type DeviceTypeCardProps = {
 };
 
 export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
-  const [showAll, setShowAll] = useState(false);
-  const { denotation, label, icon, parameters } = deviceType;
-  const visibleParams = parameters.slice(0, 2);
-  const hiddenParams = parameters.slice(2);
+  const navigate = useNavigate();
+
+  const { denotation, label, icon, parameters, id } = deviceType;
   const IconComponent = getIcon(icon || "TbQuestionMark");
 
   return (
@@ -91,31 +65,15 @@ export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
         <Icon>{IconComponent && <IconComponent />}</Icon>
       </Header>
       <p>Denotation: {denotation}</p>
-      <p>Parameters:</p>
-      <ParameterList>
-        {visibleParams.map((param) => (
-          <p key={param.id}>
-            {param.denotation}: {param.type}
-          </p>
-        ))}
-        {showAll &&
-          hiddenParams.map((param) => (
-            <p key={param.id}>
-              {param.denotation}: {param.type}
-            </p>
-          ))}
-      </ParameterList>
-      {hiddenParams.length > 0 && (
-        <DetailsButton onClick={() => setShowAll(!showAll)}>
-          {showAll ? <FaChevronUp /> : <FaChevronDown />} Details
-        </DetailsButton>
-      )}
+      <Button onClick={() => navigate(`/settings/device-types/${id}`)}>
+        View Details
+      </Button>
       <ButtonGroup>
         <Button>
-          <FaEdit /> Edit
-        </Button>
-        <Button>
           <FaList /> View Instances
+        </Button>
+        <Button variant={"destructive"}>
+          <TbTrash /> Delete
         </Button>
       </ButtonGroup>
     </Card>

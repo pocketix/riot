@@ -11,6 +11,7 @@ import ApolloSandboxPage from "./pages/ApolloSandboxPage";
 import GeneralSettings from "./features/settings/GeneralSettings";
 import PersonalInfoSettings from "./features/settings/PersonalInfoSettings";
 import DeviceTypesSettings from "./features/settings/DeviceTypes/DeviceTypesSettings";
+import DeviceTypeDetail from "./features/settings/DeviceTypes/DeviceTypeDetail";
 
 export default function App() {
   return (
@@ -30,6 +31,10 @@ export default function App() {
                   element={<PersonalInfoSettings />}
                 />
                 <Route path="device-types" element={<DeviceTypesSettings />} />
+                <Route
+                  path="/settings/device-types/:id"
+                  element={<DeviceTypeDetail />}
+                />
                 <Route index element={<GeneralSettings />} />
               </Route>
               <Route

@@ -23,7 +23,7 @@ const Header = styled.div`
 const Grid = styled.div`
   display: grid;
   gap: 1.5rem;
-  align-items: start;
+  /* align-items: start; */
   justify-content: center;
   grid-template-columns: 1fr;
 
