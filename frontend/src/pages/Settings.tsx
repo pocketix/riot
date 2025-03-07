@@ -11,12 +11,14 @@ import { useTranslation } from "react-i18next";
 const StyledPage = styled.div`
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
   padding: 2rem;
   color: hsl(var(--color-grey-900));
   overflow: hidden;
   gap: 1.2rem;
   overflow-y: auto;
+  width: 100%;
+  align-self: center;
+  max-width: 1300px;
 `;
 
 export default function Settings() {

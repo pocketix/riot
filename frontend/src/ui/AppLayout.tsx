@@ -40,6 +40,7 @@ const Main = styled.main`
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  flex-grow: 1;
   overflow-y: auto;
   grid-area: main;
 
@@ -52,17 +53,18 @@ const Main = styled.main`
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100%;
   width: 100%;
+  height: 100%;
   max-width: 480px;
   margin: 0 auto;
+  flex-grow: 1;
 
   @media (min-width: ${breakpoints.sm}) {
     max-width: 768px;
   }
 
   @media (min-width: ${breakpoints.md}) {
-    max-width: 1300px;
+    max-width: 100%;
   }
 `;
 
