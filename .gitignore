@@ -1,5 +1,6 @@
 # Ingore the IDE folder
 .idea
+.DS_Store
 
 # Ignore most of the docker directory contents
 /docker/mongo-data

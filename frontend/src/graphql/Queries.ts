@@ -34,8 +34,11 @@ export const GET_SD_TYPES = gql`
     sdTypes {
       id
       denotation
+      label
+      icon
       parameters {
         id
+        label
         denotation
         type
       }
