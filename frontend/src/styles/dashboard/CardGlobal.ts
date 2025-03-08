@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from 'styled-components'
 
 export const Container = styled.div`
   position: relative;
@@ -10,7 +10,7 @@ export const Container = styled.div`
   margin: 0;
   width: 100%;
   height: 100%;
-`;
+`
 
 export const DragHandle = styled.div`
   position: absolute;
@@ -23,7 +23,7 @@ export const DragHandle = styled.div`
   border: 1px solid hsl(var(--border));
   border-radius: 12px;
   cursor: grab;
-`;
+`
 
 export const ArrowContainer = styled.div`
   position: absolute;
@@ -40,19 +40,19 @@ export const ArrowContainer = styled.div`
   flex-direction: row;
   gap: 8px;
   margin-top: 8px;
-`;
+`
 
-export const Arrow = styled.button<{ disabled?: boolean, $red?: boolean, $green?: boolean }>`
-  background-color: ${props => {
-    if (props.disabled) return 'hsl(var(--primary))';
-    if (props.$red) return 'red';
-    if (props.$green) return 'hsl(var(--chart-2))';
-    return 'hsl(var(--primary))';
+export const Arrow = styled.button<{ disabled?: boolean; $red?: boolean; $green?: boolean }>`
+  background-color: ${(props) => {
+    if (props.disabled) return 'hsl(var(--primary))'
+    if (props.$red) return 'red'
+    if (props.$green) return 'hsl(var(--chart-2))'
+    return 'hsl(var(--primary))'
   }};
-  opacity: ${props => props.disabled ? 0.5 : 1};
+  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
   color: hsl(var(--primary-foreground));
   transition: background-color 0.3s, opacity 0.3s;
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};
   padding: 4px 8px;
   border: 1px solid hsl(var(--border));
   border-radius: 4px;
@@ -60,9 +60,9 @@ export const Arrow = styled.button<{ disabled?: boolean, $red?: boolean, $green?
   align-items: center;
   justify-content: center;
   &:hover {
-    opacity: ${props => props.disabled ? 0.5 : 0.8};
+    opacity: ${(props) => (props.disabled ? 0.5 : 0.8)};
   }
-`;
+`
 
 export const DeleteIconContainer = styled.div`
   position: absolute;
@@ -76,4 +76,4 @@ export const DeleteIconContainer = styled.div`
   padding: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
-`;
+`

@@ -28,3 +28,21 @@ export const GET_PARAMETERS = gql`
     }
     }
 `;
+
+export const GET_SAMPLEDATA = gql`
+    query StatisticsQuerySensorsWithFields($sensors: SensorsWithFields!, $request: StatisticsInput) {
+    statisticsQuerySensorsWithFields(sensors: $sensors, request: $request) {
+        time
+        data
+  }
+}
+`;
+
+export const GET_TIME_SERIES_DATA = gql`
+    query StatisticsQuerySensorsWithFields($sensors: SensorsWithFields!, $request: StatisticsInput) {
+    statisticsQuerySensorsWithFields(sensors: $sensors, request: $request) {
+        time
+        data
+  }
+}
+`;

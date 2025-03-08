@@ -17,6 +17,7 @@ frontend/*.local
 frontend/.vscode/*
 frontend/node_modules
 frontend/.env
+.vscode/launch.json
 
 # Ignore backend executables
 backend/bin
