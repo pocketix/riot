@@ -10,6 +10,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/xjohnp00/jiap/backend/shared/time-series-store/src/internal"
+	"log"
 	"os"
 )
 
@@ -90,7 +91,7 @@ func consumeReadRequests(rabbitMQClient rabbitmq.Client, influx internal.Influx2
 			jsonData, err := json.Marshal(responseWithData)
 
 			if err != nil {
-				fmt.Printf("Error During Marshall: %s", err)
+				log.Printf("Error During Marshall: %s", err)
 			}
 
 			err = rabbitMQClient.PublishJSONMessageRPC(
@@ -102,7 +103,7 @@ func consumeReadRequests(rabbitMQClient rabbitmq.Client, influx internal.Influx2
 			)
 
 			if err != nil {
-				fmt.Printf("Error: %s", err)
+				log.Fatalf("Error: %s", err)
 				return err
 			}
 			return nil
