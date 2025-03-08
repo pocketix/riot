@@ -221,12 +221,22 @@ type OutputData struct {
 type Query struct {
 }
 
+type SDCommandInvocation struct {
+	ID             uint32 `json:"id"`
+	InvocationTime string `json:"invocationTime"`
+	Payload        string `json:"payload"`
+	UserID         uint32 `json:"userId"`
+	CommandID      uint32 `json:"commandId"`
+	SdInstanceID   uint32 `json:"sdInstanceId"`
+}
+
 type SDInstance struct {
-	ID              uint32 `json:"id"`
-	UID             string `json:"uid"`
-	ConfirmedByUser bool   `json:"confirmedByUser"`
-	UserIdentifier  string `json:"userIdentifier"`
-	Type            SDType `json:"type"`
+	ID                 uint32                `json:"id"`
+	UID                string                `json:"uid"`
+	ConfirmedByUser    bool                  `json:"confirmedByUser"`
+	UserIdentifier     string                `json:"userIdentifier"`
+	Type               SDType                `json:"type"`
+	CommandInvocations []SDCommandInvocation `json:"commandInvocations"`
 }
 
 type SDInstanceGroup struct {

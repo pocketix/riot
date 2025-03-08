@@ -265,12 +265,22 @@ input SDTypeInput {
   parameters: [SDParameterInput!]!
 }
 
+type SDCommandInvocation {
+  id: ID!
+  invocationTime: String!
+  payload: String!
+  userId: ID!
+  commandId: ID!
+  sdInstanceId: ID!
+}
+
 type SDInstance {
   id: ID!
   uid: String!
   confirmedByUser: Boolean!
   userIdentifier: String!
   type: SDType!
+  commandInvocations: [SDCommandInvocation!]!
 }
 
 input SDInstanceUpdateInput {
@@ -1986,6 +1996,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSDInstance(ctx context.C
 				return ec.fieldContext_SDInstance_userIdentifier(ctx, field)
 			case "type":
 				return ec.fieldContext_SDInstance_type(ctx, field)
+			case "commandInvocations":
+				return ec.fieldContext_SDInstance_commandInvocations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDInstance", field.Name)
 		},
@@ -4087,6 +4099,8 @@ func (ec *executionContext) fieldContext_Query_sdInstances(_ context.Context, fi
 				return ec.fieldContext_SDInstance_userIdentifier(ctx, field)
 			case "type":
 				return ec.fieldContext_SDInstance_type(ctx, field)
+			case "commandInvocations":
+				return ec.fieldContext_SDInstance_commandInvocations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDInstance", field.Name)
 		},
@@ -4651,6 +4665,270 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _SDCommandInvocation_id(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDCommandInvocation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDCommandInvocation_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uint32)
+	fc.Result = res
+	return ec.marshalNID2uint32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDCommandInvocation_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDCommandInvocation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDCommandInvocation_invocationTime(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDCommandInvocation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDCommandInvocation_invocationTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InvocationTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDCommandInvocation_invocationTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDCommandInvocation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDCommandInvocation_payload(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDCommandInvocation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDCommandInvocation_payload(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Payload, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDCommandInvocation_payload(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDCommandInvocation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDCommandInvocation_userId(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDCommandInvocation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDCommandInvocation_userId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uint32)
+	fc.Result = res
+	return ec.marshalNID2uint32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDCommandInvocation_userId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDCommandInvocation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDCommandInvocation_commandId(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDCommandInvocation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDCommandInvocation_commandId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CommandID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uint32)
+	fc.Result = res
+	return ec.marshalNID2uint32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDCommandInvocation_commandId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDCommandInvocation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDCommandInvocation_sdInstanceId(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDCommandInvocation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDCommandInvocation_sdInstanceId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SdInstanceID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uint32)
+	fc.Result = res
+	return ec.marshalNID2uint32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDCommandInvocation_sdInstanceId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDCommandInvocation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _SDInstance_id(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDInstance) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SDInstance_id(ctx, field)
 	if err != nil {
@@ -4878,6 +5156,64 @@ func (ec *executionContext) fieldContext_SDInstance_type(_ context.Context, fiel
 				return ec.fieldContext_SDType_parameters(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDInstance_commandInvocations(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDInstance) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDInstance_commandInvocations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CommandInvocations, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]graphQLModel.SDCommandInvocation)
+	fc.Result = res
+	return ec.marshalNSDCommandInvocation2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInvocationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDInstance_commandInvocations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDInstance",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SDCommandInvocation_id(ctx, field)
+			case "invocationTime":
+				return ec.fieldContext_SDCommandInvocation_invocationTime(ctx, field)
+			case "payload":
+				return ec.fieldContext_SDCommandInvocation_payload(ctx, field)
+			case "userId":
+				return ec.fieldContext_SDCommandInvocation_userId(ctx, field)
+			case "commandId":
+				return ec.fieldContext_SDCommandInvocation_commandId(ctx, field)
+			case "sdInstanceId":
+				return ec.fieldContext_SDCommandInvocation_sdInstanceId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SDCommandInvocation", field.Name)
 		},
 	}
 	return fc, nil
@@ -5736,6 +6072,8 @@ func (ec *executionContext) fieldContext_Subscription_onSDInstanceRegistered(_ c
 				return ec.fieldContext_SDInstance_userIdentifier(ctx, field)
 			case "type":
 				return ec.fieldContext_SDInstance_type(ctx, field)
+			case "commandInvocations":
+				return ec.fieldContext_SDInstance_commandInvocations(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDInstance", field.Name)
 		},
@@ -9214,6 +9552,70 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
+var sDCommandInvocationImplementors = []string{"SDCommandInvocation"}
+
+func (ec *executionContext) _SDCommandInvocation(ctx context.Context, sel ast.SelectionSet, obj *graphQLModel.SDCommandInvocation) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sDCommandInvocationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SDCommandInvocation")
+		case "id":
+			out.Values[i] = ec._SDCommandInvocation_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "invocationTime":
+			out.Values[i] = ec._SDCommandInvocation_invocationTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "payload":
+			out.Values[i] = ec._SDCommandInvocation_payload(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "userId":
+			out.Values[i] = ec._SDCommandInvocation_userId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "commandId":
+			out.Values[i] = ec._SDCommandInvocation_commandId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sdInstanceId":
+			out.Values[i] = ec._SDCommandInvocation_sdInstanceId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var sDInstanceImplementors = []string{"SDInstance"}
 
 func (ec *executionContext) _SDInstance(ctx context.Context, sel ast.SelectionSet, obj *graphQLModel.SDInstance) graphql.Marshaler {
@@ -9247,6 +9649,11 @@ func (ec *executionContext) _SDInstance(ctx context.Context, sel ast.SelectionSe
 			}
 		case "type":
 			out.Values[i] = ec._SDInstance_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "commandInvocations":
+			out.Values[i] = ec._SDInstance_commandInvocations(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -10177,6 +10584,54 @@ func (ec *executionContext) marshalNOutputData2ᚕgithubᚗcomᚋMichalBuresᚑO
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalNOutputData2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐOutputData(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSDCommandInvocation2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInvocation(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDCommandInvocation) graphql.Marshaler {
+	return ec._SDCommandInvocation(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSDCommandInvocation2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInvocationᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDCommandInvocation) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSDCommandInvocation2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInvocation(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
