@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { FaChevronDown } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const PickerContainer = styled.div`
   position: relative;
@@ -21,11 +22,6 @@ const PickerButton = styled.button`
   display: flex;
   justify-content: space-between;
   align-items: center;
-
-  &:focus {
-    outline: none;
-    border-color: var(--color-grey-500);
-  }
 `;
 
 const Dropdown = styled.ul`
@@ -44,13 +40,11 @@ const Dropdown = styled.ul`
   overflow-y: auto;
 `;
 
-const DropdownItem = styled.li<{ $active: boolean }>`
+const DropdownItem = styled.li`
   padding: 0.8rem;
   font-size: 1.1rem;
   cursor: pointer;
   text-transform: capitalize;
-  background: ${({ $active }) =>
-    $active ? "var(--color-grey-300)" : "var(--color-grey-200)"};
   color: var(--color-grey-900);
   transition: background 0.2s ease-in-out;
 
@@ -59,15 +53,16 @@ const DropdownItem = styled.li<{ $active: boolean }>`
   }
 `;
 
+// ✅ Define Props Type
 interface PickerProps {
   activeTab: string;
-  setActiveTab: (tab: string) => void;
-  tabs: string[];
+  tabs: { name: string; path: string }[];
 }
 
-export default function Picker({ activeTab, setActiveTab, tabs }: PickerProps) {
+export default function Picker({ activeTab, tabs }: PickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -78,6 +73,7 @@ export default function Picker({ activeTab, setActiveTab, tabs }: PickerProps) {
         setIsOpen(false);
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -92,13 +88,12 @@ export default function Picker({ activeTab, setActiveTab, tabs }: PickerProps) {
         <Dropdown>
           {tabs.map((tab) => (
             <DropdownItem
-              key={tab}
-              $active={activeTab === tab}
+              key={tab.name}
               onClick={() => {
-                setActiveTab(tab);
+                navigate(tab.path);
                 setIsOpen(false);
               }}>
-              {tab}
+              {tab.name}
             </DropdownItem>
           ))}
         </Dropdown>

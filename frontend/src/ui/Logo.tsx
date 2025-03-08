@@ -1,4 +1,6 @@
+import { useDarkMode } from "@/context/DarkModeContext";
 import { breakpoints } from "@/styles/Breakpoints";
+import { useMediaQuery } from "react-responsive";
 import styled from "styled-components";
 
 const StyledLogo = styled.div`
@@ -10,16 +12,21 @@ const StyledLogo = styled.div`
 `;
 
 const Img = styled.img`
-  height: 7.6rem;
+  height: 5.2rem;
   width: auto;
 `;
 
 function Logo() {
-  return (
-    <StyledLogo>
-      <Img src="/vite.svg" alt="Logo" />
-    </StyledLogo>
-  );
+  const { isDarkMode } = useDarkMode();
+  const isMobile = useMediaQuery({ maxWidth: parseInt(breakpoints.sm) - 1 });
+
+  const logo = isMobile
+    ? "/riot-phone.svg"
+    : isDarkMode
+    ? "/riot-light.svg"
+    : "/riot-dark.svg";
+
+  return <StyledLogo>{logo && <Img src={logo} alt="Logo" />}</StyledLogo>;
 }
 
 export default Logo;

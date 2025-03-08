@@ -46,9 +46,12 @@ const NavItem = styled(NavLink)`
   }
 
   & svg {
-    margin-bottom: 0.4rem;
     width: 1.4rem;
     height: 1.4rem;
+  }
+
+  &.active svg {
+    color: var(--color-neon-1);
   }
 
   @media (min-width: ${breakpoints.sm}) {
@@ -59,22 +62,26 @@ const NavItem = styled(NavLink)`
     flex-direction: row;
     justify-content: flex-start;
     gap: 1rem;
-    width: 250px;
-    padding: 0.6rem 2.4rem;
+    width: 220px;
+    padding: 0.8rem 2rem;
     transition: all 0.3s ease-in-out;
     font-size: 1rem;
-    letter-spacing: 0.1rem;
-    margin-right: 1.2rem;
+    letter-spacing: 0.05rem;
 
     &:nth-child(3) {
       order: -1;
     }
 
     &.active {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: var(--color-grey-300);
     }
     &:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: var(--color-grey-300);
+    }
+    & svg {
+      width: 1.5rem;
+      height: 1.5rem;
+      color: var(--color-grey-400);
     }
   }
 `;

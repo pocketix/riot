@@ -4,6 +4,7 @@ import LanguageSwitcher from "../../ui/LanguageSwitcher";
 import { breakpoints } from "@/styles/Breakpoints";
 import { FaArrowRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const Container = styled.div`
   display: flex;
@@ -35,14 +36,16 @@ const SettingsItem = styled.div`
 
 export default function GeneralSettings() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
   return (
     <Container>
       <SettingsItem>
-        <span>Use dark mode</span>
+        <span>{t("darkMode")}</span>
         <DarkModeToggle />
       </SettingsItem>
       <SettingsItem>
-        <span>Language</span>
+        <span>{t("language")}</span>
         <LanguageSwitcher />
       </SettingsItem>
       <SettingsItem onClick={() => navigate("/settings/apollo-sandbox")}>
