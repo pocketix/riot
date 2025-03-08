@@ -47,6 +47,8 @@ type RelationalDatabaseClient interface {
 	LoadSDInstanceGroup(id uint32) sharedUtils.Result[dllModel.SDInstanceGroup]
 	PersistSDInstanceGroup(sdInstanceGroup dllModel.SDInstanceGroup) sharedUtils.Result[uint32]
 	DeleteSDInstanceGroup(id uint32) error
+	// TODO: Implement user- and auth-related DB client operations
+	// LoadUser() sharedUtils.Result[dbModel.UserEntity] TODO: user sub (Subject) for user record lookup
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")

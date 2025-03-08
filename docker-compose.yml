@@ -20,6 +20,8 @@ services:
     environment:
       POSTGRES_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB_NAME}
       RABBITMQ_URL: ${RABBITMQ_URL}
+      GOOGLE_OAUTH2_CLIENT_ID: 939239491866-unqfnuoqc0loboqoq9l4shji2i1atpei.apps.googleusercontent.com
+      GOOGLE_OAUTH2_CLIENT_SECRET: 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
     depends_on:
       - rabbitmq
       - postgres
