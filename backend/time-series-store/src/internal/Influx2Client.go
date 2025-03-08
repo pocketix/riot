@@ -172,7 +172,7 @@ func createAggregation(body sharedModel.ReadRequestBody) string {
 // mapToOutputData converts a map[string]interface{} to an OutputData struct.
 func mapToOutputData(influxOutput map[string]interface{}) sharedModel.OutputData {
 	outputData := sharedModel.OutputData{
-		Result:     influxOutput["result"].(string),
+		Result:     "",
 		Table:      influxOutput["table"].(int64),
 		Time:       influxOutput["time"].(time.Time),
 		DeviceID:   influxOutput["deviceId"].(string),
@@ -184,6 +184,19 @@ func mapToOutputData(influxOutput map[string]interface{}) sharedModel.OutputData
 		delete(influxOutput, "deviceType")
 	} else {
 		outputData.DeviceType = ""
+	}
+
+	if value, exists := influxOutput["result"]; exists {
+		outputData.DeviceType = value.(string)
+		delete(influxOutput, "result")
+	} else {
+		outputData.DeviceType = ""
+	}
+
+	for key, value := range influxOutput {
+		if value == nil {
+			delete(influxOutput, key)
+		}
 	}
 
 	delete(influxOutput, "result")

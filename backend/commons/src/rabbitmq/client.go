@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -140,52 +141,68 @@ func (c *ClientImpl) SetupMessageConsumptionWithCorrelationId(queueName string, 
 
 	messageChannel, err := c.channel.Consume(queueName, consumerName, false, false, false, false, nil)
 	if err != nil {
+		log.Printf("SetupMessageConsumptionWithCorrelationId | %s", err)
 		return err
 	}
 
 	// Timeout after a time, so you don't ping-pong with a request. Most likely the API won't even care after this time
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	for {
 		select {
 		case message, ok := <-messageChannel:
 			if !ok {
-				return fmt.Errorf("message channel closed")
+				return fmt.Errorf("SetupMessageConsumptionWithCorrelationId | Message channel closed")
 			}
 
-			fmt.Printf("Seeing message correlationId %s from a consumer %s\n", message.CorrelationId, consumerName)
+			log.Printf("SetupMessageConsumptionWithCorrelationId | Seeing message correlationId %s from a consumer %s\n", message.CorrelationId, consumerName)
 
 			if message.CorrelationId != correlationId {
 				// Return the message back to the queue if it has a wrong correlation ID
 				if err := message.Nack(false, true); err != nil {
+					log.Printf("SetupMessageConsumptionWithCorrelationId | %s", err)
 					return err
 				}
 				continue
 			}
 
 			if err := message.Ack(false); err != nil {
+				log.Printf("SetupMessageConsumptionWithCorrelationId | %s", err)
 				return err
 			}
 
 			err := c.channel.Cancel(consumerName, true)
 			if err != nil {
+				log.Printf("SetupMessageConsumptionWithCorrelationId | %s", err)
 				return err
 			}
 
 			if err := messageConsumerFunction(message); err != nil {
+				log.Printf("SetupMessageConsumptionWithCorrelationId | %s", err)
 				return err
 			}
+
+			log.Println("SetupMessageConsumptionWithCorrelationId | Consuming message and closing channel")
+
+			err = c.channel.Cancel(consumerName, true) // Stop consuming
+			if err != nil {
+				log.Printf("SetupMessageConsumptionWithCorrelationId | %s", err)
+				return err
+			}
+
+			log.Println("SetupMessageConsumptionWithCorrelationId | Closed channel, exiting")
 
 			return nil // Exit after processing
 
 		case <-ctx.Done():
-			fmt.Println("Timeout reached. Stopping message consumption.")
+			log.Println("SetupMessageConsumptionWithCorrelationId | Timeout reached. Stopping message consumption.")
 			err := c.channel.Cancel(consumerName, true) // Stop consuming
 			if err != nil {
+				log.Printf("SetupMessageConsumptionWithCorrelationId | %s", err)
 				return err
 			}
-			return fmt.Errorf("message consumption timed out after 100 seconds")
+			return fmt.Errorf("SetupMessageConsumptionWithCorrelationId | message consumption timed out after 100 seconds")
 		}
 	}
 }
