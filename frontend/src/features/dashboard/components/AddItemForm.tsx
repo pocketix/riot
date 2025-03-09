@@ -251,6 +251,7 @@ export function AddItemForm({ setDialogOpen, onAddItem }: AddItemFormProps) {
                       }}
                       selectedParameter={selectedParameter!}
                       data={processedData}
+                      instances={data?.sdInstances || []}
                     />
                   </FormControl>
                   <FormMessage />

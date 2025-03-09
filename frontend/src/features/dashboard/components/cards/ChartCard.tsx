@@ -12,6 +12,7 @@ import { darkTheme, lightTheme } from './ChartThemes'
 import { ToolTip } from './tooltips/LineChartToolTip'
 import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -51,7 +52,7 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
   const [data, setData] = useState([])
   const [chartConfig, setChartConfig] = useState<any>()
 
-  const [getChartData, { data: chartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
+  const [getChartData, { error, data: chartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
 
   const fetchData = () => {
     if (configuration) {
@@ -96,6 +97,7 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
       console.log(processedData)
       setData(processedData)
     }
+    console.log(error)
   }, [chartData, configuration])
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
@@ -137,6 +139,7 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
     }
   ]
 
+  // TODO: Alert
   if (!chartConfig || !data) return null
 
   return (
@@ -147,31 +150,37 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
         </DragHandle>
       )}
       {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
-      <div className="pl-4 pt-2 font-semibold">{chartConfig.cardTitle}</div>
-      <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
-        <ResponsiveLine
-          data={lineData}
-          margin={chartConfig.margin}
-          xScale={chartConfig.xScale as any}
-          yScale={chartConfig.yScale as any}
-          animate={chartConfig.animate}
-          yFormat={chartConfig.yFormat}
-          axisBottom={chartConfig.axisBottom}
-          axisLeft={chartConfig.axisLeft}
-          pointSize={chartConfig.pointSize}
-          pointColor={chartConfig.pointColor}
-          pointBorderWidth={chartConfig.pointBorderWidth}
-          pointBorderColor={chartConfig.pointBorderColor}
-          pointLabel={chartConfig.pointLabel}
-          pointLabelYOffset={chartConfig.pointLabelYOffset}
-          enableTouchCrosshair={chartConfig.enableTouchCrosshair}
-          useMesh={chartConfig.useMesh}
-          enableGridX={chartConfig.enableGridX}
-          enableGridY={chartConfig.enableGridY}
-          tooltip={(pos: PointTooltipProps) => <ToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}
-          theme={isDarkMode ? darkTheme : lightTheme}
-        />
-      </ChartContainer>
+      {data && data.length > 0 ? (
+        <>
+          <div className="pl-4 pt-2 font-semibold">{chartConfig.cardTitle}</div>
+          <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
+            <ResponsiveLine
+              data={lineData}
+              margin={chartConfig.margin}
+              xScale={chartConfig.xScale as any}
+              yScale={chartConfig.yScale as any}
+              animate={chartConfig.animate}
+              yFormat={chartConfig.yFormat}
+              axisBottom={chartConfig.axisBottom}
+              axisLeft={chartConfig.axisLeft}
+              pointSize={chartConfig.pointSize}
+              pointColor={chartConfig.pointColor}
+              pointBorderWidth={chartConfig.pointBorderWidth}
+              pointBorderColor={chartConfig.pointBorderColor}
+              pointLabel={chartConfig.pointLabel}
+              pointLabelYOffset={chartConfig.pointLabelYOffset}
+              enableTouchCrosshair={chartConfig.enableTouchCrosshair}
+              useMesh={chartConfig.useMesh}
+              enableGridX={chartConfig.enableGridX}
+              enableGridY={chartConfig.enableGridY}
+              tooltip={(pos: PointTooltipProps) => <ToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}
+              theme={isDarkMode ? darkTheme : lightTheme}
+            />
+          </ChartContainer>
+        </>
+      ) : (
+        <Skeleton className="w-full h-full" />
+      )}
       {editModeEnabled && (
         <AccessibilityContainer
           cols={cols}

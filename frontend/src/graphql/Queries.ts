@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from '@apollo/client'
 
 export const GET_INSTANCES = gql`
   query SdInstances {
@@ -13,7 +13,7 @@ export const GET_INSTANCES = gql`
       }
     }
   }
-`;
+`
 
 export const GET_PARAMETERS = gql`
   query SdType($sdTypeId: ID!) {
@@ -27,7 +27,7 @@ export const GET_PARAMETERS = gql`
       }
     }
   }
-`;
+`
 
 export const GET_SD_TYPES = gql`
   query SDTypes {
@@ -44,22 +44,32 @@ export const GET_SD_TYPES = gql`
       }
     }
   }
-`;
+`
 
 export const GET_SAMPLEDATA = gql`
-    query StatisticsQuerySensorsWithFields($sensors: SensorsWithFields!, $request: StatisticsInput) {
+  query StatisticsQuerySensorsWithFields($sensors: SensorsWithFields!, $request: StatisticsInput) {
     statisticsQuerySensorsWithFields(sensors: $sensors, request: $request) {
-        time
-        data
+      time
+      data
+    }
   }
-}
-`;
+`
 
 export const GET_TIME_SERIES_DATA = gql`
-    query StatisticsQuerySensorsWithFields($sensors: SensorsWithFields!, $request: StatisticsInput) {
+  query StatisticsQuerySensorsWithFields($sensors: SensorsWithFields!, $request: StatisticsInput) {
     statisticsQuerySensorsWithFields(sensors: $sensors, request: $request) {
-        time
-        data
+      time
+      data
+    }
   }
-}
-`;
+`
+
+export const GET_TABLE_DATA = gql`
+  query StatisticsQuerySensorsWithFields($sensors: SensorsWithFields!, $request: StatisticsInput) {
+    statisticsQuerySensorsWithFields(sensors: $sensors, request: $request) {
+      data
+      time
+      deviceId
+    }
+  }
+`

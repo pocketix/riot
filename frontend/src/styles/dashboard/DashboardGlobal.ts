@@ -16,9 +16,6 @@ export const DashboardRoot = styled.div`
   position: relative;
   box-sizing: border-box;
   width: 100%;
-  overflow: hidden;
-  height: fit-content;
-  overflow-y: auto;
   max-height: 100vh;
   min-height: calc(100vh - 60px); /* Subtract the height of the navbar */
 `
@@ -30,8 +27,8 @@ export const Navbar = styled.div`
   left: 0;
   z-index: 100;
   width: 100%;
-  color: black;
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
   padding: 10px;
@@ -45,5 +42,5 @@ export const Navbar = styled.div`
 
 export const MainGrid = styled.div`
   margin-top: 60px; /* Height of the navbar */
-  overflow-y: auto;
+  height: calc(100% + 100px);
 `

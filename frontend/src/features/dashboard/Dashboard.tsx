@@ -393,6 +393,7 @@ const Dashboard = () => {
                       height={rowHeight}
                       width={width}
                       setHighlightedCardID={setHighlightedCardID}
+                      configuration={details[item.i]}
                     />
                   </Card>
                 )
@@ -438,7 +439,6 @@ const Dashboard = () => {
                         setLayouts(updatedLayouts)
                         saveToLS('layouts', updatedLayouts)
                       }}
-                      configuration={details[item.i]}
                       editModeEnabled={editMode}
                       breakPoint={currentBreakpoint}
                       cols={cols}
@@ -446,6 +446,7 @@ const Dashboard = () => {
                       height={rowHeight}
                       width={width}
                       setHighlightedCardID={setHighlightedCardID}
+                      configuration={details[item.i]}
                     />
                   </Card>
                 )

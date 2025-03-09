@@ -5,8 +5,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './AccessibilityContainer'
+import { GET_TABLE_DATA } from '@/graphql/Queries'
+import { useLazyQuery } from '@apollo/client'
 import { TableCardInfo } from '@/types/TableCardInfo'
-import { SdParameterType } from '@/generated/graphql'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -39,13 +41,15 @@ interface TableCardProps {
   setHighlightedCardID: (id: string) => void
 
   // Data
-  data?: TableCardInfo
+  configuration: any
 }
 
-export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, data }: TableCardProps) => {
+export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration }: TableCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
+  const [chartConfig, setChartConfig] = useState<TableCardInfo>()
+  const [fetchTableData] = useLazyQuery(GET_TABLE_DATA)
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -73,94 +77,90 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
     }, [layout, item])
   }
 
+  const fetchData = async (sensors: { key: string; values: string }[], from: string, to: string, aggregateMinutes: number, operation: string) => {
+    return fetchTableData({
+      variables: {
+        sensors: {
+          sensors
+        },
+        request: {
+          from: from,
+          to: to,
+          aggregateMinutes: aggregateMinutes,
+          operation: operation
+        }
+      }
+    })
+  }
+
   useEffect(() => {
     if (highlight) setHighlightedCardID(cardID)
   }, [cardID, highlight])
 
-  // calculate height and width from getboundingclientrect
-  const example_data: TableCardInfo = {
-    _cardID: 'exampleCardID',
-    title: 'Sensor',
-    icon: 'temperature-icon',
-    aggregatedTime: '1h',
-    instances: [
-      {
-        order: 1,
-        instance: {
-          uid: 'instance1',
-          id: 'instance1-id',
-          userIdentifier: 'example-user'
-        },
-        params: [
-          {
-            denotation: 'temperature',
-            id: '1',
-            type: SdParameterType.Number
-          }
-        ]
-      }
-    ],
-    columns: [
-      {
-        header: 'Mean',
-        function: 'MEAN'
-      },
-      {
-        header: 'Min',
-        function: 'MIN'
-      },
-      {
-        header: 'Max',
-        function: 'MAX'
-      }
-    ],
-    rows: [
-      {
-        name: 'Kitchen',
-        values: [
-          {
-            value: '22.5'
-          },
-          {
-            value: '20.5'
-          },
-          {
-            value: '24.5'
-          }
-        ]
-      },
-      {
-        name: 'Living Room',
-        values: [
-          {
-            value: '23.1'
-          },
-          {
-            value: '21.5'
-          },
-          {
-            value: '24.5'
-          }
-        ]
-      },
-      {
-        name: 'Bathroom',
-        values: [
-          {
-            value: '21.8'
-          },
-          {
-            value: '19.5'
-          },
-          {
-            value: '24.3'
-          }
-        ]
-      }
-    ]
-  }
+  useEffect(() => {
+    const fetchDataAndConfig = async () => {
+      if (!configuration) return
 
-  data = example_data
+      const config = JSON.parse(configuration.visualizationConfig) as TableCardInfo
+      if (!config) return
+
+      const sensors = config.rows.map((row) => ({
+        key: row.instance.uid,
+        values: row.parameter.denotation
+      }))
+
+      // Cleanup row.values
+      config.rows.forEach((row) => {
+        row.values = []
+      })
+
+      if (!sensors.length) return
+
+      // Create array of promises for all operations
+      let results
+      try {
+        // Execute all queries in parallel
+        // results are returned in the same order as the queries
+        results = await Promise.all(config.columns.map((column) => fetchData(sensors, new Date(Date.now() - 3600000).toISOString(), new Date().toISOString(), 1000, column.function)))
+
+        const parsedData = results.map((result) => result.data.statisticsQuerySensorsWithFields)
+
+        let columnIndex = 0
+        parsedData.forEach((column) => {
+          // Make use of the fact that the results are in the same order as the queries
+          const functionName = config.columns[columnIndex].function
+          columnIndex++
+          // find each device in the column data for a specific function
+          sensors.forEach((sensor) => {
+            const instanceData = column.find((data: any) => data.deviceId === sensor.key)
+            // find the row corresponding to the deviceID
+            config.rows.forEach((row) => {
+              if (row.instance.uid === sensor.key) {
+                // parse the stringified data
+                let parsedData = JSON.parse(instanceData.data)
+                // console.log('PARSED DATA', parsedData[row.parameter.denotation]) // TODO: remove
+                row.values?.push({
+                  function: functionName,
+                  value: parsedData[row.parameter.denotation]
+                })
+              }
+            })
+          })
+        })
+
+        setChartConfig(config)
+        console.log('CONFIG', config)
+      } catch (error) {
+        console.error('Fetch error:', error)
+      }
+    }
+
+    fetchDataAndConfig()
+  }, [configuration])
+
+  if (!chartConfig || !chartConfig.columns || !chartConfig.rows || !chartConfig.rows.values) {
+    return <Skeleton className="w-full h-full" />
+  }
 
   return (
     <Container key={cardID} className={`${cardID}`}>
@@ -170,13 +170,13 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
         </DragHandle>
       )}
       {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
-      {/* <div className="pl-4 pt-2 font-semibold">{title}</div> */}
+      <div className="pl-4 pt-2 font-semibold">{chartConfig.title}</div>
       <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
         <table className="w-full h-fit">
           <thead className="border-b-[2px]">
             <tr>
-              <th className="text-left text-md">{data.title}</th>
-              {data.columns.map((column, index) => (
+              <th className="text-left text-md">{chartConfig?.tableTitle!}</th>
+              {chartConfig?.columns.map((column, index) => (
                 <th key={index} className="text-center text-xs">
                   {column.header}
                 </th>
@@ -184,14 +184,15 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
             </tr>
           </thead>
           <tbody>
-            {data.rows.map((row, rowIndex) => (
+            {chartConfig?.rows.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 <td className="text-sm">{row.name}</td>
-                {row.values.map((value, valueIndex) => (
-                  <td key={valueIndex} className="text-sm text-center">
-                    {value.value}
-                  </td>
-                ))}
+                {Array(row.values).length > 0 &&
+                  row.values!.map((value, valueIndex) => (
+                    <td key={valueIndex} className="text-sm text-center">
+                      {parseFloat(value.value).toFixed(chartConfig.decimalPlaces ?? 2)}
+                    </td>
+                  ))}
               </tr>
             ))}
           </tbody>

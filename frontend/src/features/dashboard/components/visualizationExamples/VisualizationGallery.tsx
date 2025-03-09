@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { Card } from '@/components/ui/card'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
+import { SdParameterType } from '@/generated/graphql'
 
 export const VisualizationGalleryContainer = styled.div`
   display: flex;
@@ -62,6 +63,88 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
     }
   ]
 
+  const dataTable: any = {
+    _cardID: 'exampleCardID',
+    title: 'Table',
+    icon: 'temperature-icon',
+    aggregatedTime: '1h',
+    instances: [
+      {
+        order: 1,
+        instance: {
+          uid: 'instance1',
+          id: 'instance1-id',
+          userIdentifier: 'example-user'
+        },
+        params: [
+          {
+            denotation: 'temperature',
+            id: '1',
+            type: SdParameterType.Number
+          }
+        ]
+      }
+    ],
+    columns: [
+      {
+        header: 'Mean',
+        function: 'MEAN'
+      },
+      {
+        header: 'Min',
+        function: 'MIN'
+      },
+      {
+        header: 'Max',
+        function: 'MAX'
+      }
+    ],
+    rows: [
+      {
+        name: 'Sensor1',
+        values: [
+          {
+            value: '22.5'
+          },
+          {
+            value: '20.5'
+          },
+          {
+            value: '24.5'
+          }
+        ]
+      },
+      {
+        name: 'Sensor2',
+        values: [
+          {
+            value: '23.1'
+          },
+          {
+            value: '21.5'
+          },
+          {
+            value: '24.5'
+          }
+        ]
+      },
+      {
+        name: 'Bathroom',
+        values: [
+          {
+            value: '21.8'
+          },
+          {
+            value: '19.5'
+          },
+          {
+            value: '24.3'
+          }
+        ]
+      }
+    ]
+  }
+
   const dataBullet = [
     {
       id: '',
@@ -109,6 +192,32 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
           theme={isDarkMode ? darkTheme : lightTheme}
           tooltip={() => null}
         />
+      </Card>
+      <Card className={`${selectedVisualization === 'table' ? 'border-2 border-blue-500' : 'border-2'} h-fit p-1 box-border`} onClick={() => setSelectedVisualization('table')}>
+        <table className="w-full h-fit">
+          <thead className="border-b-[2px]">
+            <tr>
+              <th className="text-left text-md">{dataTable.title}</th>
+              {dataTable.columns.map((column: any, index: any) => (
+                <th key={index} className="text-center text-xs">
+                  {column.header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {dataTable.rows.map((row: any, rowIndex: any) => (
+              <tr key={rowIndex}>
+                <td className="text-sm">{row.name}</td>
+                {row.values.map((value: any, valueIndex: any) => (
+                  <td key={valueIndex} className="text-sm text-center">
+                    {value.value}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </Card>
     </VisualizationGalleryContainer>
   )
