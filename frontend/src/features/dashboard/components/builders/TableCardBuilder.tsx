@@ -22,6 +22,10 @@ export interface TableCardBuilderProps {
 export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBuilderProps) {
   const initialTableConfig: TableCardInfo = {
     _cardID: 'exampleCardID',
+    sizing: {
+      w: 2,
+      h: 1
+    },
     title: 'Area',
     tableTitle: 'Sensors',
     icon: 'temperature-icon',
@@ -108,6 +112,25 @@ export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBui
     if (!instance) return
     handleRowChange(rowIndex, 'instance', instance)
     setSelectedInstance(instance)
+  }
+
+  // TODO: Dont know whether setting the sizing is necessary (minW)
+  const handleSubmit = () => {
+    let newConfig = { ...tableConfig }
+
+    // Update the sizing based on the number of rows
+    if (newConfig.rows.length > 3) {
+      newConfig = {
+        ...newConfig,
+        sizing: {
+          ...newConfig.sizing,
+          minW: 2
+        }
+      }
+    }
+
+    setTableConfig(newConfig)
+    onDataSubmit(newConfig)
   }
 
   return (
@@ -258,7 +281,7 @@ export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBui
         </Accordion>
       </div>
       <div className="flex justify-end mt-2">
-        <Button onClick={() => onDataSubmit(tableConfig)} size={'default'}>
+        <Button onClick={() => handleSubmit()} size={'default'}>
           Submit
         </Button>
       </div>

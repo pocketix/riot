@@ -1,7 +1,9 @@
 import { SdInstance, SdParameter } from '@/generated/graphql'
+import { CardGeneral } from './CardGeneral'
 
 export interface BulletCardInfo {
   _cardID: string
+  sizing?: CardGeneral
   title?: string
   icon?: string
   color?: string

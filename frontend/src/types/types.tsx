@@ -19,11 +19,3 @@ export interface Card {
   x: number // Column position
   y: number // Row position
 }
-
-// Define the API response structure
-export interface ApiResponse {
-  cards: Card[]
-}
-
-// Define the layout structure (array of card IDs in order)
-export type Layout = number[]

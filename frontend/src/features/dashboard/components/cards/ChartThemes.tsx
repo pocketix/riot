@@ -105,6 +105,14 @@ export const lightTheme = {
     table: {},
     tableCell: {},
     tableCellValue: {}
+  },
+  crosshair: {
+    line: {
+      stroke: '#000000',
+      strokeWidth: 1,
+      strokeOpacity: 0.75,
+      strokeDasharray: '6 6'
+    }
   }
 }
 
@@ -215,5 +223,13 @@ export const darkTheme = {
     table: {},
     tableCell: {},
     tableCellValue: {}
+  },
+  crosshair: {
+    line: {
+      stroke: '#ffffff',
+      strokeWidth: 1,
+      strokeOpacity: 0.75,
+      strokeDasharray: '6 6'
+    }
   }
 }

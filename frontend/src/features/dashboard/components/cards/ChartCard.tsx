@@ -13,6 +13,7 @@ import { ToolTip } from './tooltips/LineChartToolTip'
 import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ChartCardInfo } from '@/types/ChartCardInfo'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -43,14 +44,15 @@ interface ChartCardProps {
   height: number
   width: number
   configuration: any
+  breakpoint: string
 }
 
-export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration }: ChartCardProps) => {
+export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, breakpoint }: ChartCardProps) => {
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const { isDarkMode } = useDarkMode()
   const [data, setData] = useState([])
-  const [chartConfig, setChartConfig] = useState<any>()
+  const [chartConfig, setChartConfig] = useState<ChartCardInfo>()
 
   const [getChartData, { error, data: chartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
 
@@ -139,6 +141,28 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
     }
   ]
 
+  // TODO: ???
+  // useEffect(() => {
+  //   if (!chartConfig) return
+
+  //   const newChartConfig = { ...chartConfig }
+  //   console.log(newChartConfig)
+
+  //   newChartConfig.axisBottom = {
+  //     ...newChartConfig.axisBottom,
+  //     tickRotation: breakpoint === 'xs' || breakpoint === 'xxs' ? -90 : breakpoint === 'sm' ? -45 : 0,
+  //     legendOffset: breakpoint === 'xs' || breakpoint === 'xxs' ? 55 : breakpoint === 'sm' ? 30 : 36
+  //   }
+
+  //   newChartConfig.margin = {
+  //     ...newChartConfig.margin,
+  //     bottom: breakpoint === 'xs' || breakpoint === 'xxs' ? 70 : breakpoint === 'sm' ? 70 : 50
+  //   }
+
+  //   console.log(newChartConfig)
+  //   setChartConfig(newChartConfig)
+  // }, [breakpoint])
+
   // TODO: Alert
   if (!chartConfig || !data) return null
 
@@ -164,13 +188,10 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
               axisBottom={chartConfig.axisBottom}
               axisLeft={chartConfig.axisLeft}
               pointSize={chartConfig.pointSize}
-              pointColor={chartConfig.pointColor}
-              pointBorderWidth={chartConfig.pointBorderWidth}
-              pointBorderColor={chartConfig.pointBorderColor}
-              pointLabel={chartConfig.pointLabel}
-              pointLabelYOffset={chartConfig.pointLabelYOffset}
-              enableTouchCrosshair={chartConfig.enableTouchCrosshair}
-              useMesh={chartConfig.useMesh}
+              pointColor={isDarkMode ? '#ffffff' : '#000000'}
+              pointBorderWidth={0}
+              colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
+              useMesh={true}
               enableGridX={chartConfig.enableGridX}
               enableGridY={chartConfig.enableGridY}
               tooltip={(pos: PointTooltipProps) => <ToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}

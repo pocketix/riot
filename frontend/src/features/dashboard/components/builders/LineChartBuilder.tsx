@@ -11,6 +11,7 @@ import { ToolTip } from '../cards/tooltips/LineChartToolTip'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { ChartCardInfo } from '@/types/ChartCardInfo'
 
 export interface LineChartBuilderProps {
   onDataSubmit: (data: any) => void
@@ -22,8 +23,11 @@ export function LineChartBuilder({ onDataSubmit, data, parameterName }: LineChar
   const containerRef = useRef(null)
   const { isDarkMode } = useDarkMode()
 
-  const initialChartConfig = {
+  const initialChartConfig: ChartCardInfo = {
     cardTitle: 'Line Chart',
+    sizing: {
+      minH: 2
+    },
     toolTip: {
       x: 'Time',
       y: parameterName ? parameterName : 'Value'
@@ -58,12 +62,8 @@ export function LineChartBuilder({ onDataSubmit, data, parameterName }: LineChar
     },
     pointSize: 3,
     pointColor: { theme: 'background' },
-    pointBorderWidth: 2,
+    pointBorderWidth: 0,
     pointBorderColor: { from: 'serieColor' },
-    pointLabel: 'data.yFormatted',
-    pointLabelYOffset: -12,
-    enableTouchCrosshair: true,
-    useMesh: true,
     enableGridX: true,
     enableGridY: true
   }
@@ -117,13 +117,13 @@ export function LineChartBuilder({ onDataSubmit, data, parameterName }: LineChar
             axisBottom={chartConfig.axisBottom}
             axisLeft={chartConfig.axisLeft}
             pointSize={chartConfig.pointSize}
-            pointColor={chartConfig.pointColor}
-            pointBorderWidth={chartConfig.pointBorderWidth}
+            pointColor={isDarkMode ? '#ffffff' : '#000000'}
+            pointBorderWidth={0}
+            colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
             pointBorderColor={chartConfig.pointBorderColor}
-            pointLabel={chartConfig.pointLabel}
-            pointLabelYOffset={chartConfig.pointLabelYOffset}
-            enableTouchCrosshair={chartConfig.enableTouchCrosshair}
-            useMesh={chartConfig.useMesh}
+            pointLabelYOffset={-12}
+            enableTouchCrosshair={true}
+            useMesh={true}
             enableGridX={chartConfig.enableGridX}
             enableGridY={chartConfig.enableGridY}
             tooltip={(pos: PointTooltipProps) => <ToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}
@@ -190,7 +190,7 @@ export function LineChartBuilder({ onDataSubmit, data, parameterName }: LineChar
           <Input
             type="text"
             disabled={chartConfig.axisBottom == null}
-            placeholder={chartConfig.axisBottom?.legend || ''}
+            placeholder={(chartConfig.axisBottom?.legend as string) || ''}
             onChange={(e) =>
               handleConfigChange('axisBottom', {
                 ...chartConfig.axisBottom,
@@ -238,7 +238,7 @@ export function LineChartBuilder({ onDataSubmit, data, parameterName }: LineChar
           <Input
             type="text"
             disabled={chartConfig.axisLeft == null}
-            placeholder={chartConfig.axisLeft?.legend || ''}
+            placeholder={(chartConfig.axisLeft?.legend as string) || ''}
             onChange={(e) =>
               handleConfigChange('axisLeft', {
                 ...chartConfig.axisLeft,

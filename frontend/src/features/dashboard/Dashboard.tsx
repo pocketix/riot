@@ -271,15 +271,17 @@ const Dashboard = () => {
       })
     })
 
+    const sizing = JSON.parse(item.visualizationConfig).sizing
+
     const newIndex = (largestIndex + 1).toString()
     const newCard: Layout = {
-      w: 2,
-      h: 2,
+      w: sizing.w ?? 2,
+      h: sizing.h ?? 2,
       x: 0,
       y: Infinity,
       i: newIndex,
-      minH: 2,
-      minW: 2
+      minH: sizing.minH ?? 0,
+      minW: sizing.minW ?? 0
     }
 
     Object.keys(newLayouts).forEach((breakpoint) => {
@@ -447,6 +449,7 @@ const Dashboard = () => {
                       width={width}
                       setHighlightedCardID={setHighlightedCardID}
                       configuration={details[item.i]}
+                      breakpoint={currentBreakpoint}
                     />
                   </Card>
                 )
