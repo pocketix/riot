@@ -157,7 +157,7 @@ type UserEntity struct {
 	LastLoginAt time.Time                   // Timestamp of the last login
 	IsActive    bool                        `gorm:"default:true"` // Whether the user's account is active
 	Invocations []SDCommandInvocationEntity `gorm:"foreignKey:UserId;constraint:OnDelete:CASCADE"`
-	UserConfig  UserConfigEntity            `gorm:"foreignKey:UserId;constraint:OnDelete:CASCADE"`
+	UserConfig  UserConfigEntity            `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 func (UserEntity) TableName() string {
