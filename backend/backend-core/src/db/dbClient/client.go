@@ -47,8 +47,9 @@ type RelationalDatabaseClient interface {
 	LoadSDInstanceGroup(id uint32) sharedUtils.Result[dllModel.SDInstanceGroup]
 	PersistSDInstanceGroup(sdInstanceGroup dllModel.SDInstanceGroup) sharedUtils.Result[uint32]
 	DeleteSDInstanceGroup(id uint32) error
-	// TODO: Implement user- and auth-related DB client operations
-	// LoadUser() sharedUtils.Result[dbModel.UserEntity] TODO: user sub (Subject) for user record lookup
+	PersistUser(user dllModel.User) sharedUtils.Result[uint]
+	LoadUserBasedOnOAuth2ProviderIssuedID(oauth2ProviderIssuedID string) sharedUtils.Result[sharedUtils.Optional[dllModel.User]]
+	// LoadUser(id uint) sharedUtils.Result[dllModel.User] TODO: Implement
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -95,6 +96,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.SDInstanceGroupEntity),
 		new(dbModel.SDInstanceGroupMembershipEntity),
 		new(dbModel.SDInstanceKPIDefinitionRelationshipEntity),
+		new(dbModel.UserEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
 
@@ -461,4 +463,29 @@ func (r *relationalDatabaseClientImpl) DeleteSDInstanceGroup(id uint32) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.SDInstanceGroupEntity](r.db, id)
+}
+
+func (r *relationalDatabaseClientImpl) PersistUser(user dllModel.User) sharedUtils.Result[uint] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	userEntity := dll2db.ToDBModelEntityUser(user)
+	if err := dbUtil.PersistEntityIntoDB(r.db, &userEntity); err != nil {
+		return sharedUtils.NewFailureResult[uint](err)
+	}
+	return sharedUtils.NewSuccessResult[uint](userEntity.Model.ID)
+}
+
+func (r *relationalDatabaseClientImpl) LoadUserBasedOnOAuth2ProviderIssuedID(oauth2ProviderIssuedID string) sharedUtils.Result[sharedUtils.Optional[dllModel.User]] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	userEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.UserEntity](r.db, dbUtil.Where("oauth2_provider_issued_id = ?", oauth2ProviderIssuedID))
+	if userEntityLoadResult.IsFailure() {
+		userEntityLoadError := userEntityLoadResult.GetError()
+		if errors.Is(userEntityLoadError, gorm.ErrRecordNotFound) {
+			return sharedUtils.NewSuccessResult[sharedUtils.Optional[dllModel.User]](sharedUtils.NewEmptyOptional[dllModel.User]())
+		} else {
+			return sharedUtils.NewFailureResult[sharedUtils.Optional[dllModel.User]](userEntityLoadError)
+		}
+	}
+	return sharedUtils.NewSuccessResult[sharedUtils.Optional[dllModel.User]](sharedUtils.NewOptionalOf(db2dll.ToDLLModelUser(userEntityLoadResult.GetPayload())))
 }

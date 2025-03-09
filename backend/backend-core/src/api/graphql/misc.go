@@ -45,6 +45,6 @@ func SetupGraphQLServer() {
 	}).Handler)
 	router.Handle("/", graphQLServer)
 	router.Get("/auth/login", auth.LoginHandler)
-	router.Post("/auth/callback", auth.CallbackHandler)
+	router.Get("/auth/callback", auth.CallbackHandler)
 	log.Fatal(http.ListenAndServe(":9090", router))
 }
