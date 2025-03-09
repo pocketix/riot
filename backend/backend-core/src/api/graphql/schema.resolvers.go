@@ -85,6 +85,22 @@ func (r *mutationResolver) StatisticsMutate(ctx context.Context, inputData graph
 	return domainLogicLayer.Save(inputData).Unwrap()
 }
 
+func (r *mutationResolver) UpdateUserConfig(ctx context.Context, userID uint32, input graphQLModel.UserConfigInput) (graphQLModel.UserConfig, error) {
+	updateUserConfigResult := domainLogicLayer.UpdateUserConfig(userID, input)
+	if updateUserConfigResult.IsFailure() {
+		log.Printf("Error occurred (update SD instance group): %s\n", updateUserConfigResult.GetError().Error())
+	}
+	return updateUserConfigResult.Unwrap()
+}
+
+func (r *mutationResolver) DeleteUserConfig(ctx context.Context, userID uint32) (bool, error) {
+	if err := domainLogicLayer.DeleteUserConfig(userID); err != nil {
+		log.Printf("Error occurred (delete user configuration): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
 	getSDTypeResult := domainLogicLayer.GetSDType(id)
 	if getSDTypeResult.IsFailure() {
@@ -159,6 +175,14 @@ func (r *queryResolver) StatisticsQuerySensorsWithFields(ctx context.Context, re
 	convertedRequest, _ := domainLogicLayer.MapStatisticsInputToReadRequestBody(request, nil, &sensors)
 	data := domainLogicLayer.Query(*convertedRequest)
 	return data.Unwrap()
+}
+
+func (r *queryResolver) UserConfig(ctx context.Context, id uint32) (graphQLModel.UserConfig, error) {
+	getUserConfigResult := domainLogicLayer.GetUserConfig(id)
+	if getUserConfigResult.IsFailure() {
+		log.Printf("Error occurred (get user config results): %s\n", getUserConfigResult.GetError().Error())
+	}
+	return getUserConfigResult.Unwrap()
 }
 
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {

@@ -338,6 +338,15 @@ func (this StringEQAtomKPINode) GetSdParameterSpecification() string {
 type Subscription struct {
 }
 
+type UserConfig struct {
+	UserID uint32 `json:"userId"`
+	Config string `json:"config"`
+}
+
+type UserConfigInput struct {
+	Config string `json:"config"`
+}
+
 type KPINodeType string
 
 const (

@@ -157,10 +157,20 @@ type UserEntity struct {
 	LastLoginAt time.Time                   // Timestamp of the last login
 	IsActive    bool                        `gorm:"default:true"` // Whether the user's account is active
 	Invocations []SDCommandInvocationEntity `gorm:"foreignKey:UserId;constraint:OnDelete:CASCADE"`
+	UserConfig  UserConfigEntity            `gorm:"foreignKey:UserId;constraint:OnDelete:CASCADE"`
 }
 
 func (UserEntity) TableName() string {
 	return "user"
+}
+
+type UserConfigEntity struct {
+	UserID uint32 `gorm:"primaryKey;column:user_id;not null"`
+	Config string `gorm:"column:config;type:jsonb;not null"` // Store JSON as a string
+}
+
+func (UserConfigEntity) TableName() string {
+	return "user_config"
 }
 
 type SDCommandEntity struct {

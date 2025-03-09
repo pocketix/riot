@@ -47,6 +47,9 @@ type RelationalDatabaseClient interface {
 	LoadSDInstanceGroup(id uint32) sharedUtils.Result[dllModel.SDInstanceGroup]
 	PersistSDInstanceGroup(sdInstanceGroup dllModel.SDInstanceGroup) sharedUtils.Result[uint32]
 	DeleteSDInstanceGroup(id uint32) error
+	PersistUserConfig(userConfig dllModel.UserConfig) sharedUtils.Result[uint32]
+	LoadUserConfig(userId uint32) sharedUtils.Result[dllModel.UserConfig]
+	DeleteUserConfig(userId uint32) error
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -96,6 +99,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.UserEntity),
 		new(dbModel.SDCommandEntity),
 		new(dbModel.SDCommandInvocationEntity),
+		new(dbModel.UserConfigEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
 
@@ -462,4 +466,37 @@ func (r *relationalDatabaseClientImpl) DeleteSDInstanceGroup(id uint32) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.SDInstanceGroupEntity](r.db, id)
+}
+
+func (r *relationalDatabaseClientImpl) PersistUserConfig(userConfig dllModel.UserConfig) sharedUtils.Result[uint32] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	userConfigEntity := dll2db.ToDBModelEntityUserConfig(userConfig)
+
+	if err := dbUtil.PersistEntityIntoDB(r.db, &userConfigEntity); err != nil {
+		return sharedUtils.NewFailureResult[uint32](err)
+	}
+
+	return sharedUtils.NewSuccessResult[uint32](userConfigEntity.UserID)
+}
+
+func (r *relationalDatabaseClientImpl) LoadUserConfig(userId uint32) sharedUtils.Result[dllModel.UserConfig] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	userConfigEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.UserConfigEntity](r.db, dbUtil.Where("user_id = ?", userId))
+
+	if userConfigEntityLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[dllModel.UserConfig](userConfigEntityLoadResult.GetError())
+	}
+
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelUserConfig(userConfigEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) DeleteUserConfig(userId uint32) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.UserConfigEntity](r.db, userId)
 }
