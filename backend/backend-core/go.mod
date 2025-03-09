@@ -9,6 +9,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/google/go-cmp v0.6.0
 	github.com/gorilla/websocket v1.5.1
+	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/rs/cors v1.11.0
 	github.com/vektah/gqlparser/v2 v2.5.11
 	gorm.io/driver/postgres v1.5.7
@@ -30,7 +31,6 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sosodev/duration v1.3.0 // indirect
