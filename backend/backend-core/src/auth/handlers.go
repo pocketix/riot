@@ -150,20 +150,11 @@ func extractIDTokenData(idTokenPayload *idtoken.Payload) sharedUtils.Result[idTo
 }
 
 func createSessionJWT(user dllModel.User) (string, error) {
-	claims := jwt.MapClaims{
-		"sub":      user.ID.GetPayload(),
-		"iat":      time.Now().Unix(),
-		"exp":      time.Now().Add(24 * time.Hour).Unix(),
-		"username": user.Username,
-		"email":    user.Email,
-	}
-	if user.Name.IsPresent() {
-		claims["name"] = user.Name.GetPayload()
-	}
-	if user.ProfileImageURL.IsPresent() {
-		claims["profileImageURL"] = user.ProfileImageURL.GetPayload()
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": user.ID.GetPayload(),
+		"iat": time.Now().Unix(),
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
+	})
 	return token.SignedString(jwtSecret)
 }
 
