@@ -22,6 +22,8 @@ services:
       RABBITMQ_URL: ${RABBITMQ_URL}
       GOOGLE_OAUTH2_CLIENT_ID: 939239491866-unqfnuoqc0loboqoq9l4shji2i1atpei.apps.googleusercontent.com
       GOOGLE_OAUTH2_CLIENT_SECRET: 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
+      JWT_SECRET: laaiqVgdmnurM4hC
+      ALLOWED_ORIGINS: http://localhost:8080,http://localhost:1234 # Essentially a API client whitelist TODO: Configure this as needed...
     depends_on:
       - rabbitmq
       - postgres

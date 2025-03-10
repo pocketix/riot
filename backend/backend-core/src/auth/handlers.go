@@ -12,16 +12,48 @@ import (
 	"golang.org/x/oauth2"
 	"google.golang.org/api/idtoken"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 )
 
-var jwtSecret = []byte(sharedUtils.GetEnvironmentVariableValue("JWT_SECRET").GetPayloadOrDefault("provide-a-meaningful-default?")) // TODO: Revisit this
+const (
+	OAuth2StateTokenCookieIdentifier = "OAuth2StateToken"
+	SessionJWTCookieIdentifier       = "sessionJWT"
+	CallbackPath                     = "/auth/callback"
+)
+
+var (
+	jwtSecret      = []byte(sharedUtils.GetEnvironmentVariableValue("JWT_SECRET").GetPayloadOrDefault("laaiqVgdmnurM4hC"))
+	allowedOrigins = sharedUtils.NewSetFromSlice(strings.Split(sharedUtils.GetEnvironmentVariableValue("ALLOWED_ORIGINS").GetPayloadOrDefault("http://localhost:8080,http://localhost:1234"), ","))
+)
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	stateTokenValue := fmt.Sprintf("state-token-%s", uniuri.New())
-	url := GoogleOAuth2Config.AuthCodeURL(stateTokenValue, oauth2.AccessTypeOffline)
+	query := r.URL.Query()
+	rawRedirectUrl := query.Get("redirect")
+	if rawRedirectUrl == "" {
+		http.Error(w, "missing redirect url (?redirect=...)", http.StatusBadRequest)
+		return
+	}
+	redirectUrl, err := url.Parse(rawRedirectUrl)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("invalid redirect url (?redirect=...): %s", err.Error()), http.StatusBadRequest)
+		return
+	}
+	if redirectUrl.Scheme != "http" && redirectUrl.Scheme != "https" {
+		http.Error(w, "invalid redirect url (?redirect=...): url scheme must be 'http' or 'https'", http.StatusBadRequest)
+	}
+	if redirectUrl.Host == "" {
+		http.Error(w, "invalid redirect url (?redirect=...): missing host", http.StatusBadRequest)
+		return
+	}
+	if !allowedOrigins.Contains(redirectUrl.Host) {
+		http.Error(w, "redirect url (?redirect=...) is not among allowed origins", http.StatusBadRequest)
+		return
+	}
+	stateTokenValue := fmt.Sprintf("%s-%s", uniuri.New(), redirectUrl)
 	setupStateTokenCookie(w, stateTokenValue)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, GoogleOAuth2Config.AuthCodeURL(stateTokenValue, oauth2.AccessTypeOffline), http.StatusTemporaryRedirect)
 }
 
 func CallbackHandler(w http.ResponseWriter, r *http.Request) {
@@ -31,18 +63,18 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing authorization code", http.StatusBadRequest)
 		return
 	}
-	state := query.Get("state")
-	if state == "" {
+	stateTokenValue := query.Get("stateTokenValue")
+	if stateTokenValue == "" {
 		http.Error(w, "missing state-token", http.StatusBadRequest)
 		return
 	}
 
-	cookie, err := r.Cookie("OAuth2StateToken")
+	cookie, err := r.Cookie(OAuth2StateTokenCookieIdentifier)
 	if err != nil {
 		http.Error(w, "state-token cookie not found", http.StatusBadRequest)
 		return
 	}
-	if cookie.Value != state {
+	if cookie.Value != stateTokenValue {
 		http.Error(w, "state-token mismatch", http.StatusBadRequest)
 		return
 	}
@@ -99,27 +131,28 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	setupSessionJWTCookie(w, sessionJWT)
 
-	http.Redirect(w, r, "http://localhost:8080", http.StatusTemporaryRedirect) // TODO: Setup flexible redirect here
+	redirectUrl := strings.Split(stateTokenValue, "-")[1]
+	http.Redirect(w, r, redirectUrl, http.StatusTemporaryRedirect)
 	return
 }
 
 func setupStateTokenCookie(w http.ResponseWriter, stateTokenValue string) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     "OAuth2StateToken",
+		Name:     OAuth2StateTokenCookieIdentifier,
 		Value:    stateTokenValue,
 		HttpOnly: true,
 		Secure:   false, // TODO: Ensure this field is set to 'true' in production (requires HTTPS)
-		Path:     "/auth/callback",
+		Path:     CallbackPath,
 		MaxAge:   int((10 * time.Minute).Seconds()),
 	})
 }
 
 func clearStateTokenCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
-		Name:   "OAuth2StateToken",
+		Name:   OAuth2StateTokenCookieIdentifier,
 		Value:  "",
 		MaxAge: -1,
-		Path:   "/auth/callback",
+		Path:   CallbackPath,
 	})
 }
 
@@ -160,7 +193,7 @@ func createSessionJWT(user dllModel.User) (string, error) {
 
 func setupSessionJWTCookie(w http.ResponseWriter, sessionJWT string) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     "sessionJWT",
+		Name:     SessionJWTCookieIdentifier,
 		Value:    sessionJWT,
 		HttpOnly: true,
 		Secure:   false, // TODO: Ensure this field is set to 'true' in production (requires HTTPS)

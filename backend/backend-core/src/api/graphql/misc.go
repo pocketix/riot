@@ -13,6 +13,7 @@ import (
 	"github.com/rs/cors"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -22,9 +23,7 @@ var (
 )
 
 func SetupGraphQLServer() {
-	allowedOrigins := sharedUtils.NewSet[string]() // TODO: Use an environment variable here...
-	allowedOrigins.Add("http://localhost:8080")
-	allowedOrigins.Add("http://localhost:1234")
+	allowedOrigins := sharedUtils.NewSetFromSlice(strings.Split(sharedUtils.GetEnvironmentVariableValue("ALLOWED_ORIGINS").GetPayloadOrDefault("http://localhost:8080,http://localhost:1234"), ","))
 	graphQLServer := handler.New(gsc.NewExecutableSchema(gsc.Config{Resolvers: new(Resolver)}))
 	graphQLServer.AddTransport(transport.POST{})
 	graphQLServer.AddTransport(transport.Websocket{
