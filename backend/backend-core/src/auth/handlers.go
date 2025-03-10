@@ -202,3 +202,26 @@ func setupSessionJWTCookie(w http.ResponseWriter, sessionJWT string) {
 		MaxAge:   int((24 * time.Hour).Seconds()),
 	})
 }
+
+func JWTAuthenticationMiddleware(next http.Handler) http.Handler { // TODO: Make this significantly more robust
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sessionJWTCookie, err := r.Cookie(SessionJWTCookieIdentifier)
+		if err != nil {
+			http.Error(w, "session JWT cookie is missing", http.StatusUnauthorized)
+			return
+		}
+
+		token, err := jwt.Parse(sessionJWTCookie.Value, func(token *jwt.Token) (any, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %s", token.Header["alg"].(string))
+			}
+			return jwtSecret, nil
+		})
+		if err != nil || !token.Valid {
+			http.Error(w, "provided JWT is invalid", http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}

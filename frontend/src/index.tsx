@@ -35,7 +35,7 @@ const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
       return definition.kind === 'OperationDefinition' && definition.operation === 'subscription'
     },
     new WebSocketLink({ uri: webSocketBackendCoreURL }),
-    new HttpLink({ uri: backendCoreURL })
+    new HttpLink({ uri: backendCoreURL, credentials: 'include' })
   ),
   cache: new InMemoryCache(),
   defaultOptions: {
@@ -128,7 +128,19 @@ const Application: React.FC = () => {
                 <Route path={kpiDefinitions} element={<KPIPageController />} />
                 <Route path={`${kpiDefinitions}/create`} element={<KPIDetailPageController />} />
                 <Route path={`${kpiDefinitions}/:id/edit`} element={<KPIDetailPageController />} />
-                <Route path={apolloSandbox} element={<ApolloSandbox initialEndpoint={backendCoreURL} allowDynamicStyles className="h-full w-full" />} />
+                <Route
+                  path={apolloSandbox}
+                  element={
+                    <ApolloSandbox
+                      initialEndpoint={backendCoreURL}
+                      initialState={{
+                        includeCookies: true
+                      }}
+                      allowDynamicStyles
+                      className="h-full w-full"
+                    />
+                  }
+                />
                 <Route path="*" element={<FallbackPage />} />
               </Route>
             </Routes>
