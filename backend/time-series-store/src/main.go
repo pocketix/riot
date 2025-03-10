@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
@@ -113,42 +112,41 @@ func consumeReadRequests(rabbitMQClient rabbitmq.Client, influx internal.Influx2
 }
 
 func parseParameters() (bool, internal.TimeSeriesStoreEnvironment) {
-	flag.Parse()
-	token, tokenError := sharedUtils.GetEnvironmentParameter("INFLUX_TOKEN", "InfluxDB Token")
-	url, urlError := sharedUtils.GetEnvironmentParameter("INFLUX_URL", "InfluxDB URL")
-	org, orgError := sharedUtils.GetEnvironmentParameter("INFLUX_ORGANIZATION", "InfluxDB Organization")
-	bucket, bucketError := sharedUtils.GetEnvironmentParameter("INFLUX_BUCKET", "InfluxDB Bucket")
-	ampqUrl, ampqUrlError := sharedUtils.GetEnvironmentParameter("RABBITMQ_URL", "RABBITMQ Broker URL")
+	token := sharedUtils.GetEnvironmentVariableValue("INFLUX_TOKEN")
+	url := sharedUtils.GetEnvironmentVariableValue("INFLUX_URL")
+	org := sharedUtils.GetEnvironmentVariableValue("INFLUX_ORGANIZATION")
+	bucket := sharedUtils.GetEnvironmentVariableValue("INFLUX_BUCKET")
+	ampqUrl := sharedUtils.GetEnvironmentVariableValue("RABBITMQ_URL")
 
-	hasError := tokenError != nil || urlError != nil || orgError != nil || bucketError != nil || ampqUrlError != nil
+	hasError := token.IsEmpty() || url.IsEmpty() || org.IsEmpty() || bucket.IsEmpty() || ampqUrl.IsEmpty()
 
-	if tokenError != nil {
-		fmt.Println(fmt.Errorf(tokenError.Error()))
+	if token.IsEmpty() {
+		log.Fatalln("Empty token")
 	}
 
-	if urlError != nil {
-		fmt.Println(fmt.Errorf(urlError.Error()))
+	if url.IsEmpty() {
+		log.Fatalln("Empty url")
 	}
 
-	if orgError != nil {
-		fmt.Println(fmt.Errorf(orgError.Error()))
+	if org.IsEmpty() {
+		log.Fatalln("Empty org")
 	}
 
-	if bucketError != nil {
-		fmt.Println(fmt.Errorf(bucketError.Error()))
+	if bucket.IsEmpty() {
+		log.Fatalln("Empty bucket")
 	}
 
-	if ampqUrlError != nil {
-		fmt.Println(fmt.Errorf(ampqUrlError.Error()))
+	if ampqUrl.IsEmpty() {
+		log.Fatalln("Empty ampqUrl")
 	}
 
-	environment := internal.TimeSeriesStoreEnvironment{
-		InfluxToken:  token,
-		InfluxUrl:    url,
-		InfluxOrg:    org,
-		InfluxBucket: bucket,
-		AmqpURLValue: ampqUrl,
-	}
+	environment := sharedUtils.Ternary[internal.TimeSeriesStoreEnvironment](!hasError, internal.TimeSeriesStoreEnvironment{
+		InfluxToken:  token.GetPayload(),
+		InfluxUrl:    url.GetPayload(),
+		InfluxOrg:    org.GetPayload(),
+		InfluxBucket: bucket.GetPayload(),
+		AmqpURLValue: ampqUrl.GetPayload(),
+	}, internal.TimeSeriesStoreEnvironment{})
 
 	return hasError, environment
 }
