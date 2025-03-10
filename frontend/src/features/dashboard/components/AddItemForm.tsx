@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useQuery, useLazyQuery } from '@apollo/client'
-import { GET_INSTANCES, GET_PARAMETERS, GET_SAMPLEDATA } from '@/graphql/Queries'
+import { GET_INSTANCES, GET_PARAMETERS, GET_TABLE_DATA } from '@/graphql/Queries'
 import { AddItemCombobox } from './AddItemCombobox'
 import { ParameterCombobox } from './ParameterCombobox'
 import type { SdInstance, SdParameter, SdType } from '@/../../src/generated/graphql'
@@ -77,7 +77,7 @@ export function AddItemForm({ setDialogOpen, onAddItem }: AddItemFormProps) {
     }
   }, [parametersData])
 
-  const [getSampleData, { data: sampleData, error }] = useLazyQuery(GET_SAMPLEDATA)
+  const [getSampleData, { data: sampleData, error }] = useLazyQuery(GET_TABLE_DATA)
 
   useEffect(() => {
     if (selectedParameter) {

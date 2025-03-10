@@ -11,9 +11,9 @@ import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from './ChartThemes'
 import { ToolTip } from './tooltips/LineChartToolTip'
 import { useLazyQuery } from '@apollo/client'
-import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartCardInfo } from '@/types/ChartCardInfo'
+import { GET_TABLE_DATA } from '@/graphql/Queries'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -54,7 +54,7 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
   const [data, setData] = useState([])
   const [chartConfig, setChartConfig] = useState<ChartCardInfo>()
 
-  const [getChartData, { error, data: chartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
+  const [getChartData, { error, data: chartData }] = useLazyQuery(GET_TABLE_DATA)
 
   const fetchData = () => {
     if (configuration) {
