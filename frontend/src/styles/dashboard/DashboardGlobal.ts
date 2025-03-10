@@ -15,9 +15,9 @@ export const Tile = styled.div.withConfig({
 export const DashboardRoot = styled.div`
   position: relative;
   box-sizing: border-box;
+  overflow-x: hidden;
   width: 100%;
   max-height: 100vh;
-  min-height: calc(100vh - 60px); /* Subtract the height of the navbar */
 `
 
 export const Navbar = styled.div`
@@ -42,5 +42,5 @@ export const Navbar = styled.div`
 
 export const MainGrid = styled.div`
   margin-top: 60px; /* Height of the navbar */
-  height: calc(100% + 100px);
+  height: calc(max-content + 100px);
 `

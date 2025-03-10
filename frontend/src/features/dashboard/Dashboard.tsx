@@ -275,13 +275,13 @@ const Dashboard = () => {
 
     const newIndex = (largestIndex + 1).toString()
     const newCard: Layout = {
-      w: sizing.w ?? 2,
-      h: sizing.h ?? 2,
+      w: sizing?.w! || 2,
+      h: sizing?.h! || 2,
       x: 0,
       y: Infinity,
       i: newIndex,
-      minH: sizing.minH ?? 0,
-      minW: sizing.minW ?? 0
+      minH: sizing?.minH! || 0,
+      minW: sizing?.minW! || 0
     }
 
     Object.keys(newLayouts).forEach((breakpoint) => {

@@ -5,6 +5,9 @@ import { Card } from '@/components/ui/card'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
 import { SdParameterType } from '@/generated/graphql'
+import { EntityCardInfo } from '@/types/EntityCardInfo'
+import { AutoCleanedStrongCache } from '@apollo/client/utilities'
+import { Switch } from '@/components/ui/switch'
 
 export const VisualizationGalleryContainer = styled.div`
   display: flex;
@@ -154,6 +157,57 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
     }
   ]
 
+  const entityCardConfig: EntityCardInfo = {
+    _cardID: 'exampleCardID',
+    title: 'Entity Card',
+    rows: [
+      {
+        name: 'Sensor2',
+        instance: null,
+        parameter: null,
+        visualization: 'sparkline',
+        sparkLineData: {
+          data: [
+            {
+              x: '2025-01-01T00:00:00.000Z',
+              y: 15.1
+            },
+            {
+              x: '2025-01-02T00:00:00.000Z',
+              y: 23.1
+            },
+            {
+              x: '2025-01-03T02:00:00.000Z',
+              y: 20.8
+            },
+            {
+              x: '2025-01-04T00:00:00.000Z',
+              y: 26.5
+            },
+            {
+              x: '2025-01-05T00:00:00.000Z',
+              y: 30.3
+            }
+          ]
+        }
+      },
+      {
+        name: 'Bathroom',
+        instance: null,
+        parameter: null,
+        visualization: 'immediate',
+        value: '22.5'
+      },
+      {
+        name: 'Sensor1',
+        instance: null,
+        parameter: null,
+        visualization: 'switch',
+        value: 'on'
+      }
+    ]
+  }
+
   return (
     <VisualizationGalleryContainer>
       <Card className={`${selectedVisualization === 'line' ? 'border-2 border-blue-500' : 'border-2'} h-[150px] box-border`} onClick={() => setSelectedVisualization('line')}>
@@ -214,6 +268,55 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
                     {value.value}
                   </td>
                 ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+      <Card className={`${selectedVisualization === 'entitycard' ? 'border-2 border-blue-500' : 'border-2'} h-fit p-1 box-border`} onClick={() => setSelectedVisualization('entitycard')}>
+        <table className="w-full h-fit">
+          <thead className="border-b-[2px]">
+            <tr>
+              <th className="text-left text-md">Area</th>
+              <th className="text-center text-md"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {entityCardConfig.rows.map((row, rowIndex) => (
+              <tr key={rowIndex} className="mt-2 h-[24px]">
+                <td className="text-sm">{row.name}</td>
+                {row.visualization === 'sparkline' && row.sparkLineData && (
+                  <td className="text-sm text-center w-[75px] h-[24px]">
+                    <ResponsiveLine
+                      data={[
+                        {
+                          id: 'temperature',
+                          data: row.sparkLineData?.data!
+                        }
+                      ]}
+                      margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                      xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%S.%LZ' }}
+                      yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: true, reverse: false }}
+                      animate={false}
+                      pointSize={0}
+                      axisBottom={null}
+                      axisLeft={null}
+                      curve="cardinal"
+                      lineWidth={4}
+                      enableGridX={false}
+                      enableGridY={false}
+                      useMesh={false}
+                      theme={isDarkMode ? darkTheme : lightTheme}
+                    />
+                  </td>
+                )}
+                {row.visualization === 'immediate' && <td className="text-sm text-center">{row.value}</td>}
+                {row.visualization === 'switch' && (
+                  <td className="text-sm text-center">
+                    <Switch checked={row.value === 'on'} />
+                  </td>
+                )}
+                {row.visualization !== 'sparkline' && row.visualization !== 'immediate' && row.visualization !== 'switch' && <td className="text-sm text-center">{row.visualization}</td>}
               </tr>
             ))}
           </tbody>

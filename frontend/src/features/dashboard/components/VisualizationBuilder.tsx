@@ -3,6 +3,7 @@ import { LineChartBuilder } from './builders/LineChartBuilder'
 import { BulletChartBuilder } from './builders/BulletChartBuilder'
 import { SdInstance, SdParameter } from '@/generated/graphql'
 import { TableCardBuilder } from './builders/TableCardBuilder'
+import { EntityCardBuilder } from './builders/EntityCardBuilder'
 
 export const VisualizationBuilderContainer = styled.div`
   display: flex;
@@ -30,6 +31,7 @@ export function VisualizationBuilder({ setVisualizationDetails, selectedVisualiz
       {selectedVisualization === 'line' && <LineChartBuilder onDataSubmit={handleDataChange} data={data} parameterName={selectedParameter.denotation} />}
       {selectedVisualization === 'bullet' && <BulletChartBuilder onDataSubmit={handleDataChange} parameterName={selectedParameter.denotation} />}
       {selectedVisualization === 'table' && <TableCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
+      {selectedVisualization ===  'entitycard' && <EntityCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
     </VisualizationBuilderContainer>
   )
 }

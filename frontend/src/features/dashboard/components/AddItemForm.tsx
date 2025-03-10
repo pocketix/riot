@@ -126,6 +126,7 @@ export function AddItemForm({ setDialogOpen, onAddItem }: AddItemFormProps) {
   const visualizationValue = form.watch('visualization')
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log('Form values', values)
     const item: GridItem = {
       instance: selectedDevice!,
       parameters: [selectedParameter!],
