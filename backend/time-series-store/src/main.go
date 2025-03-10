@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
@@ -20,7 +19,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("Time Series Store Starting")
+	log.Println("Time Series Store Starting")
 
 	influx, influxErrors, _ := internal.NewInflux2Client(environment.InfluxUrl, environment.InfluxToken, environment.InfluxOrg, environment.InfluxBucket)
 
@@ -28,34 +27,35 @@ func main() {
 	defer rabbitMQClient.Dispose()
 	defer influx.Close()
 
-	fmt.Println("Time Series Store Ready")
+	log.Println("Time Series Store Ready")
 
 	sharedUtils.WaitForAll(
 		func() {
 			err := consumeInputMessages(rabbitMQClient, influx)
 
 			if err != nil {
-				fmt.Println(err.Error())
+				log.Println(err.Error())
 			}
 		},
 		func() {
 			err := consumeReadRequests(rabbitMQClient, influx)
 
 			if err != nil {
-				fmt.Println(err.Error())
+				log.Println(err.Error())
 			}
 		},
 	)
 
 	go func() {
 		for err := range influxErrors {
-			fmt.Println(err)
+			log.Println(err)
 		}
 	}()
 }
 
 func consumeInputMessages(rabbitMQClient rabbitmq.Client, influx internal.Influx2Client) error {
 	err := rabbitmq.ConsumeJSONMessages[sharedModel.InputData](rabbitMQClient, sharedConstants.TimeSeriesStoreDataQueueName, func(messagePayload sharedModel.InputData) error {
+		log.Printf("Writing: %s \n", messagePayload.SDInstanceUID)
 		influx.Write(messagePayload)
 		return nil
 	})
@@ -71,7 +71,7 @@ func consumeReadRequests(rabbitMQClient rabbitmq.Client, influx internal.Influx2
 			result := influx.Query(readRequestBody)
 
 			if result.IsFailure() {
-				fmt.Println(result.GetError())
+				log.Println(result.GetError())
 			}
 
 			responseWithData := sharedModel.ReadRequestResponseOrError{
