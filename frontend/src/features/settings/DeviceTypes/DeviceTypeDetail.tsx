@@ -87,7 +87,6 @@ export default function DeviceTypeDetail() {
   const { id: sdTypeId } = useParams<{ id: string }>()
   const location = useLocation()
   const isAddingNew = location.pathname.endsWith('/addNewType')
-  const isEditing = !!sdTypeId || isAddingNew
   const [editMode, setEditMode] = useState(isAddingNew)
 
   // Default state for new device type
@@ -110,7 +109,7 @@ export default function DeviceTypeDetail() {
           parameters:
             fetchedData.sdType.parameters.map((param) => ({
               id: param.id,
-              label: param.label ?? '', // Ensure label is always a string (never undefined)
+              label: param.label ?? '',
               denotation: param.denotation,
               type: param.type
             })) || []
@@ -185,13 +184,13 @@ export default function DeviceTypeDetail() {
         <strong>Parameters</strong> ({deviceType.parameters.length}):
       </TableItem>
 
-      {/* ADD PARAMETER BUTTON - Moved to the top */}
+      {/* ADD PARAMETER BUTTON */}
       {editMode && (
         <Button
           onClick={() =>
             setDeviceType({
               ...deviceType,
-              parameters: [{ label: '', denotation: '', type: 'STRING' }, ...deviceType.parameters]
+              parameters: [{ label: '', denotation: '', type: 'NUMBER' }, ...deviceType.parameters]
             })
           }
           className="ml-3 mr-3"
@@ -217,7 +216,6 @@ export default function DeviceTypeDetail() {
                   }}
                 />
 
-                {/* ShadCN Dropdown for Type Selection */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline">{param.type}</Button>
