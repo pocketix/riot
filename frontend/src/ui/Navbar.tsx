@@ -1,13 +1,13 @@
-import { AiOutlineHome } from "react-icons/ai";
-import { CiSettings } from "react-icons/ci";
-import { GoPeople } from "react-icons/go";
-import { IoHammerOutline } from "react-icons/io5";
-import { TbDevicesPc } from "react-icons/tb";
-import { NavLink } from "react-router-dom";
-import styled from "styled-components";
-import Logo from "./Logo";
-import { useTranslation } from "react-i18next";
-import { breakpoints } from "@/styles/Breakpoints";
+import { AiOutlineHome } from 'react-icons/ai'
+import { CiSettings } from 'react-icons/ci'
+import { GoPeople } from 'react-icons/go'
+import { IoHammerOutline } from 'react-icons/io5'
+import { TbDevicesPc } from 'react-icons/tb'
+import { NavLink } from 'react-router-dom'
+import styled from 'styled-components'
+import Logo from './Logo'
+import { useTranslation } from 'react-i18next'
+import { breakpoints } from '@/styles/Breakpoints'
 
 const NavbarContainer = styled.div`
   display: flex;
@@ -27,7 +27,7 @@ const NavbarContainer = styled.div`
     border-top: none;
     gap: 0.6rem;
   }
-`;
+`
 
 const NavItem = styled(NavLink)`
   display: flex;
@@ -64,7 +64,6 @@ const NavItem = styled(NavLink)`
     gap: 1rem;
     width: 220px;
     padding: 0.8rem 2rem;
-    transition: all 0.3s ease-in-out;
     font-size: 1rem;
     letter-spacing: 0.05rem;
 
@@ -74,6 +73,8 @@ const NavItem = styled(NavLink)`
 
     &.active {
       background-color: var(--color-grey-300);
+      color: var(--color-white);
+      font-weight: 600;
     }
     &:hover {
       background-color: var(--color-grey-300);
@@ -84,7 +85,7 @@ const NavItem = styled(NavLink)`
       color: var(--color-grey-400);
     }
   }
-`;
+`
 
 const StyledNavbar = styled.div`
   display: flex;
@@ -97,35 +98,35 @@ const StyledNavbar = styled.div`
     padding: 2.4rem 1.2rem;
     gap: 3rem;
   }
-`;
+`
 
 export default function Navbar() {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
   return (
     <StyledNavbar>
       <Logo />
       <NavbarContainer>
         <NavItem to="/devices">
           <TbDevicesPc />
-          <span>{t("devices")}</span>
+          <span>{t('devices')}</span>
         </NavItem>
         <NavItem to="/members">
           <GoPeople />
-          <span>{t("members")}</span>
+          <span>{t('members')}</span>
         </NavItem>
         <NavItem to="/">
           <AiOutlineHome />
-          <span>{t("home")}</span>
+          <span>{t('home')}</span>
         </NavItem>
         <NavItem to="/automations">
           <IoHammerOutline />
-          <span>{t("automations")}</span>
+          <span>{t('automations')}</span>
         </NavItem>
         <NavItem to="/settings">
           <CiSettings />
-          <span>{t("settings")}</span>
+          <span>{t('settings')}</span>
         </NavItem>
       </NavbarContainer>
     </StyledNavbar>
-  );
+  )
 }

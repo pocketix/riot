@@ -18,11 +18,14 @@ export const GET_INSTANCES = gql`
 export const GET_PARAMETERS = gql`
   query SdType($sdTypeId: ID!) {
     sdType(id: $sdTypeId) {
-      denotation
       id
+      denotation
+      label
+      icon
       parameters {
-        denotation
         id
+        label
+        denotation
         type
       }
     }

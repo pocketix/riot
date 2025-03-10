@@ -473,7 +473,7 @@ export type SdTypeQueryVariables = Exact<{
 }>;
 
 
-export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', denotation: string, id: string, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: string, type: SdParameterType }> } };
+export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', id: string, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: string, label?: string | null, denotation: string, type: SdParameterType }> } };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -538,11 +538,14 @@ export type SdInstancesQueryResult = Apollo.QueryResult<SdInstancesQuery, SdInst
 export const SdTypeDocument = gql`
     query SdType($sdTypeId: ID!) {
   sdType(id: $sdTypeId) {
-    denotation
     id
+    denotation
+    label
+    icon
     parameters {
-      denotation
       id
+      label
+      denotation
       type
     }
   }
