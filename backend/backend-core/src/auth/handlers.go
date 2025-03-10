@@ -42,16 +42,17 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if redirectUrl.Scheme != "http" && redirectUrl.Scheme != "https" {
 		http.Error(w, "invalid redirect url (?redirect=...): url scheme must be 'http' or 'https'", http.StatusBadRequest)
+		return
 	}
 	if redirectUrl.Host == "" {
 		http.Error(w, "invalid redirect url (?redirect=...): missing host", http.StatusBadRequest)
 		return
 	}
-	if !allowedOrigins.Contains(redirectUrl.Host) {
+	if !allowedOrigins.Contains(rawRedirectUrl) {
 		http.Error(w, "redirect url (?redirect=...) is not among allowed origins", http.StatusBadRequest)
 		return
 	}
-	stateTokenValue := fmt.Sprintf("%s-%s", uniuri.New(), redirectUrl)
+	stateTokenValue := fmt.Sprintf("%s-%s", uniuri.New(), rawRedirectUrl)
 	setupStateTokenCookie(w, stateTokenValue)
 	http.Redirect(w, r, GoogleOAuth2Config.AuthCodeURL(stateTokenValue, oauth2.AccessTypeOffline), http.StatusTemporaryRedirect)
 }
@@ -63,7 +64,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing authorization code", http.StatusBadRequest)
 		return
 	}
-	stateTokenValue := query.Get("stateTokenValue")
+	stateTokenValue := query.Get("state")
 	if stateTokenValue == "" {
 		http.Error(w, "missing state-token", http.StatusBadRequest)
 		return
