@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import './index.scss'
-import { ApolloClient, InMemoryCache, ApolloProvider, NormalizedCacheObject, split, HttpLink } from '@apollo/client'
+import { ApolloClient, InMemoryCache, ApolloProvider, NormalizedCacheObject, split, HttpLink, from } from '@apollo/client'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { WebSocketLink } from '@apollo/client/link/ws'
 import { createTheme, Theme, ThemeProvider } from '@mui/material'
@@ -18,6 +18,7 @@ import CustomLinkButton from './page-independent-components/CustomLinkButton'
 import { ApolloSandbox } from '@apollo/sandbox/react'
 import ConfigurationPage from './pages/ConfigurationPage'
 import SDInstanceGroupsPageController from './pages/sd-instance-groups-page/SDInstanceGroupsPageController'
+import { ErrorResponse, onError } from '@apollo/client/link/error'
 
 const backendCoreURL: string = process.env.BACKEND_CORE_URL || 'http://localhost:9090'
 const webSocketBackendCoreURL: string = (() => {
@@ -28,14 +29,25 @@ const webSocketBackendCoreURL: string = (() => {
 
 console.info(`RIoT frontend is set to communicate with RIoT backend running at: ${backendCoreURL}, ${webSocketBackendCoreURL}`)
 
+let userRedirectedAlready: boolean = false
+
 const apolloClient: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   link: split(
     ({ query }) => {
       const definition = getMainDefinition(query)
       return definition.kind === 'OperationDefinition' && definition.operation === 'subscription'
     },
-    new WebSocketLink({ uri: webSocketBackendCoreURL }),
-    new HttpLink({ uri: backendCoreURL, credentials: 'include' })
+    new WebSocketLink({ uri: webSocketBackendCoreURL }), // TODO: Handle 401 within web-socket connection(s)
+    from([
+      onError(({ networkError }: ErrorResponse) => {
+        if (networkError && 'statusCode' in networkError && (networkError as any).statusCode === 401 && !userRedirectedAlready) {
+          // TODO: Consider displaying login modal here, instead of just redirecting the user-agent
+          userRedirectedAlready = true
+          window.location.href = `${backendCoreURL}/auth/login?redirect=${encodeURIComponent(window.location.href)}`
+        }
+      }),
+      new HttpLink({ uri: backendCoreURL, credentials: 'include' })
+    ])
   ),
   cache: new InMemoryCache(),
   defaultOptions: {

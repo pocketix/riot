@@ -35,7 +35,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing redirect url (?redirect=...)", http.StatusBadRequest)
 		return
 	}
-	redirectUrl, err := url.Parse(rawRedirectUrl)
+	decodedRedirectUrl, err := url.QueryUnescape(rawRedirectUrl)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to decode the redirect url (?redirect=...): %s", err.Error()), http.StatusBadRequest)
+		return
+	}
+	redirectUrl, err := url.Parse(decodedRedirectUrl)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("invalid redirect url (?redirect=...): %s", err.Error()), http.StatusBadRequest)
 		return
@@ -48,11 +53,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid redirect url (?redirect=...): missing host", http.StatusBadRequest)
 		return
 	}
-	if !allowedOrigins.Contains(rawRedirectUrl) {
+	if !allowedOrigins.Contains(fmt.Sprintf("%s://%s", redirectUrl.Scheme, redirectUrl.Host)) {
 		http.Error(w, "redirect url (?redirect=...) is not among allowed origins", http.StatusBadRequest)
 		return
 	}
-	stateTokenValue := fmt.Sprintf("%s-%s", uniuri.New(), rawRedirectUrl)
+	stateTokenValue := fmt.Sprintf("%s|%s", uniuri.New(), decodedRedirectUrl) // TODO: Consider more robust ways of handling the provided redirect URL
 	setupStateTokenCookie(w, stateTokenValue)
 	http.Redirect(w, r, GoogleOAuth2Config.AuthCodeURL(stateTokenValue, oauth2.AccessTypeOffline), http.StatusTemporaryRedirect)
 }
@@ -132,7 +137,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	setupSessionJWTCookie(w, sessionJWT)
 
-	redirectUrl := strings.Split(stateTokenValue, "-")[1]
+	redirectUrl := strings.Split(stateTokenValue, "|")[1]
 	http.Redirect(w, r, redirectUrl, http.StatusTemporaryRedirect)
 	return
 }
