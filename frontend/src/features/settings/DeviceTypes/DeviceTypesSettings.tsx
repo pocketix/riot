@@ -7,6 +7,7 @@ import DeviceTypeCard from './DeviceTypeCard'
 import Heading from '@/ui/Heading'
 import { Button } from '@/components/ui/button'
 import { breakpoints } from '@/styles/Breakpoints'
+import { useNavigate } from 'react-router-dom'
 
 const Container = styled.div`
   display: flex;
@@ -38,6 +39,7 @@ const Grid = styled.div`
 
 export default function DeviceTypesSettings() {
   const { data, loading, refetch } = useQuery<SdTypesQuery, SdTypesQueryVariables>(GET_SD_TYPES)
+  const naviagate = useNavigate()
 
   // console.log("SD Types Data:", JSON.stringify(data, null, 2));
 
@@ -60,7 +62,7 @@ export default function DeviceTypesSettings() {
           </span>
           .{' '}
         </Heading>
-        <Button>+ Add new</Button>
+        <Button onClick={() => naviagate('/settings/device-types/addNewType')}>+ Add new</Button>
       </Header>
       <Grid>
         {data.sdTypes.map((deviceType) => (
