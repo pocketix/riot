@@ -17,6 +17,13 @@ func ToDLLModelUser(userEntity dbModel.UserEntity) dllModel.User {
 		OAuth2Provider:         sharedUtils.NewOptionalFromPointer[string](userEntity.OAuth2Provider),
 		OAuth2ProviderIssuedID: sharedUtils.NewOptionalFromPointer[string](userEntity.OAuth2ProviderIssuedID),
 		LastLoginAt:            sharedUtils.NewOptionalFromPointer[time.Time](userEntity.LastLoginAt),
-		// TODO: Implement 'Invocations' as needed
+		// TODO: Implement 'Invocations', 'UserConfig' and other possibly missing fields as needed
+	}
+}
+
+func ToDLLModelUserConfig(userConfig dbModel.UserConfigEntity) dllModel.UserConfig {
+	return dllModel.UserConfig{
+		UserID: userConfig.UserID,
+		Config: userConfig.Config,
 	}
 }

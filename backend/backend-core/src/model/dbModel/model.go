@@ -132,18 +132,28 @@ type SDInstanceKPIDefinitionRelationshipEntity struct {
 // UserEntity represents a user of the application who can log in using various OAuth providers.
 type UserEntity struct {
 	gorm.Model
-	Username               string  `gorm:"column:username;uniqueIndex"`
-	Email                  string  `gorm:"column:email;uniqueIndex"`
-	Name                   *string `gorm:"column:name"`
-	ProfileImageURL        *string `gorm:"column:profile_image_url"`
-	OAuth2Provider         *string `gorm:"column:oauth2_provider;uniqueIndex:idx_oauth,priority:1"`
-	OAuth2ProviderIssuedID *string `gorm:"column:oauth2_provider_issued_id;uniqueIndex:idx_oauth,priority:2"`
-	LastLoginAt            *time.Time
+	Username               string                      `gorm:"column:username;uniqueIndex"`
+	Email                  string                      `gorm:"column:email;uniqueIndex"`
+	Name                   *string                     `gorm:"column:name"`
+	ProfileImageURL        *string                     `gorm:"column:profile_image_url"`
+	OAuth2Provider         *string                     `gorm:"column:oauth2_provider;uniqueIndex:idx_oauth,priority:1"`
+	OAuth2ProviderIssuedID *string                     `gorm:"column:oauth2_provider_issued_id;uniqueIndex:idx_oauth,priority:2"`
+	LastLoginAt            *time.Time                  `gorm:"column:last_login_at"`
 	Invocations            []SDCommandInvocationEntity `gorm:"foreignKey:UserId;constraint:OnDelete:CASCADE"`
+	UserConfig             UserConfigEntity            `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 func (UserEntity) TableName() string {
 	return "user"
+}
+
+type UserConfigEntity struct {
+	UserID uint32 `gorm:"primaryKey;column:user_id;not null"`
+	Config string `gorm:"column:config;type:jsonb;not null"` // Store JSON as a string
+}
+
+func (UserConfigEntity) TableName() string {
+	return "user_config"
 }
 
 type SDCommandEntity struct {

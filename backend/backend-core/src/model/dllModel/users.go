@@ -14,5 +14,10 @@ type User struct {
 	OAuth2Provider         sharedUtils.Optional[string]
 	OAuth2ProviderIssuedID sharedUtils.Optional[string]
 	LastLoginAt            sharedUtils.Optional[time.Time]
-	// TODO: Implement 'Invocations' as needed
+	// TODO: Implement 'Invocations', 'UserConfig' and other possibly missing fields as needed
+}
+
+type UserConfig struct {
+	UserID uint32
+	Config string
 }

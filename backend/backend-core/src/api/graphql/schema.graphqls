@@ -289,6 +289,18 @@ input InputData {
   data: JSON!
 }
 
+
+# ----- Users and their configurations ----
+
+type UserConfig {
+  userId: ID!
+  config: JSON!
+}
+
+input UserConfigInput {
+  config: JSON!
+}
+
 # ----- Queries, mutations and subscriptions -----
 
 type Query {
@@ -302,6 +314,7 @@ type Query {
   sdInstanceGroups: [SDInstanceGroup!]!
   statisticsQuerySimpleSensors(request: StatisticsInput sensors: SimpleSensors!): [OutputData!]!
   statisticsQuerySensorsWithFields(request: StatisticsInput sensors: SensorsWithFields!): [OutputData!]!
+  userConfig(id: ID!): UserConfig!
 }
 
 type Mutation {
@@ -315,6 +328,8 @@ type Mutation {
   updateSDInstanceGroup(id: ID!, input: SDInstanceGroupInput!): SDInstanceGroup!
   deleteSDInstanceGroup(id: ID!): Boolean!
   statisticsMutate(inputData: InputData!): Boolean!
+  updateUserConfig(userId: ID!, input: UserConfigInput!): UserConfig!
+  deleteUserConfig(userId: ID!): Boolean!
 }
 
 type Subscription {

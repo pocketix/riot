@@ -7,6 +7,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
+	"log"
 	"strings"
 	"time"
 )
@@ -54,7 +55,7 @@ func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) share
 		"  |> rename(columns: {_time: \"time\", _measurement: \"deviceId\"})\n"+
 		"  |> group(columns: [\"measurement\"], mode: \"by\")", imports, influx2Client.bucket, timeRange, filter, aggregation)
 
-	fmt.Println(query)
+	log.Println(query)
 
 	result, err := influx2Client.queryApi.Query(context.Background(), query)
 
@@ -80,7 +81,7 @@ func (influx2Client Influx2Client) Write(data sharedModel.InputData) {
 		point := influxdb2.NewPoint(data.SDInstanceUID, map[string]string{"deviceType": data.SDTypeSpecification}, parameters, time.Unix(int64(data.Timestamp), 0))
 		influx2Client.writeApi.WritePoint(point)
 	} else {
-		fmt.Println("parameterAsAny is not a map[string]interface{}")
+		log.Println("parameterAsAny is not a map[string]interface{}")
 	}
 
 	influx2Client.writeApi.Flush()
@@ -123,7 +124,7 @@ func convertTimeToQueryTimePart(body sharedModel.ReadRequestBody) string {
 func createFilter(body sharedModel.ReadRequestBody) string {
 	var filterStrings []string
 
-	fmt.Printf("Getting sensors: %s\n", body.Sensors)
+	log.Printf("Getting sensors: %s\n", body.Sensors)
 	if sharedModel.AreSimpleSensors(body.Sensors) {
 		simpleSensors := body.Sensors.(sharedModel.SimpleSensors)
 		for _, sensor := range simpleSensors {
@@ -172,7 +173,7 @@ func createAggregation(body sharedModel.ReadRequestBody) string {
 // mapToOutputData converts a map[string]interface{} to an OutputData struct.
 func mapToOutputData(influxOutput map[string]interface{}) sharedModel.OutputData {
 	outputData := sharedModel.OutputData{
-		Result:     influxOutput["result"].(string),
+		Result:     "",
 		Table:      influxOutput["table"].(int64),
 		Time:       influxOutput["time"].(time.Time),
 		DeviceID:   influxOutput["deviceId"].(string),
@@ -184,6 +185,19 @@ func mapToOutputData(influxOutput map[string]interface{}) sharedModel.OutputData
 		delete(influxOutput, "deviceType")
 	} else {
 		outputData.DeviceType = ""
+	}
+
+	if value, exists := influxOutput["result"]; exists {
+		outputData.DeviceType = value.(string)
+		delete(influxOutput, "result")
+	} else {
+		outputData.DeviceType = ""
+	}
+
+	for key, value := range influxOutput {
+		if value == nil {
+			delete(influxOutput, key)
+		}
 	}
 
 	delete(influxOutput, "result")

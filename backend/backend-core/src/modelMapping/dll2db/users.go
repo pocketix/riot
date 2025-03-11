@@ -8,9 +8,10 @@ import (
 )
 
 func ToDBModelEntityUser(user dllModel.User) dbModel.UserEntity {
+	id := user.ID.GetPayloadOrDefault(0)
 	return dbModel.UserEntity{
 		Model: gorm.Model{
-			ID: user.ID.GetPayloadOrDefault(0),
+			ID: id,
 		},
 		Username:               user.Username,
 		Email:                  user.Email,
@@ -20,5 +21,16 @@ func ToDBModelEntityUser(user dllModel.User) dbModel.UserEntity {
 		OAuth2ProviderIssuedID: user.OAuth2ProviderIssuedID.ToPointer(),
 		LastLoginAt:            user.LastLoginAt.ToPointer(),
 		Invocations:            sharedUtils.EmptySlice[dbModel.SDCommandInvocationEntity](), // TODO: Implement 'Invocations' as needed
+		UserConfig: dbModel.UserConfigEntity{ // TODO: Implement 'UserConfig' as needed
+			UserID: uint32(id),
+			Config: "",
+		},
+	}
+}
+
+func ToDBModelEntityUserConfig(userConfig dllModel.UserConfig) dbModel.UserConfigEntity {
+	return dbModel.UserConfigEntity{
+		UserID: userConfig.UserID,
+		Config: userConfig.Config,
 	}
 }

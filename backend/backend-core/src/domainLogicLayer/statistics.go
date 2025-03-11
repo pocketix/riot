@@ -10,6 +10,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -37,8 +38,11 @@ func Query(input sharedModel.ReadRequestBody) sharedUtils.Result[[]graphQLModel.
 	outputChannel := make(chan sharedUtils.Result[[]sharedModel.OutputData])
 
 	go func() {
+		client := rabbitmq.NewClient()
+		defer client.Dispose()
+
 		err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.ReadRequestResponseOrError](
-			rabbitMQClient,
+			client,
 			sharedConstants.TimeSeriesReadRequestBackendCoreResponseQueueName,
 			correlationId,
 			func(readRequestResponseOrError sharedModel.ReadRequestResponseOrError, delivery amqp.Delivery) error {
@@ -54,6 +58,7 @@ func Query(input sharedModel.ReadRequestBody) sharedUtils.Result[[]graphQLModel.
 		)
 
 		if err != nil {
+			log.Printf("Statistics Query | %s", err)
 			outputChannel <- sharedUtils.NewFailureResult[[]sharedModel.OutputData](err)
 			close(outputChannel)
 		}
@@ -68,18 +73,21 @@ func Query(input sharedModel.ReadRequestBody) sharedUtils.Result[[]graphQLModel.
 	)
 
 	if err != nil {
+		log.Printf("Statistics Query | %s", err)
 		return sharedUtils.NewFailureResult[[]graphQLModel.OutputData](err)
 	}
 
 	result := <-outputChannel
 
 	if result.IsFailure() {
+		log.Printf("Statistics Query | %s", result.GetError())
 		return sharedUtils.NewFailureResult[[]graphQLModel.OutputData](result.GetError())
 	}
 
 	convertedResult, err := ConvertOutputData(result.GetPayload())
 
 	if err != nil {
+		log.Printf("Statistics Query | %s", err)
 		return sharedUtils.NewFailureResult[[]graphQLModel.OutputData](err)
 	}
 
