@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { useQuery } from '@apollo/client'
 import { GET_PARAMETERS } from '@/graphql/Queries'
@@ -6,13 +6,13 @@ import { SdTypeQuery, SdTypeQueryVariables } from '@/generated/graphql'
 import Spinner from '@/ui/Spinner'
 import styled from 'styled-components'
 import { Button } from '@/components/ui/button'
-import { TbEdit, TbPlus, TbTrash } from 'react-icons/tb'
+import { TbCircleCheck, TbEdit, TbPlus, TbTrash } from 'react-icons/tb'
 import { getIcon } from '@/utils/getIcon'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import IconPicker from '@/ui/IconPicker'
 
-// Styled Components
 const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -33,6 +33,7 @@ const Header = styled.div`
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
   box-shadow: 0px 2px 6px var(--color-grey-200);
+  min-height: 100px;
 `
 
 const TitleWrapper = styled.div`
@@ -97,7 +98,17 @@ export default function DeviceTypeDetail() {
     parameters: [] as { label: string | null; denotation: string; type: string }[]
   })
 
-  const { data, loading, error } = useQuery<SdTypeQuery, SdTypeQueryVariables>(GET_PARAMETERS, {
+  const IconComponent = useMemo(() => getIcon(deviceType.icon), [deviceType.icon])
+
+  const handleSave = useCallback(() => {
+    if (isAddingNew) {
+      console.log('Creating new device type:', deviceType)
+    } else {
+      console.log('Saving changes:', deviceType)
+    }
+  }, [deviceType, isAddingNew])
+
+  const { loading, error } = useQuery<SdTypeQuery, SdTypeQueryVariables>(GET_PARAMETERS, {
     variables: { sdTypeId: sdTypeId! },
     skip: !sdTypeId || isAddingNew,
     onCompleted: (fetchedData) => {
@@ -121,16 +132,6 @@ export default function DeviceTypeDetail() {
   if (loading) return <Spinner />
   if (error) return <p>Error: {error.message}</p>
 
-  const IconComponent = getIcon(deviceType.icon)
-
-  const handleSave = () => {
-    if (isAddingNew) {
-      console.log('Creating new device type:', deviceType)
-    } else {
-      console.log('Saving changes:', deviceType)
-    }
-  }
-
   return (
     <PageContainer>
       {/* HEADER */}
@@ -139,7 +140,7 @@ export default function DeviceTypeDetail() {
           {editMode ? (
             <div>
               <Label htmlFor="icon">Icon</Label>
-              <Input id="icon" type="text" value={deviceType.icon} placeholder="Enter Icon Name" onChange={(e) => setDeviceType({ ...deviceType, icon: e.target.value })} />
+              <IconPicker deviceType={deviceType} setDeviceType={setDeviceType} />
             </div>
           ) : (
             <IconWrapper>{IconComponent && <IconComponent />}</IconWrapper>
@@ -148,21 +149,32 @@ export default function DeviceTypeDetail() {
           {editMode ? (
             <div>
               <Label htmlFor="device-name">Device Type Name</Label>
-              <Input id="device-name" type="text" value={deviceType.label} placeholder="Enter device type name..." onChange={(e) => setDeviceType({ ...deviceType, label: e.target.value })} />
+              <Input id="device-name" type="text" value={deviceType.label} placeholder="Enter device type name..." onChange={(e) => setDeviceType((prev) => ({ ...prev, label: e.target.value }))} />
             </div>
           ) : (
             <Title>{deviceType.label}</Title>
           )}
         </TitleWrapper>
-        <Button
-          onClick={() => {
-            setEditMode(!editMode)
-            handleSave()
-          }}
-          variant={editMode ? 'green' : 'default'}
-        >
-          <TbEdit /> {editMode ? 'Save' : 'Edit'}
-        </Button>
+        {editMode ? (
+          <Button
+            onClick={() => {
+              setEditMode(!editMode)
+              handleSave()
+            }}
+            variant={'green'}
+          >
+            <TbCircleCheck /> Save
+          </Button>
+        ) : (
+          <Button
+            onClick={() => {
+              setEditMode(!editMode)
+            }}
+            variant={'default'}
+          >
+            <TbEdit /> Edit
+          </Button>
+        )}
       </Header>
 
       {/* Denotation */}
@@ -193,7 +205,7 @@ export default function DeviceTypeDetail() {
               parameters: [{ label: '', denotation: '', type: 'NUMBER' }, ...deviceType.parameters]
             })
           }
-          className="ml-3 mr-3"
+          className="ml-4 mr-4"
         >
           <TbPlus /> Add Parameter
         </Button>
