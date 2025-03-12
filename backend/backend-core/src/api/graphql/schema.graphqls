@@ -57,6 +57,14 @@ input SDInstanceUpdateInput {
   confirmedByUser: Boolean
 }
 
+input SDCommandInvocationInput {
+  invocationTime: String!
+  payload: String!
+  userId: ID!
+  commandId: ID!
+  sdInstanceId: ID!
+}
+
 # ----- KPI definitions and nodes -----
 
 enum SDInstanceMode {
@@ -331,6 +339,8 @@ type Query {
   statisticsQuerySimpleSensors(request: StatisticsInput sensors: SimpleSensors!): [OutputData!]!
   statisticsQuerySensorsWithFields(request: StatisticsInput sensors: SensorsWithFields!): [OutputData!]!
   userConfig(id: ID!): UserConfig!
+  sdCommand(id: ID!): SDCommandInvocation! # Returns a specific SDCommandInvocation by its ID
+  sdCommandInvocations: [SDCommandInvocation!]! # Returns all SDCommandInvocation from the database
 }
 
 type Mutation {
@@ -346,6 +356,8 @@ type Mutation {
   statisticsMutate(inputData: InputData!): Boolean!
   updateUserConfig(userId: ID!, input: UserConfigInput!): UserConfig!
   deleteUserConfig(userId: ID!): Boolean!
+  createSDCommand(input: SDCommandInvocationInput!): SDCommandInvocation! # creating a new invocation
+  invokeSDCommand(id: ID!): Boolean! # starts an existing invocation
 }
 
 type Subscription {
