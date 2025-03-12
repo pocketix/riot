@@ -24,8 +24,10 @@ const (
 )
 
 var (
-	jwtSecret      = []byte(sharedUtils.GetEnvironmentVariableValue("JWT_SECRET").GetPayloadOrDefault("laaiqVgdmnurM4hC"))
-	allowedOrigins = sharedUtils.NewSetFromSlice(strings.Split(sharedUtils.GetEnvironmentVariableValue("ALLOWED_ORIGINS").GetPayloadOrDefault("http://localhost:8080,http://localhost:1234"), ","))
+	jwtSecret                          = []byte(sharedUtils.GetEnvironmentVariableValue("JWT_SECRET").GetPayloadOrDefault("laaiqVgdmnurM4hC"))
+	allowedOrigins                     = sharedUtils.NewSetFromSlice(strings.Split(sharedUtils.GetEnvironmentVariableValue("ALLOWED_ORIGINS").GetPayloadOrDefault("http://localhost:8080,http://localhost:1234"), ","))
+	secureCookies                      = sharedUtils.GetFlagEnvironmentVariableValue("SECURE_COOKIES").GetPayloadOrDefault(false)                        // TODO: Ensure this variable evaluates to 'true' in production (requires HTTPS)
+	jwtAuthenticationMiddlewareEnabled = sharedUtils.GetFlagEnvironmentVariableValue("JWT_AUTHENTICATION_MIDDLEWARE_ENABLED").GetPayloadOrDefault(false) // TODO: Ensure this variable evaluates to 'true' in production
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -147,7 +149,7 @@ func setupStateTokenCookie(w http.ResponseWriter, stateTokenValue string) {
 		Name:     OAuth2StateTokenCookieIdentifier,
 		Value:    stateTokenValue,
 		HttpOnly: true,
-		Secure:   false, // TODO: Ensure this field is set to 'true' in production (requires HTTPS)
+		Secure:   secureCookies,
 		Path:     CallbackPath,
 		MaxAge:   int((10 * time.Minute).Seconds()),
 	})
@@ -202,7 +204,7 @@ func setupSessionJWTCookie(w http.ResponseWriter, sessionJWT string) {
 		Name:     SessionJWTCookieIdentifier,
 		Value:    sessionJWT,
 		HttpOnly: true,
-		Secure:   false, // TODO: Ensure this field is set to 'true' in production (requires HTTPS)
+		Secure:   secureCookies,
 		Path:     "/",
 		MaxAge:   int((24 * time.Hour).Seconds()),
 	})
@@ -210,6 +212,10 @@ func setupSessionJWTCookie(w http.ResponseWriter, sessionJWT string) {
 
 func JWTAuthenticationMiddleware(next http.Handler) http.Handler { // TODO: Make this significantly more robust
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !jwtAuthenticationMiddlewareEnabled {
+			next.ServeHTTP(w, r)
+		}
+
 		sessionJWTCookie, err := r.Cookie(SessionJWTCookieIdentifier)
 		if err != nil {
 			http.Error(w, "session JWT cookie is missing", http.StatusUnauthorized)
