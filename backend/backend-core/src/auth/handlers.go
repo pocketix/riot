@@ -61,7 +61,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	stateTokenValue := fmt.Sprintf("%s|%s", uniuri.New(), decodedRedirectUrl) // TODO: Consider more robust ways of handling the provided redirect URL
 	setupStateTokenCookie(w, stateTokenValue)
-	http.Redirect(w, r, GoogleOAuth2Config.AuthCodeURL(stateTokenValue, oauth2.AccessTypeOffline, oauth2.ApprovalForce), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, GoogleOAuth2Config.AuthCodeURL(stateTokenValue, oauth2.ApprovalForce), http.StatusTemporaryRedirect)
 }
 
 func CallbackHandler(w http.ResponseWriter, r *http.Request) {
