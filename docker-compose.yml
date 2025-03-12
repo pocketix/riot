@@ -24,8 +24,8 @@ services:
       GOOGLE_OAUTH2_CLIENT_SECRET: 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
       JWT_SECRET: laaiqVgdmnurM4hC
       ALLOWED_ORIGINS: http://localhost:8080,http://localhost:1234 # Essentially a API client whitelist TODO: Configure this as needed...
-      SECURE_COOKIES:
-      JWT_AUTHENTICATION_MIDDLEWARE_ENABLED: # TODO: Comment this out if you need unrestricted API access without authentication
+      # SECURE_COOKIES: "" # Comment this out if you are using http instead of https
+      JWT_AUTHENTICATION_MIDDLEWARE_ENABLED: "" # Comment this out if you need unrestricted API access without authentication
     depends_on:
       - rabbitmq
       - postgres

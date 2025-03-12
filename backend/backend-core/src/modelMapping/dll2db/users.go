@@ -23,7 +23,7 @@ func ToDBModelEntityUser(user dllModel.User) dbModel.UserEntity {
 		Invocations:            sharedUtils.EmptySlice[dbModel.SDCommandInvocationEntity](), // TODO: Implement 'Invocations' as needed
 		UserConfig: dbModel.UserConfigEntity{ // TODO: Implement 'UserConfig' as needed
 			UserID: uint32(id),
-			Config: "",
+			Config: "{}",
 		},
 	}
 }

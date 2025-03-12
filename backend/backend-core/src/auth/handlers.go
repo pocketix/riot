@@ -61,7 +61,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	stateTokenValue := fmt.Sprintf("%s|%s", uniuri.New(), decodedRedirectUrl) // TODO: Consider more robust ways of handling the provided redirect URL
 	setupStateTokenCookie(w, stateTokenValue)
-	http.Redirect(w, r, GoogleOAuth2Config.AuthCodeURL(stateTokenValue, oauth2.AccessTypeOffline), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, GoogleOAuth2Config.AuthCodeURL(stateTokenValue, oauth2.AccessTypeOffline, oauth2.ApprovalForce), http.StatusTemporaryRedirect)
 }
 
 func CallbackHandler(w http.ResponseWriter, r *http.Request) {
@@ -90,7 +90,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	token, err := GoogleOAuth2Config.Exchange(context.Background(), authorizationCode)
 	if err != nil {
-		http.Error(w, "failed to exchange authorization code for token", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("failed to exchange authorization code for token: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 	idToken, ok := token.Extra("id_token").(string)
@@ -100,7 +100,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	idTokenPayload, err := idtoken.Validate(context.Background(), idToken, GoogleOAuth2Config.ClientID)
 	if err != nil {
-		http.Error(w, "invalid id token", http.StatusUnauthorized)
+		http.Error(w, fmt.Sprintf("invalid id token: %s", err.Error()), http.StatusUnauthorized)
 		return
 	}
 
@@ -115,6 +115,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	userLoadResult := dbClientInstance.LoadUserBasedOnOAuth2ProviderIssuedID(userData.oauth2ProviderIssuedID)
 	if userLoadResult.IsFailure() {
 		http.Error(w, fmt.Sprintf("database operation failure - failed to load user record: %s", userLoadResult.GetError().Error()), http.StatusInternalServerError)
+		return
 	}
 	user := userLoadResult.GetPayload().GetPayloadOrDefault(dllModel.User{
 		ID:                     sharedUtils.NewEmptyOptional[uint](),
@@ -129,6 +130,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	persistResult := dbClientInstance.PersistUser(user)
 	if persistResult.IsFailure() {
 		http.Error(w, fmt.Sprintf("database operation failure - failed to persist user record: %s", persistResult.GetError().Error()), http.StatusInternalServerError)
+		return
 	}
 	user.ID = sharedUtils.NewOptionalOf(persistResult.GetPayload())
 
@@ -214,6 +216,7 @@ func JWTAuthenticationMiddleware(next http.Handler) http.Handler { // TODO: Make
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !jwtAuthenticationMiddlewareEnabled {
 			next.ServeHTTP(w, r)
+			return
 		}
 
 		sessionJWTCookie, err := r.Cookie(SessionJWTCookieIdentifier)
