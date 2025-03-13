@@ -1,9 +1,7 @@
 package auth
 
 import (
-	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
-	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 )
 
@@ -16,20 +14,14 @@ func JWTAuthenticationMiddleware(next http.Handler) http.Handler { // TODO: Make
 			return
 		}
 
-		sessionJWTCookie, err := r.Cookie(SessionJWTCookieIdentifier)
-		if err != nil {
-			http.Error(w, "session JWT cookie is missing", http.StatusUnauthorized)
+		sessionJWTCookieValueOptional := getSessionJWTCookieValue(r)
+		if sessionJWTCookieValueOptional.IsEmpty() {
+			http.Error(w, "session JWT cookie not found", http.StatusBadRequest)
 			return
 		}
 
-		token, err := jwt.Parse(sessionJWTCookie.Value, func(token *jwt.Token) (any, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %s", token.Header["alg"].(string))
-			}
-			return jwtSecret, nil
-		})
-		if err != nil || !token.Valid {
-			http.Error(w, "provided JWT is invalid", http.StatusUnauthorized)
+		if !isJWTValid(sessionJWTCookieValueOptional.GetPayload()) {
+			http.Error(w, "provided session JWT is invalid", http.StatusUnauthorized)
 			return
 		}
 

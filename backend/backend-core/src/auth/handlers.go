@@ -2,13 +2,13 @@ package auth
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"github.com/dchest/uniuri"
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/idtoken"
 	"net/http"
@@ -17,17 +17,12 @@ import (
 	"time"
 )
 
-const (
-	OAuth2StateTokenCookieIdentifier = "OAuth2StateToken"
-	SessionJWTCookieIdentifier       = "sessionJWT"
-	CallbackPath                     = "/auth/callback"
-)
+var allowedOrigins = sharedUtils.NewSetFromSlice(strings.Split(sharedUtils.GetEnvironmentVariableValue("ALLOWED_ORIGINS").GetPayloadOrDefault("http://localhost:8080,http://localhost:1234"), ","))
 
-var (
-	jwtSecret      = []byte(sharedUtils.GetEnvironmentVariableValue("JWT_SECRET").GetPayloadOrDefault("laaiqVgdmnurM4hC"))
-	allowedOrigins = sharedUtils.NewSetFromSlice(strings.Split(sharedUtils.GetEnvironmentVariableValue("ALLOWED_ORIGINS").GetPayloadOrDefault("http://localhost:8080,http://localhost:1234"), ","))
-	secureCookies  = sharedUtils.GetFlagEnvironmentVariableValue("SECURE_COOKIES").GetPayloadOrDefault(false) // TODO: Ensure this variable evaluates to 'true' in production (requires HTTPS)
-)
+type oauth2OIDCFlowState struct {
+	RandomState string `json:"randomState"`
+	RedirectUrl string `json:"redirectUrl"`
+}
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
@@ -58,9 +53,18 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "redirect url (?redirect=...) is not among allowed origins", http.StatusBadRequest)
 		return
 	}
-	stateTokenValue := fmt.Sprintf("%s|%s", uniuri.New(), decodedRedirectUrl) // TODO: Consider more robust ways of handling the provided redirect URL
-	setupStateTokenCookie(w, stateTokenValue)
-	http.Redirect(w, r, GoogleOAuth2Config.AuthCodeURL(stateTokenValue, oauth2.ApprovalForce), http.StatusTemporaryRedirect)
+	randomState := uniuri.New()
+	jsonSerializationResult := sharedUtils.SerializeToJSON(oauth2OIDCFlowState{
+		RandomState: randomState,
+		RedirectUrl: decodedRedirectUrl,
+	})
+	if jsonSerializationResult.IsFailure() {
+		http.Error(w, fmt.Sprintf("failed to serialize OAuth2 | OIDC flow state object to JSON: %s", jsonSerializationResult.GetError().Error()), http.StatusInternalServerError)
+		return
+	}
+	base64EncodedOAuth2OIDCFlowState := base64.URLEncoding.EncodeToString(jsonSerializationResult.GetPayload())
+	setupOauth2OIDCFlowStateCookie(w, base64EncodedOAuth2OIDCFlowState)
+	http.Redirect(w, r, GoogleOAuth2Config.AuthCodeURL(randomState, oauth2.ApprovalForce), http.StatusTemporaryRedirect)
 }
 
 func CallbackHandler(w http.ResponseWriter, r *http.Request) {
@@ -70,22 +74,35 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing authorization code", http.StatusBadRequest)
 		return
 	}
-	stateTokenValue := query.Get("state")
-	if stateTokenValue == "" {
-		http.Error(w, "missing state-token", http.StatusBadRequest)
+	randomState := query.Get("state")
+	if randomState == "" {
+		http.Error(w, "missing random state", http.StatusBadRequest)
 		return
 	}
 
-	cookie, err := r.Cookie(OAuth2StateTokenCookieIdentifier)
+	base64EncodedOAuth2OIDCFlowStateOptional := getOauth2OIDCFlowStateCookieValue(r)
+	if base64EncodedOAuth2OIDCFlowStateOptional.IsEmpty() {
+		http.Error(w, "OAuth2 | OIDC flow state cookie not found", http.StatusBadRequest)
+		return
+	}
+	clearOauth2OIDCFlowStateCookie(w)
+
+	decodedOAuth2OIDCFlowState, err := base64.URLEncoding.DecodeString(base64EncodedOAuth2OIDCFlowStateOptional.GetPayload())
 	if err != nil {
-		http.Error(w, "state-token cookie not found", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("failed to base64-decode OAuth2 | OIDC flow state cookie contents: %s", err.Error()), http.StatusBadRequest)
 		return
 	}
-	if cookie.Value != stateTokenValue {
-		http.Error(w, "state-token mismatch", http.StatusBadRequest)
+	jsonDeserializationResult := sharedUtils.DeserializeFromJSON[oauth2OIDCFlowState](decodedOAuth2OIDCFlowState)
+	if jsonDeserializationResult.IsFailure() {
+		http.Error(w, fmt.Sprintf("failed to deserialize OAuth2 | OIDC flow state object from JSON: %s", jsonDeserializationResult.GetError().Error()), http.StatusInternalServerError)
 		return
 	}
-	clearStateTokenCookie(w)
+	oauth2OIDCFlowStateObject := jsonDeserializationResult.GetPayload()
+
+	if randomState != oauth2OIDCFlowStateObject.RandomState {
+		http.Error(w, "random state mismatch (request-cookie)", http.StatusBadRequest)
+		return
+	}
 
 	token, err := GoogleOAuth2Config.Exchange(context.Background(), authorizationCode)
 	if err != nil {
@@ -94,7 +111,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	idToken, ok := token.Extra("id_token").(string)
 	if !ok || idToken == "" {
-		http.Error(w, "no id token found in authorization server's response", http.StatusInternalServerError)
+		http.Error(w, "no id token found in authorization server's response", http.StatusBadRequest)
 		return
 	}
 	idTokenPayload, err := idtoken.Validate(context.Background(), idToken, GoogleOAuth2Config.ClientID)
@@ -105,16 +122,37 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	idTokenDataExtractionResult := extractIDTokenData(idTokenPayload)
 	if idTokenDataExtractionResult.IsFailure() {
-		http.Error(w, fmt.Sprintf("the id token does not seem to contain the necessary data: %s", idTokenDataExtractionResult.GetError().Error()), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("the id token does not seem to contain the necessary data: %s", idTokenDataExtractionResult.GetError().Error()), http.StatusBadRequest)
 		return
 	}
 	userData := idTokenDataExtractionResult.GetPayload()
 
+	userRecordUpsertResult := handleUserRecordUpsert(w, userData)
+	if userRecordUpsertResult.IsFailure() {
+		http.Error(w, userRecordUpsertResult.GetError().Error(), http.StatusInternalServerError)
+	}
+	user := userRecordUpsertResult.GetPayload()
+
+	sessionJWT, err := createSessionJWT(user)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to create session JWT: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	if err = setupSessionJWTCookie(w, sessionJWT); err != nil {
+		http.Error(w, fmt.Sprintf("failed to set up session JWT cookie: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, oauth2OIDCFlowStateObject.RedirectUrl, http.StatusTemporaryRedirect)
+	return
+}
+
+func handleUserRecordUpsert(w http.ResponseWriter, userData idTokenData) sharedUtils.Result[dllModel.User] {
 	dbClientInstance := dbClient.GetRelationalDatabaseClientInstance()
 	userLoadResult := dbClientInstance.LoadUserBasedOnOAuth2ProviderIssuedID(userData.oauth2ProviderIssuedID)
 	if userLoadResult.IsFailure() {
-		http.Error(w, fmt.Sprintf("database operation failure - failed to load user record: %s", userLoadResult.GetError().Error()), http.StatusInternalServerError)
-		return
+		return sharedUtils.NewFailureResult[dllModel.User](fmt.Errorf("user record upsert failure - failed to load user record: %s", userLoadResult.GetError().Error()))
 	}
 	user := userLoadResult.GetPayload().GetPayloadOrDefault(dllModel.User{
 		ID:                     sharedUtils.NewEmptyOptional[uint](),
@@ -128,41 +166,10 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	user.LastLoginAt = sharedUtils.NewOptionalOf(time.Now())
 	persistResult := dbClientInstance.PersistUser(user)
 	if persistResult.IsFailure() {
-		http.Error(w, fmt.Sprintf("database operation failure - failed to persist user record: %s", persistResult.GetError().Error()), http.StatusInternalServerError)
-		return
+		return sharedUtils.NewFailureResult[dllModel.User](fmt.Errorf("user record upsert failure - failed to persist user record: %s", persistResult.GetError().Error()))
 	}
 	user.ID = sharedUtils.NewOptionalOf(persistResult.GetPayload())
-
-	sessionJWT, err := createSessionJWT(user)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to create session JWT: %s", err.Error()), http.StatusInternalServerError)
-		return
-	}
-	setupSessionJWTCookie(w, sessionJWT)
-
-	redirectUrl := strings.Split(stateTokenValue, "|")[1]
-	http.Redirect(w, r, redirectUrl, http.StatusTemporaryRedirect)
-	return
-}
-
-func setupStateTokenCookie(w http.ResponseWriter, stateTokenValue string) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     OAuth2StateTokenCookieIdentifier,
-		Value:    stateTokenValue,
-		HttpOnly: true,
-		Secure:   secureCookies,
-		Path:     CallbackPath,
-		MaxAge:   int((10 * time.Minute).Seconds()),
-	})
-}
-
-func clearStateTokenCookie(w http.ResponseWriter) {
-	http.SetCookie(w, &http.Cookie{
-		Name:   OAuth2StateTokenCookieIdentifier,
-		Value:  "",
-		MaxAge: -1,
-		Path:   CallbackPath,
-	})
+	return sharedUtils.NewSuccessResult(user)
 }
 
 type idTokenData struct {
@@ -188,25 +195,5 @@ func extractIDTokenData(idTokenPayload *idtoken.Payload) sharedUtils.Result[idTo
 		email:                  email,
 		name:                   sharedUtils.Ternary[sharedUtils.Optional[string]](name != "", sharedUtils.NewOptionalOf(name), sharedUtils.NewEmptyOptional[string]()),
 		profileImageURL:        sharedUtils.Ternary[sharedUtils.Optional[string]](profileImageURL != "", sharedUtils.NewOptionalOf(profileImageURL), sharedUtils.NewEmptyOptional[string]()),
-	})
-}
-
-func createSessionJWT(user dllModel.User) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID.GetPayload(),
-		"iat": time.Now().Unix(),
-		"exp": time.Now().Add(24 * time.Hour).Unix(),
-	})
-	return token.SignedString(jwtSecret)
-}
-
-func setupSessionJWTCookie(w http.ResponseWriter, sessionJWT string) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     SessionJWTCookieIdentifier,
-		Value:    sessionJWT,
-		HttpOnly: true,
-		Secure:   secureCookies,
-		Path:     "/",
-		MaxAge:   int((24 * time.Hour).Seconds()),
 	})
 }
