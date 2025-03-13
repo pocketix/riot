@@ -30,3 +30,25 @@ func ToGraphQLModelSDCommandInvocations(invocations []dllModel.SDCommandInvocati
 	}
 	return result
 }
+
+func ToGraphQLModelSDCommandInvocation(invocation dllModel.SDCommandInvocation) graphQLModel.SDCommandInvocation {
+	return graphQLModel.SDCommandInvocation{
+		ID:             invocation.ID,
+		InvocationTime: invocation.InvocationTime,
+		Payload:        invocation.Payload,
+		UserID:         invocation.UserID,
+		CommandID:      invocation.CommandID,
+		SdInstanceID:   invocation.SDInstanceID,
+	}
+}
+
+func ToDLLModelSDCommandInvocation(input graphQLModel.SDCommandInvocationInput) dllModel.SDCommandInvocation {
+	return dllModel.SDCommandInvocation{
+		ID:             0, // ID bude generováno při uložení do DB
+		InvocationTime: input.InvocationTime,
+		Payload:        input.Payload,
+		UserID:         input.UserID,
+		CommandID:      input.CommandID,
+		SDInstanceID:   input.SdInstanceID,
+	}
+}

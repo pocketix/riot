@@ -31,3 +31,14 @@ func ToDLLModelSDCommandInvocations(commandInvocations []dbModel.SDCommandInvoca
 	}
 	return dllInvocations
 }
+
+func ToDLLModelSDCommandInvocation(command dbModel.SDCommandInvocationEntity) dllModel.SDCommandInvocation {
+	return dllModel.SDCommandInvocation{
+		ID:             command.ID,
+		InvocationTime: command.InvocationTime.Format("2006-01-02T15:04:05Z07:00"),
+		Payload:        command.Payload,
+		UserID:         command.UserId,
+		CommandID:      command.CommandID,
+		SDInstanceID:   command.SDInstanceID,
+	}
+}

@@ -33,3 +33,15 @@ func ToDBModelSDCommandInvocations(commandInvocations []dllModel.SDCommandInvoca
 	}
 	return dbInvocations
 }
+
+func ToDBModelEntitySDCommandInvocation(command dllModel.SDCommandInvocation) dbModel.SDCommandInvocationEntity {
+	invocationTime, _ := time.Parse("2006-01-02T15:04:05Z07:00", command.InvocationTime)
+	return dbModel.SDCommandInvocationEntity{
+		ID:             command.ID,
+		InvocationTime: invocationTime,
+		Payload:        command.Payload,
+		UserId:         command.UserID,
+		CommandID:      command.CommandID,
+		SDInstanceID:   command.SDInstanceID,
+	}
+}

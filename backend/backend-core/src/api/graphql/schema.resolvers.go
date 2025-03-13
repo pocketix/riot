@@ -2,7 +2,6 @@ package graphql
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql/gsc"
@@ -102,14 +101,6 @@ func (r *mutationResolver) DeleteUserConfig(ctx context.Context, userID uint32) 
 	return true, nil
 }
 
-func (r *mutationResolver) CreateSDCommand(ctx context.Context, input graphQLModel.SDCommandInvocationInput) (graphQLModel.SDCommandInvocation, error) {
-	panic(fmt.Errorf("not implemented: CreateSDCommand - createSDCommand"))
-}
-
-func (r *mutationResolver) InvokeSDCommand(ctx context.Context, id uint32) (bool, error) {
-	panic(fmt.Errorf("not implemented: InvokeSDCommand - invokeSDCommand"))
-}
-
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
 	getSDTypeResult := domainLogicLayer.GetSDType(id)
 	if getSDTypeResult.IsFailure() {
@@ -165,7 +156,6 @@ func (r *queryResolver) SdInstanceGroup(ctx context.Context, id uint32) (graphQL
 	}
 	return getSDInstanceGroupResult.Unwrap()
 }
-
 func (r *queryResolver) SdInstanceGroups(ctx context.Context) ([]graphQLModel.SDInstanceGroup, error) {
 	getSDInstanceGroupsResult := domainLogicLayer.GetSDInstanceGroups()
 	if getSDInstanceGroupsResult.IsFailure() {
@@ -194,20 +184,45 @@ func (r *queryResolver) UserConfig(ctx context.Context, id uint32) (graphQLModel
 	return getUserConfigResult.Unwrap()
 }
 
-func (r *queryResolver) SdCommand(ctx context.Context, id uint32) (graphQLModel.SDCommandInvocation, error) {
-	panic(fmt.Errorf("not implemented: SdCommand - sdCommand"))
-}
-
-func (r *queryResolver) SdCommandInvocations(ctx context.Context) ([]graphQLModel.SDCommandInvocation, error) {
-	panic(fmt.Errorf("not implemented: SdCommandInvocations - sdCommandInvocations"))
-}
-
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {
 	return SDInstanceGraphQLSubscriptionChannel, nil
 }
 
 func (r *subscriptionResolver) OnKPIFulfillmentChecked(ctx context.Context) (<-chan graphQLModel.KPIFulfillmentCheckResultTuple, error) {
 	return KPIFulfillmentCheckResulTupleGraphQLSubscriptionChannel, nil
+}
+
+func (r *queryResolver) SdCommand(ctx context.Context, id uint32) (graphQLModel.SDCommandInvocation, error) {
+	getSDCommandResult := domainLogicLayer.GetSDCommandInvocation(id)
+	if getSDCommandResult.IsFailure() {
+		log.Printf("Error occurred (get SD command invocation): %s\n", getSDCommandResult.GetError().Error())
+	}
+	return getSDCommandResult.Unwrap()
+}
+
+func (r *queryResolver) SdCommandInvocations(ctx context.Context) ([]graphQLModel.SDCommandInvocation, error) {
+	getSDCommandInvocationsResult := domainLogicLayer.GetSDCommandInvocations()
+	if getSDCommandInvocationsResult.IsFailure() {
+		log.Printf("Error occurred (get SD command invocations): %s\n", getSDCommandInvocationsResult.GetError().Error())
+	}
+	return getSDCommandInvocationsResult.Unwrap()
+}
+
+func (r *mutationResolver) CreateSDCommand(ctx context.Context, input graphQLModel.SDCommandInvocationInput) (graphQLModel.SDCommandInvocation, error) {
+	createSDCommandResult := domainLogicLayer.CreateSDCommandInvocation(input)
+	if createSDCommandResult.IsFailure() {
+		log.Printf("Error occurred (create SD command invocation): %s\n", createSDCommandResult.GetError().Error())
+	}
+	return createSDCommandResult.Unwrap()
+}
+
+func (r *mutationResolver) InvokeSDCommand(ctx context.Context, id uint32) (bool, error) {
+	invokeSDCommandResult := domainLogicLayer.InvokeSDCommand(id)
+	if invokeSDCommandResult.IsFailure() {
+		log.Printf("Error occurred (invoke SD command): %s\n", invokeSDCommandResult.GetError().Error())
+		return false, invokeSDCommandResult.GetError()
+	}
+	return true, nil
 }
 
 func (r *Resolver) Mutation() gsc.MutationResolver { return &mutationResolver{r} }
