@@ -4,6 +4,8 @@ import { BulletChartBuilder } from './builders/BulletChartBuilder'
 import { SdInstance, SdParameter } from '@/generated/graphql'
 import { TableCardBuilder } from './builders/TableCardBuilder'
 import { EntityCardBuilder } from './builders/EntityCardBuilder'
+import { Button } from '@/components/ui/button'
+import { FaArrowLeft } from 'react-icons/fa6'
 
 export const VisualizationBuilderContainer = styled.div`
   display: flex;
@@ -15,23 +17,26 @@ export const VisualizationBuilderContainer = styled.div`
 
 export interface VisualizationBuilderProps {
   selectedVisualization: string | null
-  selectedParameter: SdParameter
-  setVisualizationDetails: (details: string) => void
-  data?: any
+  setVisualizationConfig: (Config: string) => void
+  setActiveTab: (tab: string) => void
   instances: SdInstance[]
 }
 
-export function VisualizationBuilder({ setVisualizationDetails, selectedVisualization, selectedParameter, data, instances }: VisualizationBuilderProps) {
+export function VisualizationBuilder({ setVisualizationConfig, setActiveTab, selectedVisualization, instances }: VisualizationBuilderProps) {
   const handleDataChange = (data: any) => {
-    setVisualizationDetails(JSON.stringify(data))
+    setVisualizationConfig(JSON.stringify(data))
   }
 
   return (
     <VisualizationBuilderContainer>
-      {selectedVisualization === 'line' && <LineChartBuilder onDataSubmit={handleDataChange} data={data} parameterName={selectedParameter.denotation} />}
+      {selectedVisualization === 'line' && <LineChartBuilder onDataSubmit={handleDataChange} instances={instances} />}
       {selectedVisualization === 'bullet' && <BulletChartBuilder onDataSubmit={handleDataChange} parameterName={selectedParameter.denotation} />}
       {selectedVisualization === 'table' && <TableCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
-      {selectedVisualization ===  'entitycard' && <EntityCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
+      {selectedVisualization === 'entitycard' && <EntityCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
+      {/* <Button onClick={() => setActiveTab('visualization')} className="w-fit">
+        <FaArrowLeft />
+        Back
+      </Button> */}
     </VisualizationBuilderContainer>
   )
 }

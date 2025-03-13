@@ -10,7 +10,7 @@ export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' |
 const defaultOptions = {} as const;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string; }
+  ID: { input: number; output: number; }
   String: { input: string; output: string; }
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
@@ -127,10 +127,12 @@ export type Mutation = {
   deleteKPIDefinition: Scalars['Boolean']['output'];
   deleteSDInstanceGroup: Scalars['Boolean']['output'];
   deleteSDType: Scalars['Boolean']['output'];
+  deleteUserConfig: Scalars['Boolean']['output'];
   statisticsMutate: Scalars['Boolean']['output'];
   updateKPIDefinition: KpiDefinition;
   updateSDInstance: SdInstance;
   updateSDInstanceGroup: SdInstanceGroup;
+  updateUserConfig: UserConfig;
 };
 
 
@@ -164,6 +166,11 @@ export type MutationDeleteSdTypeArgs = {
 };
 
 
+export type MutationDeleteUserConfigArgs = {
+  userId: Scalars['ID']['input'];
+};
+
+
 export type MutationStatisticsMutateArgs = {
   inputData: InputData;
 };
@@ -184,6 +191,12 @@ export type MutationUpdateSdInstanceArgs = {
 export type MutationUpdateSdInstanceGroupArgs = {
   id: Scalars['ID']['input'];
   input: SdInstanceGroupInput;
+};
+
+
+export type MutationUpdateUserConfigArgs = {
+  input: UserConfigInput;
+  userId: Scalars['ID']['input'];
 };
 
 export type NumericEqAtomKpiNode = AtomKpiNode & KpiNode & {
@@ -256,6 +269,7 @@ export type Query = {
   sdTypes: Array<SdType>;
   statisticsQuerySensorsWithFields: Array<OutputData>;
   statisticsQuerySimpleSensors: Array<OutputData>;
+  userConfig: UserConfig;
 };
 
 
@@ -285,8 +299,24 @@ export type QueryStatisticsQuerySimpleSensorsArgs = {
   sensors: SimpleSensors;
 };
 
+
+export type QueryUserConfigArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type SdCommandInvocation = {
+  __typename?: 'SDCommandInvocation';
+  commandId: Scalars['ID']['output'];
+  id: Scalars['ID']['output'];
+  invocationTime: Scalars['String']['output'];
+  payload: Scalars['String']['output'];
+  sdInstanceId: Scalars['ID']['output'];
+  userId: Scalars['ID']['output'];
+};
+
 export type SdInstance = {
   __typename?: 'SDInstance';
+  commandInvocations: Array<SdCommandInvocation>;
   confirmedByUser: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   type: SdType;
@@ -320,11 +350,13 @@ export type SdParameter = {
   __typename?: 'SDParameter';
   denotation: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  label?: Maybe<Scalars['String']['output']>;
   type: SdParameterType;
 };
 
 export type SdParameterInput = {
   denotation: Scalars['String']['input'];
+  label?: InputMaybe<Scalars['String']['input']>;
   type: SdParameterType;
 };
 
@@ -337,12 +369,16 @@ export enum SdParameterType {
 export type SdType = {
   __typename?: 'SDType';
   denotation: Scalars['String']['output'];
+  icon?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  label?: Maybe<Scalars['String']['output']>;
   parameters: Array<SdParameter>;
 };
 
 export type SdTypeInput = {
   denotation: Scalars['String']['input'];
+  icon?: InputMaybe<Scalars['String']['input']>;
+  label?: InputMaybe<Scalars['String']['input']>;
   parameters: Array<SdParameterInput>;
 };
 
@@ -417,17 +453,32 @@ export type Subscription = {
   onSDInstanceRegistered: SdInstance;
 };
 
+export type UserConfig = {
+  __typename?: 'UserConfig';
+  config: Scalars['JSON']['output'];
+  userId: Scalars['ID']['output'];
+};
+
+export type UserConfigInput = {
+  config: Scalars['JSON']['input'];
+};
+
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }> };
+export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string } }> };
 
 export type SdTypeQueryVariables = Exact<{
   sdTypeId: Scalars['ID']['input'];
 }>;
 
 
-export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', denotation: string, id: string, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: string, type: SdParameterType }> } };
+export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', denotation: string, id: number, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, type: SdParameterType }> } };
+
+export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SdTypesQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }> }> };
 
 export type StatisticsQuerySensorsWithFieldsQueryVariables = Exact<{
   sensors: SensorsWithFields;
@@ -435,7 +486,7 @@ export type StatisticsQuerySensorsWithFieldsQueryVariables = Exact<{
 }>;
 
 
-export type StatisticsQuerySensorsWithFieldsQuery = { __typename?: 'Query', statisticsQuerySensorsWithFields: Array<{ __typename?: 'OutputData', time: any, data: any }> };
+export type StatisticsQuerySensorsWithFieldsQuery = { __typename?: 'Query', statisticsQuerySensorsWithFields: Array<{ __typename?: 'OutputData', data: any, time: any, deviceId: string }> };
 
 
 export const SdInstancesDocument = gql`
@@ -530,11 +581,60 @@ export type SdTypeQueryHookResult = ReturnType<typeof useSdTypeQuery>;
 export type SdTypeLazyQueryHookResult = ReturnType<typeof useSdTypeLazyQuery>;
 export type SdTypeSuspenseQueryHookResult = ReturnType<typeof useSdTypeSuspenseQuery>;
 export type SdTypeQueryResult = Apollo.QueryResult<SdTypeQuery, SdTypeQueryVariables>;
+export const SdTypesDocument = gql`
+    query SDTypes {
+  sdTypes {
+    id
+    denotation
+    label
+    icon
+    parameters {
+      id
+      label
+      denotation
+      type
+    }
+  }
+}
+    `;
+
+/**
+ * __useSdTypesQuery__
+ *
+ * To run a query within a React component, call `useSdTypesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSdTypesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSdTypesQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useSdTypesQuery(baseOptions?: Apollo.QueryHookOptions<SdTypesQuery, SdTypesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<SdTypesQuery, SdTypesQueryVariables>(SdTypesDocument, options);
+      }
+export function useSdTypesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SdTypesQuery, SdTypesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<SdTypesQuery, SdTypesQueryVariables>(SdTypesDocument, options);
+        }
+export function useSdTypesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<SdTypesQuery, SdTypesQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<SdTypesQuery, SdTypesQueryVariables>(SdTypesDocument, options);
+        }
+export type SdTypesQueryHookResult = ReturnType<typeof useSdTypesQuery>;
+export type SdTypesLazyQueryHookResult = ReturnType<typeof useSdTypesLazyQuery>;
+export type SdTypesSuspenseQueryHookResult = ReturnType<typeof useSdTypesSuspenseQuery>;
+export type SdTypesQueryResult = Apollo.QueryResult<SdTypesQuery, SdTypesQueryVariables>;
 export const StatisticsQuerySensorsWithFieldsDocument = gql`
     query StatisticsQuerySensorsWithFields($sensors: SensorsWithFields!, $request: StatisticsInput) {
   statisticsQuerySensorsWithFields(sensors: $sensors, request: $request) {
-    time
     data
+    time
+    deviceId
   }
 }
     `;

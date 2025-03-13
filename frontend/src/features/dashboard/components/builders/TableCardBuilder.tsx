@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { IoRemove, IoAdd } from 'react-icons/io5'
-import { Label } from '@/components/ui/label'
+import { IoAdd } from 'react-icons/io5'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { TableCardInfo } from '@/types/TableCardInfo'
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
@@ -12,9 +10,18 @@ import { useQuery } from '@apollo/client'
 import { GET_PARAMETERS } from '@/graphql/Queries'
 import { HiOutlineQuestionMarkCircle } from 'react-icons/hi2'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { z } from 'zod'
+import { tableCardSchema } from '@/schemas/dashboard/TableBuilderSchema'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
+import { TbTrash } from 'react-icons/tb'
+import { Label } from '@/components/ui/label'
 
 export interface TableCardBuilderProps {
-  onDataSubmit: (data: TableCardInfo) => void
+  onDataSubmit: (data: any) => void
   data?: TableCardInfo
   instances: SdInstance[]
 }
@@ -22,15 +29,10 @@ export interface TableCardBuilderProps {
 export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBuilderProps) {
   const initialTableConfig: TableCardInfo = {
     _cardID: 'exampleCardID',
-    sizing: {
-      w: 2,
-      h: 1
-    },
     title: 'Area',
     tableTitle: 'Sensors',
-    icon: 'temperature-icon',
-    aggregatedTime: '1h',
     decimalPlaces: 2,
+    aggregatedTime: '1h',
     columns: [],
     rows: []
   }
@@ -52,6 +54,18 @@ export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBui
       }))
     }
   }, [parametersData, selectedInstance])
+
+  const form = useForm<z.infer<typeof tableCardSchema>>({
+    resolver: zodResolver(tableCardSchema),
+    defaultValues: {
+      title: 'Area',
+      tableTitle: 'Sensors',
+      decimalPlaces: 2,
+      columns: [],
+      rows: []
+    }
+  })
+
   const handleConfigChange = (property: string, value: any) => {
     const newConfig = {
       ...tableConfig,
@@ -75,62 +89,57 @@ export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBui
       ...newRows[index],
       [property]: value
     }
-    console.log(newRows)
     handleConfigChange('rows', newRows)
   }
 
   const addColumn = () => {
     const newColumns = [...tableConfig.columns, { header: '', function: '' }]
+    form.trigger('columns')
     handleConfigChange('columns', newColumns)
   }
 
   const removeColumn = (index: number) => {
     const newColumns = tableConfig.columns.filter((_, i) => i !== index)
+    form.setValue('columns', newColumns)
+    form.trigger('columns')
     handleConfigChange('columns', newColumns)
   }
 
   const addRow = () => {
-    const newRows = [...tableConfig.rows, { name: '', instance: null, parameter: null, values: tableConfig.columns.map(() => ({ value: '' })) }]
+    const newRows = [...tableConfig.rows, { name: '', instance: null, parameter: null }]
+    form.trigger('rows')
     handleConfigChange('rows', newRows)
   }
 
   const removeRow = (index: number) => {
     const newRows = tableConfig.rows.filter((_, i) => i !== index)
+    form.setValue(
+      'rows',
+      newRows.map((row) => ({
+        ...row,
+        instance: { uid: row.instance?.uid! },
+        parameter: { id: row.parameter?.id! }
+      }))
+    )
+    form.trigger('rows')
     handleConfigChange('rows', newRows)
   }
 
-  const handleParameterChange = (rowIndex: number, value: string) => {
-    const parameter = availableParameters[selectedInstance?.uid!]?.find((param) => param.id === value) || null
+  const handleParameterChange = (rowIndex: number, parameter: SdParameter) => {
     if (!parameter) return
     const newRows = [...tableConfig.rows]
     newRows[rowIndex].parameter = parameter
     handleConfigChange('rows', newRows)
   }
 
-  const handleInstanceChange = (rowIndex: number, instanceId: string) => {
-    const instance = instances.find((instance) => instance.uid === instanceId) || null
+  const handleInstanceChange = (rowIndex: number, instance: SdInstance) => {
     if (!instance) return
     handleRowChange(rowIndex, 'instance', instance)
     setSelectedInstance(instance)
   }
 
-  // TODO: Dont know whether setting the sizing is necessary (minW)
-  const handleSubmit = () => {
-    let newConfig = { ...tableConfig }
-
-    // Update the sizing based on the number of rows
-    if (newConfig.rows.length > 3) {
-      newConfig = {
-        ...newConfig,
-        sizing: {
-          ...newConfig.sizing,
-          minW: 2
-        }
-      }
-    }
-
-    setTableConfig(newConfig)
-    onDataSubmit(newConfig)
+  const handleSubmit = (values: z.infer<typeof tableCardSchema>) => {
+    onDataSubmit(values)
   }
 
   return (
@@ -162,129 +171,307 @@ export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBui
           </tbody>
         </table>
       </Card>
-      <div className="flex gap-4 w-full mt-2">
-        <Label className="w-full">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex flex-col items-start gap-2 w-full">
-              Card Title
-              <Input type="text" value={tableConfig.title} onChange={(e) => handleConfigChange('title', e.target.value)} className="w-full" />
+      <Card className="h-fit w-full overflow-hidden p-2 pt-0 mt-4 shadow-lg">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
+            <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Card Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e)
+                          handleConfigChange('title', e.target.value)
+                        }}
+                        value={field.value}
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="tableTitle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Table Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e)
+                          handleConfigChange('tableTitle', e.target.value)
+                        }}
+                        value={field.value}
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="decimalPlaces"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      <div className="flex items-center gap-2">
+                        Number of decimal places
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <HiOutlineQuestionMarkCircle className="text-primary w-5 h-5" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="font-thin">The number of decimal places to display in the table.</p>
+                              <p>
+                                <span className="font-thin">The values inside this builder are </span>
+                                <b>randomly generated.</b>
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        min={0}
+                        max={5}
+                        onChange={(e) => {
+                          field.onChange(parseInt(e.target.value))
+                          handleConfigChange('decimalPlaces', e.target.value)
+                        }}
+                        value={field.value}
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-          </div>
-        </Label>
-      </div>
-      <div className="flex gap-4 w-full mt-2 items-end">
-        <Label className="w-1/2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex flex-col items-start gap-2">
-              <div className="flex items-center gap-2">
-                Number of decimal places
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <HiOutlineQuestionMarkCircle className="text-primary w-5 h-5" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="font-thin">The number of decimal places to display in the table.</p>
-                      <p>
-                        <span className="font-thin">The values inside this builder are </span>
-                        <b>randomly generated.</b>
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Input type="number" value={tableConfig.decimalPlaces} onChange={(e) => handleConfigChange('decimalPlaces', e.target.value)} className="w-full" />
-            </div>
-          </div>
-        </Label>
-        <Label className="w-1/2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex flex-col items-start gap-2">
-              Table Title
-              <Input type="text" value={tableConfig.tableTitle} onChange={(e) => handleConfigChange('tableTitle', e.target.value)} className="w-full" />
-            </div>
-          </div>
-        </Label>
-      </div>
-      <div className="flex gap-4 w-full mt-2">
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="columns">
-            <AccordionTrigger>Columns</AccordionTrigger>
-            <AccordionContent className="w-full flex flex-col gap-4 mt-2 px-1">
-              {tableConfig.columns.map((column, index) => (
-                <div key={index} className="flex gap-4 items-center">
-                  <Input type="text" value={column.header} onChange={(e) => handleColumnChange(index, 'header', e.target.value)} placeholder="Header" className="w-full" />
-                  <Select onValueChange={(value) => handleColumnChange(index, 'function', value)} value={column.function}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a function" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.values(StatisticsOperation).map((operation) => (
-                        <SelectItem key={operation} value={operation}>
-                          {operation}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button onClick={() => removeColumn(index)} variant={'destructive'} size={'icon'} className="flex items-center justify-center">
-                    <IoRemove />
+            <Accordion type="single" collapsible className="w-full mt-4">
+              <AccordionItem value="columns">
+                <AccordionTrigger>Columns</AccordionTrigger>
+                <AccordionContent className="w-full flex flex-col mt-2 px-1 border-2 rounded-md p-2">
+                  {tableConfig.columns.map((_, index) => (
+                    <div key={index} className="flex flex-col">
+                      <div className="flex gap-2 items-center justify-between w-full">
+                        <h4 className="font-semibold">Column {index + 1}</h4>
+                        <Button onClick={() => removeColumn(index)} variant={'destructive'} size={'icon'}>
+                          <TbTrash />
+                        </Button>
+                      </div>
+                      <Separator className="my-2" />
+                      <div key={index} className="grid sm:grid-cols-2 grid-cols-1 gap-4">
+                        <FormField
+                          control={form.control}
+                          name={`columns.${index}.header`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Label>
+                                  Header
+                                  <Input
+                                    {...field}
+                                    onChange={(e) => {
+                                      field.onChange(e)
+                                      handleColumnChange(index, 'header', e.target.value)
+                                    }}
+                                    value={field.value}
+                                    placeholder="Header"
+                                    className="w-full"
+                                  />
+                                </Label>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`columns.${index}.function`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Label>
+                                  Function
+                                  <Select
+                                    {...field}
+                                    onValueChange={(value) => {
+                                      field.onChange(value)
+                                      handleColumnChange(index, 'function', value)
+                                    }}
+                                    value={field.value}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select a function" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {Object.values(StatisticsOperation).map((operation) => (
+                                        <SelectItem key={operation} value={operation}>
+                                          {operation}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </Label>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <Separator className="my-2" />
+                    </div>
+                  ))}
+                  <Button onClick={addColumn} variant={'green'} size={'icon'} className="flex items-center justify-center w-1/2 m-auto">
+                    <IoAdd />
+                    Add Column
                   </Button>
-                </div>
-              ))}
-              <Button onClick={addColumn} variant={'green'} size={'icon'} className="flex items-center justify-center w-1/2 m-auto">
-                <IoAdd />
-                Add Column
-              </Button>
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="rows">
-            <AccordionTrigger>Rows</AccordionTrigger>
-            <AccordionContent className="w-full flex flex-col gap-4 mt-2">
-              {tableConfig.rows.map((row, rowIndex) => (
-                <div key={rowIndex} className="flex gap-4 items-center p-1 border-2 rounded-md">
-                  <Input type="text" value={row.name} onChange={(e) => handleRowChange(rowIndex, 'name', e.target.value)} placeholder="Row Name" className="w-full" />
-                  <Button onClick={() => removeRow(rowIndex)} variant={'destructive'} size={'icon'} className="flex items-center justify-center">
-                    <IoRemove />
+                </AccordionContent>
+              </AccordionItem>
+              {form.formState.errors.columns && <FormMessage>{form.formState.errors.columns.message}</FormMessage>}
+              {form.formState.errors.columns?.root && <FormMessage>{form.formState.errors.columns.root?.message}</FormMessage>}
+              <AccordionItem value="rows">
+                <AccordionTrigger>Rows</AccordionTrigger>
+                <AccordionContent className="w-full flex flex-col gap-4 mt-2 border-2 rounded-md p-2">
+                  {tableConfig.rows.map((row, rowIndex) => (
+                    <div key={rowIndex} className="flex flex-col">
+                      <div className="flex gap-2 items-center justify-between w-full">
+                        <h4 className="font-semibold">Row {rowIndex + 1}</h4>
+                        <Button onClick={() => removeRow(rowIndex)} variant={'destructive'} size={'icon'}>
+                          <TbTrash />
+                        </Button>
+                      </div>
+                      <Separator className="my-2" />
+                      <FormField
+                        control={form.control}
+                        name={`rows.${rowIndex}.name`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Label>
+                                Row Name
+                                <Input
+                                  {...field}
+                                  onChange={(e) => {
+                                    field.onChange(e)
+                                    handleRowChange(rowIndex, 'name', e.target.value)
+                                  }}
+                                  value={field.value}
+                                  placeholder="Row Name"
+                                  className="w-full"
+                                />
+                              </Label>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`rows.${rowIndex}.instance.uid`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Label>
+                                Instance
+                                <Select
+                                  {...field}
+                                  onValueChange={(value) => {
+                                    const instance = instances.find((instance) => instance.uid === value) || null
+                                    if (!instance) return
+                                    field.onChange(instance.uid)
+                                    handleInstanceChange(rowIndex, instance)
+                                  }}
+                                  value={field.value}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select an instance" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {instances.map((instance) => (
+                                      <SelectItem key={instance.uid} value={instance.uid}>
+                                        {instance.type.denotation}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </Label>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`rows.${rowIndex}.parameter.id`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Label>
+                                Parameter
+                                <Select
+                                  onValueChange={(value) => {
+                                    const parameter = availableParameters[row.instance?.uid!]?.find((param) => param.id === Number(value)) || null
+                                    if (!parameter) return
+                                    field.onChange(parameter.id)
+                                    handleParameterChange(rowIndex, parameter)
+                                  }}
+                                  value={field.value}
+                                  disabled={!availableParameters[row.instance?.uid!]}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select a parameter" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {availableParameters[row.instance?.uid!]?.map((parameter) => (
+                                      <SelectItem key={parameter.id} value={parameter.id}>
+                                        {parameter.denotation}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </Label>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  ))}
+                  <Button onClick={addRow} variant={'green'} size={'icon'} className="flex items-center justify-center w-1/2 m-auto">
+                    <IoAdd /> Add Row
                   </Button>
-                  {/* Entity and parameter selectors */}
-                  <Select onValueChange={(value) => handleInstanceChange(rowIndex, value)} value={row.instance?.uid || ''}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an instance" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {instances.map((instance) => (
-                        <SelectItem key={instance.uid} value={instance.uid}>
-                          {instance.type.denotation}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select onValueChange={(value) => handleParameterChange(rowIndex, value)} value={row.parameter?.id || ''} disabled={!availableParameters[row.instance?.uid]}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a parameter" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableParameters[row.instance?.uid]?.map((parameter) => (
-                        <SelectItem key={parameter.id} value={parameter.id}>
-                          {parameter.denotation}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
-              <Button onClick={addRow} variant={'green'} size={'icon'} className="flex items-center justify-center w-1/2 m-auto">
-                <IoAdd /> Add Row
-              </Button>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
-      <div className="flex justify-end mt-2">
-        <Button onClick={() => handleSubmit()} size={'default'}>
-          Submit
-        </Button>
-      </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+            {form.formState.errors.rows && <FormMessage>{form.formState.errors.rows.message}</FormMessage>}
+            {form.formState.errors.rows?.root && <FormMessage>{form.formState.errors.rows.root?.message}</FormMessage>}
+            <Button
+              type="submit"
+              className="w-fit mt-4"
+              onClick={() => {
+                console.log('Form errors:', form.formState.errors)
+                console.log('Form state:', form.getValues())
+              }}
+            >
+              Submit
+            </Button>
+          </form>
+        </Form>
+      </Card>
     </div>
   )
 }

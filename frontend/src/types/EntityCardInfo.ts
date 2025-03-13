@@ -1,21 +1,15 @@
-import { SdInstance, SdParameter } from '@/generated/graphql'
-
 export interface EntityCardInfo {
   _cardID: string
   title: string
-  rows: Array<{
+  rows: {
     name: string
-    instance: SdInstance | null
-    parameter: SdParameter | null
-    visualization: 'sparkline' | 'immediate' | 'switch'
+    instance: {
+      uid: string
+    } | null
+    parameter: {
+      id: number
+    } | null
+    visualization: 'switch' | 'sparkline' | 'immediate'
     timeFrame?: string
-    value?: string
-    sparkLineData?: {
-      timeFrame?: string
-      data?: Array<{
-        x: string
-        y: number
-      }>
-    }
-  }>
+  }[]
 }

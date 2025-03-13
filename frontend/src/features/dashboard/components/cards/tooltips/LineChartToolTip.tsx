@@ -9,7 +9,7 @@ export interface ToolTipProps {
   yName?: string
 }
 
-export const ToolTip = ({ position, containerRef, xName, yName }: ToolTipProps) => {
+export const ChartToolTip = ({ position, containerRef, xName, yName }: ToolTipProps) => {
   const { isDarkMode } = useDarkMode()
 
   return (

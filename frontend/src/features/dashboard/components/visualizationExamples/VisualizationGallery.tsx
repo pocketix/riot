@@ -6,7 +6,6 @@ import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
 import { SdParameterType } from '@/generated/graphql'
 import { EntityCardInfo } from '@/types/EntityCardInfo'
-import { AutoCleanedStrongCache } from '@apollo/client/utilities'
 import { Switch } from '@/components/ui/switch'
 
 export const VisualizationGalleryContainer = styled.div`
@@ -18,7 +17,7 @@ export const VisualizationGalleryContainer = styled.div`
 `
 
 export interface VisualizationGalleryProps {
-  setSelectedVisualization: (Visualization: string) => void
+  setSelectedVisualization: (Visualization: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard') => void
   selectedVisualization: string | null
 }
 
@@ -165,48 +164,45 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
         name: 'Sensor2',
         instance: null,
         parameter: null,
-        visualization: 'sparkline',
-        sparkLineData: {
-          data: [
-            {
-              x: '2025-01-01T00:00:00.000Z',
-              y: 15.1
-            },
-            {
-              x: '2025-01-02T00:00:00.000Z',
-              y: 23.1
-            },
-            {
-              x: '2025-01-03T02:00:00.000Z',
-              y: 20.8
-            },
-            {
-              x: '2025-01-04T00:00:00.000Z',
-              y: 26.5
-            },
-            {
-              x: '2025-01-05T00:00:00.000Z',
-              y: 30.3
-            }
-          ]
-        }
+        visualization: 'sparkline'
       },
       {
         name: 'Bathroom',
         instance: null,
         parameter: null,
-        visualization: 'immediate',
-        value: '22.5'
+        visualization: 'immediate'
       },
       {
         name: 'Sensor1',
         instance: null,
         parameter: null,
-        visualization: 'switch',
-        value: 'on'
+        visualization: 'switch'
       }
     ]
   }
+
+  const sparkLineData = [
+    {
+      x: '2025-01-01T00:00:00.000Z',
+      y: 15.1
+    },
+    {
+      x: '2025-01-02T00:00:00.000Z',
+      y: 23.1
+    },
+    {
+      x: '2025-01-03T02:00:00.000Z',
+      y: 20.8
+    },
+    {
+      x: '2025-01-04T00:00:00.000Z',
+      y: 26.5
+    },
+    {
+      x: '2025-01-05T00:00:00.000Z',
+      y: 30.3
+    }
+  ]
 
   return (
     <VisualizationGalleryContainer>
@@ -285,13 +281,13 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
             {entityCardConfig.rows.map((row, rowIndex) => (
               <tr key={rowIndex} className="mt-2 h-[24px]">
                 <td className="text-sm">{row.name}</td>
-                {row.visualization === 'sparkline' && row.sparkLineData && (
+                {row.visualization === 'sparkline' && (
                   <td className="text-sm text-center w-[75px] h-[24px]">
                     <ResponsiveLine
                       data={[
                         {
                           id: 'temperature',
-                          data: row.sparkLineData?.data!
+                          data: sparkLineData
                         }
                       ]}
                       margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
@@ -310,10 +306,10 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
                     />
                   </td>
                 )}
-                {row.visualization === 'immediate' && <td className="text-sm text-center">{row.value}</td>}
+                {row.visualization === 'immediate' && <td className="text-sm text-center">23</td>}
                 {row.visualization === 'switch' && (
                   <td className="text-sm text-center">
-                    <Switch checked={row.value === 'on'} />
+                    <Switch checked={true} />
                   </td>
                 )}
                 {row.visualization !== 'sparkline' && row.visualization !== 'immediate' && row.visualization !== 'switch' && <td className="text-sm text-center">{row.visualization}</td>}

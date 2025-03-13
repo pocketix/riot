@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './AccessibilityContainer'
-import { GET_TABLE_DATA } from '@/graphql/Queries'
+import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { useLazyQuery } from '@apollo/client'
 import { TableCardInfo } from '@/types/TableCardInfo'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -49,7 +49,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
 
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const [chartConfig, setChartConfig] = useState<TableCardInfo>()
-  const [fetchTableData] = useLazyQuery(GET_TABLE_DATA)
+  const [fetchTableData] = useLazyQuery(GET_TIME_SERIES_DATA)
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 

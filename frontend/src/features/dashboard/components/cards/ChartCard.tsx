@@ -9,7 +9,7 @@ import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './AccessibilityContainer'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from './ChartThemes'
-import { ToolTip } from './tooltips/LineChartToolTip'
+import { ChartToolTip } from './tooltips/LineChartToolTip'
 import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -194,7 +194,7 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
               useMesh={true}
               enableGridX={chartConfig.enableGridX}
               enableGridY={chartConfig.enableGridY}
-              tooltip={(pos: PointTooltipProps) => <ToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}
+              tooltip={(pos: PointTooltipProps) => <ChartToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}
               theme={isDarkMode ? darkTheme : lightTheme}
             />
           </ChartContainer>
