@@ -16,7 +16,7 @@ func JWTAuthenticationMiddleware(next http.Handler) http.Handler { // TODO: Make
 
 		sessionJWTCookieValueOptional := getSessionJWTCookieValue(r)
 		if sessionJWTCookieValueOptional.IsEmpty() {
-			http.Error(w, "session JWT cookie not found", http.StatusBadRequest)
+			http.Error(w, "session JWT cookie not found", http.StatusUnauthorized)
 			return
 		}
 

@@ -72,6 +72,10 @@ func setupJWTCookie(w http.ResponseWriter, identifier, jwtString string) error {
 	return nil
 }
 
+func clearJWTCookie(w http.ResponseWriter, identifier string) {
+	clearHttpOnlyCookie(w, identifier, RootPath)
+}
+
 // ----- OAuth2 | OIDC flow state -----
 
 func setupOauth2OIDCFlowStateCookie(w http.ResponseWriter, base64EncodedOAuth2OIDCFlowState string) {
@@ -96,6 +100,10 @@ func getSessionJWTCookieValue(r *http.Request) sharedUtils.Optional[string] {
 	return getCookieValue(r, SessionJWTCookieIdentifier)
 }
 
+func clearSessionJWTCookie(w http.ResponseWriter) {
+	clearJWTCookie(w, SessionJWTCookieIdentifier)
+}
+
 // ----- refresh JWT -----
 
 func setupRefreshJWTCookie(w http.ResponseWriter, refreshJWTString string) error {
@@ -104,4 +112,12 @@ func setupRefreshJWTCookie(w http.ResponseWriter, refreshJWTString string) error
 
 func getRefreshJWTCookieValue(r *http.Request) sharedUtils.Optional[string] {
 	return getCookieValue(r, RefreshJWTCookieIdentifier)
+}
+
+// ----- aux -----
+
+func areCookiesSet(r *http.Request, identifiers []string) bool {
+	return sharedUtils.All(identifiers, func(identifier string) bool {
+		return getCookieValue(r, identifier).IsPresent()
+	})
 }

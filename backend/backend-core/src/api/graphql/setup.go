@@ -44,6 +44,7 @@ func SetupGraphQLServer() {
 	}).Handler)
 	router.Handle("/", auth.JWTAuthenticationMiddleware(graphQLServer))
 	router.Get("/auth/login", auth.LoginHandler)
+	router.Get("/auth/logout", auth.LogoutHandler)
 	router.Get("/auth/callback", auth.CallbackHandler)
 	log.Fatal(http.ListenAndServe(":9090", router))
 }
