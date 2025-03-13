@@ -16,26 +16,21 @@ const iconOptions = [
   { category: 'Energy & Power', icons: ['TbBattery', 'TbBatteryCharging', 'TbBatteryFull', 'TbBatteryLow', 'TbPlugConnected'] }
 ]
 
-interface DeviceType {
-  label: string
-  denotation: string
-  icon: string
-  parameters: { label: string | null; denotation: string; type: string }[]
-}
-
 interface IconPickerProps {
-  deviceType: DeviceType
-  setDeviceType: React.Dispatch<React.SetStateAction<DeviceType>>
+  icon: string
+  setIcon: (icon: string) => void
 }
 
-export default function IconPicker({ deviceType, setDeviceType }: IconPickerProps) {
-  const IconComponent = getIcon(deviceType.icon)
+export default function IconPicker({ icon, setIcon }: IconPickerProps) {
+  const IconComponent = getIcon(icon)
 
   return (
     <div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline">{IconComponent ? <IconComponent /> : 'Select Icon'}</Button>
+          <Button variant="outline" className="flex items-center gap-2">
+            {IconComponent ? <IconComponent /> : 'Select Icon'}
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56 max-h-60 overflow-auto">
           {iconOptions.map((group) => (
@@ -43,11 +38,11 @@ export default function IconPicker({ deviceType, setDeviceType }: IconPickerProp
               <DropdownMenuItem disabled className="font-bold text-gray-500">
                 {group.category}
               </DropdownMenuItem>
-              {group.icons.map((icon) => {
-                const Icon = getIcon(icon)
+              {group.icons.map((iconName) => {
+                const Icon = getIcon(iconName)
                 return (
-                  <DropdownMenuItem key={icon} onClick={() => setDeviceType({ ...deviceType, icon })} className="flex items-center gap-2 ">
-                    {Icon && <Icon />} {icon}
+                  <DropdownMenuItem key={iconName} onClick={() => setIcon(iconName)} className="flex items-center gap-2">
+                    {Icon && <Icon />} {iconName}
                   </DropdownMenuItem>
                 )
               })}

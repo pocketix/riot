@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { useQuery } from '@apollo/client'
 import { GET_PARAMETERS } from '@/graphql/Queries'
@@ -12,8 +12,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import IconPicker from '@/ui/IconPicker'
+import { useForm } from 'react-hook-form'
 
-const PageContainer = styled.div`
+const PageContainer = styled.form`
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -75,72 +76,77 @@ const ParametersContainer = styled.div`
   max-height: 100vh;
 `
 
-const ParameterItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.8rem;
-  gap: 1rem;
-  border-bottom: 1px solid var(--color-grey-300);
-`
-
 export default function DeviceTypeDetail() {
   const { id: sdTypeId } = useParams<{ id: string }>()
   const location = useLocation()
   const isAddingNew = location.pathname.endsWith('/addNewType')
   const [editMode, setEditMode] = useState(isAddingNew)
 
-  // Default state for new device type
-  const [deviceType, setDeviceType] = useState({
-    label: '',
-    denotation: '',
-    icon: '',
-    parameters: [] as { label: string | null; denotation: string; type: string }[]
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    getValues,
+    watch,
+    formState: { errors, isSubmitted, isSubmitting }
+  } = useForm({
+    defaultValues: {
+      label: '',
+      denotation: '',
+      icon: '',
+      parameters: [] as { denotation: string; type: string }[]
+    },
+    mode: 'onSubmit'
   })
 
-  const IconComponent = useMemo(() => getIcon(deviceType.icon), [deviceType.icon])
-
-  const handleSave = useCallback(() => {
-    if (isAddingNew) {
-      console.log('Creating new device type:', deviceType)
-    } else {
-      console.log('Saving changes:', deviceType)
-    }
-  }, [deviceType, isAddingNew])
-
+  // Fetch data and update form state dynamically
   const { loading, error } = useQuery<SdTypeQuery, SdTypeQueryVariables>(GET_PARAMETERS, {
     variables: { sdTypeId: sdTypeId! },
     skip: !sdTypeId || isAddingNew,
     onCompleted: (fetchedData) => {
       if (fetchedData?.sdType) {
-        setDeviceType({
-          label: fetchedData.sdType.label || '',
-          denotation: fetchedData.sdType.denotation || '',
-          icon: fetchedData.sdType.icon || '',
-          parameters:
-            fetchedData.sdType.parameters.map((param) => ({
-              id: param.id,
-              label: param.label ?? '',
-              denotation: param.denotation,
-              type: param.type
-            })) || []
-        })
+        setValue('label', fetchedData.sdType.label || '')
+        setValue('denotation', fetchedData.sdType.denotation || '')
+        setValue('icon', fetchedData.sdType.icon || '')
+        setValue(
+          'parameters',
+          fetchedData.sdType.parameters.map((param) => ({
+            denotation: param.denotation,
+            type: param.type
+          })) || []
+        )
       }
     }
   })
+
+  const IconComponent = useMemo(() => getIcon(watch('icon') || 'TbQuestionMark'), [watch('icon')])
+
+  const onSubmit = async (data: any) => {
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      console.log('Form Submitted:', data)
+
+      setEditMode(false) // Only after successful submit
+    } catch (error) {
+      console.error('Submission failed:', error)
+    }
+  }
+  const addParameter = () => {
+    setValue('parameters', [{ denotation: '', type: 'NUMBER' }, ...getValues('parameters')])
+  }
 
   if (loading) return <Spinner />
   if (error) return <p>Error: {error.message}</p>
 
   return (
-    <PageContainer>
+    <PageContainer onSubmit={handleSubmit(onSubmit)}>
       {/* HEADER */}
       <Header>
         <TitleWrapper>
           {editMode ? (
             <div>
               <Label htmlFor="icon">Icon</Label>
-              <IconPicker deviceType={deviceType} setDeviceType={setDeviceType} />
+              <IconPicker icon={watch('icon')} setIcon={(icon) => setValue('icon', icon)} />
             </div>
           ) : (
             <IconWrapper>{IconComponent && <IconComponent />}</IconWrapper>
@@ -149,28 +155,27 @@ export default function DeviceTypeDetail() {
           {editMode ? (
             <div>
               <Label htmlFor="device-name">Device Type Name</Label>
-              <Input id="device-name" type="text" value={deviceType.label} placeholder="Enter device type name..." onChange={(e) => setDeviceType((prev) => ({ ...prev, label: e.target.value }))} />
+              <Input {...register('label', { required: 'Device type name is required' })} placeholder="Enter device type name..." />
+              {isSubmitted && errors.label && <p className="text-red-500 text-sm">{errors.label.message}</p>}
             </div>
           ) : (
-            <Title>{deviceType.label}</Title>
+            <Title>{watch('label')}</Title>
           )}
         </TitleWrapper>
+
+        {/* Buttons */}
         {editMode ? (
-          <Button
-            onClick={() => {
-              setEditMode(!editMode)
-              handleSave()
-            }}
-            variant={'green'}
-          >
-            <TbCircleCheck /> Save
+          <Button type="submit" variant="green" disabled={isSubmitting}>
+            <TbCircleCheck /> {isSubmitting ? 'Saving...' : 'Save'}
           </Button>
         ) : (
           <Button
-            onClick={() => {
-              setEditMode(!editMode)
+            onClick={(e) => {
+              e.preventDefault() // Ensure it doesn't trigger form submit
+              setEditMode(true)
             }}
-            variant={'default'}
+            variant="default"
+            type="button"
           >
             <TbEdit /> Edit
           </Button>
@@ -181,30 +186,31 @@ export default function DeviceTypeDetail() {
       <TableItem>
         {editMode ? (
           <div className="flex items-center justify-center gap-2 pr-3">
-            <strong>Denotation:</strong>{' '}
-            <Input type="text" value={deviceType.denotation} placeholder="Enter denotation..." onChange={(e) => setDeviceType({ ...deviceType, denotation: e.target.value })} />
+            <strong>Denotation:</strong>
+            <div className="w-full">
+              <Input {...register('denotation', { required: 'Denotation is required' })} placeholder="Enter denotation..." />
+              {isSubmitted && errors.denotation && <p className="text-red-500 text-sm">{errors.denotation.message}</p>}
+            </div>
           </div>
         ) : (
           <div>
-            <strong>Denotation:</strong> {deviceType.denotation || 'Not set'}
+            <strong>Denotation:</strong> {watch('denotation') || 'Not set'}
           </div>
         )}
       </TableItem>
 
       {/* PARAMETERS SECTION */}
       <TableItem>
-        <strong>Parameters</strong> ({deviceType.parameters.length}):
+        <strong>Parameters</strong> ({watch('parameters').length}):
       </TableItem>
 
       {/* ADD PARAMETER BUTTON */}
       {editMode && (
         <Button
-          onClick={() =>
-            setDeviceType({
-              ...deviceType,
-              parameters: [{ label: '', denotation: '', type: 'NUMBER' }, ...deviceType.parameters]
-            })
-          }
+          onClick={(e) => {
+            e.preventDefault()
+            addParameter()
+          }}
           className="ml-4 mr-4"
         >
           <TbPlus /> Add Parameter
@@ -212,21 +218,14 @@ export default function DeviceTypeDetail() {
       )}
 
       <ParametersContainer>
-        {deviceType.parameters.map((param, index) => (
-          <ParameterItem key={index}>
+        {watch('parameters').map((param, index) => (
+          <div key={index} className="flex gap-4 p-1">
             {editMode ? (
               <>
-                {/* Denotation Input */}
-                <Input
-                  type="text"
-                  placeholder="Denotation"
-                  value={param.denotation}
-                  onChange={(e) => {
-                    const updatedParams = [...deviceType.parameters]
-                    updatedParams[index].denotation = e.target.value
-                    setDeviceType({ ...deviceType, parameters: updatedParams })
-                  }}
-                />
+                <div className="w-full flex flex-col gap-2">
+                  <Input {...register(`parameters.${index}.denotation`, { required: 'Denotation is required' })} placeholder="Denotation" />
+                  {isSubmitted && errors.parameters?.[index]?.denotation && <p className="text-red-500 text-sm">{errors.parameters[index].denotation.message}</p>}
+                </div>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -234,29 +233,22 @@ export default function DeviceTypeDetail() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     {['NUMBER', 'STRING', 'BOOLEAN'].map((option) => (
-                      <DropdownMenuItem
-                        key={option}
-                        onClick={() => {
-                          const updatedParams = [...deviceType.parameters]
-                          updatedParams[index].type = option
-                          setDeviceType({ ...deviceType, parameters: updatedParams })
-                        }}
-                      >
+                      <DropdownMenuItem key={option} onClick={() => setValue(`parameters.${index}.type`, option)}>
                         {option}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Delete Button */}
                 <Button
                   variant="destructive"
-                  onClick={() =>
-                    setDeviceType({
-                      ...deviceType,
-                      parameters: deviceType.parameters.filter((_, i) => i !== index)
-                    })
-                  }
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setValue(
+                      'parameters',
+                      watch('parameters').filter((_, i) => i !== index)
+                    )
+                  }}
                 >
                   <TbTrash />
                 </Button>
@@ -266,7 +258,7 @@ export default function DeviceTypeDetail() {
                 {param.denotation} - {param.type}
               </span>
             )}
-          </ParameterItem>
+          </div>
         ))}
       </ParametersContainer>
     </PageContainer>
