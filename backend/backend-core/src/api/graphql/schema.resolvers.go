@@ -2,6 +2,7 @@ package graphql
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql/gsc"
@@ -101,6 +102,14 @@ func (r *mutationResolver) DeleteUserConfig(ctx context.Context, userID uint32) 
 	return true, nil
 }
 
+func (r *mutationResolver) CreateSDCommand(ctx context.Context, input graphQLModel.SDCommandInvocationInput) (graphQLModel.SDCommandInvocation, error) {
+	panic(fmt.Errorf("not implemented: CreateSDCommand - createSDCommand"))
+}
+
+func (r *mutationResolver) InvokeSDCommand(ctx context.Context, id uint32) (bool, error) {
+	panic(fmt.Errorf("not implemented: InvokeSDCommand - invokeSDCommand"))
+}
+
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
 	getSDTypeResult := domainLogicLayer.GetSDType(id)
 	if getSDTypeResult.IsFailure() {
@@ -183,6 +192,14 @@ func (r *queryResolver) UserConfig(ctx context.Context, id uint32) (graphQLModel
 		log.Printf("Error occurred (get user config results): %s\n", getUserConfigResult.GetError().Error())
 	}
 	return getUserConfigResult.Unwrap()
+}
+
+func (r *queryResolver) SdCommand(ctx context.Context, id uint32) (graphQLModel.SDCommandInvocation, error) {
+	panic(fmt.Errorf("not implemented: SdCommand - sdCommand"))
+}
+
+func (r *queryResolver) SdCommandInvocations(ctx context.Context) ([]graphQLModel.SDCommandInvocation, error) {
+	panic(fmt.Errorf("not implemented: SdCommandInvocations - sdCommandInvocations"))
 }
 
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {

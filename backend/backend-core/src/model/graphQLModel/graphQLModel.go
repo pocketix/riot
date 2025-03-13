@@ -230,6 +230,14 @@ type SDCommandInvocation struct {
 	SdInstanceID   uint32 `json:"sdInstanceId"`
 }
 
+type SDCommandInvocationInput struct {
+	InvocationTime string `json:"invocationTime"`
+	Payload        string `json:"payload"`
+	UserID         uint32 `json:"userId"`
+	CommandID      uint32 `json:"commandId"`
+	SdInstanceID   uint32 `json:"sdInstanceId"`
+}
+
 type SDInstance struct {
 	ID                 uint32                `json:"id"`
 	UID                string                `json:"uid"`
