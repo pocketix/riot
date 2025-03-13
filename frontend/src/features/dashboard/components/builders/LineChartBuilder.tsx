@@ -264,7 +264,11 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
   }
 
   const handleSubmit = (values: z.infer<typeof lineChartBuilderSchema>) => {
-    onDataSubmit(values)
+    const result = {
+      values,
+      chartConfig
+    }
+    onDataSubmit(result)
   }
 
   return (

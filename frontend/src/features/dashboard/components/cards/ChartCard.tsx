@@ -14,6 +14,8 @@ import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartCardInfo } from '@/types/ChartCardInfo'
+import { toast } from 'sonner'
+import { LineChartConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -31,6 +33,11 @@ export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   border-radius: 12px;
 `
 
+type Config = {
+  values: LineChartConfig
+  chartConfig: ChartCardInfo
+}
+
 interface ChartCardProps {
   cardID: string
   handleDeleteItem: (id: string) => void
@@ -44,35 +51,40 @@ interface ChartCardProps {
   height: number
   width: number
   configuration: any
-  breakpoint: string
+  breakpoint: string // TODO: unused
 }
 
-export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, breakpoint }: ChartCardProps) => {
+export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration }: ChartCardProps) => {
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const { isDarkMode } = useDarkMode()
-  const [data, setData] = useState([])
+  const [data, setData] = useState<any[]>([])
+  const [cardConfig, setCardConfig] = useState<LineChartConfig>()
   const [chartConfig, setChartConfig] = useState<ChartCardInfo>()
 
-  const [getChartData, { error, data: chartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
+  const [getChartData, { data: fetchedChartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
 
   const fetchData = () => {
-    if (configuration) {
+    console.log('Chart config', cardConfig)
+    if (cardConfig) {
+      const instances = cardConfig?.instances
+      if (!instances) return
+      console.log('Fetching data')
+      const sensors = instances.map((instance: { uid: string; parameters: { denotation: string }[] }) => ({
+        key: instance.uid,
+        values: instance.parameters ? instance.parameters.map((param) => param.denotation) : []
+      }))
+
+      const request = {
+        from: new Date(Date.now() - Number(cardConfig.timeFrame) * 60 * 1000).toISOString(),
+        aggregateMinutes: cardConfig.aggregateMinutes,
+        operation: 'last'
+      }
+
       getChartData({
         variables: {
-          sensors: {
-            sensors: [
-              {
-                key: configuration.instance.uid,
-                values: [configuration.parameters[0].denotation]
-              }
-            ]
-          },
-          request: {
-            from: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-            aggregateMinutes: '30',
-            operation: 'last'
-          }
+          sensors: { sensors },
+          request
         }
       })
     }
@@ -80,27 +92,51 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
 
   useEffect(() => {
     if (configuration) {
-      setChartConfig(JSON.parse(configuration.visualizationConfig))
-      console.log(JSON.parse(configuration.visualizationConfig))
-      fetchData()
+      const globalConfig: Config = JSON.parse(configuration.visualizationConfig)
+      // console.log('Global config', globalConfig)
+      setCardConfig(globalConfig.values)
+      setChartConfig(globalConfig.chartConfig)
+      // console.log(JSON.parse(configuration.visualizationConfig))
     }
   }, [configuration])
 
   useEffect(() => {
-    if (chartData) {
-      const processedData = chartData.statisticsQuerySensorsWithFields.map((item: any) => {
-        const parsedData = JSON.parse(item.data)
-        const { host, ...rest } = parsedData
-        return {
-          x: item.time,
-          y: rest[configuration.parameters[0].denotation]
-        }
-      })
-      console.log(processedData)
-      setData(processedData)
+    if (cardConfig) {
+      fetchData()
     }
-    console.log(error)
-  }, [chartData, configuration])
+  }, [cardConfig])
+
+  useEffect(() => {
+    if (!cardConfig) return
+    if (!fetchedChartData) return
+    const instances = cardConfig?.instances
+
+    let result: any[] = []
+
+    instances.forEach((instance: { uid: string; parameters: { denotation: string }[] }) => {
+      const sensorDataArray = fetchedChartData.statisticsQuerySensorsWithFields.filter((item: any) => item.deviceId === instance.uid)
+      instance.parameters.forEach((param) => {
+        const paramData = {
+          id: param.denotation + '-' + instance.uid,
+          data: sensorDataArray.map((sensorData: any) => {
+            const parsedData = JSON.parse(sensorData.data)
+            return {
+              x: sensorData.time,
+              y: parsedData[param.denotation]
+            }
+          })
+        }
+        if (paramData.data.length === 0) {
+          toast.error('One or more of the selected parameters have no data available for the selected time frame.')
+          return
+        }
+        result.push(paramData)
+      })
+    })
+
+    setData(result)
+  }, [fetchedChartData])
+
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -132,39 +168,8 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
     if (highlight) setHighlightedCardID(cardID)
   }, [cardID, highlight])
 
-  // calculate height and width from getboundingclientrect
-
-  const lineData = [
-    {
-      id: 'data',
-      data: data
-    }
-  ]
-
-  // TODO: ???
-  // useEffect(() => {
-  //   if (!chartConfig) return
-
-  //   const newChartConfig = { ...chartConfig }
-  //   console.log(newChartConfig)
-
-  //   newChartConfig.axisBottom = {
-  //     ...newChartConfig.axisBottom,
-  //     tickRotation: breakpoint === 'xs' || breakpoint === 'xxs' ? -90 : breakpoint === 'sm' ? -45 : 0,
-  //     legendOffset: breakpoint === 'xs' || breakpoint === 'xxs' ? 55 : breakpoint === 'sm' ? 30 : 36
-  //   }
-
-  //   newChartConfig.margin = {
-  //     ...newChartConfig.margin,
-  //     bottom: breakpoint === 'xs' || breakpoint === 'xxs' ? 70 : breakpoint === 'sm' ? 70 : 50
-  //   }
-
-  //   console.log(newChartConfig)
-  //   setChartConfig(newChartConfig)
-  // }, [breakpoint])
-
   // TODO: Alert
-  if (!chartConfig || !data) return null
+  if (!cardConfig || !chartConfig || !data) return null
 
   return (
     <Container key={cardID} className={`${cardID}`}>
@@ -179,7 +184,7 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
           <div className="pl-4 pt-2 font-semibold">{chartConfig.cardTitle}</div>
           <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
             <ResponsiveLine
-              data={lineData}
+              data={data}
               margin={chartConfig.margin}
               xScale={chartConfig.xScale as any}
               yScale={chartConfig.yScale as any}
