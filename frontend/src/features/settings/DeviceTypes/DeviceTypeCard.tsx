@@ -1,10 +1,13 @@
 import styled from 'styled-components'
 import { FaList } from 'react-icons/fa'
-import { SdTypesQuery } from '@/generated/graphql'
+import { DeleteSdTypeMutation, DeleteSdTypeMutationVariables, SdTypesQuery, SdTypesQueryVariables } from '@/generated/graphql'
 import { Button } from '@/components/ui/button'
 import { getIcon } from '@/utils/getIcon'
 import { TbTrash } from 'react-icons/tb'
 import { useNavigate } from 'react-router-dom'
+import { DELETE_DEVICE_TYPE } from '@/graphql/Mutations'
+import { useMutation, useQuery } from '@apollo/client'
+import { GET_SD_TYPES } from '@/graphql/Queries'
 
 const Card = styled.div`
   background: var(--color-grey-0);
@@ -55,8 +58,37 @@ type DeviceTypeCardProps = {
 export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
   const navigate = useNavigate()
 
-  const { denotation, label, icon, parameters, id } = deviceType
+  const { denotation, label, icon, id } = deviceType
   const IconComponent = getIcon(icon || 'TbQuestionMark')
+
+  const { refetch } = useQuery<SdTypesQuery, SdTypesQueryVariables>(GET_SD_TYPES)
+  const [deleteSDTypeMutation] = useMutation<DeleteSdTypeMutation, DeleteSdTypeMutationVariables>(DELETE_DEVICE_TYPE)
+
+  const handleDelete = async () => {
+    if (!id) return
+
+    try {
+      console.log('Attempting to delete device type with ID:', id)
+
+      await deleteSDTypeMutation({
+        variables: { id: Number(id) },
+        update: (cache) => {
+          cache.modify({
+            fields: {
+              sdTypes(existingSDTypes = [], { readField }) {
+                return existingSDTypes.filter((sdTypeRef: any) => readField('id', sdTypeRef) !== Number(id))
+              }
+            }
+          })
+        }
+      })
+
+      console.log('Successfully deleted:', id)
+      await refetch()
+    } catch (error) {
+      console.error('Deletion failed:', error)
+    }
+  }
 
   return (
     <Card>
@@ -70,7 +102,7 @@ export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
         <Button>
           <FaList /> View Instances
         </Button>
-        <Button variant={'destructive'}>
+        <Button onClick={handleDelete} variant={'destructive'}>
           <TbTrash /> Delete
         </Button>
       </ButtonGroup>

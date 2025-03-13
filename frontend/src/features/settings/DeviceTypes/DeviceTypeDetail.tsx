@@ -1,18 +1,20 @@
 import { useMemo, useState } from 'react'
-import { useParams, useLocation } from 'react-router-dom'
-import { useQuery } from '@apollo/client'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import { useMutation, useQuery } from '@apollo/client'
 import { GET_PARAMETERS } from '@/graphql/Queries'
-import { SdTypeQuery, SdTypeQueryVariables } from '@/generated/graphql'
+import { DeleteSdTypeMutation, DeleteSdTypeMutationVariables, SdTypeQuery, SdTypeQueryVariables } from '@/generated/graphql'
 import Spinner from '@/ui/Spinner'
 import styled from 'styled-components'
 import { Button } from '@/components/ui/button'
-import { TbCircleCheck, TbEdit, TbPlus, TbTrash } from 'react-icons/tb'
+import { TbCircleCheck, TbEdit, TbPlus, TbTrash, TbX } from 'react-icons/tb'
 import { getIcon } from '@/utils/getIcon'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import IconPicker from '@/ui/IconPicker'
 import { useForm } from 'react-hook-form'
+import { breakpoints } from '@/styles/Breakpoints'
+import { DELETE_DEVICE_TYPE } from '@/graphql/Mutations'
 
 const PageContainer = styled.form`
   display: flex;
@@ -22,14 +24,14 @@ const PageContainer = styled.form`
   height: max-content;
   margin: 0 auto;
   border-radius: 8px;
-  background-color: var(--color-grey-100);
+  background-color: var(--color-grey-200);
 `
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--color-grey-0);
+  background: var(--color-grey-400);
   padding: 1rem;
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
@@ -76,11 +78,30 @@ const ParametersContainer = styled.div`
   max-height: 100vh;
 `
 
+const ButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  @media (min-width: ${breakpoints.sm}) {
+    flex-direction: row;
+    gap: 1rem;
+  }
+`
+
 export default function DeviceTypeDetail() {
-  const { id: sdTypeId } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>()
+  const sdTypeId = id ? Number(id) : null
   const location = useLocation()
   const isAddingNew = location.pathname.endsWith('/addNewType')
   const [editMode, setEditMode] = useState(isAddingNew)
+
+  const [initialValues, setInitialValues] = useState({
+    label: '',
+    denotation: '',
+    icon: '',
+    parameters: [] as { denotation: string; type: string }[]
+  })
 
   const {
     register,
@@ -88,14 +109,10 @@ export default function DeviceTypeDetail() {
     setValue,
     getValues,
     watch,
-    formState: { errors, isSubmitted, isSubmitting }
+    reset,
+    formState: { errors, isSubmitting }
   } = useForm({
-    defaultValues: {
-      label: '',
-      denotation: '',
-      icon: '',
-      parameters: [] as { denotation: string; type: string }[]
-    },
+    defaultValues: initialValues,
     mode: 'onSubmit'
   })
 
@@ -105,32 +122,67 @@ export default function DeviceTypeDetail() {
     skip: !sdTypeId || isAddingNew,
     onCompleted: (fetchedData) => {
       if (fetchedData?.sdType) {
-        setValue('label', fetchedData.sdType.label || '')
-        setValue('denotation', fetchedData.sdType.denotation || '')
-        setValue('icon', fetchedData.sdType.icon || '')
-        setValue(
-          'parameters',
-          fetchedData.sdType.parameters.map((param) => ({
-            denotation: param.denotation,
-            type: param.type
-          })) || []
-        )
+        const fetchedValues = {
+          label: fetchedData.sdType.label || '',
+          denotation: fetchedData.sdType.denotation || '',
+          icon: fetchedData.sdType.icon || 'TbQuestionMark',
+          parameters:
+            fetchedData.sdType.parameters.map((param) => ({
+              denotation: param.denotation,
+              type: param.type
+            })) || []
+        }
+
+        setInitialValues(fetchedValues)
+        reset(fetchedValues)
       }
     }
   })
+
+  const [deleteSDTypeMutation] = useMutation<DeleteSdTypeMutation, DeleteSdTypeMutationVariables>(DELETE_DEVICE_TYPE)
 
   const IconComponent = useMemo(() => getIcon(watch('icon') || 'TbQuestionMark'), [watch('icon')])
 
   const onSubmit = async (data: any) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log('Form Submitted:', data)
+      if (isAddingNew) console.log('Creating:', data)
+      else {
+        console.log('Editing:', data)
+      }
 
-      setEditMode(false) // Only after successful submit
+      setEditMode(false)
     } catch (error) {
       console.error('Submission failed:', error)
     }
   }
+
+  const handleDelete = async () => {
+    if (!id) return
+
+    try {
+      console.log('Attempting to delete device type with ID:', id)
+
+      await deleteSDTypeMutation({
+        variables: { id: Number(id) },
+        update: (cache) => {
+          cache.modify({
+            fields: {
+              sdTypes(existingSDTypes = [], { readField }) {
+                return existingSDTypes.filter((sdTypeRef: any) => readField('id', sdTypeRef) !== Number(id))
+              }
+            }
+          })
+        }
+      })
+
+      console.log('Successfully deleted:', id)
+      navigate('/settings/device-types')
+    } catch (error) {
+      console.error('Deletion failed:', error)
+    }
+  }
+
   const addParameter = () => {
     setValue('parameters', [{ denotation: '', type: 'NUMBER' }, ...getValues('parameters')])
   }
@@ -146,7 +198,7 @@ export default function DeviceTypeDetail() {
           {editMode ? (
             <div>
               <Label htmlFor="icon">Icon</Label>
-              <IconPicker icon={watch('icon')} setIcon={(icon) => setValue('icon', icon)} />
+              <IconPicker icon={watch('icon')} setIcon={(icon) => setValue('icon', icon, { shouldDirty: true })} />
             </div>
           ) : (
             <IconWrapper>{IconComponent && <IconComponent />}</IconWrapper>
@@ -156,7 +208,7 @@ export default function DeviceTypeDetail() {
             <div>
               <Label htmlFor="device-name">Device Type Name</Label>
               <Input {...register('label', { required: 'Device type name is required' })} placeholder="Enter device type name..." />
-              {isSubmitted && errors.label && <p className="text-red-500 text-sm">{errors.label.message}</p>}
+              {errors.label && <p className="text-red-500 text-sm">{errors.label.message}</p>}
             </div>
           ) : (
             <Title>{watch('label')}</Title>
@@ -165,9 +217,34 @@ export default function DeviceTypeDetail() {
 
         {/* Buttons */}
         {editMode ? (
-          <Button type="submit" variant="green" disabled={isSubmitting}>
-            <TbCircleCheck /> {isSubmitting ? 'Saving...' : 'Save'}
-          </Button>
+          <ButtonsContainer>
+            <Button type="submit" variant="green" disabled={isSubmitting}>
+              <TbCircleCheck /> {isAddingNew ? 'Create' : isSubmitting ? 'Saving...' : 'Save'}
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              disabled={isSubmitting}
+              onClick={() => {
+                isAddingNew ? navigate(-1) : reset(initialValues)
+                setEditMode(false)
+              }}
+            >
+              <TbX /> Cancel
+            </Button>
+            {!isAddingNew && (
+              <Button
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleDelete()
+                }}
+                variant="destructive"
+                disabled={isSubmitting}
+              >
+                <TbTrash /> Delete
+              </Button>
+            )}
+          </ButtonsContainer>
         ) : (
           <Button
             onClick={(e) => {
@@ -189,7 +266,7 @@ export default function DeviceTypeDetail() {
             <strong>Denotation:</strong>
             <div className="w-full">
               <Input {...register('denotation', { required: 'Denotation is required' })} placeholder="Enter denotation..." />
-              {isSubmitted && errors.denotation && <p className="text-red-500 text-sm">{errors.denotation.message}</p>}
+              {errors.denotation && <p className="text-red-500 text-sm">{errors.denotation.message}</p>}
             </div>
           </div>
         ) : (
@@ -224,7 +301,7 @@ export default function DeviceTypeDetail() {
               <>
                 <div className="w-full flex flex-col gap-2">
                   <Input {...register(`parameters.${index}.denotation`, { required: 'Denotation is required' })} placeholder="Denotation" />
-                  {isSubmitted && errors.parameters?.[index]?.denotation && <p className="text-red-500 text-sm">{errors.parameters[index].denotation.message}</p>}
+                  {errors.parameters?.[index]?.denotation && <p className="text-red-500 text-sm">{errors.parameters[index].denotation.message}</p>}
                 </div>
 
                 <DropdownMenu>

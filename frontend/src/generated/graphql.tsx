@@ -10,7 +10,7 @@ export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' |
 const defaultOptions = {} as const;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string; }
+  ID: { input: number; output: number; }
   String: { input: string; output: string; }
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
@@ -463,22 +463,29 @@ export type UserConfigInput = {
   config: Scalars['JSON']['input'];
 };
 
+export type DeleteSdTypeMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteSdTypeMutation = { __typename?: 'Mutation', deleteSDType: boolean };
+
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }> };
+export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string } }> };
 
 export type SdTypeQueryVariables = Exact<{
   sdTypeId: Scalars['ID']['input'];
 }>;
 
 
-export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', id: string, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: string, label?: string | null, denotation: string, type: SdParameterType }> } };
+export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }> } };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdTypesQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: string, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: string, label?: string | null, denotation: string, type: SdParameterType }> }> };
+export type SdTypesQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }> }> };
 
 export type StatisticsQuerySensorsWithFieldsQueryVariables = Exact<{
   sensors: SensorsWithFields;
@@ -489,6 +496,37 @@ export type StatisticsQuerySensorsWithFieldsQueryVariables = Exact<{
 export type StatisticsQuerySensorsWithFieldsQuery = { __typename?: 'Query', statisticsQuerySensorsWithFields: Array<{ __typename?: 'OutputData', data: any, time: any, deviceId: string }> };
 
 
+export const DeleteSdTypeDocument = gql`
+    mutation DeleteSDType($id: ID!) {
+  deleteSDType(id: $id)
+}
+    `;
+export type DeleteSdTypeMutationFn = Apollo.MutationFunction<DeleteSdTypeMutation, DeleteSdTypeMutationVariables>;
+
+/**
+ * __useDeleteSdTypeMutation__
+ *
+ * To run a mutation, you first call `useDeleteSdTypeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteSdTypeMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteSdTypeMutation, { data, loading, error }] = useDeleteSdTypeMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteSdTypeMutation(baseOptions?: Apollo.MutationHookOptions<DeleteSdTypeMutation, DeleteSdTypeMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteSdTypeMutation, DeleteSdTypeMutationVariables>(DeleteSdTypeDocument, options);
+      }
+export type DeleteSdTypeMutationHookResult = ReturnType<typeof useDeleteSdTypeMutation>;
+export type DeleteSdTypeMutationResult = Apollo.MutationResult<DeleteSdTypeMutation>;
+export type DeleteSdTypeMutationOptions = Apollo.BaseMutationOptions<DeleteSdTypeMutation, DeleteSdTypeMutationVariables>;
 export const SdInstancesDocument = gql`
     query SdInstances {
   sdInstances {
