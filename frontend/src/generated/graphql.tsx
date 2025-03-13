@@ -470,6 +470,13 @@ export type DeleteSdTypeMutationVariables = Exact<{
 
 export type DeleteSdTypeMutation = { __typename?: 'Mutation', deleteSDType: boolean };
 
+export type CreateSdTypeMutationVariables = Exact<{
+  input: SdTypeInput;
+}>;
+
+
+export type CreateSdTypeMutation = { __typename?: 'Mutation', createSDType: { __typename?: 'SDType', id: number, label?: string | null, icon?: string | null, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }> } };
+
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -527,6 +534,48 @@ export function useDeleteSdTypeMutation(baseOptions?: Apollo.MutationHookOptions
 export type DeleteSdTypeMutationHookResult = ReturnType<typeof useDeleteSdTypeMutation>;
 export type DeleteSdTypeMutationResult = Apollo.MutationResult<DeleteSdTypeMutation>;
 export type DeleteSdTypeMutationOptions = Apollo.BaseMutationOptions<DeleteSdTypeMutation, DeleteSdTypeMutationVariables>;
+export const CreateSdTypeDocument = gql`
+    mutation createSDType($input: SDTypeInput!) {
+  createSDType(input: $input) {
+    id
+    label
+    icon
+    denotation
+    parameters {
+      id
+      label
+      denotation
+      type
+    }
+  }
+}
+    `;
+export type CreateSdTypeMutationFn = Apollo.MutationFunction<CreateSdTypeMutation, CreateSdTypeMutationVariables>;
+
+/**
+ * __useCreateSdTypeMutation__
+ *
+ * To run a mutation, you first call `useCreateSdTypeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateSdTypeMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createSdTypeMutation, { data, loading, error }] = useCreateSdTypeMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateSdTypeMutation(baseOptions?: Apollo.MutationHookOptions<CreateSdTypeMutation, CreateSdTypeMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateSdTypeMutation, CreateSdTypeMutationVariables>(CreateSdTypeDocument, options);
+      }
+export type CreateSdTypeMutationHookResult = ReturnType<typeof useCreateSdTypeMutation>;
+export type CreateSdTypeMutationResult = Apollo.MutationResult<CreateSdTypeMutation>;
+export type CreateSdTypeMutationOptions = Apollo.BaseMutationOptions<CreateSdTypeMutation, CreateSdTypeMutationVariables>;
 export const SdInstancesDocument = gql`
     query SdInstances {
   sdInstances {

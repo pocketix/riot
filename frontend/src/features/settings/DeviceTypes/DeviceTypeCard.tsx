@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom'
 import { DELETE_DEVICE_TYPE } from '@/graphql/Mutations'
 import { useMutation, useQuery } from '@apollo/client'
 import { GET_SD_TYPES } from '@/graphql/Queries'
+import DeleteConfirmationModal from '@/ui/DeleteConfirmationModal'
+import { useState } from 'react'
 
 const Card = styled.div`
   background: var(--color-grey-0);
@@ -57,6 +59,7 @@ type DeviceTypeCardProps = {
 
 export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
   const navigate = useNavigate()
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const { denotation, label, icon, id } = deviceType
   const IconComponent = getIcon(icon || 'TbQuestionMark')
@@ -83,6 +86,7 @@ export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
         }
       })
 
+      setIsModalOpen(false)
       console.log('Successfully deleted:', id)
       await refetch()
     } catch (error) {
@@ -102,9 +106,15 @@ export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
         <Button>
           <FaList /> View Instances
         </Button>
-        <Button onClick={handleDelete} variant={'destructive'}>
-          <TbTrash /> Delete
-        </Button>
+        <>
+          {/* DELETE BUTTON */}
+          <Button onClick={() => setIsModalOpen(true)} variant="destructive">
+            <TbTrash /> Delete Type
+          </Button>
+
+          {/* MODAL */}
+          <DeleteConfirmationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleDelete} itemName="this device type" />
+        </>
       </ButtonGroup>
     </Card>
   )

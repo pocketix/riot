@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@apollo/client'
 import { GET_PARAMETERS } from '@/graphql/Queries'
-import { DeleteSdTypeMutation, DeleteSdTypeMutationVariables, SdTypeQuery, SdTypeQueryVariables } from '@/generated/graphql'
+import { CreateSdTypeMutation, CreateSdTypeMutationVariables, DeleteSdTypeMutation, DeleteSdTypeMutationVariables, SdParameterType, SdTypeQuery, SdTypeQueryVariables } from '@/generated/graphql'
 import Spinner from '@/ui/Spinner'
 import styled from 'styled-components'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import IconPicker from '@/ui/IconPicker'
 import { useForm } from 'react-hook-form'
 import { breakpoints } from '@/styles/Breakpoints'
-import { DELETE_DEVICE_TYPE } from '@/graphql/Mutations'
+import { CREATE_DEVICE_TYPE, DELETE_DEVICE_TYPE } from '@/graphql/Mutations'
+import DeleteConfirmationModal from '@/ui/DeleteConfirmationModal'
+import { toast } from 'sonner'
 
 const PageContainer = styled.form`
   display: flex;
@@ -95,6 +97,7 @@ export default function DeviceTypeDetail() {
   const location = useLocation()
   const isAddingNew = location.pathname.endsWith('/addNewType')
   const [editMode, setEditMode] = useState(isAddingNew)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const [initialValues, setInitialValues] = useState({
     label: '',
@@ -140,15 +143,39 @@ export default function DeviceTypeDetail() {
   })
 
   const [deleteSDTypeMutation] = useMutation<DeleteSdTypeMutation, DeleteSdTypeMutationVariables>(DELETE_DEVICE_TYPE)
+  const [createSDTypeMutation] = useMutation<CreateSdTypeMutation, CreateSdTypeMutationVariables>(CREATE_DEVICE_TYPE)
 
   const IconComponent = useMemo(() => getIcon(watch('icon') || 'TbQuestionMark'), [watch('icon')])
 
   const onSubmit = async (data: any) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      if (isAddingNew) console.log('Creating:', data)
-      else {
+      if (isAddingNew) {
+        console.log('Creating:', data)
+
+        const response = await createSDTypeMutation({
+          variables: {
+            input: {
+              denotation: data.denotation,
+              icon: data.icon,
+              label: data.label,
+              parameters: data.parameters.map((p: any) => ({
+                denotation: p.denotation,
+                type: p.type as SdParameterType
+              }))
+            }
+          }
+        })
+
+        // Get the newly created ID
+        const newId = response?.data?.createSDType?.id
+
+        if (newId) {
+          toast.success('Device type created successfully')
+          navigate(`/settings/device-types/${newId}`)
+        }
+      } else {
         console.log('Editing:', data)
+        // Here you would call the update mutation if it exists
       }
 
       setEditMode(false)
@@ -159,7 +186,6 @@ export default function DeviceTypeDetail() {
 
   const handleDelete = async () => {
     if (!id) return
-
     try {
       console.log('Attempting to delete device type with ID:', id)
 
@@ -175,8 +201,9 @@ export default function DeviceTypeDetail() {
           })
         }
       })
-
       console.log('Successfully deleted:', id)
+      toast.success('Device type deleted successfully')
+      setIsModalOpen(false)
       navigate('/settings/device-types')
     } catch (error) {
       console.error('Deletion failed:', error)
@@ -233,22 +260,27 @@ export default function DeviceTypeDetail() {
               <TbX /> Cancel
             </Button>
             {!isAddingNew && (
-              <Button
-                onClick={(e) => {
-                  e.preventDefault()
-                  handleDelete()
-                }}
-                variant="destructive"
-                disabled={isSubmitting}
-              >
-                <TbTrash /> Delete
-              </Button>
+              <>
+                {/* DELETE BUTTON */}
+                <Button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setIsModalOpen(true)
+                  }}
+                  variant="destructive"
+                >
+                  <TbTrash /> Delete Type
+                </Button>
+
+                {/* MODAL */}
+                <DeleteConfirmationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleDelete} itemName="this device type" />
+              </>
             )}
           </ButtonsContainer>
         ) : (
           <Button
             onClick={(e) => {
-              e.preventDefault() // Ensure it doesn't trigger form submit
+              e.preventDefault()
               setEditMode(true)
             }}
             variant="default"

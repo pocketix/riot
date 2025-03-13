@@ -50,7 +50,7 @@ export default function Settings() {
             { name: 'device types', path: '/settings/device-types' }
           ]}
         />
-        {!isDefaultTab && <Button onClick={() => navigate(-1)}>&larr; Go Back</Button>}
+        {!isDefaultTab && <Button onClick={() => navigate('/settings/device-types')}>&larr; Go Back</Button>}
       </NavigationDiv>
       <Outlet />
     </StyledPage>
