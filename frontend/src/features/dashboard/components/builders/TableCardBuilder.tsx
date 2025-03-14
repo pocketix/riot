@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { TbTrash } from 'react-icons/tb'
 import { Label } from '@/components/ui/label'
+import { BuilderResult } from '../VisualizationBuilder'
 
 export interface TableCardBuilderProps {
   onDataSubmit: (data: any) => void
@@ -60,7 +61,8 @@ export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBui
     defaultValues: {
       title: 'Area',
       tableTitle: 'Sensors',
-      decimalPlaces: 2,
+      timeFrame: '1440',
+      decimalPlaces: 1,
       columns: [],
       rows: []
     }
@@ -118,7 +120,7 @@ export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBui
       newRows.map((row) => ({
         ...row,
         instance: { uid: row.instance?.uid! },
-        parameter: { id: row.parameter?.id! }
+        parameter: { id: row.parameter?.id!, denotation: row.parameter?.denotation! }
       }))
     )
     form.trigger('rows')
@@ -139,7 +141,14 @@ export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBui
   }
 
   const handleSubmit = (values: z.infer<typeof tableCardSchema>) => {
-    onDataSubmit(values)
+    const result: BuilderResult = {
+      config: values,
+      sizing: {
+        w: 2,
+        h: 1
+      }
+    }
+    onDataSubmit(result)
   }
 
   return (
@@ -221,13 +230,13 @@ export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBui
                 control={form.control}
                 name="decimalPlaces"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="self-center">
                     <FormLabel>
                       <div className="flex items-center gap-2">
                         Number of decimal places
                         <TooltipProvider>
                           <Tooltip>
-                            <TooltipTrigger>
+                            <TooltipTrigger type="button">
                               <HiOutlineQuestionMarkCircle className="text-primary w-5 h-5" />
                             </TooltipTrigger>
                             <TooltipContent>
@@ -254,6 +263,39 @@ export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBui
                         value={field.value}
                         className="w-full"
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="timeFrame"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Time Frame</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value)
+                          console.log('form values', form.getValues())
+                          // fetchData() // TODO: fetch after changing
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a time frame" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="60">Last hour</SelectItem>
+                          <SelectItem value="360">Last 6 hours</SelectItem>
+                          <SelectItem value="480">Last 12 hours</SelectItem>
+                          <SelectItem value="1440">Last day</SelectItem>
+                          <SelectItem value="4320">Last 3 days</SelectItem>
+                          <SelectItem value="10080">Last week</SelectItem>
+                          <SelectItem value="43200">Last month</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -416,7 +458,7 @@ export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBui
                       />
                       <FormField
                         control={form.control}
-                        name={`rows.${rowIndex}.parameter.id`}
+                        name={`rows.${rowIndex}.parameter`}
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
@@ -426,10 +468,11 @@ export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBui
                                   onValueChange={(value) => {
                                     const parameter = availableParameters[row.instance?.uid!]?.find((param) => param.id === Number(value)) || null
                                     if (!parameter) return
-                                    field.onChange(parameter.id)
+                                    const fieldValue = { ...parameter, id: parameter.id, denotation: parameter.denotation }
+                                    field.onChange(fieldValue)
                                     handleParameterChange(rowIndex, parameter)
                                   }}
-                                  value={field.value}
+                                  value={field.value?.id}
                                   disabled={!availableParameters[row.instance?.uid!]}
                                 >
                                   <SelectTrigger>

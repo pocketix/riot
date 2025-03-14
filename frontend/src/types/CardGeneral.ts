@@ -1,4 +1,4 @@
-export type CardGeneral = {
+export type Sizing = {
     w?: number;
     h?: number;
     minW?: number;

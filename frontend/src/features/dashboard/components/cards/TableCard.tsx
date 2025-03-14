@@ -7,8 +7,8 @@ import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './AccessibilityContainer'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { useLazyQuery } from '@apollo/client'
-import { TableCardInfo } from '@/types/TableCardInfo'
 import { Skeleton } from '@/components/ui/skeleton'
+import { TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -48,7 +48,8 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
-  const [chartConfig, setChartConfig] = useState<TableCardInfo>()
+  const [tableConfig, setTableConfig] = useState<TableCardConfig>()
+  const [tableData, setTableData] = useState<any[]>([])
   const [fetchTableData] = useLazyQuery(GET_TIME_SERIES_DATA)
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
@@ -77,7 +78,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
     }, [layout, item])
   }
 
-  const fetchData = async (sensors: { key: string; values: string }[], from: string, to: string, aggregateMinutes: number, operation: string) => {
+  const fetchData = async (sensors: { key: string; values: string }[], from: string, aggregateMinutes: number, operation: string) => {
     return fetchTableData({
       variables: {
         sensors: {
@@ -85,7 +86,6 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
         },
         request: {
           from: from,
-          to: to,
           aggregateMinutes: aggregateMinutes,
           operation: operation
         }
@@ -98,21 +98,28 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
   }, [cardID, highlight])
 
   useEffect(() => {
-    const fetchDataAndConfig = async () => {
+    const parseConfig = () => {
       if (!configuration) return
+      console.log('CONFIGURATION', configuration)
 
-      const config = JSON.parse(configuration.visualizationConfig) as TableCardInfo
+      const config = JSON.parse(configuration.visualizationConfig) as TableCardConfig
       if (!config) return
+      setTableConfig(config)
+    }
 
-      const sensors = config.rows.map((row) => ({
+    parseConfig()
+  }, [configuration])
+
+  useEffect(() => {
+    const fetchDataAndPopulate = async () => {
+      if (!tableConfig) return
+
+      const sensors = tableConfig.rows.map((row) => ({
         key: row.instance.uid,
         values: row.parameter.denotation
       }))
 
-      // Cleanup row.values
-      config.rows.forEach((row) => {
-        row.values = []
-      })
+      console.log('SENSORS', sensors)
 
       if (!sensors.length) return
 
@@ -121,44 +128,49 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
       try {
         // Execute all queries in parallel
         // results are returned in the same order as the queries
-        results = await Promise.all(config.columns.map((column) => fetchData(sensors, new Date(Date.now() - 3600000).toISOString(), new Date().toISOString(), 1000, column.function)))
+        results = await Promise.all(
+          tableConfig.columns.map((column) => fetchData(sensors, new Date(Date.now() - Number(tableConfig.timeFrame) * 60 * 1000).toISOString(), Number(tableConfig.timeFrame) * 1000, column.function))
+        )
 
+        console.log('RESULTS', results)
         const parsedData = results.map((result) => result.data.statisticsQuerySensorsWithFields)
 
-        let columnIndex = 0
-        parsedData.forEach((column) => {
-          // Make use of the fact that the results are in the same order as the queries
-          const functionName = config.columns[columnIndex].function
-          columnIndex++
-          // find each device in the column data for a specific function
-          sensors.forEach((sensor) => {
-            const instanceData = column.find((data: any) => data.deviceId === sensor.key)
-            // find the row corresponding to the deviceID
-            config.rows.forEach((row) => {
-              if (row.instance.uid === sensor.key) {
-                // parse the stringified data
-                let parsedData = JSON.parse(instanceData.data)
-                // console.log('PARSED DATA', parsedData[row.parameter.denotation]) // TODO: remove
-                row.values?.push({
-                  function: functionName,
-                  value: parsedData[row.parameter.denotation]
-                })
-              }
-            })
+        const updatedRows = tableConfig.rows.map((row) => {
+          let columnIndex = 0
+          const rowValues: any = []
+          console.log('Parsed data', parsedData)
+          parsedData.forEach((column) => {
+            // Make use of the fact that the results are in the same order as the queries
+            const functionName = tableConfig.columns[columnIndex++]?.function!
+            console.log('Function name', functionName, 'Column index', columnIndex)
+            console.log('Column index', columnIndex)
+            // find each device in the column data for a specific function
+            const instanceData = column.find((data: any) => data.deviceId === row.instance.uid)
+            if (instanceData) {
+              // parse the stringified data
+              let parsedData = JSON.parse(instanceData.data)
+              rowValues.push({
+                function: functionName,
+                value: parsedData[row.parameter.denotation]
+              })
+            }
           })
+          return { ...row, values: rowValues }
         })
 
-        setChartConfig(config)
-        console.log('CONFIG', config)
+        console.log('Table data', updatedRows)
+
+        setTableData(updatedRows)
+        console.log('CONFIG', tableConfig)
       } catch (error) {
         console.error('Fetch error:', error)
       }
     }
 
-    fetchDataAndConfig()
-  }, [configuration])
+    fetchDataAndPopulate()
+  }, [tableConfig])
 
-  if (!chartConfig || !chartConfig.columns || !chartConfig.rows || !chartConfig.rows.values) {
+  if (!tableConfig || !tableConfig.columns || !tableData) {
     return <Skeleton className="w-full h-full" />
   }
 
@@ -170,13 +182,13 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
         </DragHandle>
       )}
       {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
-      <div className="pl-4 pt-2 font-semibold">{chartConfig.title}</div>
+      <div className="pl-4 pt-2 font-semibold">{tableConfig.title}</div>
       <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
         <table className="w-full h-fit">
           <thead className="border-b-[2px]">
             <tr>
-              <th className="text-left text-md">{chartConfig?.tableTitle!}</th>
-              {chartConfig?.columns.map((column, index) => (
+              <th className="text-left text-md">{tableConfig?.tableTitle!}</th>
+              {tableConfig?.columns.map((column, index) => (
                 <th key={index} className="text-center text-xs">
                   {column.header}
                 </th>
@@ -184,15 +196,14 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
             </tr>
           </thead>
           <tbody>
-            {chartConfig?.rows.map((row, rowIndex) => (
+            {tableData?.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 <td className="text-sm">{row.name}</td>
-                {Array(row.values).length > 0 &&
-                  row.values!.map((value, valueIndex) => (
-                    <td key={valueIndex} className="text-sm text-center">
-                      {parseFloat(value.value).toFixed(chartConfig.decimalPlaces ?? 2)}
-                    </td>
-                  ))}
+                {row.values?.map((data: { function: string; value: number }, valueIndex: number) => (
+                  <td key={valueIndex} className="text-sm text-center">
+                    {data.value.toFixed(tableConfig.decimalPlaces ?? 2)}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>

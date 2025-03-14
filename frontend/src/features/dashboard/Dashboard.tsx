@@ -271,7 +271,7 @@ const Dashboard = () => {
       })
     })
 
-    const sizing = JSON.parse(item.visualizationConfig).sizing
+    const sizing = item.visualizationConfig?.sizing
 
     const newIndex = (largestIndex + 1).toString()
     const newCard: Layout = {

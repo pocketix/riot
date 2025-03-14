@@ -92,7 +92,9 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
 
   useEffect(() => {
     if (configuration) {
-      const globalConfig: Config = JSON.parse(configuration.visualizationConfig)
+      console.log('Configuration', configuration.visualizationConfig.config)
+      const globalConfig: Config = configuration.visualizationConfig.config
+      console.log('Global config', globalConfig)
       // console.log('Global config', globalConfig)
       setCardConfig(globalConfig.values)
       setChartConfig(globalConfig.chartConfig)
@@ -136,7 +138,6 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
 
     setData(result)
   }, [fetchedChartData])
-
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 

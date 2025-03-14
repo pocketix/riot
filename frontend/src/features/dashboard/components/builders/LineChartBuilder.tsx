@@ -27,6 +27,7 @@ import { HiOutlineQuestionMarkCircle } from 'react-icons/hi2'
 import { toast } from 'sonner'
 import { useDebounce } from 'use-debounce'
 import { Checkbox } from '@/components/ui/checkbox'
+import { BuilderResult } from '../VisualizationBuilder'
 
 export interface LineChartBuilderProps {
   onDataSubmit: (data: any) => void
@@ -264,9 +265,16 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
   }
 
   const handleSubmit = (values: z.infer<typeof lineChartBuilderSchema>) => {
-    const result = {
-      values,
-      chartConfig
+    const result : BuilderResult = {
+      config : {
+        values,
+        chartConfig
+      },
+      sizing : {
+        minH: 2,
+        w: 2,
+        h: 2
+      }
     }
     onDataSubmit(result)
   }

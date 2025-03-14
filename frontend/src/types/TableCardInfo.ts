@@ -1,9 +1,9 @@
 import { SdInstance, SdParameter } from '@/generated/graphql'
-import { CardGeneral } from './CardGeneral'
+import { Sizing } from './CardGeneral'
 
 export type TableCardInfo = {
   _cardID: string
-  sizing?: CardGeneral
+  sizing?: Sizing
   title?: string
   tableTitle?: string
   icon?: string // unused

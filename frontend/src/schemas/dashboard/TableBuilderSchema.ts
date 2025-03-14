@@ -4,6 +4,7 @@ export const tableCardSchema = z.object({
   _cardID: z.string().length(0, { message: 'Card ID cannot be set' }).optional(),
   title: z.string().min(1, { message: 'Title is required' }),
   tableTitle: z.string().min(1, { message: 'Table title is required' }),
+  timeFrame: z.string().min(1, { message: 'Time frame must be at least 1' }),
   decimalPlaces: z.number().min(0, { message: 'Decimal places must be a non-negative number' }),
   columns: z
     .array(
@@ -21,9 +22,12 @@ export const tableCardSchema = z.object({
           uid: z.string().min(1, { message: 'Instance is required' })
         }),
         parameter: z.object({
-          id: z.number().min(1, { message: 'Parameter is required' })
+          id: z.number().min(1, { message: 'Parameter is required' }),
+          denotation: z.string().min(1, { message: 'Parameter is required' })
         })
       })
     )
     .min(1, { message: 'At least one row is required' })
 })
+
+export type TableCardConfig = z.infer<typeof tableCardSchema>

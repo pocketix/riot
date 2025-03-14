@@ -1,11 +1,11 @@
 import { AxisProps } from "@nivo/axes";
 import { Box, DatumValue, ValueFormat } from "@nivo/core";
 import { ScaleSpec } from "@nivo/scales";
-import { CardGeneral } from "./CardGeneral";
+import { Sizing } from "./CardGeneral";
 
 export interface ChartCardInfo {
     cardTitle: string;
-    sizing?: CardGeneral;
+    sizing?: Sizing;
     toolTip: {
         x: string;
         y: string;
