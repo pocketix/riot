@@ -1,15 +1,14 @@
+import { z } from 'zod'
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { IoAdd } from 'react-icons/io5'
-import { EntityCardInfo } from '@/types/EntityCardInfo'
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import { SdInstance, SdParameter } from '@/generated/graphql'
 import { useQuery } from '@apollo/client'
 import { GET_PARAMETERS } from '@/graphql/Queries'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
-import { z } from 'zod'
 import { entityCardSchema } from '@/schemas/dashboard/EntityCardBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -19,6 +18,7 @@ import { ResponsiveLine } from '@nivo/line'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { TbTrash } from 'react-icons/tb'
+import type { EntityCardConfig } from '@/types/EntityCardConfig'
 
 export interface EntityCardBuilderProps {
   onDataSubmit: (data: any) => void
@@ -27,13 +27,13 @@ export interface EntityCardBuilderProps {
 
 export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilderProps) {
   const { isDarkMode } = useDarkMode()
-  const initialEntityCardConfig: EntityCardInfo = {
+  const initialEntityCardConfig: EntityCardConfig = {
     _cardID: '',
     title: 'Entity Card',
     rows: []
   }
 
-  const [entityCardConfig, setEntityCardConfig] = useState<EntityCardInfo>(initialEntityCardConfig)
+  const [entityCardConfig, setEntityCardConfig] = useState<EntityCardConfig>(initialEntityCardConfig)
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
   const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
 

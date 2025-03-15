@@ -1,14 +1,16 @@
-export interface EntityCardInfo {
+export type EntityCardConfig = {
   _cardID: string
   title: string
   rows: {
     name: string
     instance: {
       uid: string
-    } | null
+    }
     parameter: {
       id: number
-    } | null
+    }
+    value: number | string
+    sparklineData: any
     visualization: 'switch' | 'sparkline' | 'immediate'
     timeFrame?: string
   }[]

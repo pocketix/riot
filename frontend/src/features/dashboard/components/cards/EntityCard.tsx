@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './AccessibilityContainer'
-import { EntityCardInfo } from '@/types/EntityCardInfo'
+import { EntityCardConfig } from '@/types/EntityCardConfig'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ResponsiveLine } from '@nivo/line'
 import { Switch } from '@/components/ui/switch'
@@ -42,7 +42,7 @@ interface EntityCardProps {
   setHighlightedCardID: (id: string) => void
 
   // Data
-  configuration: EntityCardInfo
+  configuration: EntityCardConfig
 }
 
 export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration }: EntityCardProps) => {
@@ -106,13 +106,13 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
             {configuration.rows.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 <td className="text-sm">{row.name}</td>
-                {row.visualization === 'sparkline' && row.sparkLineData && (
+                {row.visualization === 'sparkline' && row.sparklineData && (
                   <td className="text-sm text-center w-[75px] h-[24px]">
                     <ResponsiveLine
                       data={[
                         {
                           id: 'temperature',
-                          data: row.sparkLineData?.data!
+                          data: row.sparklineData?.data!
                         }
                       ]}
                       margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
