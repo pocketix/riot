@@ -78,7 +78,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
     }, [layout, item])
   }
 
-  const fetchData = async (sensors: { key: string; values: string }[], from: string, aggregateMinutes: number, operation: string) => {
+  const fetchData = async (sensors: { key: string; values: string | string[] }[], from: string, aggregateMinutes: number, operation: string) => {
     return fetchTableData({
       variables: {
         sensors: {
@@ -102,13 +102,29 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
       if (!configuration) return
       console.log('CONFIGURATION', configuration)
 
-      const config = JSON.parse(configuration.visualizationConfig) as TableCardConfig
+      const config = configuration.visualizationConfig.config as TableCardConfig
       if (!config) return
       setTableConfig(config)
     }
 
     parseConfig()
   }, [configuration])
+
+  function combineSensors(sensors: { key: string; values: string }[]): { key: string; values: string[] }[] {
+    const combinedSensors: { [key: string]: string[] } = {}
+
+    sensors.forEach((sensor) => {
+      if (!combinedSensors[sensor.key]) {
+        combinedSensors[sensor.key] = []
+      }
+      combinedSensors[sensor.key].push(sensor.values)
+    })
+
+    return Object.keys(combinedSensors).map((key) => ({
+      key,
+      values: combinedSensors[key]
+    }))
+  }
 
   useEffect(() => {
     const fetchDataAndPopulate = async () => {
@@ -119,9 +135,11 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
         values: row.parameter.denotation
       }))
 
-      console.log('SENSORS', sensors)
+      const combinedSensors = combineSensors(sensors)
 
-      if (!sensors.length) return
+      console.log('SENSORS', combinedSensors)
+
+      if (!combinedSensors.length) return
 
       // Create array of promises for all operations
       let results
@@ -129,7 +147,9 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
         // Execute all queries in parallel
         // results are returned in the same order as the queries
         results = await Promise.all(
-          tableConfig.columns.map((column) => fetchData(sensors, new Date(Date.now() - Number(tableConfig.timeFrame) * 60 * 1000).toISOString(), Number(tableConfig.timeFrame) * 1000, column.function))
+          tableConfig.columns.map((column) =>
+            fetchData(combinedSensors, new Date(Date.now() - Number(tableConfig.timeFrame) * 60 * 1000).toISOString(), Number(tableConfig.timeFrame) * 1000, column.function)
+          )
         )
 
         console.log('RESULTS', results)
@@ -201,7 +221,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
                 <td className="text-sm">{row.name}</td>
                 {row.values?.map((data: { function: string; value: number }, valueIndex: number) => (
                   <td key={valueIndex} className="text-sm text-center">
-                    {data.value.toFixed(tableConfig.decimalPlaces ?? 2)}
+                    {parseFloat(data.value.toFixed(tableConfig.decimalPlaces ?? 2))}
                   </td>
                 ))}
               </tr>
