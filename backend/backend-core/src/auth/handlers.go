@@ -39,6 +39,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) { // TODO: Clear all 
 	}
 	clearOauth2OIDCFlowStateCookie(w)
 	clearSessionJWTCookie(w)
+	clearRefreshJWTCookie(w)
 	http.Redirect(w, r, redirectUrl, http.StatusTemporaryRedirect)
 }
 
@@ -106,16 +107,29 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if userRecordUpsertResult.IsFailure() {
 		http.Error(w, userRecordUpsertResult.GetError().Error(), http.StatusInternalServerError)
 	}
-	user := userRecordUpsertResult.GetPayload()
 
-	sessionJWT, err := createSessionJWT(user)
+	user := userRecordUpsertResult.GetPayload()
+	userID := fmt.Sprintf("%d", user.ID.GetPayload())
+
+	sessionJWT, err := createSessionJWT(userID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to create session JWT: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 
+	refreshJWT, err := createRefreshJWT(userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to create refresh JWT: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+
 	if err = setupSessionJWTCookie(w, sessionJWT); err != nil {
 		http.Error(w, fmt.Sprintf("failed to set up session JWT cookie: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	if err = setupRefreshJWTCookie(w, refreshJWT); err != nil {
+		http.Error(w, fmt.Sprintf("failed to set up refresh JWT cookie: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 

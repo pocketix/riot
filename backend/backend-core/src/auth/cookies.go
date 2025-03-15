@@ -53,18 +53,15 @@ func clearHttpOnlyCookie(w http.ResponseWriter, identifier string, path string) 
 }
 
 func setupJWTCookie(w http.ResponseWriter, identifier, jwtString string) error {
-	claims, err := extractClaims(jwtString)
+	token, err := parseJWT(jwtString)
 	if err != nil {
 		return err
 	}
-	expirationTime, err := claims.GetExpirationTime()
-	if err != nil {
-		return err
+	timeUntilJWTExpiryResult := getTimeUntilJWTExpiry(token)
+	if timeUntilJWTExpiryResult.IsFailure() {
+		return timeUntilJWTExpiryResult.GetError()
 	}
-	if expirationTime == nil {
-		return fmt.Errorf("the 'exp' claim is missing")
-	}
-	jwtExpiresIn := time.Until(expirationTime.Time)
+	jwtExpiresIn := timeUntilJWTExpiryResult.GetPayload()
 	if jwtExpiresIn <= 0 {
 		return fmt.Errorf("the JWT is already expired")
 	}
@@ -114,10 +111,12 @@ func getRefreshJWTCookieValue(r *http.Request) sharedUtils.Optional[string] {
 	return getCookieValue(r, RefreshJWTCookieIdentifier)
 }
 
+func clearRefreshJWTCookie(w http.ResponseWriter) {
+	clearJWTCookie(w, RefreshJWTCookieIdentifier)
+}
+
 // ----- aux -----
 
-func areCookiesSet(r *http.Request, identifiers []string) bool {
-	return sharedUtils.All(identifiers, func(identifier string) bool {
-		return getCookieValue(r, identifier).IsPresent()
-	})
+func isCookieSet(r *http.Request, identifier string) bool {
+	return getCookieValue(r, identifier).IsPresent()
 }

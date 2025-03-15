@@ -2,7 +2,6 @@ package auth
 
 import (
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"github.com/golang-jwt/jwt/v5"
 	"strconv"
@@ -11,22 +10,22 @@ import (
 
 var jwtSecret = []byte(sharedUtils.GetEnvironmentVariableValue("JWT_SECRET").GetPayloadOrDefault("laaiqVgdmnurM4hC"))
 
-func createJWT(user dllModel.User, expiresIn time.Duration) (string, error) {
+func createJWT(userID string, expiresIn time.Duration) (string, error) {
 	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": fmt.Sprintf("%d", user.ID.GetPayload()),
+		"sub": userID,
 		"iat": now.Unix(),
 		"exp": now.Add(expiresIn).Unix(),
 	})
 	return token.SignedString(jwtSecret)
 }
 
-func createSessionJWT(user dllModel.User) (string, error) {
-	return createJWT(user, 24*time.Hour)
+func createSessionJWT(userID string) (string, error) {
+	return createJWT(userID, 30*time.Second)
 }
 
-func createRefreshJWT(user dllModel.User) (string, error) {
-	return createJWT(user, 30*24*time.Hour)
+func createRefreshJWT(userID string) (string, error) {
+	return createJWT(userID, 3*time.Minute)
 }
 
 func parseJWT(jwtString string) (*jwt.Token, error) {
@@ -34,11 +33,7 @@ func parseJWT(jwtString string) (*jwt.Token, error) {
 	return jwt.Parse(jwtString, keyFunc, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 }
 
-func isJWTValid(jwtString string) bool {
-	token, err := parseJWT(jwtString)
-	if err != nil {
-		return false
-	}
+func isJWTValid(token *jwt.Token) bool {
 	if !token.Valid {
 		return false
 	}
@@ -55,10 +50,14 @@ func isJWTValid(jwtString string) bool {
 	return true
 }
 
-func extractClaims(jwtString string) (jwt.Claims, error) {
-	token, err := parseJWT(jwtString)
-	if err != nil || !token.Valid {
-		return nil, err
+func getTimeUntilJWTExpiry(token *jwt.Token) sharedUtils.Result[time.Duration] {
+	claims := token.Claims
+	expirationTime, err := claims.GetExpirationTime()
+	if err != nil {
+		return sharedUtils.NewFailureResult[time.Duration](err)
 	}
-	return token.Claims, nil
+	if expirationTime == nil {
+		return sharedUtils.NewFailureResult[time.Duration](fmt.Errorf("the 'exp' claim is missing"))
+	}
+	return sharedUtils.NewSuccessResult(time.Until(expirationTime.Time))
 }
