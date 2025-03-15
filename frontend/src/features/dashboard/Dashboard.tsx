@@ -422,6 +422,7 @@ const Dashboard = () => {
                       height={rowHeight}
                       width={width}
                       setHighlightedCardID={setHighlightedCardID}
+                      configuration={details[item.i]}
                     />
                   </Card>
                 )

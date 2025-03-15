@@ -27,4 +27,4 @@ export const lineChartBuilderSchema = z.object({
     .min(1, { message: 'At least one instance is required' })
 })
 
-export type LineChartConfig = z.infer<typeof lineChartBuilderSchema>
+export type ChartCardConfig = z.infer<typeof lineChartBuilderSchema>

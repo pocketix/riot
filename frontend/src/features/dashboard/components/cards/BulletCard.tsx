@@ -10,6 +10,10 @@ import { AccessibilityContainer } from './AccessibilityContainer'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { lightTheme, darkTheme } from './ChartThemes'
 import { ToolTipContainer } from './ChartGlobals'
+import type { BulletCardConfig } from '@/types/BulletChartConfig'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useLazyQuery } from '@apollo/client'
+import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 
 // Styled components
 export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -37,13 +41,16 @@ interface BulletCardProps {
   height: number
   width: number
   setHighlightedCardID: (id: string) => void
+
+  configuration: any
 }
 
-export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID }: BulletCardProps) => {
-  const containerRef = useRef<HTMLDivElement>(null)
+export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration }: BulletCardProps) => {
   const { isDarkMode } = useDarkMode()
-
+  const [chartConfig, setChartConfig] = useState<BulletCardConfig>()
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
+  const [data, setData] = useState<any[]>([])
+  const [getChartData] = useLazyQuery(GET_TIME_SERIES_DATA)
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -75,16 +82,82 @@ export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint,
     if (highlight) setHighlightedCardID(cardID)
   }, [cardID, highlight])
 
+  const fetchData = async () => {
+    if (chartConfig) {
+      const configs = chartConfig.chartConfigs
+      if (!configs) return
+
+      console.log('Fetching data')
+      console.log('CONFIGS', configs)
+
+      const results = await Promise.all(
+        configs.map(async (config) => {
+          if (!config.instance?.parameter?.denotation! || !config.instance?.uid! || !config.function) return
+          return getChartData({
+            variables: {
+              sensors: {
+                sensors: [
+                  {
+                    key: config.instance.uid,
+                    values: config.instance.parameter.denotation
+                  }
+                ]
+              },
+              request: {
+                from: new Date(Date.now() - config.timeFrame! * 60 * 1000).toISOString(),
+                aggregateMinutes: config.timeFrame! * 1000,
+                operation: config.function
+              }
+            }
+          })
+        })
+      )
+
+      const parsedData = results
+        .map((result) => {
+          if (!result || !result.data) return null
+          return result.data.statisticsQuerySensorsWithFields
+        })
+        .filter(Boolean)
+
+      console.log('PARSED DATA', parsedData)
+      const newData = parsedData.map((parsed, index) => {
+        const config = configs[index]
+        const value = JSON.parse(parsed[0].data)[config.instance.parameter.denotation]
+        return {
+          id: config.name,
+          measures: [value],
+          markers: config.markers,
+          ranges: [...(config.ranges || []), 0, 0]
+        }
+      })
+      setData(newData)
+    }
+  }
+
+  useEffect(() => {
+    if (data) {
+      console.log('Data', data)
+    }
+  }, [data])
+
+  useEffect(() => {
+    if (chartConfig) {
+      console.log('Chart config', chartConfig)
+      fetchData()
+    }
+  }, [chartConfig])
+
   // calculate height and width from getboundingclientrect
 
-  const data = [
-    {
-      id: 'temp.',
-      ranges: [41, 5, 93, 0, 100],
-      measures: [64],
-      markers: [44]
+  useEffect(() => {
+    if (configuration) {
+      console.log('Configuration', configuration.visualizationConfig.config)
+      setChartConfig(configuration.visualizationConfig.config)
     }
-  ]
+  }, [configuration])
+
+  if (!chartConfig || !data) return <Skeleton className="w-full h-full" />
 
   return (
     <Container key={cardID} className={`${cardID}`}>
@@ -94,36 +167,41 @@ export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint,
         </DragHandle>
       )}
       {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
-      <div className="pl-4 pt-2 font-semibold">{title}</div>
-      <BulletContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
-        <ResponsiveBullet
-          data={data}
-          margin={{ top: 5, right: 10, bottom: 30, left: 10 }}
-          spacing={46}
-          titleAlign="start"
-          titleOffsetX={-70}
-          titleOffsetY={-10}
-          measureSize={0.2}
-          rangeColors="nivo"
-          theme={isDarkMode ? darkTheme : lightTheme}
-          tooltip={() => {
-            return (
-              <ToolTipContainer $offsetHorizontal={0} $offsetVertical={0} $isDarkMode={isDarkMode}>
-                <div className="flex flex-col">
-                  <div>
-                    <span>Value: </span>
-                    <span className="font-bold">{data[0].measures}</span>
-                  </div>
-                  <div>
-                    <span>Target: </span>
-                    <span className="font-bold">{data[0].markers}</span>
-                  </div>
-                </div>
-              </ToolTipContainer>
-            )
-          }}
-        />
-      </BulletContainer>
+      {chartConfig.cardTitle ? <div className="pl-4 pt-2 font-semibold">{chartConfig.cardTitle}</div> : null}
+      {chartConfig.chartConfigs?.map((config, index) => {
+        if (!data[index]) return null
+        return (
+          <BulletContainer key={index} $editModeEnabled={editModeEnabled}>
+            <ResponsiveBullet
+              data={[data[index]]}
+              margin={config.margin}
+              titleOffsetX={config.titleOffsetX}
+              measureSize={config.measureSize}
+              minValue={config.minValue || 'auto'}
+              maxValue={config.maxValue || 'auto'}
+              rangeColors={config.colorScheme === 'greys' ? ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3'] : 'seq:cool'}
+              measureColors={config.colorScheme === 'greys' ? ['pink'] : 'seq:red_purple'}
+              theme={isDarkMode ? darkTheme : lightTheme}
+              tooltip={() => {
+                return (
+                  <ToolTipContainer $offsetHorizontal={0} $offsetVertical={0} $isDarkMode={isDarkMode}>
+                    <div className="flex flex-col">
+                      <div>
+                        <span>Value: </span>
+                        <span className="font-bold">{data[index].measures}</span>
+                      </div>
+                      <div>
+                        <span>Target: </span>
+                        <span className="font-bold">{data[index].markers}</span>
+                      </div>
+                    </div>
+                  </ToolTipContainer>
+                )
+              }}
+            />
+          </BulletContainer>
+        )
+      })}
       {editModeEnabled && (
         <AccessibilityContainer
           cols={cols}

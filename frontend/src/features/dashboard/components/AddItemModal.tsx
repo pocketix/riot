@@ -18,7 +18,7 @@ export function AddItemModal({ onAddItem }: AddItemModalProps) {
           <FaPlus />
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-full sm:w-fit max-h-[80vh] p-1 sm:p-6 overflow-y-auto overflow-x-hidden">
+      <DialogContent className="w-full sm:w-fit max-h-[90vh] p-1 sm:p-6 overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>Add new item to dashboard</DialogTitle>
           <DialogDescription>Select a device you wish to add to the dashboard.</DialogDescription>

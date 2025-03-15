@@ -8,7 +8,6 @@ import { ChartToolTip } from '../cards/tooltips/LineChartToolTip'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { ChartCardInfo } from '@/types/ChartCardInfo'
 import { z } from 'zod'
 import { lineChartBuilderSchema } from '@/schemas/dashboard/LineChartBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -28,6 +27,7 @@ import { toast } from 'sonner'
 import { useDebounce } from 'use-debounce'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BuilderResult } from '../VisualizationBuilder'
+import type { LineChartConfig } from '@/types/LineChartConfig'
 
 export interface LineChartBuilderProps {
   onDataSubmit: (data: any) => void
@@ -38,7 +38,7 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
   const containerRef = useRef(null)
   const { isDarkMode } = useDarkMode()
 
-  const initialChartConfig: ChartCardInfo = {
+  const initialChartConfig: LineChartConfig = {
     cardTitle: 'Line Chart',
     sizing: {
       minH: 2
@@ -265,12 +265,12 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
   }
 
   const handleSubmit = (values: z.infer<typeof lineChartBuilderSchema>) => {
-    const result : BuilderResult = {
-      config : {
+    const result: BuilderResult = {
+      config: {
         values,
         chartConfig
       },
-      sizing : {
+      sizing: {
         minH: 2,
         w: 2,
         h: 2

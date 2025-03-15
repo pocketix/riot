@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
 import { SdParameterType } from '@/generated/graphql'
-import { EntityCardInfo } from '@/types/EntityCardInfo'
+import { EntityCardConfig } from '@/types/EntityCardConfig'
 import { Switch } from '@/components/ui/switch'
 
 export const VisualizationGalleryContainer = styled.div`
@@ -156,7 +156,7 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
     }
   ]
 
-  const entityCardConfig: EntityCardInfo = {
+  const entityCardConfig: EntityCardConfig = {
     _cardID: 'exampleCardID',
     title: 'Entity Card',
     rows: [

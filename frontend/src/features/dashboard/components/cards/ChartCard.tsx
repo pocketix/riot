@@ -13,9 +13,9 @@ import { ChartToolTip } from './tooltips/LineChartToolTip'
 import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ChartCardInfo } from '@/types/ChartCardInfo'
 import { toast } from 'sonner'
-import { LineChartConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
+import type { LineChartConfig } from '@/types/LineChartConfig'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -34,8 +34,8 @@ export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
 `
 
 type Config = {
-  values: LineChartConfig
-  chartConfig: ChartCardInfo
+  values: ChartCardConfig
+  chartConfig: LineChartConfig
 }
 
 interface ChartCardProps {
@@ -59,8 +59,8 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
   const containerRef = useRef<HTMLDivElement>(null)
   const { isDarkMode } = useDarkMode()
   const [data, setData] = useState<any[]>([])
-  const [cardConfig, setCardConfig] = useState<LineChartConfig>()
-  const [chartConfig, setChartConfig] = useState<ChartCardInfo>()
+  const [cardConfig, setCardConfig] = useState<ChartCardConfig>()
+  const [chartConfig, setChartConfig] = useState<LineChartConfig>()
 
   const [getChartData, { data: fetchedChartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
 
@@ -170,7 +170,7 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
   }, [cardID, highlight])
 
   // TODO: Alert
-  if (!cardConfig || !chartConfig || !data) return null
+  if (!cardConfig || !chartConfig || !data) return <Skeleton className="w-full h-full" />
 
   return (
     <Container key={cardID} className={`${cardID}`}>
