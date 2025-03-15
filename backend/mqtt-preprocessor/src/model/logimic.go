@@ -3,7 +3,7 @@ package model
 type UpstreamMQTTMessageInJSONBasedProprietaryFormatOfLogimic struct {
 	Notification struct {
 		MessageID string  `json:"msgId"`
-		Timestamp float32 `json:"tst"`
+		Timestamp float64 `json:"tst"`
 	} `json:"ntf"`
 	Data struct {
 		SDArray []struct {

@@ -50,7 +50,7 @@ func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) share
 		"  %s\n"+ // time range
 		"  %s\n"+ // filter
 		"  %s\n"+ // aggregation
-		"  |> drop(columns: [\"_start\", \"_stop\"])\n"+
+		"  |> drop(columns: [\"_start\", \"_stop\", \"host\", \"deviceType\"])\n"+
 		"  |> pivot(columnKey: [\"_field\"], rowKey: [\"_measurement\", \"_time\"], valueColumn: \"_value\")\n"+
 		"  |> rename(columns: {_time: \"time\", _measurement: \"deviceId\"})\n"+
 		"  |> group(columns: [\"measurement\"], mode: \"by\")", imports, influx2Client.bucket, timeRange, filter, aggregation)
@@ -77,6 +77,7 @@ func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) share
 }
 
 func (influx2Client Influx2Client) Write(data sharedModel.InputData) {
+	log.Printf("Writing %s with ts %s received ts %f", data.SDInstanceUID, time.Unix(int64(data.Timestamp), 0), data.Timestamp)
 	if parameters, ok := data.Parameters.(map[string]interface{}); ok {
 		point := influxdb2.NewPoint(data.SDInstanceUID, map[string]string{"deviceType": data.SDTypeSpecification}, parameters, time.Unix(int64(data.Timestamp), 0))
 		influx2Client.writeApi.WritePoint(point)
