@@ -1,5 +1,3 @@
-version: '2'
-
 services:
 
   riot-frontend:
@@ -128,3 +126,35 @@ services:
       - "5672:5672" # Main (amqp)
       - "15672:15672" # Management
       - "15692:15692" # Prometheus
+
+  grafana:
+    image: grafana/grafana-enterprise
+    profiles: ["dev"]
+    volumes:
+      - ./docker/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: password
+
+  prometheus:
+    image: prom/prometheus
+    profiles: ["dev"]
+    volumes:
+      - "./docker/prometheus.yml:/etc/prometheus/prometheus.yml"
+    ports:
+      - "9091:9090"
+
+  mqtt-prometheus-exporter:
+    profiles: ["dev"]
+    image: kpetrem/mqtt-exporter
+    ports:
+      - "9000:9000"
+    environment:
+      MQTT_ADDRESS: mosquitto
+      MQTT_TOPIC: topic
+      MQTT_USERNAME: admin
+      MQTT_PASSWORD: password
