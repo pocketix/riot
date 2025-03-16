@@ -9,16 +9,21 @@ import { useQuery } from '@apollo/client'
 import { GET_PARAMETERS } from '@/graphql/Queries'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
-import { entityCardSchema } from '@/schemas/dashboard/EntityCardBuilderSchema'
+import { EntityCardConfig, entityCardSchema } from '@/schemas/dashboard/EntityCardBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useFieldArray } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { ResponsiveLine } from '@nivo/line'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { TbTrash } from 'react-icons/tb'
-import type { EntityCardConfig } from '@/types/EntityCardConfig'
+import { Sizing } from '@/types/CardGeneral'
+
+export type BuilderResult = {
+  config: EntityCardConfig
+  sizing?: Sizing
+}
 
 export interface EntityCardBuilderProps {
   onDataSubmit: (data: any) => void
@@ -27,13 +32,6 @@ export interface EntityCardBuilderProps {
 
 export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilderProps) {
   const { isDarkMode } = useDarkMode()
-  const initialEntityCardConfig: EntityCardConfig = {
-    _cardID: '',
-    title: 'Entity Card',
-    rows: []
-  }
-
-  const [entityCardConfig, setEntityCardConfig] = useState<EntityCardConfig>(initialEntityCardConfig)
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
   const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
 
@@ -52,6 +50,7 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
   }, [parametersData, selectedInstance])
 
   const form = useForm<z.infer<typeof entityCardSchema>>({
+    mode: 'onChange',
     resolver: zodResolver(entityCardSchema),
     defaultValues: {
       title: 'Entity Card',
@@ -59,13 +58,10 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
     }
   })
 
-  const handleConfigChange = (property: string, value: any) => {
-    const newConfig = {
-      ...entityCardConfig,
-      [property]: value
-    }
-    setEntityCardConfig(newConfig)
-  }
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'rows'
+  })
 
   const staticImmediateValue = Math.floor(Math.random() * 100).toString()
 
@@ -92,59 +88,43 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
     }
   ]
 
-  const handleRowChange = (index: number, property: string, value: any) => {
-    const newRows = [...entityCardConfig.rows]
-    newRows[index] = {
-      ...newRows[index],
-      [property]: value
-    }
-    handleConfigChange('rows', newRows)
-  }
-
-  const addRow = () => {
-    const newRows = [...entityCardConfig.rows, { name: '', instance: null, parameter: null, visualization: 'immediate' }]
-    handleConfigChange('rows', newRows)
-  }
-
-  const removeRow = (index: number) => {
-    const newRows = entityCardConfig.rows.filter((_, i) => i !== index)
-    handleConfigChange('rows', newRows)
+  const handleInstanceChange = (rowIndex: number, instance: SdInstance) => {
+    if (!instance) return
+    setSelectedInstance(instance)
+    form.setValue(`rows.${rowIndex}.instance`, { uid: instance.uid })
   }
 
   const handleParameterChange = (rowIndex: number, parameter: SdParameter) => {
     if (!parameter) return
-    const newRows = [...entityCardConfig.rows]
-    newRows[rowIndex].parameter = parameter
-    handleConfigChange('rows', newRows)
+    form.setValue(`rows.${rowIndex}.parameter`, { id: parameter.id })
   }
 
-  const handleInstanceChange = (rowIndex: number, instance: SdInstance) => {
-    if (!instance) return
-    handleRowChange(rowIndex, 'instance', instance)
-    setSelectedInstance(instance)
-  }
-
-  function onSubmit(values: z.infer<typeof entityCardSchema>) {
-    console.log('Form values12213123133', values)
-    onDataSubmit(values)
+  const handleSubmit = (values: z.infer<typeof entityCardSchema>) => {
+    const result : BuilderResult = {
+      config: values,
+      sizing: {
+        w: 2,
+        h: Math.max(values.rows.length / 2, 1)
+      }
+    }
+    onDataSubmit(result)
   }
 
   return (
     <div className="w-full">
       <Card className="h-fit w-full overflow-hidden p-2 pt-0">
-        {entityCardConfig.title && <h3 className="text-lg font-semibold">{entityCardConfig.title}</h3>}
+        {form.watch('title') && <h3 className="text-lg font-semibold">{form.watch('title')}</h3>}
         <table className="w-full h-fit">
           <thead className="border-b-[2px]">
             <tr>
               <th className="text-left text-md">Name</th>
-              <th className="text-center text-md">Visualization</th>
             </tr>
           </thead>
           <tbody>
-            {entityCardConfig.rows.map((row, rowIndex) => (
-              <tr key={rowIndex}>
-                <td className="text-sm">{row.name}</td>
-                {row.visualization === 'sparkline' && (
+            {fields.map((row, rowIndex) => (
+              <tr key={row.id}>
+                <td className={`${rowIndex !== 0 ? 'pt-2' : ''}`}>{form.watch(`rows.${rowIndex}.name`)}</td>
+                {form.watch(`rows.${rowIndex}.visualization`) === 'sparkline' && (
                   <td className="text-sm text-center w-[75px] h-[24px]">
                     <ResponsiveLine
                       data={[
@@ -169,9 +149,9 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
                     />
                   </td>
                 )}
-                {row.visualization === 'immediate' && <td className="text-sm text-center">{staticImmediateValue}</td>}
-                {row.visualization === 'switch' && (
-                  <td className="text-sm text-center">
+                {form.watch(`rows.${rowIndex}.visualization`) === 'immediate' && <td className="text-sm text-center w-[75px] h-[24px]">{staticImmediateValue}</td>}
+                {form.watch(`rows.${rowIndex}.visualization`) === 'switch' && (
+                  <td className="text-sm text-center w-[75px] h-[24px]">
                     <Switch checked={true} />
                   </td>
                 )}
@@ -182,7 +162,7 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
       </Card>
       <Card className="h-fit w-full overflow-hidden p-2 pt-0 mt-4 shadow-lg">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
             <FormField
               control={form.control}
               name="title"
@@ -190,27 +170,19 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
                 <FormItem>
                   <FormLabel>Card Title</FormLabel>
                   <FormControl>
-                    <Input
-                      type="text"
-                      value={entityCardConfig.title}
-                      onChange={(e) => {
-                        field.onChange(e)
-                        handleConfigChange('title', e.target.value)
-                      }}
-                      className="w-full"
-                    />
+                    <Input type="text" {...field} className="w-full" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            {entityCardConfig.rows.map((row, rowIndex) => (
+            {fields.map((row, rowIndex) => (
               <>
                 <Separator className="my-4" />
-                <div key={rowIndex} className="flex flex-col items-start border-2 p-2 rounded-lg shadow-sm">
+                <div key={row.id} className="flex flex-col items-start border-2 p-2 rounded-lg shadow-sm">
                   <div className="flex items-center justify-between w-full">
                     <h4 className="font-semibold">Row {rowIndex + 1}</h4>
-                    <Button onClick={() => removeRow(rowIndex)} variant={'destructive'} size={'icon'} className="flex items-center justify-center">
+                    <Button onClick={() => remove(rowIndex)} variant={'destructive'} size={'icon'} className="flex items-center justify-center">
                       <TbTrash />
                     </Button>
                   </div>
@@ -221,17 +193,9 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
                       name={`rows.${rowIndex}.name`}
                       render={({ field }) => (
                         <FormItem>
+                          <FormLabel>Row Name</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              onChange={(e) => {
-                                field.onChange(e)
-                                handleRowChange(rowIndex, 'name', e.target.value)
-                              }}
-                              value={row.name}
-                              placeholder="Row Name"
-                              className="w-full"
-                            />
+                            <Input onChange={field.onChange} value={field.value} placeholder="Row Name" className="w-full" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -242,9 +206,9 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
                       name={`rows.${rowIndex}.instance.uid`}
                       render={({ field }) => (
                         <FormItem>
+                          <FormLabel>Instance</FormLabel>
                           <FormControl>
                             <Select
-                              {...field}
                               onValueChange={(value) => {
                                 const instance = instances.find((instance) => instance.uid === value) || null
                                 if (!instance) return
@@ -274,23 +238,23 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
                       name={`rows.${rowIndex}.parameter.id`}
                       render={({ field }) => (
                         <FormItem>
+                          <FormLabel>Parameter</FormLabel>
                           <FormControl>
                             <Select
                               onValueChange={(value) => {
-                                const parameter = availableParameters[row.instance?.uid!]?.find((param) => param.id === Number(value)) || null
+                                const parameter = availableParameters[form.watch(`rows.${rowIndex}.instance.uid`)]?.find((param) => param.id === Number(value)) || null
                                 if (!parameter) return
                                 field.onChange(parameter.id)
-                                console.log('Field value', field.value)
                                 handleParameterChange(rowIndex, parameter)
                               }}
-                              value={field.value}
-                              disabled={!availableParameters[row.instance?.uid!]}
+                              value={field.value || ''}
+                              disabled={!availableParameters[form.watch(`rows.${rowIndex}.instance.uid`)]}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a parameter" />
                               </SelectTrigger>
                               <SelectContent>
-                                {availableParameters[row.instance?.uid!]?.map((parameter) => (
+                                {availableParameters[form.watch(`rows.${rowIndex}.instance.uid`)]?.map((parameter) => (
                                   <SelectItem key={parameter.id} value={parameter.id}>
                                     {parameter.denotation}
                                   </SelectItem>
@@ -307,14 +271,13 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
                       name={`rows.${rowIndex}.visualization`}
                       render={({ field }) => (
                         <FormItem>
+                          <FormLabel>Visualization</FormLabel>
                           <FormControl>
                             <Select
                               onValueChange={(value) => {
                                 field.onChange(value)
-                                console.log('Form values', form.getValues())
-                                handleRowChange(rowIndex, 'visualization', value)
                               }}
-                              value={field.value}
+                              value={field.value || ''}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a visualization" />
@@ -330,15 +293,48 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
                         </FormItem>
                       )}
                     />
+                    {form.watch(`rows.${rowIndex}.visualization`) === 'sparkline' && (
+                      <FormField
+                        control={form.control}
+                        name={`rows.${rowIndex}.timeFrame`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Time Frame</FormLabel>
+                            <FormControl>
+                              <Select
+                                value={field.value}
+                                onValueChange={(value) => {
+                                  field.onChange(value)
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a time frame" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="60">Last hour</SelectItem>
+                                  <SelectItem value="360">Last 6 hours</SelectItem>
+                                  <SelectItem value="480">Last 12 hours</SelectItem>
+                                  <SelectItem value="1440">Last day</SelectItem>
+                                  <SelectItem value="4320">Last 3 days</SelectItem>
+                                  <SelectItem value="10080">Last week</SelectItem>
+                                  <SelectItem value="43200">Last month</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                   </div>
                 </div>
               </>
             ))}
             {form.formState.errors.rows && <FormMessage>{form.formState.errors.rows.message}</FormMessage>}
             <Button
+              type="button"
               onClick={() => {
-                addRow()
-                form.trigger()
+                append({ name: '', instance: { uid: '' }, parameter: { id: null }, visualization: null, timeFrame: '' })
               }}
               variant={'green'}
               size={'icon'}
