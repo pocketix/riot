@@ -21,11 +21,11 @@ func createJWT(userID string, expiresIn time.Duration) (string, error) {
 }
 
 func createSessionJWT(userID string) (string, error) {
-	return createJWT(userID, 30*time.Second)
+	return createJWT(userID, 10*time.Minute)
 }
 
 func createRefreshJWT(userID string) (string, error) {
-	return createJWT(userID, 3*time.Minute)
+	return createJWT(userID, 30*24*time.Hour)
 }
 
 func parseJWT(jwtString string) (*jwt.Token, error) {
