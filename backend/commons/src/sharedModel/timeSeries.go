@@ -31,7 +31,12 @@ func AreSimpleSensors(sensors interface{}) bool {
 type Operation string
 
 // InputData represents a single input data point.
-type InputData KPIFulfillmentCheckRequestISCMessage
+type InputData struct {
+	Timestamp           float64 `json:"timestamp"`
+	SDInstanceUID       string  `json:"sdInstanceUID"`
+	SDTypeSpecification string  `json:"sdTypeSpecification"`
+	Parameters          any     `json:"parameters"`
+}
 
 // OutputData represents a single data point retrieved from InfluxDB.
 type OutputData struct {
