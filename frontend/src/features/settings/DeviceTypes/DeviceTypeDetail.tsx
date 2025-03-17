@@ -181,6 +181,7 @@ export default function DeviceTypeDetail() {
       setEditMode(false)
     } catch (error) {
       console.error('Submission failed:', error)
+      toast.error('Failed to save device type')
     }
   }
 
@@ -207,6 +208,7 @@ export default function DeviceTypeDetail() {
       navigate('/settings/device-types')
     } catch (error) {
       console.error('Deletion failed:', error)
+      toast.error('Failed to delete device type')
     }
   }
 
@@ -320,56 +322,58 @@ export default function DeviceTypeDetail() {
             e.preventDefault()
             addParameter()
           }}
-          className="ml-4 mr-4"
+          className="ml-4 mr-4 mb-4"
         >
           <TbPlus /> Add Parameter
         </Button>
       )}
 
-      <ParametersContainer>
-        {watch('parameters').map((param, index) => (
-          <div key={index} className="flex gap-4 p-1">
-            {editMode ? (
-              <>
-                <div className="w-full flex flex-col gap-2">
-                  <Input {...register(`parameters.${index}.denotation`, { required: 'Denotation is required' })} placeholder="Denotation" />
-                  {errors.parameters?.[index]?.denotation && <p className="text-red-500 text-sm">{errors.parameters[index].denotation.message}</p>}
-                </div>
+      {watch('parameters').length > 0 && (
+        <ParametersContainer>
+          {watch('parameters').map((param, index) => (
+            <div key={index} className="flex gap-4 p-1">
+              {editMode ? (
+                <>
+                  <div className="w-full flex flex-col gap-2">
+                    <Input {...register(`parameters.${index}.denotation`, { required: 'Denotation is required' })} placeholder="Denotation" />
+                    {errors.parameters?.[index]?.denotation && <p className="text-red-500 text-sm">{errors.parameters[index].denotation.message}</p>}
+                  </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">{param.type}</Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    {['NUMBER', 'STRING', 'BOOLEAN'].map((option) => (
-                      <DropdownMenuItem key={option} onClick={() => setValue(`parameters.${index}.type`, option)}>
-                        {option}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">{param.type}</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {['NUMBER', 'STRING', 'BOOLEAN'].map((option) => (
+                        <DropdownMenuItem key={option} onClick={() => setValue(`parameters.${index}.type`, option)}>
+                          {option}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
 
-                <Button
-                  variant="destructive"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setValue(
-                      'parameters',
-                      watch('parameters').filter((_, i) => i !== index)
-                    )
-                  }}
-                >
-                  <TbTrash />
-                </Button>
-              </>
-            ) : (
-              <span>
-                {param.denotation} - {param.type}
-              </span>
-            )}
-          </div>
-        ))}
-      </ParametersContainer>
+                  <Button
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setValue(
+                        'parameters',
+                        watch('parameters').filter((_, i) => i !== index)
+                      )
+                    }}
+                  >
+                    <TbTrash />
+                  </Button>
+                </>
+              ) : (
+                <span>
+                  {param.denotation} - {param.type}
+                </span>
+              )}
+            </div>
+          ))}
+        </ParametersContainer>
+      )}
     </PageContainer>
   )
 }

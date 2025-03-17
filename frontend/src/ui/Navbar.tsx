@@ -8,6 +8,7 @@ import styled from 'styled-components'
 import Logo from './Logo'
 import { useTranslation } from 'react-i18next'
 import { breakpoints } from '@/styles/Breakpoints'
+import { useMediaQuery } from 'react-responsive'
 
 const NavbarContainer = styled.div`
   display: flex;
@@ -102,9 +103,10 @@ const StyledNavbar = styled.div`
 
 export default function Navbar() {
   const { t } = useTranslation()
+  const isMobile = useMediaQuery({ maxWidth: parseInt(breakpoints.sm) - 1 })
   return (
     <StyledNavbar>
-      <Logo />
+      <Logo hideLogo={isMobile} />
       <NavbarContainer>
         <NavItem to="/devices">
           <TbDevicesPc />

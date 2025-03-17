@@ -12,6 +12,7 @@ import GeneralSettings from './features/settings/GeneralSettings'
 import PersonalInfoSettings from './features/settings/PersonalInfoSettings'
 import DeviceTypesSettings from './features/settings/DeviceTypes/DeviceTypesSettings'
 import DeviceTypeDetail from './features/settings/DeviceTypes/DeviceTypeDetail'
+import Login from './pages/Login'
 
 export default function App() {
   return (
@@ -35,6 +36,7 @@ export default function App() {
               <Route path="settings/apollo-sandbox" element={<ApolloSandboxPage />} />
             </Route>
             <Route path="*" element={<PageNotFound />} />
+            <Route path="login" element={<Login />} />
           </Routes>
         </BrowserRouter>
       </DarkModeProvider>
