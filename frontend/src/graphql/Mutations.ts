@@ -22,3 +22,19 @@ export const CREATE_DEVICE_TYPE = gql`
     }
   }
 `
+
+export const CREATE_KPI_DEFINITION = gql`
+  mutation createKPIDefinition($input: KPIDefinitionInput!) {
+    createKPIDefinition(input: $input) {
+      id
+    }
+  }
+`
+
+export const UPDATE_KPI_DEFINITION = gql`
+  mutation updateKPIDefinition($id: ID!, $input: KPIDefinitionInput!) {
+    updateKPIDefinition(id: $id, input: $input) {
+      id
+    }
+  }
+`

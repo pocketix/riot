@@ -477,6 +477,21 @@ export type CreateSdTypeMutationVariables = Exact<{
 
 export type CreateSdTypeMutation = { __typename?: 'Mutation', createSDType: { __typename?: 'SDType', denotation: string, icon?: string | null, id: number, label?: string | null, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, label?: string | null, type: SdParameterType }> } };
 
+export type CreateKpiDefinitionMutationVariables = Exact<{
+  input: KpiDefinitionInput;
+}>;
+
+
+export type CreateKpiDefinitionMutation = { __typename?: 'Mutation', createKPIDefinition: { __typename?: 'KPIDefinition', id: number } };
+
+export type UpdateKpiDefinitionMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: KpiDefinitionInput;
+}>;
+
+
+export type UpdateKpiDefinitionMutation = { __typename?: 'Mutation', updateKPIDefinition: { __typename?: 'KPIDefinition', id: number } };
+
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -506,6 +521,18 @@ export type KpiDefinitionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type KpiDefinitionsQuery = { __typename?: 'Query', kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: number, userIdentifier: string, sdTypeID: number, sdTypeSpecification: string, sdInstanceMode: SdInstanceMode, selectedSDInstanceUIDs: Array<string> }> };
+
+export type KpiDefinitionDetailQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type KpiDefinitionDetailQuery = { __typename?: 'Query', kpiDefinition: { __typename?: 'KPIDefinition', id: number, userIdentifier: string, sdTypeID: number, sdTypeSpecification: string, sdInstanceMode: SdInstanceMode, selectedSDInstanceUIDs: Array<string>, nodes: Array<{ __typename?: 'BooleanEQAtomKPINode', id: number, parentNodeID?: number | null, nodeType: KpiNodeType, sdParameterID: number, sdParameterSpecification: string, booleanReferenceValue: boolean } | { __typename?: 'LogicalOperationKPINode', id: number, parentNodeID?: number | null, nodeType: KpiNodeType, type: LogicalOperationType } | { __typename?: 'NumericEQAtomKPINode', id: number, parentNodeID?: number | null, nodeType: KpiNodeType, sdParameterID: number, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericGEQAtomKPINode', id: number, parentNodeID?: number | null, nodeType: KpiNodeType, sdParameterID: number, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericGTAtomKPINode', id: number, parentNodeID?: number | null, nodeType: KpiNodeType, sdParameterID: number, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericLEQAtomKPINode', id: number, parentNodeID?: number | null, nodeType: KpiNodeType, sdParameterID: number, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'NumericLTAtomKPINode', id: number, parentNodeID?: number | null, nodeType: KpiNodeType, sdParameterID: number, sdParameterSpecification: string, numericReferenceValue: number } | { __typename?: 'StringEQAtomKPINode', id: number, parentNodeID?: number | null, nodeType: KpiNodeType, sdParameterID: number, sdParameterSpecification: string, stringReferenceValue: string }> } };
+
+export type RestOfKpiDefinitionDetailPageDataQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type RestOfKpiDefinitionDetailPageDataQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: number, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: number, denotation: string, type: SdParameterType }> }>, sdInstances: Array<{ __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number } }> };
 
 
 export const DeleteSdTypeDocument = gql`
@@ -581,6 +608,73 @@ export function useCreateSdTypeMutation(baseOptions?: Apollo.MutationHookOptions
 export type CreateSdTypeMutationHookResult = ReturnType<typeof useCreateSdTypeMutation>;
 export type CreateSdTypeMutationResult = Apollo.MutationResult<CreateSdTypeMutation>;
 export type CreateSdTypeMutationOptions = Apollo.BaseMutationOptions<CreateSdTypeMutation, CreateSdTypeMutationVariables>;
+export const CreateKpiDefinitionDocument = gql`
+    mutation createKPIDefinition($input: KPIDefinitionInput!) {
+  createKPIDefinition(input: $input) {
+    id
+  }
+}
+    `;
+export type CreateKpiDefinitionMutationFn = Apollo.MutationFunction<CreateKpiDefinitionMutation, CreateKpiDefinitionMutationVariables>;
+
+/**
+ * __useCreateKpiDefinitionMutation__
+ *
+ * To run a mutation, you first call `useCreateKpiDefinitionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateKpiDefinitionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createKpiDefinitionMutation, { data, loading, error }] = useCreateKpiDefinitionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateKpiDefinitionMutation(baseOptions?: Apollo.MutationHookOptions<CreateKpiDefinitionMutation, CreateKpiDefinitionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateKpiDefinitionMutation, CreateKpiDefinitionMutationVariables>(CreateKpiDefinitionDocument, options);
+      }
+export type CreateKpiDefinitionMutationHookResult = ReturnType<typeof useCreateKpiDefinitionMutation>;
+export type CreateKpiDefinitionMutationResult = Apollo.MutationResult<CreateKpiDefinitionMutation>;
+export type CreateKpiDefinitionMutationOptions = Apollo.BaseMutationOptions<CreateKpiDefinitionMutation, CreateKpiDefinitionMutationVariables>;
+export const UpdateKpiDefinitionDocument = gql`
+    mutation updateKPIDefinition($id: ID!, $input: KPIDefinitionInput!) {
+  updateKPIDefinition(id: $id, input: $input) {
+    id
+  }
+}
+    `;
+export type UpdateKpiDefinitionMutationFn = Apollo.MutationFunction<UpdateKpiDefinitionMutation, UpdateKpiDefinitionMutationVariables>;
+
+/**
+ * __useUpdateKpiDefinitionMutation__
+ *
+ * To run a mutation, you first call `useUpdateKpiDefinitionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateKpiDefinitionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateKpiDefinitionMutation, { data, loading, error }] = useUpdateKpiDefinitionMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateKpiDefinitionMutation(baseOptions?: Apollo.MutationHookOptions<UpdateKpiDefinitionMutation, UpdateKpiDefinitionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateKpiDefinitionMutation, UpdateKpiDefinitionMutationVariables>(UpdateKpiDefinitionDocument, options);
+      }
+export type UpdateKpiDefinitionMutationHookResult = ReturnType<typeof useUpdateKpiDefinitionMutation>;
+export type UpdateKpiDefinitionMutationResult = Apollo.MutationResult<UpdateKpiDefinitionMutation>;
+export type UpdateKpiDefinitionMutationOptions = Apollo.BaseMutationOptions<UpdateKpiDefinitionMutation, UpdateKpiDefinitionMutationVariables>;
 export const SdInstancesDocument = gql`
     query SdInstances {
   sdInstances {
@@ -811,3 +905,166 @@ export type KpiDefinitionsQueryHookResult = ReturnType<typeof useKpiDefinitionsQ
 export type KpiDefinitionsLazyQueryHookResult = ReturnType<typeof useKpiDefinitionsLazyQuery>;
 export type KpiDefinitionsSuspenseQueryHookResult = ReturnType<typeof useKpiDefinitionsSuspenseQuery>;
 export type KpiDefinitionsQueryResult = Apollo.QueryResult<KpiDefinitionsQuery, KpiDefinitionsQueryVariables>;
+export const KpiDefinitionDetailDocument = gql`
+    query KPIDefinitionDetail($id: ID!) {
+  kpiDefinition(id: $id) {
+    id
+    userIdentifier
+    sdTypeID
+    sdTypeSpecification
+    sdInstanceMode
+    selectedSDInstanceUIDs
+    nodes {
+      ... on LogicalOperationKPINode {
+        id
+        parentNodeID
+        nodeType
+        type
+      }
+      ... on BooleanEQAtomKPINode {
+        id
+        parentNodeID
+        nodeType
+        sdParameterID
+        sdParameterSpecification
+        booleanReferenceValue
+      }
+      ... on NumericEQAtomKPINode {
+        id
+        parentNodeID
+        nodeType
+        sdParameterID
+        sdParameterSpecification
+        numericReferenceValue
+      }
+      ... on NumericGEQAtomKPINode {
+        id
+        parentNodeID
+        nodeType
+        sdParameterID
+        sdParameterSpecification
+        numericReferenceValue
+      }
+      ... on NumericGTAtomKPINode {
+        id
+        parentNodeID
+        nodeType
+        sdParameterID
+        sdParameterSpecification
+        numericReferenceValue
+      }
+      ... on NumericLEQAtomKPINode {
+        id
+        parentNodeID
+        nodeType
+        sdParameterID
+        sdParameterSpecification
+        numericReferenceValue
+      }
+      ... on NumericLTAtomKPINode {
+        id
+        parentNodeID
+        nodeType
+        sdParameterID
+        sdParameterSpecification
+        numericReferenceValue
+      }
+      ... on StringEQAtomKPINode {
+        id
+        parentNodeID
+        nodeType
+        sdParameterID
+        sdParameterSpecification
+        stringReferenceValue
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useKpiDefinitionDetailQuery__
+ *
+ * To run a query within a React component, call `useKpiDefinitionDetailQuery` and pass it any options that fit your needs.
+ * When your component renders, `useKpiDefinitionDetailQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useKpiDefinitionDetailQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useKpiDefinitionDetailQuery(baseOptions: Apollo.QueryHookOptions<KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables> & ({ variables: KpiDefinitionDetailQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables>(KpiDefinitionDetailDocument, options);
+      }
+export function useKpiDefinitionDetailLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables>(KpiDefinitionDetailDocument, options);
+        }
+export function useKpiDefinitionDetailSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables>(KpiDefinitionDetailDocument, options);
+        }
+export type KpiDefinitionDetailQueryHookResult = ReturnType<typeof useKpiDefinitionDetailQuery>;
+export type KpiDefinitionDetailLazyQueryHookResult = ReturnType<typeof useKpiDefinitionDetailLazyQuery>;
+export type KpiDefinitionDetailSuspenseQueryHookResult = ReturnType<typeof useKpiDefinitionDetailSuspenseQuery>;
+export type KpiDefinitionDetailQueryResult = Apollo.QueryResult<KpiDefinitionDetailQuery, KpiDefinitionDetailQueryVariables>;
+export const RestOfKpiDefinitionDetailPageDataDocument = gql`
+    query RestOfKPIDefinitionDetailPageData {
+  sdTypes {
+    id
+    denotation
+    parameters {
+      id
+      denotation
+      type
+    }
+  }
+  sdInstances {
+    id
+    uid
+    confirmedByUser
+    userIdentifier
+    type {
+      id
+    }
+  }
+}
+    `;
+
+/**
+ * __useRestOfKpiDefinitionDetailPageDataQuery__
+ *
+ * To run a query within a React component, call `useRestOfKpiDefinitionDetailPageDataQuery` and pass it any options that fit your needs.
+ * When your component renders, `useRestOfKpiDefinitionDetailPageDataQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useRestOfKpiDefinitionDetailPageDataQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useRestOfKpiDefinitionDetailPageDataQuery(baseOptions?: Apollo.QueryHookOptions<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>(RestOfKpiDefinitionDetailPageDataDocument, options);
+      }
+export function useRestOfKpiDefinitionDetailPageDataLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>(RestOfKpiDefinitionDetailPageDataDocument, options);
+        }
+export function useRestOfKpiDefinitionDetailPageDataSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>(RestOfKpiDefinitionDetailPageDataDocument, options);
+        }
+export type RestOfKpiDefinitionDetailPageDataQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataQuery>;
+export type RestOfKpiDefinitionDetailPageDataLazyQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataLazyQuery>;
+export type RestOfKpiDefinitionDetailPageDataSuspenseQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataSuspenseQuery>;
+export type RestOfKpiDefinitionDetailPageDataQueryResult = Apollo.QueryResult<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>;

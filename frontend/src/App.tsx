@@ -17,39 +17,42 @@ import Devices from './features/devices/Devices'
 import DeviceGroups from './features/devices/DeviceGroups'
 import KPIDefinitions from './features/settings/KPIDefinitions/KPIDefinitions'
 import KPIEditor from './features/settings/KPIDefinitions/KPIEditor'
+import NiceModal from '@ebay/nice-modal-react'
 
 export default function App() {
   return (
     <>
       <DarkModeProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<AppLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="/devicesPage" element={<DevicesPage />}>
-                <Route path="devices" element={<Devices />} />
-                <Route path="groups" element={<DeviceGroups />} />
-                <Route index element={<Devices />} />
+        <NiceModal.Provider>
+          <BrowserRouter>
+            <Routes>
+              <Route element={<AppLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="/devicesPage" element={<DevicesPage />}>
+                  <Route path="devices" element={<Devices />} />
+                  <Route path="groups" element={<DeviceGroups />} />
+                  <Route index element={<Devices />} />
+                </Route>
+                <Route path="members" element={<Members />} />
+                <Route path="automations" element={<Automations />} />
+                <Route path="/settings" element={<Settings />}>
+                  <Route path="general" element={<GeneralSettings />} />
+                  <Route path="personal-info" element={<PersonalInfoSettings />} />
+                  <Route path="device-types" element={<DeviceTypesSettings />} />
+                  <Route path="/settings/kpi-definitions" element={<KPIDefinitions />} />
+                  <Route path="/settings/device-types/:id" element={<DeviceTypeDetail />} />
+                  <Route path="/settings/deivce-types/addNewType" element={<DeviceTypeDetail />} />
+                  <Route index element={<GeneralSettings />} />
+                </Route>
+                <Route path="/settings/kpi-definitions/create" element={<KPIEditor />} />
+                <Route path="/settings/kpi-definitions/:id/edit" element={<KPIEditor />} />
+                <Route path="settings/apollo-sandbox" element={<ApolloSandboxPage />} />
               </Route>
-              <Route path="members" element={<Members />} />
-              <Route path="automations" element={<Automations />} />
-              <Route path="/settings" element={<Settings />}>
-                <Route path="general" element={<GeneralSettings />} />
-                <Route path="personal-info" element={<PersonalInfoSettings />} />
-                <Route path="device-types" element={<DeviceTypesSettings />} />
-                <Route path="/settings/kpi-definitions" element={<KPIDefinitions />} />
-                <Route path="/settings/device-types/:id" element={<DeviceTypeDetail />} />
-                <Route path="/settings/deivce-types/addNewType" element={<DeviceTypeDetail />} />
-                <Route index element={<GeneralSettings />} />
-              </Route>
-              <Route path="/settings/kpi-definitions/create" element={<KPIEditor />} />
-              <Route path="/settings/kpi-definitions/:id/edit" element={<KPIEditor />} />
-              <Route path="settings/apollo-sandbox" element={<ApolloSandboxPage />} />
-            </Route>
-            <Route path="*" element={<PageNotFound />} />
-            <Route path="login" element={<Login />} />
-          </Routes>
-        </BrowserRouter>
+              <Route path="*" element={<PageNotFound />} />
+              <Route path="login" element={<Login />} />
+            </Routes>
+          </BrowserRouter>
+        </NiceModal.Provider>
       </DarkModeProvider>
     </>
   )
