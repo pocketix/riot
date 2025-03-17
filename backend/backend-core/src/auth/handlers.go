@@ -4,20 +4,26 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
-	"github.com/dchest/uniuri"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/idtoken"
+	"log"
 	"net/http"
+	"time"
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	if isCookieSet(r, SessionJWTCookieIdentifier) || isCookieSet(r, RefreshTokenCookieIdentifier) {
+		http.Error(w, "cannot initiate OAuth2 | OIDC flow while authentication-related cookies set", http.StatusBadRequest)
+		return
+	}
 	redirectUrl, err := handleRedirectUrl(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	randomState := uniuri.New()
+	randomState := sharedUtils.GenerateRandomAlphanumericString(16)
 	jsonSerializationResult := sharedUtils.SerializeToJSON(oauth2OIDCFlowState{
 		RandomState: randomState,
 		RedirectUrl: redirectUrl,
@@ -37,9 +43,33 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) { // TODO: Clear all 
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	clearOauth2OIDCFlowStateCookie(w)
 	clearSessionJWTCookie(w)
-	clearRefreshJWTCookie(w)
+	refreshToken := getRefreshTokenCookieValue(r).GetPayloadOrDefault("")
+	clearRefreshTokenCookie(w)
+
+	if refreshToken != "" {
+		dbClientInstance := dbClient.GetRelationalDatabaseClientInstance()
+		refreshTokenHash := sharedUtils.GenerateHexHash(refreshToken)
+		userSessionLoadResult := dbClientInstance.LoadUserSessionBasedOnRefreshTokenHash(refreshTokenHash)
+		if userSessionLoadResult.IsFailure() {
+			http.Error(w, fmt.Sprintf("database operation failure - failed to load user session record: %s", userSessionLoadResult.GetError().Error()), http.StatusInternalServerError)
+			return
+		}
+		userSessionOptional := userSessionLoadResult.GetPayload()
+		if userSessionOptional.IsPresent() {
+			userSession := userSessionOptional.GetPayload()
+			userSession.Revoked = true // TODO: Consider deleting the session record or setting 'expiresAt' to 'now' instead
+			if dbClientInstance.PersistUserSession(userSession).IsFailure() {
+				http.Error(w, fmt.Sprintf("database operation failure - failed to persist user session record: %s", userSessionLoadResult.GetError().Error()), http.StatusInternalServerError)
+				return
+			}
+		} else {
+			log.Println("Warning: (logout): refresh token is present but no database record corresponds to it based on hash lookup...")
+		}
+	}
+
 	http.Redirect(w, r, redirectUrl, http.StatusTemporaryRedirect)
 }
 
@@ -103,23 +133,17 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	userData := idTokenDataExtractionResult.GetPayload()
 
-	userRecordUpsertResult := handleUserRecordUpsert(userData)
+	refreshToken := generateRefreshToken()
+
+	userRecordUpsertResult := handleUserRecordUpsert(userData, refreshToken)
 	if userRecordUpsertResult.IsFailure() {
 		http.Error(w, userRecordUpsertResult.GetError().Error(), http.StatusInternalServerError)
 	}
-
 	user := userRecordUpsertResult.GetPayload()
-	userID := fmt.Sprintf("%d", user.ID.GetPayload())
 
-	sessionJWT, err := createSessionJWT(userID)
+	sessionJWT, err := createSessionJWT(fmt.Sprintf("%d", user.ID.GetPayload()))
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to create session JWT: %s", err.Error()), http.StatusInternalServerError)
-		return
-	}
-
-	refreshJWT, err := createRefreshJWT(userID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to create refresh JWT: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 
@@ -128,10 +152,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = setupRefreshJWTCookie(w, refreshJWT); err != nil {
-		http.Error(w, fmt.Sprintf("failed to set up refresh JWT cookie: %s", err.Error()), http.StatusInternalServerError)
-		return
-	}
+	setupRefreshTokenCookie(w, refreshToken, time.Until(user.Sessions[len(user.Sessions)-1].ExpiresAt))
 
 	http.Redirect(w, r, oauth2OIDCFlowStateObject.RedirectUrl, http.StatusTemporaryRedirect)
 }

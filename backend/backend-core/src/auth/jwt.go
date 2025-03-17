@@ -10,22 +10,14 @@ import (
 
 var jwtSecret = []byte(sharedUtils.GetEnvironmentVariableValue("JWT_SECRET").GetPayloadOrDefault("laaiqVgdmnurM4hC"))
 
-func createJWT(userID string, expiresIn time.Duration) (string, error) {
+func createSessionJWT(userID string) (string, error) {
 	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": userID,
 		"iat": now.Unix(),
-		"exp": now.Add(expiresIn).Unix(),
+		"exp": now.Add(10 * time.Minute).Unix(),
 	})
 	return token.SignedString(jwtSecret)
-}
-
-func createSessionJWT(userID string) (string, error) {
-	return createJWT(userID, 10*time.Minute)
-}
-
-func createRefreshJWT(userID string) (string, error) {
-	return createJWT(userID, 30*24*time.Hour)
 }
 
 func parseJWT(jwtString string) (*jwt.Token, error) {

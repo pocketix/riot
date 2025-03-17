@@ -1,13 +1,13 @@
 package auth
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"golang.org/x/sync/singleflight"
 	"net/http"
+	"time"
 )
 
 var (
@@ -46,54 +46,70 @@ func JWTAuthenticationMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
-		refreshJWTCookieValue := getRefreshJWTCookieValue(r).GetPayloadOrDefault("")
-		if refreshJWTCookieValue == "" {
-			http.Error(w, "expired session JWT | missing refresh JWT", http.StatusUnauthorized)
+		refreshToken := getRefreshTokenCookieValue(r).GetPayloadOrDefault("")
+		if refreshToken == "" {
+			http.Error(w, "expired session JWT | missing refresh token", http.StatusUnauthorized)
 			return
 		}
 
-		refreshJWTString := getRefreshJWTCookieValue(r).GetPayload()
-		if refreshJWTString == "" {
-			http.Error(w, "expired session JWT | cannot attempt to generate new session JWT using refresh JWT: empty refresh JWT", http.StatusUnauthorized)
-			return
-		}
-
-		singleflightKey := generateSingleflightKey(refreshJWTString)
-		newSessionJWT, err, _ := sameOriginExpiredSessionJWTRequestGroup.Do(singleflightKey, func() (any, error) {
-			return handleSessionJWTRefresh(refreshJWTString)
+		refreshTokenHash := sharedUtils.GenerateHexHash(refreshToken)
+		rawSessionRefreshResultObject, err, _ := sameOriginExpiredSessionJWTRequestGroup.Do(refreshTokenHash, func() (any, error) {
+			return performSessionRefresh(refreshTokenHash)
 		})
 		if err != nil {
-			http.Error(w, fmt.Sprintf("expired session JWT | failed to generate new session JWT using refresh JWT: %s", err.Error()), http.StatusUnauthorized)
+			http.Error(w, fmt.Sprintf("expired session JWT | failed to generate new session JWT using refresh token: %s", err.Error()), http.StatusUnauthorized)
 			return
 		}
+		sessionRefreshResultObject := rawSessionRefreshResultObject.(*sessionRefreshResult)
 
-		err = setupSessionJWTCookie(w, newSessionJWT.(string))
+		err = setupSessionJWTCookie(w, sessionRefreshResultObject.newSessionJWT)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("expired session JWT | failed to set up session JWT cookie: %s", err.Error()), http.StatusUnauthorized)
 			return
 		}
 
+		setupRefreshTokenCookie(w, sessionRefreshResultObject.newRefreshToken, time.Until(sessionRefreshResultObject.refreshTokenExpiresAt))
+
 		next.ServeHTTP(w, r)
 	})
 }
 
-func generateSingleflightKey(refreshJWTString string) string {
-	hash := sha256.Sum256([]byte(refreshJWTString))
-	return hex.EncodeToString(hash[:])
+type sessionRefreshResult struct {
+	newSessionJWT         string
+	newRefreshToken       string
+	refreshTokenExpiresAt time.Time
 }
 
-func handleSessionJWTRefresh(refreshJWTString string) (string, error) {
-	refreshJWT, err := parseJWT(refreshJWTString)
+func performSessionRefresh(refreshTokenHash string) (*sessionRefreshResult, error) {
+	dbClientInstance := dbClient.GetRelationalDatabaseClientInstance()
+	userSessionLoadResult := dbClientInstance.LoadUserSessionBasedOnRefreshTokenHash(refreshTokenHash)
+	if userSessionLoadResult.IsFailure() {
+		return nil, fmt.Errorf("database operation error - failed to load user session record: %w", userSessionLoadResult.GetError())
+	}
+	userSessionOptional := userSessionLoadResult.GetPayload()
+	if userSessionOptional.IsEmpty() {
+		return nil, errors.New("no user session record found based on refresh token hash")
+	}
+	userSession := userSessionOptional.GetPayload()
+	if userSession.Revoked {
+		return nil, errors.New("the refresh token has been revoked")
+	}
+	if time.Until(userSession.ExpiresAt) <= 0 {
+		return nil, errors.New("the session has expired")
+	}
+	newSessionJWT, err := createSessionJWT(fmt.Sprintf("%d", userSession.UserID))
 	if err != nil {
-		return "", errors.New("failed to parse refresh JWT")
+		return nil, err
 	}
-	if !isJWTValid(refreshJWT) {
-		return "", errors.New("expired or invalid refresh JWT")
+	newRefreshToken := sharedUtils.GenerateRandomAlphanumericString(16)
+	userSession.RefreshTokenHash = sharedUtils.GenerateHexHash(newRefreshToken)
+	userSessionPersistResult := dbClientInstance.PersistUserSession(userSession)
+	if userSessionPersistResult.IsFailure() {
+		return nil, fmt.Errorf("database operation error - failed to persist user session record: %w", userSessionPersistResult.GetError())
 	}
-	userID, _ := refreshJWT.Claims.GetSubject()
-	newSessionJWT, err := createSessionJWT(userID)
-	if err != nil {
-		return "", err
-	}
-	return newSessionJWT, nil
+	return &sessionRefreshResult{
+		newSessionJWT:         newSessionJWT,
+		newRefreshToken:       newRefreshToken,
+		refreshTokenExpiresAt: userSession.ExpiresAt,
+	}, nil
 }

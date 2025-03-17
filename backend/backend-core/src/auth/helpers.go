@@ -58,7 +58,7 @@ func handleRedirectUrl(r *http.Request) (string, error) {
 	return decodedRedirectUrl, nil
 }
 
-func handleUserRecordUpsert(userData idTokenData) sharedUtils.Result[dllModel.User] {
+func handleUserRecordUpsert(userData idTokenData, newRefreshToken string) sharedUtils.Result[dllModel.User] {
 	dbClientInstance := dbClient.GetRelationalDatabaseClientInstance()
 	userLoadResult := dbClientInstance.LoadUserBasedOnOAuth2ProviderIssuedID(userData.oauth2ProviderIssuedID)
 	if userLoadResult.IsFailure() {
@@ -74,6 +74,17 @@ func handleUserRecordUpsert(userData idTokenData) sharedUtils.Result[dllModel.Us
 	user.Name = userData.name
 	user.ProfileImageURL = userData.profileImageURL
 	user.LastLoginAt = sharedUtils.NewOptionalOf(time.Now())
+
+	user.Sessions = append(user.Sessions, dllModel.UserSession{ // TODO: simply adding a new session... is that optimal?
+		ID:               sharedUtils.NewEmptyOptional[uint](),
+		UserID:           user.ID.GetPayloadOrDefault(0),
+		RefreshTokenHash: sharedUtils.GenerateHexHash(newRefreshToken),
+		ExpiresAt:        time.Now().Add(time.Hour * 24 * 30),
+		Revoked:          false,
+		IPAddress:        "", // TODO: plug these fields in... or get rid of them if proven unnecessary
+		UserAgent:        "",
+	})
+
 	persistResult := dbClientInstance.PersistUser(user)
 	if persistResult.IsFailure() {
 		return sharedUtils.NewFailureResult[dllModel.User](fmt.Errorf("user record upsert failure - failed to persist user record: %s", persistResult.GetError().Error()))
@@ -99,4 +110,8 @@ func extractIDTokenData(idTokenPayload *idtoken.Payload) sharedUtils.Result[idTo
 		name:                   sharedUtils.Ternary[sharedUtils.Optional[string]](name != "", sharedUtils.NewOptionalOf(name), sharedUtils.NewEmptyOptional[string]()),
 		profileImageURL:        sharedUtils.Ternary[sharedUtils.Optional[string]](profileImageURL != "", sharedUtils.NewOptionalOf(profileImageURL), sharedUtils.NewEmptyOptional[string]()),
 	})
+}
+
+func generateRefreshToken() string {
+	return sharedUtils.GenerateRandomAlphanumericString(16)
 }

@@ -1,16 +1,16 @@
 package auth
 
 import (
-	"fmt"
+	"errors"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"net/http"
 	"time"
 )
 
 const (
-	OAuth2OIDCFlowStateCookieIdentifier = "OAuth2OIDCFlowState"
+	OAuth2OIDCFlowStateCookieIdentifier = "OAuth2-OIDCFlowState"
 	SessionJWTCookieIdentifier          = "sessionJWT"
-	RefreshJWTCookieIdentifier          = "refreshJWT"
+	RefreshTokenCookieIdentifier        = "refreshToken"
 
 	RootPath     = "/"
 	CallbackPath = "/auth/callback"
@@ -52,27 +52,6 @@ func clearHttpOnlyCookie(w http.ResponseWriter, identifier string, path string) 
 	})
 }
 
-func setupJWTCookie(w http.ResponseWriter, identifier, jwtString string) error {
-	token, err := parseJWT(jwtString)
-	if err != nil {
-		return err
-	}
-	timeUntilJWTExpiryResult := getTimeUntilJWTExpiry(token)
-	if timeUntilJWTExpiryResult.IsFailure() {
-		return timeUntilJWTExpiryResult.GetError()
-	}
-	jwtExpiresIn := timeUntilJWTExpiryResult.GetPayload()
-	if jwtExpiresIn <= 0 {
-		return fmt.Errorf("the JWT is already expired")
-	}
-	setupHttpOnlyCookie(w, identifier, jwtString, RootPath, jwtExpiresIn)
-	return nil
-}
-
-func clearJWTCookie(w http.ResponseWriter, identifier string) {
-	clearHttpOnlyCookie(w, identifier, RootPath)
-}
-
 // ----- OAuth2 | OIDC flow state -----
 
 func setupOauth2OIDCFlowStateCookie(w http.ResponseWriter, base64EncodedOAuth2OIDCFlowState string) {
@@ -90,7 +69,20 @@ func clearOauth2OIDCFlowStateCookie(w http.ResponseWriter) {
 // ----- session JWT -----
 
 func setupSessionJWTCookie(w http.ResponseWriter, sessionJWTString string) error {
-	return setupJWTCookie(w, SessionJWTCookieIdentifier, sessionJWTString)
+	sessionJWT, err := parseJWT(sessionJWTString)
+	if err != nil {
+		return err
+	}
+	timeUntilSessionJWTExpiryResult := getTimeUntilJWTExpiry(sessionJWT)
+	if timeUntilSessionJWTExpiryResult.IsFailure() {
+		return timeUntilSessionJWTExpiryResult.GetError()
+	}
+	sessionJWTExpiresIn := timeUntilSessionJWTExpiryResult.GetPayload()
+	if sessionJWTExpiresIn <= 0 {
+		return errors.New("session JWT is already expired")
+	}
+	setupHttpOnlyCookie(w, SessionJWTCookieIdentifier, sessionJWTString, RootPath, sessionJWTExpiresIn)
+	return nil
 }
 
 func getSessionJWTCookieValue(r *http.Request) sharedUtils.Optional[string] {
@@ -98,21 +90,21 @@ func getSessionJWTCookieValue(r *http.Request) sharedUtils.Optional[string] {
 }
 
 func clearSessionJWTCookie(w http.ResponseWriter) {
-	clearJWTCookie(w, SessionJWTCookieIdentifier)
+	clearHttpOnlyCookie(w, SessionJWTCookieIdentifier, RootPath)
 }
 
-// ----- refresh JWT -----
+// ----- refresh token -----
 
-func setupRefreshJWTCookie(w http.ResponseWriter, refreshJWTString string) error {
-	return setupJWTCookie(w, RefreshJWTCookieIdentifier, refreshJWTString)
+func setupRefreshTokenCookie(w http.ResponseWriter, refreshToken string, expiresIn time.Duration) {
+	setupHttpOnlyCookie(w, RefreshTokenCookieIdentifier, refreshToken, RootPath, expiresIn)
 }
 
-func getRefreshJWTCookieValue(r *http.Request) sharedUtils.Optional[string] {
-	return getCookieValue(r, RefreshJWTCookieIdentifier)
+func getRefreshTokenCookieValue(r *http.Request) sharedUtils.Optional[string] {
+	return getCookieValue(r, RefreshTokenCookieIdentifier)
 }
 
-func clearRefreshJWTCookie(w http.ResponseWriter) {
-	clearJWTCookie(w, RefreshJWTCookieIdentifier)
+func clearRefreshTokenCookie(w http.ResponseWriter) {
+	clearHttpOnlyCookie(w, RefreshTokenCookieIdentifier, RootPath)
 }
 
 // ----- aux -----
