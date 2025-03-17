@@ -14,7 +14,18 @@ type User struct {
 	OAuth2Provider         sharedUtils.Optional[string]
 	OAuth2ProviderIssuedID sharedUtils.Optional[string]
 	LastLoginAt            sharedUtils.Optional[time.Time]
+	Sessions               []UserSession
 	// TODO: Implement 'Invocations', 'UserConfig' and other possibly missing fields as needed
+}
+
+type UserSession struct {
+	ID               sharedUtils.Optional[uint] // TODO: Consider getting rid of Optional[T] within dllModel...
+	UserID           uint
+	RefreshTokenHash string
+	ExpiresAt        time.Time
+	Revoked          bool
+	IPAddress        string
+	UserAgent        string
 }
 
 type UserConfig struct {

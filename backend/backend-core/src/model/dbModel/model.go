@@ -123,7 +123,7 @@ func (SDInstanceGroupMembershipEntity) TableName() string {
 	return "sd_instance_group_membership"
 }
 
-type SDInstanceKPIDefinitionRelationshipEntity struct {
+type SDInstanceKPIDefinitionRelationshipEntity struct { // TODO: Missing 'TableName' function, handle this across schema
 	KPIDefinitionID uint32 `gorm:"column:kpi_definition_id;primaryKey;not null"`
 	SDInstanceID    uint32 `gorm:"column:sd_instance_id;primaryKey;not null"`
 	SDInstanceUID   string `gorm:"column:sd_instance_uid;not null"`
@@ -139,15 +139,30 @@ type UserEntity struct {
 	OAuth2Provider         *string                     `gorm:"column:oauth2_provider;uniqueIndex:idx_oauth,priority:1"`
 	OAuth2ProviderIssuedID *string                     `gorm:"column:oauth2_provider_issued_id;uniqueIndex:idx_oauth,priority:2"`
 	LastLoginAt            *time.Time                  `gorm:"column:last_login_at"`
+	Sessions               []UserSessionEntity         `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
 	Invocations            []SDCommandInvocationEntity `gorm:"foreignKey:UserId;constraint:OnDelete:CASCADE"`
 	UserConfig             UserConfigEntity            `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
-func (UserEntity) TableName() string {
+func (UserEntity) TableName() string { // TODO: Standardize table names, e.g. 'user' × 'users'
 	return "user"
 }
 
-type UserConfigEntity struct {
+type UserSessionEntity struct {
+	gorm.Model                 // TODO: Standardize 'gorm.Model' usage: either use it everywhere, or not at all
+	UserID           uint      `gorm:"column:user_id"`
+	RefreshTokenHash string    `gorm:"column:refresh_token_hash;not null;uniqueIndex"`
+	ExpiresAt        time.Time `gorm:"column:expires_at"` // TODO: Are the 'column:...' entries necessary? If not, get rid of them across entire schema
+	Revoked          bool      `gorm:"column:revoked;not null;default:false"`
+	IPAddress        string    `gorm:"column:ip_address"`
+	UserAgent        string    `gorm:"column:user_agent"`
+}
+
+func (UserSessionEntity) TableName() string {
+	return "user_sessions"
+}
+
+type UserConfigEntity struct { // TODO: Consider embedding this inside 'UserEntity' for global user config and or inside 'UserSessionEntity' for per-session user config
 	UserID uint32 `gorm:"primaryKey;column:user_id;not null"`
 	Config string `gorm:"column:config;type:jsonb;not null"` // Store JSON as a string
 }
