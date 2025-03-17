@@ -7,7 +7,7 @@ import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
 import { SdInstance, SdParameter, StatisticsOperation } from '@/generated/graphql'
 import { z } from 'zod'
-import { bulletChartBuilderSchema } from '@/schemas/dashboard/BulletChartBuilderSchema'
+import { BulletCardConfig, bulletChartBuilderSchema } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -18,12 +18,12 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { useLazyQuery, useQuery } from '@apollo/client'
 import { GET_PARAMETERS, GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Badge } from '@/components/ui/badge'
-import type { BulletCardConfig } from '@/types/BulletChartConfig'
+// import type { BulletCardConfig } from '@/types/BulletChartConfig'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Sizing } from '@/types/CardGeneral'
 
 export type BuilderResult = {
-  config: any
+  config: BulletCardConfig
   sizing?: Sizing
 }
 
@@ -36,33 +36,6 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
   const parameterNameMock = useRef<HTMLSpanElement | null>(null)
   const { isDarkMode } = useDarkMode()
 
-  const initialChartConfig: BulletCardConfig = {
-    cardTitle: 'Bullet Charts',
-    chartConfigs: [
-      {
-        name: '',
-        titleOffsetX: 0,
-        margin: { top: 10, right: 10, bottom: 30, left: 50 },
-        minValue: 'auto',
-        maxValue: 'auto',
-        ranges: [],
-        markers: [],
-        measureSize: 0.2,
-        measure: 0,
-        function: '',
-        colorScheme: 'nivo',
-        instance: {
-          uid: '',
-          parameter: {
-            denotation: '',
-            id: -1
-          }
-        }
-      }
-    ]
-  }
-
-  const [chartConfig, setChartConfig] = useState(initialChartConfig)
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
   const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
   const [getChartData] = useLazyQuery(GET_TIME_SERIES_DATA)
@@ -74,24 +47,24 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
     resolver: zodResolver(bulletChartBuilderSchema),
     defaultValues: {
       cardTitle: 'Bullet Charts',
-      instances: [{ uid: '', parameter: { denotation: '', id: -1, function: '', timeFrame: '1440', measureSize: 0.2, markers: [] } }]
+      rows: [{ instance: { uid: '' }, parameter: { denotation: '', id: null }, config: { name: '', function: '', timeFrame: '1440', measureSize: 0.2, markers: [] } }]
     }
   })
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: 'instances'
+    name: 'rows'
   })
 
   const fetchData = async () => {
-    if (form.getValues('instances')?.length === 0) return
+    if (form.getValues('rows')?.length === 0) return
 
-    const rows = form.getValues('instances').map((instance) => ({
-      key: instance.uid,
-      value: instance.parameter.denotation,
-      timeFrame: instance.parameter.timeFrame,
-      function: instance.parameter.function,
-      name: instance.parameter.name
+    const rows = form.getValues('rows').map((row) => ({
+      key: row.instance.uid,
+      value: row.parameter.denotation,
+      timeFrame: row.config.timeFrame,
+      function: row.config.function,
+      name: row.config.name
     }))
 
     const results = await Promise.all(
@@ -120,27 +93,17 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
 
     let index = 0
     const newData = parsedData.map((parsed) => {
-      const row = form.getValues(`instances.${index}`)
+      const row = form.getValues(`rows.${index}`)
       const value = JSON.parse(parsed[0].data)[row.parameter.denotation]
 
-      // Save the value to the config, so that we do not have to fetch again upon chaning the chart configuration
-      setChartConfig((prevConfig) => {
-        const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-        newChartConfigs[index] = {
-          ...newChartConfigs[index],
-          measure: value
-        }
-        return {
-          ...prevConfig,
-          chartConfigs: newChartConfigs
-        }
-      })
+      // Save the value to the form state, so that we do not have to fetch again upon changing the chart configuration
+      // form.setValue(`rows.${index}.config.measure`, value)
 
       const newDataItem = {
-        id: row.parameter.name,
-        ranges: [...(chartConfig?.chartConfigs?.[index]?.ranges || []), 0, 0],
+        id: row.config.name,
+        ranges: [...(row.config.ranges || []), 0, 0],
         measures: [value],
-        markers: chartConfig?.chartConfigs?.[index]?.markers || []
+        markers: row.config.markers || []
       }
       index++
       return newDataItem
@@ -163,15 +126,7 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
     }
   }, [parametersData, selectedInstance])
 
-  useEffect(() => {
-    if (chartConfig) {
-      console.log('Chart config changed', chartConfig)
-    }
-  }, [chartConfig])
-
   const handleDataChange = (index: number, ranges?: number[], markers?: number[], id?: string): void => {
-    if (!chartConfig.chartConfigs) return
-    // Based on the index, change the data[index] ranges, using the measure value in the config
     const newData = [...data]
     if (!newData[index]) return
     if (ranges) newData[index].ranges = ranges
@@ -184,38 +139,15 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
     if (!parameterNameMock.current) return
     parameterNameMock.current.innerText = name
     const width = parameterNameMock.current.offsetWidth + 5
-    console.log('Width', width)
-    setChartConfig((prevConfig) => {
-      const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-      newChartConfigs[index] = {
-        ...newChartConfigs[index],
-        titleOffsetX: -width / 2
-      }
-      return {
-        ...prevConfig,
-        chartConfigs: newChartConfigs
-      }
-    })
-
-    // Set the margin left to the width of the parameter name + 10px
-    setChartConfig((prevConfig) => {
-      const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-      newChartConfigs[index] = {
-        ...newChartConfigs[index],
-        margin: { ...newChartConfigs[index].margin, left: width + 5 }
-      }
-      return {
-        ...prevConfig,
-        chartConfigs: newChartConfigs
-      }
-    })
+    form.setValue(`rows.${index}.config.titleOffsetX`, -width / 2)
+    form.setValue(`rows.${index}.config.margin.left`, width + 5)
   }
 
-  const handleSubmit = (_: z.infer<typeof bulletChartBuilderSchema>) => {
+  const handleSubmit = (values: z.infer<typeof bulletChartBuilderSchema>) => {
     const result: BuilderResult = {
-      config: chartConfig,
+      config: values,
       sizing: {
-        h: chartConfig.chartConfigs?.length,
+        h: values.rows.length,
         w: 2
       }
     }
@@ -229,28 +161,26 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
         {parameterNameMock.current?.innerText}
       </span>
       <Card className="h-fit w-full">
-        {chartConfig.cardTitle ? <h3 className="ml-2 text-lg font-semibold">{chartConfig.cardTitle}</h3> : null}
-        {chartConfig.chartConfigs &&
-          chartConfig.chartConfigs.map((config, index) => {
-            if (!data[index]) return null
-            console.log('Config colorscheme', config.colorScheme)
-            return (
-              <div className="h-[75px] w-full scale-[0.9] sm:scale-100">
-                <ResponsiveBullet
-                  data={[data[index]]}
-                  margin={config.margin}
-                  titleOffsetX={config.titleOffsetX}
-                  measureSize={config.measureSize}
-                  minValue={config.minValue || 'auto'}
-                  maxValue={config.maxValue || 'auto'}
-                  key={index}
-                  rangeColors={config.colorScheme === 'greys' ? ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3'] : 'seq:cool'}
-                  measureColors={config.colorScheme === 'greys' ? ['pink'] : 'seq:red_purple'}
-                  theme={isDarkMode ? darkTheme : lightTheme}
-                />
-              </div>
-            )
-          })}
+        {form.watch('cardTitle') ? <h3 className="ml-2 text-lg font-semibold">{form.watch('cardTitle')}</h3> : null}
+        {fields.map((_, index) => {
+          const row = form.watch(`rows.${index}`)
+          if (!data[index]) return null
+          return (
+            <div className="h-[75px] w-full scale-[0.9] sm:scale-100" key={index}>
+              <ResponsiveBullet
+                data={[data[index]]}
+                margin={row.config.margin}
+                titleOffsetX={row.config.titleOffsetX}
+                measureSize={row.config.measureSize}
+                minValue={row.config.minValue || 'auto'}
+                maxValue={row.config.maxValue || 'auto'}
+                rangeColors={row.config.colorScheme === 'greys' ? ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3'] : 'seq:cool'}
+                measureColors={row.config.colorScheme === 'greys' ? ['pink'] : 'seq:red_purple'}
+                theme={isDarkMode ? darkTheme : lightTheme}
+              />
+            </div>
+          )
+        })}
       </Card>
       <Card className="h-fit w-full overflow-hidden p-2 pt-0 mt-4 shadow-lg">
         <Form {...form}>
@@ -270,18 +200,7 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                   <FormItem>
                     <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="Enter title"
-                        onChange={(e) => {
-                          field.onChange(e)
-                          setChartConfig((prevConfig) => ({
-                            ...prevConfig,
-                            cardTitle: e.target.value
-                          }))
-                        }}
-                        value={field.value}
-                      />
+                      <Input type="text" placeholder="Enter title" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -300,7 +219,7 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                       <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
                         <FormField
                           control={form.control}
-                          name={`instances.${index}.uid`}
+                          name={`rows.${index}.instance.uid`}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Instance</FormLabel>
@@ -310,19 +229,8 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                                     const instance = instances.find((instance) => instance.uid === value)
                                     if (!instance) return
                                     setSelectedInstance(instance)
-                                    setChartConfig((prevConfig) => {
-                                      const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                      newChartConfigs[index] = {
-                                        ...newChartConfigs[index],
-                                        instance: { uid: instance.uid, parameter: { denotation: '', id: -1 } }
-                                      }
-                                      return {
-                                        ...prevConfig,
-                                        chartConfigs: newChartConfigs
-                                      }
-                                    })
-                                    form.setValue(`instances.${index}.parameter.id`, -1)
-                                    form.setValue(`instances.${index}.parameter.denotation`, '')
+                                    form.setValue(`rows.${index}.parameter.id`, -1)
+                                    form.setValue(`rows.${index}.parameter.denotation`, '')
                                     field.onChange(value)
                                   }}
                                   value={field.value}
@@ -345,56 +253,31 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                         />
                         <FormField
                           control={form.control}
-                          name={`instances.${index}.parameter.id`}
+                          name={`rows.${index}.parameter.id`}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Parameter</FormLabel>
                               <FormControl>
                                 <Select
                                   onValueChange={(value) => {
-                                    const selectedParameter = availableParameters[form.getValues(`instances.${index}.uid`)!].find((parameter) => parameter.id === Number(value))
+                                    const selectedParameter = availableParameters[form.getValues(`rows.${index}.instance.uid`)!].find((parameter) => parameter.id === Number(value))
                                     if (!selectedParameter) return
                                     field.onChange(selectedParameter.id)
-                                    form.setValue(`instances.${index}.parameter.denotation`, selectedParameter.denotation)
-                                    form.setValue(`instances.${index}.parameter.name`, selectedParameter.denotation)
-                                    setChartConfig((prevConfig) => {
-                                      const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                      newChartConfigs[index] = {
-                                        ...newChartConfigs[index],
-                                        name: selectedParameter.denotation
-                                      }
-                                      return {
-                                        ...prevConfig,
-                                        chartConfigs: newChartConfigs
-                                      }
-                                    })
+                                    form.setValue(`rows.${index}.parameter.denotation`, selectedParameter.denotation)
+                                    form.setValue(`rows.${index}.config.name`, selectedParameter.denotation)
                                     automaticOffset(index, selectedParameter.denotation)
                                     handleDataChange(index, undefined, undefined, selectedParameter.denotation)
-                                    setChartConfig((prevConfig) => {
-                                      const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                      newChartConfigs[index] = {
-                                        ...newChartConfigs[index],
-                                        instance: {
-                                          ...newChartConfigs[index].instance,
-                                          parameter: { id: selectedParameter.id, denotation: selectedParameter.denotation }
-                                        }
-                                      }
-                                      return {
-                                        ...prevConfig,
-                                        chartConfigs: newChartConfigs
-                                      }
-                                    })
                                   }}
                                   value={field.value || ''}
-                                  disabled={!form.getValues(`instances.${index}.uid`)}
+                                  disabled={!form.getValues(`rows.${index}.instance.uid`)}
                                 >
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select a parameter" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {form.getValues(`instances.${index}.uid`) &&
-                                      availableParameters[form.getValues(`instances.${index}.uid`)] &&
-                                      availableParameters[form.getValues(`instances.${index}.uid`)].map((parameter) => (
+                                    {form.getValues(`rows.${index}.instance.uid`) &&
+                                      availableParameters[form.getValues(`rows.${index}.instance.uid`)] &&
+                                      availableParameters[form.getValues(`rows.${index}.instance.uid`)].map((parameter) => (
                                         <SelectItem key={parameter.id} value={parameter.id}>
                                           {parameter.denotation}
                                         </SelectItem>
@@ -408,30 +291,19 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                         />
                         <FormField
                           control={form.control}
-                          name={`instances.${index}.parameter.name`}
+                          name={`rows.${index}.config.name`}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Name</FormLabel>
                               <FormControl>
                                 <Input
                                   placeholder="Display name"
+                                  {...field}
                                   onChange={(e) => {
                                     field.onChange(e.target.value)
                                     automaticOffset(index, e.target.value)
                                     handleDataChange(index, undefined, undefined, e.target.value)
-                                    setChartConfig((prevConfig) => {
-                                      const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                      newChartConfigs[index] = {
-                                        ...newChartConfigs[index],
-                                        name: e.target.value
-                                      }
-                                      return {
-                                        ...prevConfig,
-                                        chartConfigs: newChartConfigs
-                                      }
-                                    })
                                   }}
-                                  value={field.value}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -440,7 +312,7 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                         />
                         <FormField
                           control={form.control}
-                          name={`instances.${index}.parameter.function`}
+                          name={`rows.${index}.config.function`}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Function</FormLabel>
@@ -449,31 +321,9 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                                   onValueChange={(value) => {
                                     field.onChange(value)
                                     if (value === 'last') {
-                                      form.setValue(`instances.${index}.parameter.timeFrame`, '1440')
-                                      setChartConfig((prevConfig) => {
-                                        const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                        newChartConfigs[index] = {
-                                          ...newChartConfigs[index],
-                                          timeFrame: 1440
-                                        }
-                                        return {
-                                          ...prevConfig,
-                                          chartConfigs: newChartConfigs
-                                        }
-                                      })
+                                      form.setValue(`rows.${index}.config.timeFrame`, '1440')
                                       fetchData()
                                     }
-                                    setChartConfig((prevConfig) => {
-                                      const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                      newChartConfigs[index] = {
-                                        ...newChartConfigs[index],
-                                        function: value
-                                      }
-                                      return {
-                                        ...prevConfig,
-                                        chartConfigs: newChartConfigs
-                                      }
-                                    })
                                   }}
                                   value={field.value}
                                 >
@@ -493,10 +343,10 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                             </FormItem>
                           )}
                         />
-                        {form.watch(`instances.${index}.parameter.function`) !== 'last' && form.watch(`instances.${index}.parameter.function`) !== '' && (
+                        {form.watch(`rows.${index}.config.function`) !== 'last' && form.watch(`rows.${index}.config.function`) !== '' && (
                           <FormField
                             control={form.control}
-                            name={`instances.${index}.parameter.timeFrame`}
+                            name={`rows.${index}.config.timeFrame`}
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Time Frame</FormLabel>
@@ -506,17 +356,6 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                                     onValueChange={(value) => {
                                       fetchData()
                                       field.onChange(value)
-                                      setChartConfig((prevConfig) => {
-                                        const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                        newChartConfigs[index] = {
-                                          ...newChartConfigs[index],
-                                          timeFrame: Number(value)
-                                        }
-                                        return {
-                                          ...prevConfig,
-                                          chartConfigs: newChartConfigs
-                                        }
-                                      })
                                     }}
                                   >
                                     <SelectTrigger>
@@ -545,7 +384,7 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                           <AccordionContent className="w-full">
                             <FormField
                               control={form.control}
-                              name={`instances.${index}.parameter.ranges`}
+                              name={`rows.${index}.config.ranges`}
                               render={({ field }) => (
                                 <FormItem>
                                   {field.value?.map((range, rangeIndex) => (
@@ -555,28 +394,14 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                                         className="ml-2 cursor-pointer text-destructive"
                                         onClick={() => {
                                           if (!field.value) return
-                                          // Filter out the range
                                           const newRanges = field.value?.filter((_, i) => i !== rangeIndex)
-
-                                          // Update the form field
                                           field.onChange(newRanges)
                                           setRangeInput(newRanges.map((r: { min: number; max: number }) => `${r.min}:${r.max}`).join(', '))
-
-                                          // Update the chart config
-                                          const flatRanges = newRanges.flatMap((range) => [range.min, range.max])
-                                          setChartConfig((prevConfig) => {
-                                            const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                            newChartConfigs[index] = {
-                                              ...newChartConfigs[index],
-                                              ranges: flatRanges
-                                            }
-                                            return {
-                                              ...prevConfig,
-                                              chartConfigs: newChartConfigs
-                                            }
-                                          })
-                                          // Reflect changes in chart
-                                          handleDataChange(index, flatRanges, undefined)
+                                          handleDataChange(
+                                            index,
+                                            newRanges.flatMap((range) => [range.min, range.max]),
+                                            undefined
+                                          )
                                         }}
                                       />
                                     </Badge>
@@ -587,51 +412,38 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                                       placeholder="Format: '10:20,20:30,...'"
                                       onChange={(e) => {
                                         setRangeInput(e.target.value)
-
-                                        // Parse the input
                                         const newRanges = e.target.value
                                           .split(',')
                                           .map((range) => {
                                             const [min, max] = range.split(':').map((value) => Number(value.trim()))
-
-                                            // Validate the range
                                             if (!isNaN(min) && !isNaN(max)) {
                                               return { min, max }
                                             }
                                             return null
                                           })
-                                          .filter(Boolean) // Remove invalids
-                                        console.log('New ranges', newRanges)
-                                        const flatRanges = newRanges.flatMap((range) => [range!.min, range!.max])
-                                        setChartConfig((prevConfig) => {
-                                          const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                          newChartConfigs[index] = {
-                                            ...newChartConfigs[index],
-                                            ranges: flatRanges
-                                          }
-                                          return {
-                                            ...prevConfig,
-                                            chartConfigs: newChartConfigs
-                                          }
-                                        })
+                                          .filter(Boolean)
                                         field.onChange(newRanges)
-                                        handleDataChange(index, flatRanges, undefined)
+                                        handleDataChange(
+                                          index,
+                                          newRanges.flatMap((range) => [range!.min, range!.max]),
+                                          undefined
+                                        )
                                       }}
                                       value={rangeInput}
                                     />
                                   </FormControl>
-                                  <FormMessage />
                                 </FormItem>
                               )}
                             />
                           </AccordionContent>
                         </AccordionItem>
+                        {form.formState.errors?.rows?.[index]?.config?.ranges && <FormMessage>{form.formState.errors.rows[index].config.ranges.message}</FormMessage>}
                         <AccordionItem value="markers">
                           <AccordionTrigger>Targets</AccordionTrigger>
                           <AccordionContent className="w-full">
                             <FormField
                               control={form.control}
-                              name={`instances.${index}.parameter.markers`}
+                              name={`rows.${index}.config.markers`}
                               render={({ field }) => (
                                 <FormItem>
                                   {field.value?.map((marker, markerIndex) => (
@@ -643,17 +455,6 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                                           const newMarkers = field.value?.filter((_, i) => i !== markerIndex)
                                           field.onChange(newMarkers)
                                           setMarkerInput(newMarkers.join(', '))
-                                          setChartConfig((prevConfig) => {
-                                            const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                            newChartConfigs[index] = {
-                                              ...newChartConfigs[index],
-                                              markers: newMarkers
-                                            }
-                                            return {
-                                              ...prevConfig,
-                                              chartConfigs: newChartConfigs
-                                            }
-                                          })
                                           handleDataChange(index, undefined, newMarkers, undefined)
                                         }}
                                       />
@@ -665,47 +466,34 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                                       placeholder="Format : '100,20,30,...'"
                                       onChange={(e) => {
                                         setMarkerInput(e.target.value)
-                                        // Parse the input
                                         const newMarkers = e.target.value
                                           .split(',')
                                           .map((marker) => {
                                             const value = Number(marker.trim())
-                                            // Validate the marker
                                             if (!isNaN(value)) {
                                               return value
                                             }
                                             return null
                                           })
                                           .filter((marker): marker is number => marker !== null)
-                                        setChartConfig((prevConfig) => {
-                                          const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                          newChartConfigs[index] = {
-                                            ...newChartConfigs[index],
-                                            markers: newMarkers
-                                          }
-                                          return {
-                                            ...prevConfig,
-                                            chartConfigs: newChartConfigs
-                                          }
-                                        })
-                                        handleDataChange(index, undefined, newMarkers, undefined)
                                         field.onChange(newMarkers)
+                                        handleDataChange(index, undefined, newMarkers, undefined)
                                       }}
                                       value={markerInput}
                                     />
                                   </FormControl>
-                                  <FormMessage />
                                 </FormItem>
                               )}
                             />
                           </AccordionContent>
                         </AccordionItem>
+                        {form.formState.errors?.rows?.[index]?.config?.markers && <FormMessage>{form.formState.errors.rows[index].config.markers.message}</FormMessage>}
                         <AccordionItem value="advanced">
                           <AccordionTrigger>Advanced Options</AccordionTrigger>
                           <AccordionContent className="w-full grid sm:grid-cols-2 grid-cols-1 gap-4 p-1">
                             <FormField
                               control={form.control}
-                              name={`instances.${index}.parameter.measureSize`}
+                              name={`rows.${index}.config.measureSize`}
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>Measure Size</FormLabel>
@@ -718,17 +506,6 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                                       placeholder="Enter measure size"
                                       onChange={(e) => {
                                         field.onChange(Number(e.target.value))
-                                        setChartConfig((prevConfig) => {
-                                          const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                          newChartConfigs[index] = {
-                                            ...newChartConfigs[index],
-                                            measureSize: Number(e.target.value)
-                                          }
-                                          return {
-                                            ...prevConfig,
-                                            chartConfigs: newChartConfigs
-                                          }
-                                        })
                                       }}
                                       value={field.value}
                                     />
@@ -737,154 +514,153 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                                 </FormItem>
                               )}
                             />
-                            <FormItem>
-                              <FormLabel>Title Offset X</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="Enter title offset X"
-                                  onChange={(e) => {
-                                    setChartConfig((prevConfig) => {
-                                      const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                      newChartConfigs[index] = {
-                                        ...newChartConfigs[index],
-                                        titleOffsetX: Number(e.target.value)
-                                      }
-                                      return {
-                                        ...prevConfig,
-                                        chartConfigs: newChartConfigs
-                                      }
-                                    })
-                                  }}
-                                  value={chartConfig.chartConfigs?.[index].titleOffsetX}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                            <FormItem>
-                              <FormLabel className="flex gap-2 items-center justify-between">
-                                Min Value
-                                {/* Checkbox for 'auto' value */}
-                                <div className="flex items-center gap-2">
-                                  Auto
-                                  <Checkbox
-                                    onCheckedChange={(checked) => {
-                                      setChartConfig((prevConfig) => {
-                                        const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                        newChartConfigs[index] = {
-                                          ...newChartConfigs[index],
-                                          minValue: checked ? 'auto' : 0
-                                        }
-                                        return {
-                                          ...prevConfig,
-                                          chartConfigs: newChartConfigs
-                                        }
-                                      })
-                                    }}
-                                    checked={chartConfig.chartConfigs?.[index].minValue === 'auto'}
-                                  />
-                                </div>
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="Enter min value"
-                                  onChange={(e) => {
-                                    setChartConfig((prevConfig) => {
-                                      const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                      newChartConfigs[index] = {
-                                        ...newChartConfigs[index],
-                                        minValue: Number(e.target.value)
-                                      }
-                                      return {
-                                        ...prevConfig,
-                                        chartConfigs: newChartConfigs
-                                      }
-                                    })
-                                  }}
-                                  disabled={chartConfig.chartConfigs?.[index].minValue === 'auto'}
-                                  value={chartConfig.chartConfigs?.[index].minValue}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                            <FormItem className="self-start">
-                              <FormLabel className="flex gap-2 items-center justify-between">
-                                Max Value
-                                {/* Checkbox for 'auto' value */}
-                                <div className="flex items-center gap-2">
-                                  Auto
-                                  <Checkbox
-                                    onCheckedChange={(checked) => {
-                                      setChartConfig((prevConfig) => {
-                                        const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                        newChartConfigs[index] = {
-                                          ...newChartConfigs[index],
-                                          maxValue: checked ? 'auto' : 0
-                                        }
-                                        return {
-                                          ...prevConfig,
-                                          chartConfigs: newChartConfigs
-                                        }
-                                      })
-                                    }}
-                                    checked={chartConfig.chartConfigs?.[index].maxValue === 'auto'}
-                                  />
-                                </div>
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="Enter max value"
-                                  onChange={(e) => {
-                                    setChartConfig((prevConfig) => {
-                                      const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                      newChartConfigs[index] = {
-                                        ...newChartConfigs[index],
-                                        maxValue: Number(e.target.value)
-                                      }
-                                      return {
-                                        ...prevConfig,
-                                        chartConfigs: newChartConfigs
-                                      }
-                                    })
-                                  }}
-                                  disabled={chartConfig.chartConfigs?.[index].maxValue === 'auto'}
-                                  value={chartConfig.chartConfigs?.[index].maxValue}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                            <FormItem className="self-start">
-                              <FormLabel>Color Scheme</FormLabel>
-                              <FormControl>
-                                <Select
-                                  onValueChange={(value) => {
-                                    setChartConfig((prevConfig) => {
-                                      const newChartConfigs = [...(prevConfig.chartConfigs || [])]
-                                      newChartConfigs[index] = {
-                                        ...newChartConfigs[index],
-                                        colorScheme: value as 'greys' | 'nivo'
-                                      }
-                                      return {
-                                        ...prevConfig,
-                                        chartConfigs: newChartConfigs
-                                      }
-                                    })
-                                  }}
-                                  value={chartConfig.chartConfigs?.[index].colorScheme || ''}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Choose a color scheme" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="greys">Black & White</SelectItem>
-                                    <SelectItem value="nivo">Colorful</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+                            <FormField
+                              control={form.control}
+                              name={`rows.${index}.config.titleOffsetX`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Title Offset X</FormLabel>
+                                  <FormControl>
+                                    <Input type="number" placeholder="Enter title offset X" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`rows.${index}.config.minValue`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="flex gap-2 items-center justify-between">
+                                    Min Value
+                                    <div className="flex items-center gap-2">
+                                      Auto
+                                      <Checkbox
+                                        onCheckedChange={(checked) => {
+                                          field.onChange(checked ? 'auto' : '')
+                                        }}
+                                        checked={field.value === 'auto'}
+                                      />
+                                    </div>
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      placeholder="Enter min value"
+                                      onChange={(e) => field.onChange(Number(e.target.value))}
+                                      disabled={field.value === 'auto'}
+                                      value={field.value === 'auto' ? '' : field.value}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`rows.${index}.config.maxValue`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="flex gap-2 items-center justify-between">
+                                    Max Value
+                                    <div className="flex items-center gap-2">
+                                      Auto
+                                      <Checkbox
+                                        onCheckedChange={(checked) => {
+                                          field.onChange(checked ? 'auto' : '')
+                                        }}
+                                        checked={field.value === 'auto'}
+                                      />
+                                    </div>
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      placeholder="Enter max value"
+                                      onChange={(e) => field.onChange(Number(e.target.value))}
+                                      disabled={field.value === 'auto'}
+                                      value={field.value === 'auto' ? '' : field.value}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`rows.${index}.config.colorScheme`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Color Scheme</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={(value) => field.onChange(value)} value={field.value || ''}>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Choose a color scheme" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="greys">Black & White</SelectItem>
+                                        <SelectItem value="nivo">Colorful</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            {/* Margin adjusters */}
+                            <FormField
+                              control={form.control}
+                              name={`rows.${index}.config.margin.top`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Margin Top</FormLabel>
+                                  <FormControl>
+                                    <Input type="number" placeholder="Enter margin top" onChange={(e) => field.onChange(Number(e.target.value))} value={field.value} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`rows.${index}.config.margin.right`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Margin Right</FormLabel>
+                                  <FormControl>
+                                    <Input type="number" placeholder="Enter margin right" onChange={(e) => field.onChange(Number(e.target.value))} value={field.value} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`rows.${index}.config.margin.bottom`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Margin Bottom</FormLabel>
+                                  <FormControl>
+                                    <Input type="number" placeholder="Enter margin bottom" onChange={(e) => field.onChange(Number(e.target.value))} value={field.value} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`rows.${index}.config.margin.left`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Margin Left</FormLabel>
+                                  <FormControl>
+                                    <Input type="number" placeholder="Enter margin left" onChange={(e) => field.onChange(Number(e.target.value))} value={field.value} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           </AccordionContent>
                         </AccordionItem>
                       </Accordion>
@@ -895,35 +671,18 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                     variant="green"
                     className="mt-4 flex items-center justify-center w-1/2 m-auto"
                     onClick={() => {
-                      append({ uid: '', parameter: { function: '', timeFrame: '1440', id: 0, denotation: '', measureSize: 0.2, markers: [] } })
-                      // set the chartConfig defaults
-                      setChartConfig((prevConfig) => {
-                        return {
-                          ...prevConfig,
-                          chartConfigs: [
-                            ...(prevConfig.chartConfigs || []),
-                            {
-                              name: '',
-                              titleOffsetX: 0,
-                              margin: { top: 10, right: 10, bottom: 30, left: 50 },
-                              minValue: 'auto',
-                              maxValue: 'auto',
-                              ranges: [],
-                              markers: [],
-                              measureSize: 0.2,
-                              function: '',
-                              colorScheme: 'nivo',
-                              timeFrame: 1440,
-                              measure: 0,
-                              instance: {
-                                uid: '',
-                                parameter: {
-                                  denotation: '',
-                                  id: -1
-                                }
-                              }
-                            }
-                          ]
+                      append({
+                        instance: { uid: '' },
+                        parameter: { denotation: '', id: null },
+                        config: {
+                          name: '',
+                          margin: { top: 10, right: 10, bottom: 30, left: 10 },
+                          function: '',
+                          minValue: 'auto',
+                          maxValue: 'auto',
+                          timeFrame: '1440',
+                          measureSize: 0.2,
+                          markers: []
                         }
                       })
                     }}
@@ -942,9 +701,6 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
             </Button>
             <Button type="button" onClick={() => console.log('Form errors', form.formState.errors)}>
               Log Form Errors
-            </Button>
-            <Button type="button" onClick={() => console.log('Chart config', chartConfig)}>
-              Log Chart Config
             </Button>
           </form>
         </Form>

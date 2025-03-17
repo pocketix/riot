@@ -52,7 +52,9 @@ export const entityCardSchema = z.object({
               path: ['timeFrame'],
               code: z.ZodIssueCode.custom
             })
+            return z.NEVER
           }
+          return data
         })
     )
     .min(1, { message: 'At least one row is required' })

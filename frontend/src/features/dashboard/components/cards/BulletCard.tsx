@@ -3,17 +3,18 @@ import { AiOutlineDrag } from 'react-icons/ai'
 import { ResponsiveBullet } from '@nivo/bullet'
 import styled from 'styled-components'
 // import { Layout } from '@/types/Layout';
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './AccessibilityContainer'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { lightTheme, darkTheme } from './ChartThemes'
 import { ToolTipContainer } from './ChartGlobals'
-import type { BulletCardConfig } from '@/types/BulletChartConfig'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
+import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
+import { toast } from 'sonner'
 
 // Styled components
 export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -33,19 +34,19 @@ interface BulletCardProps {
   cardID: string
   title: string
   layout: Layout[]
-  setLayout: (layout: Layout[]) => void
   breakPoint: string
   editModeEnabled: boolean
   cols: { lg: number; md: number; sm: number; xs: number; xxs: number }
-  handleDeleteItem: (id: string) => void
   height: number
   width: number
+  setLayout: (layout: Layout[]) => void
+  handleDeleteItem: (id: string) => void
   setHighlightedCardID: (id: string) => void
 
   configuration: any
 }
 
-export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration }: BulletCardProps) => {
+export const BulletCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration }: BulletCardProps) => {
   const { isDarkMode } = useDarkMode()
   const [chartConfig, setChartConfig] = useState<BulletCardConfig>()
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
@@ -84,29 +85,28 @@ export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint,
 
   const fetchData = async () => {
     if (chartConfig) {
-      const configs = chartConfig.chartConfigs
-      if (!configs) return
+      const rows = chartConfig.rows
+      if (!rows) return
 
       console.log('Fetching data')
-      console.log('CONFIGS', configs)
+      console.log('CONFIGS', rows)
 
       const results = await Promise.all(
-        configs.map(async (config) => {
-          if (!config.instance?.parameter?.denotation! || !config.instance?.uid! || !config.function) return
+        rows.map(async (row) => {
           return getChartData({
             variables: {
               sensors: {
                 sensors: [
                   {
-                    key: config.instance.uid,
-                    values: config.instance.parameter.denotation
+                    key: row.instance.uid,
+                    values: row.parameter.denotation
                   }
                 ]
               },
               request: {
-                from: new Date(Date.now() - config.timeFrame! * 60 * 1000).toISOString(),
-                aggregateMinutes: config.timeFrame! * 1000,
-                operation: config.function
+                from: new Date(Date.now() - Number(row.config.timeFrame) * 60 * 1000).toISOString(),
+                aggregateMinutes: Number(row.config.timeFrame) * 1000,
+                operation: row.config.function
               }
             }
           })
@@ -122,13 +122,13 @@ export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint,
 
       console.log('PARSED DATA', parsedData)
       const newData = parsedData.map((parsed, index) => {
-        const config = configs[index]
-        const value = JSON.parse(parsed[0].data)[config.instance.parameter.denotation]
+        const row = rows[index]
+        const value = JSON.parse(parsed[0].data)[row.parameter.denotation]
         return {
-          id: config.name,
+          id: row.config.name,
           measures: [value],
-          markers: config.markers,
-          ranges: [...(config.ranges || []), 0, 0]
+          markers: row.config.markers,
+          ranges: row.config.ranges ? row.config.ranges.flatMap((range) => [range.min, range.max]) : [0, 0]
         }
       })
       setData(newData)
@@ -152,7 +152,14 @@ export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint,
 
   useEffect(() => {
     if (configuration) {
-      console.log('Configuration', configuration.visualizationConfig.config)
+      // Safe parse does not throw an error and we can leverage its success property
+      const parsedConfig = bulletChartBuilderSchema.safeParse(configuration.visualizationConfig.config)
+      if (parsedConfig.success) {
+        console.log('Parsed config', parsedConfig.data)
+        setChartConfig(parsedConfig.data)
+      } else {
+        toast.error('Failed to parse configuration')
+      }
       setChartConfig(configuration.visualizationConfig.config)
     }
   }, [configuration])
@@ -168,19 +175,21 @@ export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint,
       )}
       {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
       {chartConfig.cardTitle ? <div className="pl-4 pt-2 font-semibold">{chartConfig.cardTitle}</div> : null}
-      {chartConfig.chartConfigs?.map((config, index) => {
+      {chartConfig.rows?.map((row, index) => {
+        console.log('ROW', row)
+        console.log('DATA AT INDEX', data[index])
         if (!data[index]) return null
         return (
           <BulletContainer key={index} $editModeEnabled={editModeEnabled}>
             <ResponsiveBullet
               data={[data[index]]}
-              margin={config.margin}
-              titleOffsetX={config.titleOffsetX}
-              measureSize={config.measureSize}
-              minValue={config.minValue || 'auto'}
-              maxValue={config.maxValue || 'auto'}
-              rangeColors={config.colorScheme === 'greys' ? ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3'] : 'seq:cool'}
-              measureColors={config.colorScheme === 'greys' ? ['pink'] : 'seq:red_purple'}
+              margin={row.config.margin}
+              titleOffsetX={row.config.titleOffsetX}
+              measureSize={row.config.measureSize}
+              minValue={row.config.minValue || 'auto'}
+              maxValue={row.config.maxValue || 'auto'}
+              rangeColors={row.config.colorScheme === 'greys' ? ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3'] : 'seq:cool'}
+              measureColors={row.config.colorScheme === 'greys' ? ['pink'] : 'seq:red_purple'}
               theme={isDarkMode ? darkTheme : lightTheme}
               tooltip={() => {
                 return (
