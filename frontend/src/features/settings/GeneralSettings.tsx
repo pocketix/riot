@@ -1,15 +1,15 @@
-import styled from "styled-components";
-import DarkModeToggle from "../../ui/DarkModeToggle";
-import LanguageSwitcher from "../../ui/LanguageSwitcher";
-import { breakpoints } from "@/styles/Breakpoints";
-import { FaArrowRight } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import styled from 'styled-components'
+import DarkModeToggle from '../../ui/DarkModeToggle'
+import LanguageSwitcher from '../../ui/LanguageSwitcher'
+import { breakpoints } from '@/styles/Breakpoints'
+import { FaArrowRight } from 'react-icons/fa'
+import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-`;
+`
 
 const SettingsItem = styled.div`
   display: flex;
@@ -32,30 +32,26 @@ const SettingsItem = styled.div`
       cursor: pointer;
     }
   }
-`;
+`
 
 export default function GeneralSettings() {
-  const navigate = useNavigate();
-  const { t } = useTranslation();
+  const navigate = useNavigate()
+  const { t } = useTranslation()
 
   return (
     <Container>
       <SettingsItem>
-        <span>{t("darkMode")}</span>
+        <span>{t('darkMode')}</span>
         <DarkModeToggle />
       </SettingsItem>
       <SettingsItem>
-        <span>{t("language")}</span>
+        <span>{t('language')}</span>
         <LanguageSwitcher />
       </SettingsItem>
-      <SettingsItem onClick={() => navigate("/settings/apollo-sandbox")}>
+      <SettingsItem onClick={() => navigate('/settings/apollo-sandbox')}>
         <span>Developer mode (Apollo Sanxbox)</span>
         <FaArrowRight />
       </SettingsItem>
-      <SettingsItem>
-        <span>KPI editor</span>
-        <FaArrowRight />
-      </SettingsItem>
     </Container>
-  );
+  )
 }

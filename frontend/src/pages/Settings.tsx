@@ -36,7 +36,8 @@ export default function Settings() {
     return <Navigate to="/settings/general" replace />
   }
 
-  const isDefaultTab = location.pathname === '/settings/general' || location.pathname === '/settings/personal-info' || location.pathname === '/settings/device-types'
+  const isDefaultTab =
+    location.pathname === '/settings/general' || location.pathname === '/settings/personal-info' || location.pathname === '/settings/device-types' || location.pathname === '/settings/kpi-definitions'
 
   return (
     <StyledPage>
@@ -47,7 +48,8 @@ export default function Settings() {
           tabs={[
             { name: 'general', path: '/settings/general' },
             { name: 'personal info', path: '/settings/personal-info' },
-            { name: 'device types', path: '/settings/device-types' }
+            { name: 'device types', path: '/settings/device-types' },
+            { name: 'KPI definitions', path: '/settings/kpi-definitions' }
           ]}
         />
         {!isDefaultTab && <Button onClick={() => navigate('/settings/device-types')}>&larr; Go Back</Button>}

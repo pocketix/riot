@@ -38,10 +38,11 @@ const Grid = styled.div`
 `
 
 export default function DeviceTypesSettings() {
-  const { data, loading, refetch } = useQuery<SdTypesQuery, SdTypesQueryVariables>(GET_SD_TYPES)
+  const { data, loading } = useQuery<SdTypesQuery, SdTypesQueryVariables>(GET_SD_TYPES, {
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first'
+  })
   const naviagate = useNavigate()
-
-  // console.log("SD Types Data:", JSON.stringify(data, null, 2));
 
   if (loading) return <Spinner />
   if (!data?.sdTypes?.length) return <p>No device types found.</p>

@@ -36,7 +36,6 @@ const Dropdown = styled.ul`
   list-style: none;
   padding: 0;
   margin: 0;
-  max-height: 160px;
   overflow-y: auto;
 `
 

@@ -58,3 +58,15 @@ export const GET_TABLE_DATA = gql`
     }
   }
 `
+export const GET_KPI_DEFINITIONS = gql`
+  query KPIDefinitions {
+    kpiDefinitions {
+      id
+      userIdentifier
+      sdTypeID
+      sdTypeSpecification
+      sdInstanceMode
+      selectedSDInstanceUIDs
+    }
+  }
+`

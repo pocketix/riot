@@ -15,6 +15,8 @@ import Login from './pages/Login'
 import DevicesPage from './pages/DevicesPage'
 import Devices from './features/devices/Devices'
 import DeviceGroups from './features/devices/DeviceGroups'
+import KPIDefinitions from './features/settings/KPIDefinitions/KPIDefinitions'
+import KPIEditor from './features/settings/KPIDefinitions/KPIEditor'
 
 export default function App() {
   return (
@@ -35,10 +37,13 @@ export default function App() {
                 <Route path="general" element={<GeneralSettings />} />
                 <Route path="personal-info" element={<PersonalInfoSettings />} />
                 <Route path="device-types" element={<DeviceTypesSettings />} />
+                <Route path="/settings/kpi-definitions" element={<KPIDefinitions />} />
                 <Route path="/settings/device-types/:id" element={<DeviceTypeDetail />} />
                 <Route path="/settings/deivce-types/addNewType" element={<DeviceTypeDetail />} />
                 <Route index element={<GeneralSettings />} />
               </Route>
+              <Route path="/settings/kpi-definitions/create" element={<KPIEditor />} />
+              <Route path="/settings/kpi-definitions/:id/edit" element={<KPIEditor />} />
               <Route path="settings/apollo-sandbox" element={<ApolloSandboxPage />} />
             </Route>
             <Route path="*" element={<PageNotFound />} />
