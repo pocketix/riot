@@ -103,12 +103,12 @@ const StyledNavbar = styled.div`
 
 export default function Navbar() {
   const { t } = useTranslation()
-  const isMobile = useMediaQuery({ maxWidth: parseInt(breakpoints.sm) - 1 })
+  const isMobile = useMediaQuery({ maxWidth: parseInt(breakpoints.md) - 1 })
   return (
     <StyledNavbar>
       <Logo hideLogo={isMobile} />
       <NavbarContainer>
-        <NavItem to="/devices">
+        <NavItem to="/devicesPage">
           <TbDevicesPc />
           <span>{t('devices')}</span>
         </NavItem>

@@ -1,7 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppLayout from './ui/AppLayout'
 import Dashboard from './pages/Dashboard'
-import Devices from './pages/Devices'
 import Members from './pages/Members'
 import Automations from './pages/Automations'
 import Settings from './pages/Settings'
@@ -13,6 +12,9 @@ import PersonalInfoSettings from './features/settings/PersonalInfoSettings'
 import DeviceTypesSettings from './features/settings/DeviceTypes/DeviceTypesSettings'
 import DeviceTypeDetail from './features/settings/DeviceTypes/DeviceTypeDetail'
 import Login from './pages/Login'
+import DevicesPage from './pages/DevicesPage'
+import Devices from './features/devices/Devices'
+import DeviceGroups from './features/devices/DeviceGroups'
 
 export default function App() {
   return (
@@ -22,7 +24,11 @@ export default function App() {
           <Routes>
             <Route element={<AppLayout />}>
               <Route index element={<Dashboard />} />
-              <Route path="devices" element={<Devices />} />
+              <Route path="/devicesPage" element={<DevicesPage />}>
+                <Route path="devices" element={<Devices />} />
+                <Route path="groups" element={<DeviceGroups />} />
+                <Route index element={<Devices />} />
+              </Route>
               <Route path="members" element={<Members />} />
               <Route path="automations" element={<Automations />} />
               <Route path="/settings" element={<Settings />}>

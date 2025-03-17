@@ -77,7 +77,7 @@ export default function Picker({ activeTab, tabs }: PickerProps) {
   return (
     <PickerContainer ref={dropdownRef}>
       <PickerButton onClick={() => setIsOpen((prev) => !prev)}>
-        {tabs.filter((tab) => tab.path.startsWith(`/settings/${activeTab}`))[0]?.name}
+        {tabs.filter((tab) => tab.path.endsWith(`${activeTab}`))[0]?.name}
         <FaChevronDown />
       </PickerButton>
       {isOpen && (
