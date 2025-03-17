@@ -492,6 +492,13 @@ export type UpdateKpiDefinitionMutationVariables = Exact<{
 
 export type UpdateKpiDefinitionMutation = { __typename?: 'Mutation', updateKPIDefinition: { __typename?: 'KPIDefinition', id: number } };
 
+export type DeleteKpiDefinitionMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteKpiDefinitionMutation = { __typename?: 'Mutation', deleteKPIDefinition: boolean };
+
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -675,6 +682,37 @@ export function useUpdateKpiDefinitionMutation(baseOptions?: Apollo.MutationHook
 export type UpdateKpiDefinitionMutationHookResult = ReturnType<typeof useUpdateKpiDefinitionMutation>;
 export type UpdateKpiDefinitionMutationResult = Apollo.MutationResult<UpdateKpiDefinitionMutation>;
 export type UpdateKpiDefinitionMutationOptions = Apollo.BaseMutationOptions<UpdateKpiDefinitionMutation, UpdateKpiDefinitionMutationVariables>;
+export const DeleteKpiDefinitionDocument = gql`
+    mutation DeleteKPIDefinition($id: ID!) {
+  deleteKPIDefinition(id: $id)
+}
+    `;
+export type DeleteKpiDefinitionMutationFn = Apollo.MutationFunction<DeleteKpiDefinitionMutation, DeleteKpiDefinitionMutationVariables>;
+
+/**
+ * __useDeleteKpiDefinitionMutation__
+ *
+ * To run a mutation, you first call `useDeleteKpiDefinitionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteKpiDefinitionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteKpiDefinitionMutation, { data, loading, error }] = useDeleteKpiDefinitionMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteKpiDefinitionMutation(baseOptions?: Apollo.MutationHookOptions<DeleteKpiDefinitionMutation, DeleteKpiDefinitionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteKpiDefinitionMutation, DeleteKpiDefinitionMutationVariables>(DeleteKpiDefinitionDocument, options);
+      }
+export type DeleteKpiDefinitionMutationHookResult = ReturnType<typeof useDeleteKpiDefinitionMutation>;
+export type DeleteKpiDefinitionMutationResult = Apollo.MutationResult<DeleteKpiDefinitionMutation>;
+export type DeleteKpiDefinitionMutationOptions = Apollo.BaseMutationOptions<DeleteKpiDefinitionMutation, DeleteKpiDefinitionMutationVariables>;
 export const SdInstancesDocument = gql`
     query SdInstances {
   sdInstances {

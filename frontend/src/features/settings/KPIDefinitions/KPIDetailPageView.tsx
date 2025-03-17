@@ -3,7 +3,8 @@ import EditableTree, { AtomNodeType } from './components/editable-tree/EditableT
 import StandardContentPageTemplate, { StandardContentTemplatePageProps } from '../../page-independent-components/StandardContentPageTemplate'
 import { KPIDefinitionModel } from './KPIEditor'
 import { MdRestartAlt } from 'react-icons/md'
-import { Button, FormControl, Grid } from '@mui/material'
+import { FormControl, Grid } from '@mui/material'
+import { Button } from '@/components/ui/button'
 import { RestOfKpiDefinitionDetailPageDataQuery, SdInstanceMode, SdType } from '@/generated/graphql'
 import { AsynchronousEffectFunction, ConsumerFunction, EffectFunction, TetraConsumerFunction } from './components/util'
 import ChipBasedMultiSelect from '../../page-independent-components/mui-based/ChipBasedMultiSelect'
@@ -160,14 +161,12 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
       />
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={1}>
-          <Button fullWidth disabled={!props.canSubmit} onClick={props.onSubmitHandler}>
+          <Button variant={'secondary'} disabled={!props.canSubmit} onClick={props.onSubmitHandler}>
             Submit
           </Button>
         </Grid>
         <Grid item xs={1}>
-          <Button fullWidth onClick={props.onCancelHandler}>
-            Cancel
-          </Button>
+          <Button onClick={props.onCancelHandler}>Cancel</Button>
         </Grid>
         <Grid item xs={7} />
         <Grid item xs={3}>

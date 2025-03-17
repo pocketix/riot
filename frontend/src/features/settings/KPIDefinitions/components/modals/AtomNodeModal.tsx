@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Button, FormControl, Grid } from '@mui/material'
+import { FormControl, Grid } from '@mui/material'
+import { Button } from '@/components/ui/button'
 import ModalBase from '../../../../page-independent-components/mui-based/ModalBase'
 import { AtomNodeType } from '../editable-tree/EditableTree'
 import NiceModal, { useModal } from '@ebay/nice-modal-react'
@@ -147,7 +148,7 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
           </FormControl>
         </Grid>
         <Grid item xs={6}>
-          <Button fullWidth onClick={checkThenConfirm}>
+          <Button variant="secondary" fullWidth onClick={checkThenConfirm}>
             Confirm
           </Button>
         </Grid>

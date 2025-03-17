@@ -38,3 +38,9 @@ export const UPDATE_KPI_DEFINITION = gql`
     }
   }
 `
+
+export const DELETE_KPI_DEFINITION = gql`
+  mutation DeleteKPIDefinition($id: ID!) {
+    deleteKPIDefinition(id: $id)
+  }
+`

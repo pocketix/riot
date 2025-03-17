@@ -32,6 +32,7 @@ import {
   kpiDefinitionToKPIDefinitionModel,
   modifyAtomNode
 } from './kpiDefinitionModel'
+import { toast } from 'sonner'
 
 export interface KPIDefinitionModel extends EditableTreeNodeDataModel {
   id: string
@@ -241,7 +242,7 @@ export default function KPIEditor() {
         if (id) {
           await updateKPIDefinitionMutation({
             variables: {
-              id: id,
+              id: Number(id),
               input: kpiDefinitionInput
             }
           })
@@ -252,7 +253,8 @@ export default function KPIEditor() {
             }
           })
         }
-        changeURL('/kpi-definitions')
+        changeURL('/settings/kpi-definitions')
+        toast.success('KPI Definition saved successfully')
       }}
       onCancelHandler={() => changeURL('/settings/kpi-definitions')}
       updateUserIdentifier={(newUserIdentifier: string) => {
