@@ -9,7 +9,7 @@ import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { z } from 'zod'
-import { lineChartBuilderSchema } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { ChartCardConfig, lineChartBuilderSchema } from '@/schemas/dashboard/LineChartBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -31,15 +31,16 @@ import { BuilderResult } from '../VisualizationBuilder'
 export interface LineChartBuilderProps {
   onDataSubmit: (data: any) => void
   instances: SdInstance[]
+  config?: ChartCardConfig
 }
 
-export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderProps) {
+export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartBuilderProps) {
   const containerRef = useRef(null)
   const { isDarkMode } = useDarkMode()
 
   const form = useForm<z.infer<typeof lineChartBuilderSchema>>({
     resolver: zodResolver(lineChartBuilderSchema),
-    defaultValues: {
+    defaultValues: config || {
       cardTitle: 'Line Chart',
       toolTip: {
         x: 'Time',
@@ -205,10 +206,26 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
     }
   }, [leftAxisMarginMockRef.current?.innerText, dataMaxValue])
 
-  const { data: parametersData } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
+  const { data: parametersData, refetch: refetchParameters } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
     variables: { sdTypeId: selectedInstance?.type.id },
     skip: !selectedInstance
   })
+
+  useEffect(() => {
+    if (config) {
+      config.instances.forEach((instance: { uid: string; parameters: { id: number; denotation: string }[] }) => {
+        const selectedInstance = instances.find((inst) => inst.uid === instance.uid)
+        if (selectedInstance) {
+          refetchParameters({ sdTypeId: selectedInstance.type.id }).then((result) => {
+            setAvailableParameters((prev) => ({
+              ...prev,
+              [selectedInstance.uid]: result.data.sdType.parameters
+            }))
+          })
+        }
+      })
+    }
+  }, [config, instances, refetchParameters])
 
   useEffect(() => {
     if (parametersData && selectedInstance) {
@@ -458,7 +475,6 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
                       <FormLabel>Instance</FormLabel>
                       <FormControl>
                         <Select
-                          {...field}
                           onValueChange={(value) => {
                             const instance = instances.find((instance) => instance.uid === value)
                             if (!instance) return
@@ -499,19 +515,17 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
                             form.getValues(`instances.${index}.uid`) && availableParameters[form.getValues(`instances.${index}.uid`)]
                               ? availableParameters[form.getValues(`instances.${index}.uid`)].map((parameter) => ({
                                   label: parameter.denotation,
-                                  value: Number(parameter.id)
+                                  value: parameter.id
                                 }))
                               : []
                           }
-                          reset={form.watch(`instances.${index}.uid`)}
+                          reset={form.watch(`instances.${index}.uid`) !== config?.instances[index]?.uid}
                           modalPopover={true}
                           onValueChange={(value) => {
-                            console.log('Available parameters', availableParameters[form.getValues(`instances.${index}.uid`)])
                             const selectedParameters = value.map((param) => ({
                               id: param,
                               denotation: availableParameters[form.getValues(`instances.${index}.uid`)].find((paramWhole) => paramWhole.id === Number(param))?.denotation
                             }))
-                            console.log('Selected parameters', selectedParameters)
                             field.onChange(selectedParameters)
                           }}
                           defaultValue={field.value.map((param: { id: number }) => param.id)}

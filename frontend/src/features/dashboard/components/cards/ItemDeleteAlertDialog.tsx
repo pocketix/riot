@@ -1,6 +1,5 @@
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
-import { DeleteIconContainer } from '@/styles/dashboard/CardGlobal'
-import { FaTrash } from 'react-icons/fa'
+import { TbTrash } from 'react-icons/tb'
 import { Button } from '@/components/ui/button'
 import { useState, useRef, useEffect } from 'react'
 
@@ -33,9 +32,7 @@ export function ItemDeleteAlertDialog({ onSuccess }: ItemDeleteAlertDialogProps)
   return (
     <AlertDialog open={open} onOpenChange={() => setOpen(!open)}>
       <AlertDialogTrigger asChild>
-        <DeleteIconContainer>
-          <FaTrash />
-        </DeleteIconContainer>
+        <TbTrash className="cursor-pointer text-destructive" />
       </AlertDialogTrigger>
       <AlertDialogContent ref={dialogRef}>
         <AlertDialogHeader>

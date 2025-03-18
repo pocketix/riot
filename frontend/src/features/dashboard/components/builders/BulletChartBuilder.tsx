@@ -30,9 +30,10 @@ export type BuilderResult = {
 export interface BulletChartBuilderProps {
   onDataSubmit: (data: any) => void
   instances: SdInstance[]
+  config?: BulletCardConfig
 }
 
-export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuilderProps) {
+export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletChartBuilderProps) {
   const parameterNameMock = useRef<HTMLSpanElement | null>(null)
   const { isDarkMode } = useDarkMode()
 
@@ -45,9 +46,15 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
 
   const form = useForm<z.infer<typeof bulletChartBuilderSchema>>({
     resolver: zodResolver(bulletChartBuilderSchema),
-    defaultValues: {
+    defaultValues: config || {
       cardTitle: 'Bullet Charts',
-      rows: [{ instance: { uid: '' }, parameter: { denotation: '', id: null }, config: { name: '', function: '', timeFrame: '1440', measureSize: 0.2, markers: [] } }]
+      rows: [
+        {
+          instance: { uid: '' },
+          parameter: { denotation: '', id: null },
+          config: { name: '', function: '', timeFrame: '1440', measureSize: 0.2, markers: [], margin: { top: 10, right: 10, bottom: 30, left: 30 }, titleOffsetX: 0, colorScheme: 'nivo' }
+        }
+      ]
     }
   })
 
@@ -112,10 +119,26 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
     setData(newData)
   }
 
-  const { data: parametersData } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
+  const { data: parametersData, refetch: refetchParameters } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
     variables: { sdTypeId: selectedInstance?.type.id },
     skip: !selectedInstance
   })
+
+  useEffect(() => {
+    if (config) {
+      config.rows.forEach((row) => {
+        const selectedInstance = instances.find((inst) => inst.uid === row.instance.uid)
+        if (selectedInstance) {
+          refetchParameters({ sdTypeId: selectedInstance.type.id }).then((result) => {
+            setAvailableParameters((prev) => ({
+              ...prev,
+              [selectedInstance.uid]: result.data.sdType.parameters
+            }))
+          })
+        }
+      })
+    }
+  }, [config, instances, refetchParameters])
 
   useEffect(() => {
     if (parametersData && selectedInstance) {
@@ -260,6 +283,7 @@ export function BulletChartBuilder({ onDataSubmit, instances }: BulletChartBuild
                               <FormControl>
                                 <Select
                                   onValueChange={(value) => {
+                                    if (!value) return
                                     const selectedParameter = availableParameters[form.getValues(`rows.${index}.instance.uid`)!].find((parameter) => parameter.id === Number(value))
                                     if (!selectedParameter) return
                                     field.onChange(selectedParameter.id)

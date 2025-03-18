@@ -1,4 +1,4 @@
-import { Container, DragHandle } from '@/styles/dashboard/CardGlobal'
+import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/CardGlobal'
 import { AiOutlineDrag } from 'react-icons/ai'
 import { ResponsiveBullet } from '@nivo/bullet'
 import styled from 'styled-components'
@@ -15,6 +15,7 @@ import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { toast } from 'sonner'
+import { CardEditDialog } from '../editor/CardEditDialog'
 
 // Styled components
 export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -173,7 +174,12 @@ export const BulletCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
           <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 rounded-lg border-2" />
         </DragHandle>
       )}
-      {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
+      {editModeEnabled && (
+        <DeleteEditContainer>
+          <CardEditDialog bulletCardConfig={chartConfig} />
+          <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+        </DeleteEditContainer>
+      )}
       {chartConfig.cardTitle ? <div className="pl-4 pt-2 font-semibold">{chartConfig.cardTitle}</div> : null}
       {chartConfig.rows?.map((row, index) => {
         console.log('ROW', row)

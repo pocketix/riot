@@ -1,4 +1,4 @@
-import { Container, DragHandle } from '@/styles/dashboard/CardGlobal'
+import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/CardGlobal'
 import { AiOutlineDrag } from 'react-icons/ai'
 import styled from 'styled-components'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -14,6 +14,7 @@ import { darkTheme, lightTheme } from '../cards/ChartThemes'
 import { toast } from 'sonner'
 import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
+import { CardEditDialog } from '../editor/CardEditDialog'
 
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   position: relative;
@@ -179,7 +180,12 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
           <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 border-2 rounded-lg" />
         </DragHandle>
       )}
-      {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
+      {editModeEnabled && (
+        <DeleteEditContainer>
+          <CardEditDialog entityCardConfig={chartConfig} />
+          <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+        </DeleteEditContainer>
+      )}
       <div className="pl-2 pt-2 font-semibold">{chartConfig.title}</div>
       <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
         <table className="w-full h-fit">

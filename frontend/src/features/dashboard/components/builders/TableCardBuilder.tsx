@@ -3,7 +3,6 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { IoAdd } from 'react-icons/io5'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { TableCardInfo } from '@/types/TableCardInfo'
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import { SdInstance, SdParameter, StatisticsOperation } from '@/generated/graphql'
 import { useQuery } from '@apollo/client'
@@ -11,7 +10,7 @@ import { GET_PARAMETERS } from '@/graphql/Queries'
 import { HiOutlineQuestionMarkCircle } from 'react-icons/hi2'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { z } from 'zod'
-import { tableCardSchema } from '@/schemas/dashboard/TableBuilderSchema'
+import { tableCardSchema, TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -23,22 +22,22 @@ import { BuilderResult } from '../VisualizationBuilder'
 
 export interface TableCardBuilderProps {
   onDataSubmit: (data: any) => void
-  data?: TableCardInfo
   instances: SdInstance[]
+  config?: TableCardConfig
 }
 
-export function TableCardBuilder({ onDataSubmit, data, instances }: TableCardBuilderProps) {
-  const initialTableConfig: TableCardInfo = {
+export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardBuilderProps) {
+  const initialTableConfig: TableCardConfig = {
     _cardID: 'exampleCardID',
     title: 'Area',
     tableTitle: 'Sensors',
+    timeFrame: '1440',
     decimalPlaces: 2,
-    aggregatedTime: '1h',
     columns: [],
     rows: []
   }
 
-  const [tableConfig, setTableConfig] = useState<TableCardInfo>(data || initialTableConfig)
+  const [tableConfig, setTableConfig] = useState<TableCardConfig>(config || initialTableConfig)
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
   const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
 

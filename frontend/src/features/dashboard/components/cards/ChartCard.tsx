@@ -1,4 +1,4 @@
-import { Container, DragHandle } from '@/styles/dashboard/CardGlobal'
+import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/CardGlobal'
 import { AiOutlineDrag } from 'react-icons/ai'
 import { ResponsiveLine, PointTooltipProps } from '@nivo/line'
 import styled from 'styled-components'
@@ -15,6 +15,7 @@ import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { CardEditDialog } from '../editor/CardEditDialog'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -173,7 +174,12 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
           <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 rounded-lg border-2" />
         </DragHandle>
       )}
-      {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
+      {editModeEnabled && (
+        <DeleteEditContainer>
+          <CardEditDialog chartCardConfig={chartConfig} />
+          <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+        </DeleteEditContainer>
+      )}
       {data && data.length > 0 ? (
         <>
           <div className="pl-4 pt-2 font-semibold">{chartConfig.cardTitle}</div>

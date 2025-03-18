@@ -28,14 +28,15 @@ export type BuilderResult = {
 export interface EntityCardBuilderProps {
   onDataSubmit: (data: any) => void
   instances: SdInstance[]
+  config?: EntityCardConfig
 }
 
-export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilderProps) {
+export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCardBuilderProps) {
   const { isDarkMode } = useDarkMode()
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
   const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
 
-  const { data: parametersData } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
+  const { data: parametersData, refetch: refetchParameters } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
     variables: { sdTypeId: selectedInstance?.type.id },
     skip: !selectedInstance
   })
@@ -49,10 +50,26 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
     }
   }, [parametersData, selectedInstance])
 
+  useEffect(() => {
+    if (config) {
+      config.rows.forEach((row) => {
+        const instance = instances.find((instance) => instance.uid === row.instance.uid)
+        if (instance) {
+          refetchParameters({ sdTypeId: instance.type.id }).then((result) => {
+            setAvailableParameters((prev) => ({
+              ...prev,
+              [instance.uid]: result.data.sdType.parameters
+            }))
+          })
+        }
+      })
+    }
+  }, [config, instances, refetchParameters])
+
   const form = useForm<z.infer<typeof entityCardSchema>>({
     mode: 'onChange',
     resolver: zodResolver(entityCardSchema),
-    defaultValues: {
+    defaultValues: config || {
       title: 'Entity Card',
       rows: []
     }

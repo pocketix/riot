@@ -1,6 +1,5 @@
 // Original Source: https://github.com/sersavan/shadcn-multi-select-component
 
-import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { CheckIcon, XCircle, ChevronDown, XIcon, WandSparkles } from 'lucide-react'
 
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
+import { ButtonHTMLAttributes, ComponentType, forwardRef, KeyboardEvent, useEffect, useState } from 'react'
 
 /**
  * Variants for the multi-select component to handle different styles.
@@ -33,7 +33,7 @@ const ParameterMultiSelectVariants = cva('m-1 transition ease-in-out delay-150 h
  * Props for ParameterMultiSelect component
  */
 interface ParameterMultiSelectProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'defaultValue'>, // Exclude defaultValue
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'defaultValue'>, // Exclude defaultValue
     VariantProps<typeof ParameterMultiSelectVariants> {
   /**
    * An array of option objects to be displayed in the multi-select component.
@@ -43,19 +43,19 @@ interface ParameterMultiSelectProps
     /** The text to display for the option. */
     label: string
     /** The unique value associated with the option. */
-    value: number // Changed to number
+    value: number
     /** Optional icon component to display alongside the option. */
-    icon?: React.ComponentType<{ className?: string }>
+    icon?: ComponentType<{ className?: string }>
   }[]
 
   /**
    * Callback function triggered when the selected values change.
    * Receives an array of the new selected values.
    */
-  onValueChange: (value: number[]) => void // Changed to number[]
+  onValueChange: (value: number[]) => void
 
   /** The default selected values when the component mounts. */
-  defaultValue?: number[] // Changed to number[]
+  defaultValue?: number[]
 
   /**
    * Placeholder text to be displayed when no values are selected.
@@ -105,13 +105,16 @@ interface ParameterMultiSelectProps
   onClose?: () => void
 }
 
-export const ParameterMultiSelect = React.forwardRef<HTMLButtonElement, ParameterMultiSelectProps>(
-  ({ options, onValueChange, variant, defaultValue = [], placeholder = 'Select options', animation = 0, maxCount = 3, modalPopover = false, asChild = false, className, reset, onClose, ...props }, ref) => {
-    const [selectedValues, setSelectedValues] = React.useState<number[]>(defaultValue) // Changed to number[]
-    const [isPopoverOpen, setIsPopoverOpen] = React.useState(false)
-    const [isAnimating, setIsAnimating] = React.useState(false)
+export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMultiSelectProps>(
+  (
+    { options, onValueChange, variant, defaultValue = [], placeholder = 'Select options', animation = 0, maxCount = 3, modalPopover = false, asChild = false, className, reset, onClose, ...props },
+    ref
+  ) => {
+    const [selectedValues, setSelectedValues] = useState<number[]>(defaultValue)
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false)
+    const [isAnimating, setIsAnimating] = useState(false)
 
-    const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
         setIsPopoverOpen(true)
       } else if (event.key === 'Backspace' && !event.currentTarget.value) {
@@ -122,7 +125,7 @@ export const ParameterMultiSelect = React.forwardRef<HTMLButtonElement, Paramete
       }
     }
 
-    React.useEffect(() => {
+    useEffect(() => {
       if (reset) {
         setSelectedValues([])
         onValueChange([])
@@ -130,7 +133,6 @@ export const ParameterMultiSelect = React.forwardRef<HTMLButtonElement, Paramete
     }, [reset])
 
     const toggleOption = (option: number) => {
-      // Changed to number
       const newSelectedValues = selectedValues.includes(option) ? selectedValues.filter((value) => value !== option) : [...selectedValues, option]
       setSelectedValues(newSelectedValues)
       onValueChange(newSelectedValues)
@@ -162,12 +164,16 @@ export const ParameterMultiSelect = React.forwardRef<HTMLButtonElement, Paramete
     }
 
     return (
-      <Popover open={isPopoverOpen} onOpenChange={(open) => {
-        setIsPopoverOpen(open)
-        if (!open && onClose) {
-          onClose()
-        }
-        }} modal={modalPopover}>
+      <Popover
+        open={isPopoverOpen}
+        onOpenChange={(open) => {
+          setIsPopoverOpen(open)
+          if (!open && onClose) {
+            onClose()
+          }
+        }}
+        modal={modalPopover}
+      >
         <PopoverTrigger asChild>
           <Button
             ref={ref}
