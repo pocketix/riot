@@ -1,5 +1,5 @@
 # Use an official Go runtime as a parent image
-FROM golang:1.24.1-alpine
+FROM golang:1.24.1-alpine AS build
 # Set the working directory inside the container
 WORKDIR /app
 # Copy the go.mod file, go.sum file, and src directory from message-processing-unit
@@ -15,5 +15,10 @@ RUN go mod tidy
 RUN go mod download
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -o RIoT-message-processing-unit src/main.go
-# Run the executable
+
+# Move to production alpine image
+FROM alpine AS prod
+
+COPY --from=build /app/message-processing-unit/RIoT-message-processing-unit /app/message-processing-unit/RIoT-message-processing-unit
+
 CMD ["/app/message-processing-unit/RIoT-message-processing-unit"]
