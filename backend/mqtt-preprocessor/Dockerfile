@@ -1,5 +1,5 @@
 # Use an official Go runtime as a parent image
-FROM golang:1.22-alpine
+FROM golang:1.24.1-alpine
 # Set the working directory inside the container
 WORKDIR /app
 # Copy the go.mod file, go.sum file, and src directory from mqtt-preprocessor

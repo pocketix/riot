@@ -367,7 +367,7 @@ func (e KPINodeType) String() string {
 	return string(e)
 }
 
-func (e *KPINodeType) UnmarshalGQL(v interface{}) error {
+func (e *KPINodeType) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -410,7 +410,7 @@ func (e LogicalOperationType) String() string {
 	return string(e)
 }
 
-func (e *LogicalOperationType) UnmarshalGQL(v interface{}) error {
+func (e *LogicalOperationType) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -451,7 +451,7 @@ func (e SDInstanceMode) String() string {
 	return string(e)
 }
 
-func (e *SDInstanceMode) UnmarshalGQL(v interface{}) error {
+func (e *SDInstanceMode) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -494,7 +494,7 @@ func (e SDParameterType) String() string {
 	return string(e)
 }
 
-func (e *SDParameterType) UnmarshalGQL(v interface{}) error {
+func (e *SDParameterType) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
@@ -565,7 +565,7 @@ func (e StatisticsOperation) String() string {
 	return string(e)
 }
 
-func (e *StatisticsOperation) UnmarshalGQL(v interface{}) error {
+func (e *StatisticsOperation) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
