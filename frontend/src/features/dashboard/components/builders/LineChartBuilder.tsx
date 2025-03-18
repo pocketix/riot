@@ -27,7 +27,6 @@ import { toast } from 'sonner'
 import { useDebounce } from 'use-debounce'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BuilderResult } from '../VisualizationBuilder'
-import type { LineChartConfig } from '@/types/LineChartConfig'
 
 export interface LineChartBuilderProps {
   onDataSubmit: (data: any) => void
@@ -38,86 +37,70 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
   const containerRef = useRef(null)
   const { isDarkMode } = useDarkMode()
 
-  const initialChartConfig: LineChartConfig = {
-    cardTitle: 'Line Chart',
-    sizing: {
-      minH: 2
-    },
-    toolTip: {
-      x: 'Time',
-      y: 'Value'
-    },
-    margin: { top: 10, right: 20, bottom: 50, left: 50 },
-    xScale: { type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' },
-    xFormat: 'time:%Y-%m-%dT%H:%M:%SZ',
-    yScale: {
-      type: 'linear',
-      min: 'auto',
-      max: 'auto',
-      stacked: false,
-      reverse: false
-    },
-    animate: true,
-    yFormat: ' >-.3~f',
-    axisBottom: {
-      format: '%H:%M',
-      tickValues: 6,
-      legend: 'Date',
-      legendOffset: 36,
-      legendPosition: 'middle' as AxisLegendPosition
-    },
-    axisLeft: {
-      tickSize: 5,
-      tickPadding: 5,
-      tickRotation: 0,
-      legend: 'Value',
-      legendOffset: -40,
-      truncateTickAt: 0,
-      legendPosition: 'middle' as AxisLegendPosition
-    },
-    pointSize: 3,
-    pointColor: { theme: 'background' },
-    pointBorderWidth: 0,
-    pointBorderColor: { from: 'serieColor' },
-    enableGridX: true,
-    enableGridY: true
-  }
-
-  const [chartConfig, setChartConfig] = useState(initialChartConfig)
-  const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
-  const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
-  const [getChartData, { data: chartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
-  const [data, setData] = useState<any[]>([])
-  const [leftAxisMockValue, setLeftAxisMockValue] = useState<number | null>(null)
-  const leftAxisMarginMockRef = useRef<HTMLHeadingElement | null>(null)
-
   const form = useForm<z.infer<typeof lineChartBuilderSchema>>({
     resolver: zodResolver(lineChartBuilderSchema),
     defaultValues: {
       cardTitle: 'Line Chart',
       toolTip: {
         x: 'Time',
-        y: 'Value'
+        y: 'Value',
+        yFormat: ' >-.1~f'
       },
       pointSize: 3,
       instances: [{ uid: '', parameters: [] }],
       timeFrame: '60',
       aggregateMinutes: 2,
-      decimalPlaces: 1
+      decimalPlaces: 1,
+      axisLeft: {
+        legend: 'Value',
+        legendOffset: -40,
+        legendPosition: 'middle' as AxisLegendPosition
+        // tickSize: 5,
+        // tickPadding: 5,
+        // tickRotation: 0,
+        // truncateTickAt: 0
+      },
+      axisBottom: {
+        format: '%H:%M',
+        tickValues: 6,
+        legend: 'Date',
+        legendOffset: 36,
+        legendPosition: 'middle' as AxisLegendPosition
+      },
+      margin: { top: 10, right: 20, bottom: 50, left: 50 },
+      yScale: {
+        format: ' >-.1~f',
+        type: 'linear',
+        min: 'auto',
+        max: 'auto',
+        stacked: false
+      },
+      // xScale: { type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' },
+      // xFormat: 'time:%Y-%m-%dT%H:%M:%SZ',
+      // animate: true,
+      // yFormat: ' >-.3~f',
+      enableGridX: true,
+      enableGridY: true
+      // pointBorderColor: { from: 'serieColor' }
     }
   })
+
+  const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
+  const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
+  const [getChartData, { data: chartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
+  const [data, setData] = useState<any[]>([])
+  const [dataMaxValue, setDataMaxValue] = useState<number | null>(null)
+  const leftAxisMarginMockRef = useRef<HTMLHeadingElement | null>(null)
 
   const [debouncedAggregateMinutes] = useDebounce(form.watch('aggregateMinutes'), 1000)
 
   const fetchData = () => {
-    // Prepare all the instances and parameters from the form
     const instances = form.getValues('instances')
     if (instances.length === 0) return
     const sensors = instances.map((instance: { uid: string; parameters: { denotation: string }[] }) => ({
       key: instance.uid,
       values: instance.parameters ? instance.parameters.map((param) => param.denotation) : []
     }))
-    // Prepare the request object
     const request = {
       from: new Date(Date.now() - Number(form.getValues('timeFrame')) * 60 * 1000).toISOString(),
       aggregateMinutes: form.getValues('aggregateMinutes'),
@@ -135,13 +118,21 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
   const [debouncedDecimalPlaces] = useDebounce(form.watch('decimalPlaces'), 1000)
 
   useEffect(() => {
-    if (chartConfig.yScale) {
+    // The format follows the pattern >-.x~f, where x is the number of decimal places
+    // This is checked in the zod schema too
+    if (form.watch('yScale')) {
       const newYScale = {
-        ...chartConfig.yScale,
-        format: ` >-.${debouncedDecimalPlaces}~f`
+        ...form.watch('yScale'),
+        format: `>-.${debouncedDecimalPlaces}~f`
       }
-      console.log('New y-scale', newYScale)
-      setChartConfig((prevConfig) => ({ ...prevConfig, yScale: newYScale }))
+      form.setValue('yScale', newYScale)
+
+      // The tooltip value formatting has to be updated as well
+      const newToolTipFormat = {
+        ...form.watch('toolTip'),
+        yFormat: `>-.${debouncedDecimalPlaces}~f`
+      }
+      form.setValue('toolTip', newToolTipFormat)
     }
   }, [debouncedDecimalPlaces])
 
@@ -149,7 +140,6 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
     if (!chartData) return
     const instances = form.getValues('instances')
 
-    console.log('Chart data', chartData)
     let maxValue: number = 0
     let result: any[] = []
 
@@ -175,11 +165,13 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
       })
     })
 
-    // Based on the decimal places, add the corresponding amount of decimal places
-    // maxValue += 10 ** -debouncedDecimalPlaces
     maxValue += 0.1
-    setLeftAxisMockValue(maxValue)
-    console.log('Result', result)
+    if (maxValue > Number(leftAxisMarginMockRef.current?.innerText) && leftAxisMarginMockRef.current) {
+      const decimalPlaces = form.watch('decimalPlaces')
+      const mockValue = parseFloat(maxValue.toFixed(decimalPlaces))
+      setDataMaxValue(mockValue)
+      leftAxisMarginMockRef.current.innerText = mockValue.toString()
+    }
     setData(result)
   }, [chartData])
 
@@ -188,53 +180,30 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
   }, [form.watch('timeFrame'), debouncedAggregateMinutes])
 
   const calculateLeftAxisMargin = () => {
-    if (leftAxisMockValue && leftAxisMarginMockRef.current) {
-      console.log('Left axis mock value', leftAxisMockValue)
-      const yAxisTextWidth = leftAxisMarginMockRef.current.offsetWidth
-
-      const isLegendPresent = chartConfig.axisLeft.legend === '' ? true : false
-      console.log('Is legend present', isLegendPresent)
-      // get the width of the left axis by getting the width of the mock element
-      // + 10 stands for the gap between the axis and the chart
-      // * 2 stands for the padding of the axis
-      // + 20 stands for padding to the edge of the chart
+    if (leftAxisMarginMockRef.current) {
+      const yAxisTextWidth = leftAxisMarginMockRef.current.offsetWidth + 5
+      console.log('Mock Width', yAxisTextWidth)
+      const isLegendPresent = form.getValues('axisLeft.legend') === '' ? false : true
       let yAxisWidth = yAxisTextWidth + 10 * 2 + 20
 
-      if (!isLegendPresent) yAxisWidth -= 30
-      console.log('Y-axis width', yAxisWidth)
+      if (!isLegendPresent) yAxisWidth -= 20
 
-      // set the margin
-      setChartConfig((prevConfig) => {
-        const newMargin = { ...prevConfig.margin, left: Math.ceil(yAxisWidth) }
-        console.log('New margin', newMargin)
-        return { ...prevConfig, margin: newMargin }
-      })
-
-      // set the legend offset
-      setChartConfig((prevConfig) => {
-        const newAxisLeft = { ...prevConfig.axisLeft, legendOffset: -yAxisTextWidth - 20 }
-        return { ...prevConfig, axisLeft: newAxisLeft }
-      })
+      form.setValue('margin.left', Math.ceil(yAxisWidth))
+      form.setValue('axisLeft.legendOffset', -yAxisTextWidth - 20)
     }
   }
 
   const calculateBottomAxisMargin = () => {
-    const isLegendPresent = chartConfig.axisBottom.legend === '' ? true : false
-    console.log('Is legend present', isLegendPresent)
-
-    // If the legend is NOT present, decrease bottom margin by 30
-    setChartConfig((prevConfig) => {
-      const newMargin = { ...prevConfig.margin, bottom: isLegendPresent ? 50 : 30 }
-      return { ...prevConfig, margin: newMargin }
-    })
+    const isLegendPresent = form.getValues('axisBottom.legend') === '' ? false : true
+    form.setValue('margin.bottom', isLegendPresent ? 50 : 30)
   }
 
-  // Based on the maximum value of the y-axis, we will try to calculate the margin of the left axis
   useEffect(() => {
-    if (leftAxisMockValue && leftAxisMarginMockRef.current) {
+    if (leftAxisMarginMockRef.current) {
+      console.log('Left axis margin mock', leftAxisMarginMockRef.current.innerText)
       calculateLeftAxisMargin()
     }
-  }, [leftAxisMockValue])
+  }, [leftAxisMarginMockRef.current?.innerText, dataMaxValue])
 
   const { data: parametersData } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
     variables: { sdTypeId: selectedInstance?.type.id },
@@ -255,21 +224,9 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
     name: 'instances'
   })
 
-  const handleConfigChange = (property: string, value: any) => {
-    const newConfig = {
-      ...chartConfig,
-      [property]: value
-    }
-    setChartConfig(newConfig)
-    form.setValue(property as any, value)
-  }
-
   const handleSubmit = (values: z.infer<typeof lineChartBuilderSchema>) => {
     const result: BuilderResult = {
-      config: {
-        values,
-        chartConfig
-      },
+      config: values,
       sizing: {
         minH: 2,
         w: 2,
@@ -281,40 +238,39 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
 
   return (
     <div className="relative w-full">
-      {leftAxisMockValue ? (
-        <h3 className="absolute top-0 left-1/2 -z-10 text-[11px]" ref={leftAxisMarginMockRef}>
-          {leftAxisMockValue}
-        </h3>
-      ) : null}
-      <Card className="h-[220px] w-full overflow-hidden">
-        {chartConfig.cardTitle && <h3 className="text-md font-semibold ml-2">{chartConfig.cardTitle}</h3>}
+      <h3 className="absolute top-0 left-1/2 text-[11px] -z-10" ref={leftAxisMarginMockRef}>
+        {leftAxisMarginMockRef.current?.innerText}
+      </h3>
+      <Card className="h-[220px] w-full">
+        {form.watch('cardTitle') && <h3 className="text-md font-semibold ml-2">{form.watch('cardTitle')}</h3>}
         <div className="relative w-full h-full">
           {data.length === 0 && (
             <div className="absolute z-10 w-full h-full flex items-center justify-center bg-transparent">
               <p className="text-center text-destructive font-semibold">No data available, please select an instance and parameter to display data.</p>
             </div>
           )}
-          <div className={`relative w-full ${chartConfig.cardTitle ? 'h-[200px]' : 'h-[220px]'} ${data.length === 0 ? 'opacity-25' : 'opacity-100'}`} ref={containerRef}>
+          <div className={`relative w-full ${form.watch('cardTitle') ? 'h-[200px]' : 'h-[220px]'} ${data.length === 0 ? 'opacity-25' : 'opacity-100'}`} ref={containerRef}>
             <ResponsiveLine
               data={data}
-              margin={chartConfig.margin}
-              xScale={chartConfig.xScale as any}
-              yScale={chartConfig.yScale as any}
-              animate={chartConfig.animate}
-              yFormat={chartConfig.yFormat}
-              axisBottom={chartConfig.axisBottom}
-              axisLeft={chartConfig.axisLeft}
-              pointSize={chartConfig.pointSize}
+              margin={form.watch('margin')}
+              xFormat="time:%Y-%m-%dT%H:%M:%SZ"
+              xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
+              yScale={form.watch('yScale') as any}
+              animate={true}
+              yFormat={form.watch('toolTip.yFormat')}
+              axisBottom={form.watch('axisBottom')}
+              axisLeft={{ ...form.watch('axisLeft'), format: '~s' }}
+              pointSize={form.watch('pointSize')}
               pointColor={isDarkMode ? '#ffffff' : '#000000'}
               pointBorderWidth={0}
               colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
-              pointBorderColor={chartConfig.pointBorderColor}
+              pointBorderColor={{ from: 'serieColor' }}
               pointLabelYOffset={-12}
               enableTouchCrosshair={true}
               useMesh={true}
-              enableGridX={chartConfig.enableGridX}
-              enableGridY={chartConfig.enableGridY}
-              tooltip={(pos: PointTooltipProps) => <ChartToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}
+              enableGridX={form.watch('enableGridX')}
+              enableGridY={form.watch('enableGridY')}
+              tooltip={(pos: PointTooltipProps) => <ChartToolTip position={pos} containerRef={containerRef} xName={form.watch('toolTip.x')} yName={form.watch('toolTip.y')} />}
               theme={isDarkMode ? darkTheme : lightTheme}
             />
           </div>
@@ -322,58 +278,59 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
       </Card>
       <Card className="h-fit w-full overflow-hidden p-2 pt-0 mt-4 shadow-lg">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+              }
+            }}
+          >
             <div className="grid sm:grid-cols-2 grid-cols-1 gap-4 pt-2">
-              <FormItem>
-                <FormLabel className="flex items-center gap-2">
-                  Left Axis Legend
-                  <Checkbox
-                    checked={!!chartConfig.axisLeft.legend}
-                    onCheckedChange={(e) => {
-                      const newAxisLeft = { ...chartConfig.axisLeft, legend: e ? 'Example' : '' }
-                      setChartConfig({ ...chartConfig, axisLeft: newAxisLeft })
-                      calculateLeftAxisMargin()
-                    }}
-                  />
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="text"
-                    value={(chartConfig.axisLeft.legend as string) || ''}
-                    onChange={(e) => {
-                      const newAxisLeft = { ...chartConfig.axisLeft, legend: e.target.value }
-                      setChartConfig({ ...chartConfig, axisLeft: newAxisLeft })
-                    }}
-                    className="w-full"
-                    disabled={!chartConfig.axisLeft.legend}
-                  />
-                </FormControl>
-              </FormItem>
-              <FormItem>
-                <FormLabel className="flex items-center gap-2">
-                  Bottom Axis Legend
-                  <Checkbox
-                    checked={!!chartConfig.axisBottom.legend}
-                    onCheckedChange={(e) => {
-                      const newAxisBottom = { ...chartConfig.axisBottom, legend: e ? 'Example' : '' }
-                      setChartConfig({ ...chartConfig, axisBottom: newAxisBottom })
-                      calculateBottomAxisMargin()
-                    }}
-                  />
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="text"
-                    value={(chartConfig.axisBottom.legend as string) || ''}
-                    onChange={(e) => {
-                      const newAxisBottom = { ...chartConfig.axisBottom, legend: e.target.value }
-                      setChartConfig({ ...chartConfig, axisBottom: newAxisBottom })
-                    }}
-                    className="w-full"
-                    disabled={!chartConfig.axisBottom.legend}
-                  />
-                </FormControl>
-              </FormItem>
+              <FormField
+                control={form.control}
+                name="axisLeft.legend"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      Left Axis Legend
+                      <Checkbox
+                        checked={!!field.value}
+                        onCheckedChange={(e) => {
+                          field.onChange(e ? 'value' : '')
+                          calculateLeftAxisMargin()
+                        }}
+                      />
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="text" {...field} className="w-full" disabled={!field.value} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="axisBottom.legend"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      Bottom Axis Legend
+                      <Checkbox
+                        checked={!!field.value}
+                        onCheckedChange={(e) => {
+                          field.onChange(e ? 'date' : '')
+                          calculateBottomAxisMargin()
+                        }}
+                      />
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="text" {...field} className="w-full" disabled={!field.value} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="cardTitle"
@@ -385,7 +342,6 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
                         {...field}
                         onChange={(e) => {
                           field.onChange(e)
-                          handleConfigChange('cardTitle', e.target.value)
                         }}
                         value={field.value}
                         className="w-full"
@@ -408,7 +364,6 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
                         min={1}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value))
-                          handleConfigChange('pointSize', parseInt(e.target.value))
                         }}
                         value={field.value}
                         className="w-full"
@@ -430,8 +385,6 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
                         onValueChange={(value) => {
                           field.onChange(value)
                           form.setValue('aggregateMinutes', Math.ceil(Number(value) / 32))
-                          console.log('form values', form.getValues())
-                          // fetchData() // TODO: fetch after changing
                         }}
                       >
                         <SelectTrigger>
@@ -540,7 +493,6 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
                       <FormControl>
                         <ParameterMultiSelect
                           onClose={() => {
-                            form.trigger()
                             fetchData()
                           }}
                           options={
@@ -582,7 +534,6 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
               className="mt-4 flex items-center justify-center w-1/2 m-auto"
               onClick={() => {
                 append({ uid: '', parameters: [] })
-                form.trigger()
               }}
             >
               <IoAdd />
@@ -603,7 +554,6 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
                             {...field}
                             onChange={(e) => {
                               field.onChange(e)
-                              handleConfigChange('toolTip', { ...chartConfig.toolTip, x: e.target.value })
                             }}
                             value={field.value}
                             className="w-full"
@@ -624,7 +574,6 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
                             {...field}
                             onChange={(e) => {
                               field.onChange(e)
-                              handleConfigChange('toolTip', { ...chartConfig.toolTip, y: e.target.value })
                             }}
                             value={field.value}
                             className="w-full"
@@ -641,78 +590,18 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
               <AccordionItem value="advanced-options">
                 <AccordionTrigger>Advanced options</AccordionTrigger>
                 <AccordionContent className="w-full sm:grid-cols-2 grid-cols-1 grid gap-4">
-                  <div className="w-full">
-                    <FormLabel>Bottom Margin</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={0}
-                        value={chartConfig.margin.bottom}
-                        onChange={(e) => {
-                          const newMargin = { ...chartConfig.margin, bottom: parseInt(e.target.value) }
-                          setChartConfig({ ...chartConfig, margin: newMargin })
-                        }}
-                        className="w-full"
-                      />
-                    </FormControl>
-                  </div>
-                  <div className="w-full">
-                    <FormLabel>Left Margin</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={0}
-                        value={chartConfig.margin.left}
-                        onChange={(e) => {
-                          const newMargin = { ...chartConfig.margin, left: parseInt(e.target.value) }
-                          setChartConfig({ ...chartConfig, margin: newMargin })
-                        }}
-                        className="w-full"
-                      />
-                    </FormControl>
-                  </div>
-                  <div className="w-full">
-                    <FormLabel>Number of Ticks</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={chartConfig.axisBottom.tickValues}
-                        onChange={(e) => {
-                          const newAxisBottom = { ...chartConfig.axisBottom, tickValues: parseInt(e.target.value) }
-                          setChartConfig({ ...chartConfig, axisBottom: newAxisBottom })
-                        }}
-                        className="w-full"
-                      />
-                    </FormControl>
-                  </div>
-                  <div className="w-full">
-                    <FormLabel>Left Axis Legend Offset</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        value={chartConfig.axisLeft.legendOffset}
-                        onChange={(e) => {
-                          const newAxisLeft = { ...chartConfig.axisLeft, legendOffset: parseInt(e.target.value) }
-                          setChartConfig({ ...chartConfig, axisLeft: newAxisLeft })
-                        }}
-                        className="w-full"
-                      />
-                    </FormControl>
-                  </div>
-                  {/* <FormField
+                  <FormField
                     control={form.control}
-                    name="decimalPlaces"
+                    name="margin.bottom"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Y-Scale Decimal Places</FormLabel>
+                        <FormLabel>Bottom Margin</FormLabel>
                         <FormControl>
                           <Input
-                            {...field}
                             type="number"
                             min={0}
+                            {...field}
                             onChange={(e) => {
-                              console.log('Decimal places', e.target.value)
                               field.onChange(parseInt(e.target.value))
                             }}
                             value={field.value}
@@ -722,7 +611,142 @@ export function LineChartBuilder({ onDataSubmit, instances }: LineChartBuilderPr
                         <FormMessage />
                       </FormItem>
                     )}
-                  /> */}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="margin.left"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Left Margin</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={0}
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(parseInt(e.target.value))
+                            }}
+                            value={field.value}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="axisBottom.tickValues"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Number of Ticks</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={1}
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(parseInt(e.target.value))
+                            }}
+                            value={field.value}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="axisLeft.legendOffset"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Left Axis Legend Offset</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(parseInt(e.target.value))
+                            }}
+                            value={field.value}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {/* Field for min and max values */}
+                  <FormField
+                    control={form.control}
+                    name="yScale.min"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex gap-2 items-center justify-between">
+                          Min Value
+                          <div className="flex items-center gap-2">
+                            Auto
+                            <Checkbox
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked ? 'auto' : '')
+                              }}
+                              checked={field.value === 'auto'}
+                            />
+                          </div>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter min value"
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            disabled={field.value === 'auto'}
+                            value={field.value === 'auto' ? '' : field.value}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="yScale.max"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex gap-2 items-center justify-between">
+                          Max Value
+                          <div className="flex items-center gap-2">
+                            Auto
+                            <Checkbox
+                              onCheckedChange={(checked) => {
+                                // If value is set to auto, use the max value from the data
+                                if (checked && leftAxisMarginMockRef.current) {
+                                  leftAxisMarginMockRef.current.innerText = dataMaxValue?.toString() || ''
+                                }
+                                field.onChange(checked ? 'auto' : '')
+                              }}
+                              checked={field.value === 'auto'}
+                            />
+                          </div>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter max value"
+                            onChange={(e) => {
+                              if (Number(e.target.value) > dataMaxValue! && leftAxisMarginMockRef.current) {
+                                leftAxisMarginMockRef.current.innerText = e.target.value
+                              }
+                              field.onChange(Number(e.target.value))
+                            }}
+                            disabled={field.value === 'auto'}
+                            value={field.value === 'auto' ? '' : field.value}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

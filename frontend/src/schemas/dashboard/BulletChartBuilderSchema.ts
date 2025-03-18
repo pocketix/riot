@@ -24,7 +24,7 @@ const configSchema = z
         })
       )
       .optional(),
-    markers: z.array(z.number()).min(1, { message: 'At least one marker is required' })
+    markers: z.array(z.number()).min(1, { message: 'At least one target is required' })
   })
   .superRefine((data, ctx) => {
     if (data.function !== 'last' && !data.timeFrame) {

@@ -14,8 +14,7 @@ import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
-import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
-import type { LineChartConfig } from '@/types/LineChartConfig'
+import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -32,11 +31,6 @@ export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   transition: opacity 0.3s;
   border-radius: 12px;
 `
-
-type Config = {
-  values: ChartCardConfig
-  chartConfig: LineChartConfig
-}
 
 interface ChartCardProps {
   cardID: string
@@ -59,15 +53,14 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
   const containerRef = useRef<HTMLDivElement>(null)
   const { isDarkMode } = useDarkMode()
   const [data, setData] = useState<any[]>([])
-  const [cardConfig, setCardConfig] = useState<ChartCardConfig>()
-  const [chartConfig, setChartConfig] = useState<LineChartConfig>()
+  const [chartConfig, setChartConfig] = useState<ChartCardConfig>()
 
   const [getChartData, { data: fetchedChartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
 
   const fetchData = () => {
-    console.log('Chart config', cardConfig)
-    if (cardConfig) {
-      const instances = cardConfig?.instances
+    console.log('Chart config', chartConfig)
+    if (chartConfig) {
+      const instances = chartConfig?.instances
       if (!instances) return
       console.log('Fetching data')
       const sensors = instances.map((instance: { uid: string; parameters: { denotation: string }[] }) => ({
@@ -76,8 +69,8 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
       }))
 
       const request = {
-        from: new Date(Date.now() - Number(cardConfig.timeFrame) * 60 * 1000).toISOString(),
-        aggregateMinutes: cardConfig.aggregateMinutes,
+        from: new Date(Date.now() - Number(chartConfig.timeFrame) * 60 * 1000).toISOString(),
+        aggregateMinutes: chartConfig.aggregateMinutes,
         operation: 'last'
       }
 
@@ -92,26 +85,26 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
 
   useEffect(() => {
     if (configuration) {
-      console.log('Configuration', configuration.visualizationConfig.config)
-      const globalConfig: Config = configuration.visualizationConfig.config
-      console.log('Global config', globalConfig)
-      // console.log('Global config', globalConfig)
-      setCardConfig(globalConfig.values)
-      setChartConfig(globalConfig.chartConfig)
-      // console.log(JSON.parse(configuration.visualizationConfig))
+      const parsedConfig = lineChartBuilderSchema.safeParse(configuration.visualizationConfig.config)
+      if (parsedConfig.success) {
+        console.log('Parsed config', parsedConfig.data)
+        setChartConfig(parsedConfig.data)
+      } else {
+        toast.error('Failed to parse configuration')
+      }
     }
   }, [configuration])
 
   useEffect(() => {
-    if (cardConfig) {
+    if (chartConfig) {
       fetchData()
     }
-  }, [cardConfig])
+  }, [chartConfig])
 
   useEffect(() => {
-    if (!cardConfig) return
+    if (!chartConfig) return
     if (!fetchedChartData) return
-    const instances = cardConfig?.instances
+    const instances = chartConfig?.instances
 
     let result: any[] = []
 
@@ -170,7 +163,7 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
   }, [cardID, highlight])
 
   // TODO: Alert
-  if (!cardConfig || !chartConfig || !data) return <Skeleton className="w-full h-full" />
+  if (!chartConfig || !data) return <Skeleton className="w-full h-full" />
 
   return (
     <Container key={cardID} className={`${cardID}`}>
@@ -187,16 +180,20 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
             <ResponsiveLine
               data={data}
               margin={chartConfig.margin}
-              xScale={chartConfig.xScale as any}
+              xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
+              xFormat="time:%Y-%m-%dT%H:%M:%SZ"
               yScale={chartConfig.yScale as any}
-              animate={chartConfig.animate}
-              yFormat={chartConfig.yFormat}
+              animate={true}
+              yFormat={chartConfig.toolTip.yFormat}
               axisBottom={chartConfig.axisBottom}
-              axisLeft={chartConfig.axisLeft}
+              axisLeft={{ ...chartConfig.axisLeft, format: '~s' }}
+              // axisLeft={{ ...form.watch('axisLeft'), format: '~s' }}
               pointSize={chartConfig.pointSize}
               pointColor={isDarkMode ? '#ffffff' : '#000000'}
               pointBorderWidth={0}
               colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
+              pointBorderColor={{ from: 'serieColor' }}
+              pointLabelYOffset={-12}
               useMesh={true}
               enableGridX={chartConfig.enableGridX}
               enableGridY={chartConfig.enableGridY}

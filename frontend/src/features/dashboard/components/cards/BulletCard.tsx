@@ -160,7 +160,6 @@ export const BulletCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
       } else {
         toast.error('Failed to parse configuration')
       }
-      setChartConfig(configuration.visualizationConfig.config)
     }
   }, [configuration])
 

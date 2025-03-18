@@ -17,7 +17,7 @@ export const DashboardRoot = styled.div`
   box-sizing: border-box;
   overflow-x: hidden;
   width: 100%;
-  max-height: 100vh;
+  height: 100vh;
 `
 
 export const Navbar = styled.div`
