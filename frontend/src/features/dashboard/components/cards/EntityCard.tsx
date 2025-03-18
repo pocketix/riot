@@ -14,7 +14,7 @@ import { darkTheme, lightTheme } from '../cards/ChartThemes'
 import { toast } from 'sonner'
 import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
-import { CardEditDialog } from '../editor/CardEditDialog'
+import { CardEditDialog } from '../editors/CardEditDialog'
 
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   position: relative;

@@ -22,7 +22,22 @@ export const tableCardSchema = z.object({
           uid: z.string().min(1, { message: 'Instance is required' })
         }),
         parameter: z.object({
-          id: z.number().min(1, { message: 'Parameter is required' }),
+          id: z
+            .number()
+            .min(1, { message: 'Parameter is required' })
+            .nullable()
+            .superRefine((data, ctx) => {
+              if (data === null) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.invalid_type,
+                  expected: 'number',
+                  received: 'null',
+                  message: 'Select a parameter'
+                })
+                return z.NEVER
+              }
+              return data
+            }),
           denotation: z.string().min(1, { message: 'Parameter is required' })
         })
       })

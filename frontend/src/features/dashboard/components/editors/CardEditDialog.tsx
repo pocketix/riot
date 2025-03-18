@@ -13,6 +13,7 @@ import { useQuery } from '@apollo/client'
 import { SdInstance } from '@/generated/graphql'
 import { GET_INSTANCES } from '@/graphql/Queries'
 import { toast } from 'sonner'
+import { DialogDescription } from '@radix-ui/react-dialog'
 
 export interface CardEditDialogProps {
   entityCardConfig?: EntityCardConfig
@@ -51,7 +52,8 @@ export function CardEditDialog({ entityCardConfig, chartCardConfig, tableCardCon
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit the card configuration</DialogTitle>
+          <DialogTitle>Card editor</DialogTitle>
+          <DialogDescription>Make changes to the card configuration</DialogDescription>
         </DialogHeader>
         {renderBuilder()}
       </DialogContent>

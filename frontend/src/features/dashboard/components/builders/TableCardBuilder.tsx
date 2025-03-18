@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { z } from 'zod'
 import { tableCardSchema, TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useFieldArray, useForm } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
@@ -27,24 +27,29 @@ export interface TableCardBuilderProps {
 }
 
 export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardBuilderProps) {
-  const initialTableConfig: TableCardConfig = {
-    _cardID: 'exampleCardID',
-    title: 'Area',
-    tableTitle: 'Sensors',
-    timeFrame: '1440',
-    decimalPlaces: 2,
-    columns: [],
-    rows: []
-  }
-
-  const [tableConfig, setTableConfig] = useState<TableCardConfig>(config || initialTableConfig)
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
   const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
 
-  const { data: parametersData } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
+  const { data: parametersData, refetch: refetchParameters } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
     variables: { sdTypeId: selectedInstance?.type.id },
     skip: !selectedInstance
   })
+
+  useEffect(() => {
+    if (config) {
+      config.rows.forEach((row) => {
+        const selectedInstance = instances.find((inst) => inst.uid === row.instance.uid)
+        if (selectedInstance) {
+          refetchParameters({ sdTypeId: selectedInstance.type.id }).then((result) => {
+            setAvailableParameters((prev) => ({
+              ...prev,
+              [selectedInstance.uid]: result.data.sdType.parameters
+            }))
+          })
+        }
+      })
+    }
+  }, [config, instances, refetchParameters])
 
   useEffect(() => {
     if (parametersData && selectedInstance) {
@@ -57,7 +62,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
 
   const form = useForm<z.infer<typeof tableCardSchema>>({
     resolver: zodResolver(tableCardSchema),
-    defaultValues: {
+    defaultValues: config || {
       title: 'Area',
       tableTitle: 'Sensors',
       timeFrame: '1440',
@@ -67,78 +72,23 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
     }
   })
 
-  const handleConfigChange = (property: string, value: any) => {
-    const newConfig = {
-      ...tableConfig,
-      [property]: value
-    }
-    setTableConfig(newConfig)
-  }
+  const {
+    fields: columnFields,
+    append: appendColumn,
+    remove: removeColumn
+  } = useFieldArray({
+    control: form.control,
+    name: 'columns'
+  })
 
-  const handleColumnChange = (index: number, property: string, value: any) => {
-    const newColumns = [...tableConfig.columns]
-    newColumns[index] = {
-      ...newColumns[index],
-      [property]: value
-    }
-    handleConfigChange('columns', newColumns)
-  }
-
-  const handleRowChange = (index: number, property: string, value: any) => {
-    const newRows = [...tableConfig.rows]
-    newRows[index] = {
-      ...newRows[index],
-      [property]: value
-    }
-    handleConfigChange('rows', newRows)
-  }
-
-  const addColumn = () => {
-    const newColumns = [...tableConfig.columns, { header: '', function: '' }]
-    form.trigger('columns')
-    handleConfigChange('columns', newColumns)
-  }
-
-  const removeColumn = (index: number) => {
-    const newColumns = tableConfig.columns.filter((_, i) => i !== index)
-    form.setValue('columns', newColumns)
-    form.trigger('columns')
-    handleConfigChange('columns', newColumns)
-  }
-
-  const addRow = () => {
-    const newRows = [...tableConfig.rows, { name: '', instance: null, parameter: null }]
-    form.trigger('rows')
-    handleConfigChange('rows', newRows)
-  }
-
-  const removeRow = (index: number) => {
-    const newRows = tableConfig.rows.filter((_, i) => i !== index)
-    form.setValue(
-      'rows',
-      newRows.map((row) => ({
-        ...row,
-        instance: { uid: row.instance?.uid! },
-        parameter: { id: row.parameter?.id!, denotation: row.parameter?.denotation! }
-      }))
-    )
-    form.trigger('rows')
-    handleConfigChange('rows', newRows)
-  }
-
-  const handleParameterChange = (rowIndex: number, parameter: SdParameter) => {
-    if (!parameter) return
-    const newRows = [...tableConfig.rows]
-    newRows[rowIndex].parameter = parameter
-    handleConfigChange('rows', newRows)
-  }
-
-  const handleInstanceChange = (rowIndex: number, instance: SdInstance) => {
-    if (!instance) return
-    handleRowChange(rowIndex, 'instance', instance)
-    setSelectedInstance(instance)
-  }
-
+  const {
+    fields: rowFields,
+    append: appendRow,
+    remove: removeRow
+  } = useFieldArray({
+    control: form.control,
+    name: 'rows'
+  })
   const handleSubmit = (values: z.infer<typeof tableCardSchema>) => {
     const result: BuilderResult = {
       config: values,
@@ -153,25 +103,25 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
   return (
     <div className="w-full">
       <Card className="h-fit w-full overflow-hidden p-2 pt-0">
-        {tableConfig.title && <h3 className="text-lg font-semibold">{tableConfig.title}</h3>}
+        {form.watch('title') && <h3 className="text-lg font-semibold">{form.watch('title')}</h3>}
         <table className="w-full h-fit">
           <thead className="border-b-[2px]">
             <tr>
-              <th className="text-left text-md">{tableConfig.tableTitle}</th>
-              {tableConfig.columns.map((column, index) => (
+              <th className="text-left text-md">{form.watch('tableTitle')}</th>
+              {columnFields.map((_, index) => (
                 <th key={index} className="text-center text-xs">
-                  {column.header}
+                  {form.watch(`columns.${index}.header`)}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {tableConfig.rows.map((row, rowIndex) => (
+            {rowFields.map((_, rowIndex) => (
               <tr key={rowIndex}>
-                <td className="text-sm">{row.name}</td>
-                {tableConfig.columns.map((_, columnIndex) => (
+                <td className="text-sm">{form.watch(`rows.${rowIndex}.name`)}</td>
+                {columnFields.map((_, columnIndex) => (
                   <td key={columnIndex} className="text-sm text-center">
-                    {(Math.random() * 100).toFixed(tableConfig.decimalPlaces ?? 2)}
+                    {(Math.random() * 100).toFixed(form.watch('decimalPlaces') ?? 2)}
                   </td>
                 ))}
               </tr>
@@ -181,7 +131,14 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
       </Card>
       <Card className="h-fit w-full overflow-hidden p-2 pt-0 mt-4 shadow-lg">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+              }
+            }}
+          >
             <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
               <FormField
                 control={form.control}
@@ -190,15 +147,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                   <FormItem>
                     <FormLabel>Card Title</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(e)
-                          handleConfigChange('title', e.target.value)
-                        }}
-                        value={field.value}
-                        className="w-full"
-                      />
+                      <Input value={field.value} onChange={field.onChange} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -211,15 +160,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                   <FormItem>
                     <FormLabel>Table Title</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(e)
-                          handleConfigChange('tableTitle', e.target.value)
-                        }}
-                        value={field.value}
-                        className="w-full"
-                      />
+                      <Input value={field.value} onChange={field.onChange} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -250,18 +191,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                       </div>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        min={0}
-                        max={5}
-                        onChange={(e) => {
-                          field.onChange(parseInt(e.target.value))
-                          handleConfigChange('decimalPlaces', e.target.value)
-                        }}
-                        value={field.value}
-                        className="w-full"
-                      />
+                      <Input value={field.value} onChange={field.onChange} type="number" min={0} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -274,14 +204,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                   <FormItem>
                     <FormLabel>Time Frame</FormLabel>
                     <FormControl>
-                      <Select
-                        value={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value)
-                          console.log('form values', form.getValues())
-                          // fetchData() // TODO: fetch after changing
-                        }}
-                      >
+                      <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a time frame" />
                         </SelectTrigger>
@@ -305,8 +228,8 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
               <AccordionItem value="columns">
                 <AccordionTrigger>Columns</AccordionTrigger>
                 <AccordionContent className="w-full flex flex-col mt-2 px-1 border-2 rounded-md p-2">
-                  {tableConfig.columns.map((_, index) => (
-                    <div key={index} className="flex flex-col">
+                  {columnFields.map((column, index) => (
+                    <div key={column.id} className="flex flex-col">
                       <div className="flex gap-2 items-center justify-between w-full">
                         <h4 className="font-semibold">Column {index + 1}</h4>
                         <Button onClick={() => removeColumn(index)} variant={'destructive'} size={'icon'}>
@@ -314,7 +237,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                         </Button>
                       </div>
                       <Separator className="my-2" />
-                      <div key={index} className="grid sm:grid-cols-2 grid-cols-1 gap-4">
+                      <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
                         <FormField
                           control={form.control}
                           name={`columns.${index}.header`}
@@ -323,16 +246,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                               <FormControl>
                                 <Label>
                                   Header
-                                  <Input
-                                    {...field}
-                                    onChange={(e) => {
-                                      field.onChange(e)
-                                      handleColumnChange(index, 'header', e.target.value)
-                                    }}
-                                    value={field.value}
-                                    placeholder="Header"
-                                    className="w-full"
-                                  />
+                                  <Input value={field.value} onChange={field.onChange} placeholder="Header" className="w-full" />
                                 </Label>
                               </FormControl>
                               <FormMessage />
@@ -347,14 +261,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                               <FormControl>
                                 <Label>
                                   Function
-                                  <Select
-                                    {...field}
-                                    onValueChange={(value) => {
-                                      field.onChange(value)
-                                      handleColumnChange(index, 'function', value)
-                                    }}
-                                    value={field.value}
-                                  >
+                                  <Select value={field.value} onValueChange={field.onChange}>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select a function" />
                                     </SelectTrigger>
@@ -376,7 +283,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                       <Separator className="my-2" />
                     </div>
                   ))}
-                  <Button onClick={addColumn} variant={'green'} size={'icon'} className="flex items-center justify-center w-1/2 m-auto">
+                  <Button onClick={() => appendColumn({ header: '', function: '' })} variant={'green'} size={'icon'} className="flex items-center justify-center w-1/2 m-auto">
                     <IoAdd />
                     Add Column
                   </Button>
@@ -387,8 +294,8 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
               <AccordionItem value="rows">
                 <AccordionTrigger>Rows</AccordionTrigger>
                 <AccordionContent className="w-full flex flex-col gap-4 mt-2 border-2 rounded-md p-2">
-                  {tableConfig.rows.map((row, rowIndex) => (
-                    <div key={rowIndex} className="flex flex-col">
+                  {rowFields.map((row, rowIndex) => (
+                    <div key={row.id} className="flex flex-col">
                       <div className="flex gap-2 items-center justify-between w-full">
                         <h4 className="font-semibold">Row {rowIndex + 1}</h4>
                         <Button onClick={() => removeRow(rowIndex)} variant={'destructive'} size={'icon'}>
@@ -404,16 +311,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                             <FormControl>
                               <Label>
                                 Row Name
-                                <Input
-                                  {...field}
-                                  onChange={(e) => {
-                                    field.onChange(e)
-                                    handleRowChange(rowIndex, 'name', e.target.value)
-                                  }}
-                                  value={field.value}
-                                  placeholder="Row Name"
-                                  className="w-full"
-                                />
+                                <Input value={field.value} onChange={field.onChange} placeholder="Row Name" className="w-full" />
                               </Label>
                             </FormControl>
                             <FormMessage />
@@ -429,12 +327,11 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                               <Label>
                                 Instance
                                 <Select
-                                  {...field}
                                   onValueChange={(value) => {
                                     const instance = instances.find((instance) => instance.uid === value) || null
                                     if (!instance) return
                                     field.onChange(instance.uid)
-                                    handleInstanceChange(rowIndex, instance)
+                                    setSelectedInstance(instance)
                                   }}
                                   value={field.value}
                                 >
@@ -457,7 +354,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                       />
                       <FormField
                         control={form.control}
-                        name={`rows.${rowIndex}.parameter`}
+                        name={`rows.${rowIndex}.parameter.id`}
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
@@ -465,20 +362,19 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                                 Parameter
                                 <Select
                                   onValueChange={(value) => {
-                                    const parameter = availableParameters[row.instance?.uid!]?.find((param) => param.id === Number(value)) || null
+                                    const parameter = availableParameters[form.watch(`rows.${rowIndex}.instance.uid`)]?.find((param) => param.id === Number(value)) || null
                                     if (!parameter) return
-                                    const fieldValue = { ...parameter, id: parameter.id, denotation: parameter.denotation }
-                                    field.onChange(fieldValue)
-                                    handleParameterChange(rowIndex, parameter)
+                                    field.onChange(parameter.id)
+                                    form.setValue(`rows.${rowIndex}.parameter.denotation`, parameter.denotation)
                                   }}
-                                  value={field.value?.id}
-                                  disabled={!availableParameters[row.instance?.uid!]}
+                                  value={field.value || ''}
+                                  disabled={!availableParameters[form.watch(`rows.${rowIndex}.instance.uid`)]}
                                 >
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select a parameter" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {availableParameters[row.instance?.uid!]?.map((parameter) => (
+                                    {availableParameters[form.watch(`rows.${rowIndex}.instance.uid`)]?.map((parameter) => (
                                       <SelectItem key={parameter.id} value={parameter.id}>
                                         {parameter.denotation}
                                       </SelectItem>
@@ -493,7 +389,12 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                       />
                     </div>
                   ))}
-                  <Button onClick={addRow} variant={'green'} size={'icon'} className="flex items-center justify-center w-1/2 m-auto">
+                  <Button
+                    onClick={() => appendRow({ name: '', instance: { uid: '' }, parameter: { id: null, denotation: '' } })}
+                    variant={'green'}
+                    size={'icon'}
+                    className="flex items-center justify-center w-1/2 m-auto"
+                  >
                     <IoAdd /> Add Row
                   </Button>
                 </AccordionContent>
@@ -501,14 +402,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
             </Accordion>
             {form.formState.errors.rows && <FormMessage>{form.formState.errors.rows.message}</FormMessage>}
             {form.formState.errors.rows?.root && <FormMessage>{form.formState.errors.rows.root?.message}</FormMessage>}
-            <Button
-              type="submit"
-              className="w-fit mt-4"
-              onClick={() => {
-                console.log('Form errors:', form.formState.errors)
-                console.log('Form state:', form.getValues())
-              }}
-            >
+            <Button type="submit" className="w-fit mt-4">
               Submit
             </Button>
           </form>

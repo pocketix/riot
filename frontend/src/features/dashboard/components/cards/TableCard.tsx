@@ -1,4 +1,4 @@
-import { Container, DragHandle } from '@/styles/dashboard/CardGlobal'
+import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/CardGlobal'
 import { AiOutlineDrag } from 'react-icons/ai'
 import styled from 'styled-components'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -8,7 +8,8 @@ import { AccessibilityContainer } from './AccessibilityContainer'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { useLazyQuery } from '@apollo/client'
 import { Skeleton } from '@/components/ui/skeleton'
-import { TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
+import { TableCardConfig, tableCardSchema } from '@/schemas/dashboard/TableBuilderSchema'
+import { CardEditDialog } from '../editors/CardEditDialog'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -99,16 +100,14 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
   }, [cardID, highlight])
 
   useEffect(() => {
-    const parseConfig = () => {
-      if (!configuration) return
-      console.log('CONFIGURATION', configuration)
-
-      const config = configuration.visualizationConfig.config as TableCardConfig
-      if (!config) return
-      setTableConfig(config)
+    if (configuration) {
+      const parsedConfig = tableCardSchema.safeParse(configuration.visualizationConfig.config)
+      if (parsedConfig.success) {
+        setTableConfig(parsedConfig.data)
+      } else {
+        console.error('Failed to parse configuration')
+      }
     }
-
-    parseConfig()
   }, [configuration])
 
   function combineSensors(sensors: { key: string; values: string }[]): { key: string; values: string[] }[] {
@@ -203,7 +202,12 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
           <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 border-2 rounded-lg" />
         </DragHandle>
       )}
-      {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
+      {editModeEnabled && (
+        <DeleteEditContainer>
+          <CardEditDialog tableCardConfig={tableConfig} />
+          <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+        </DeleteEditContainer>
+      )}
       <div className="pl-2 pt-2 font-semibold">{tableConfig.title}</div>
       <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
         <table className="w-full h-fit">
