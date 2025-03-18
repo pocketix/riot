@@ -46,9 +46,10 @@ interface ChartCardProps {
   width: number
   configuration: any
   breakpoint: string // TODO: unused
+  beingResized: boolean // TODO: unused
 }
 
-export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration }: ChartCardProps) => {
+export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, beingResized }: ChartCardProps) => {
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const { isDarkMode } = useDarkMode()
@@ -163,7 +164,7 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
   }, [cardID, highlight])
 
   // TODO: Alert
-  if (!chartConfig || !data) return <Skeleton className="w-full h-full" />
+  if (!chartConfig || !data || beingResized) return <Skeleton className="w-full h-full" />
 
   return (
     <Container key={cardID} className={`${cardID}`}>

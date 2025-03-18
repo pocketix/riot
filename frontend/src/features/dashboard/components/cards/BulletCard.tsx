@@ -42,11 +42,12 @@ interface BulletCardProps {
   setLayout: (layout: Layout[]) => void
   handleDeleteItem: (id: string) => void
   setHighlightedCardID: (id: string) => void
+  beingResized: boolean
 
   configuration: any
 }
 
-export const BulletCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration }: BulletCardProps) => {
+export const BulletCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, beingResized }: BulletCardProps) => {
   const { isDarkMode } = useDarkMode()
   const [chartConfig, setChartConfig] = useState<BulletCardConfig>()
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
@@ -163,7 +164,7 @@ export const BulletCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
     }
   }, [configuration])
 
-  if (!chartConfig || !data) return <Skeleton className="w-full h-full" />
+  if (!chartConfig || !data || beingResized) return <Skeleton className="w-full h-full" />
 
   return (
     <Container key={cardID} className={`${cardID}`}>

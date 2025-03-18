@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/card'
 import { MyHandle } from './components/cards/DragHandle'
 import { GridItem } from '@/types/GridItem'
 import { utils } from 'react-grid-layout'
+import { EntityCard } from './components/cards/EntityCard'
 
 const Dashboard = () => {
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), [])
@@ -30,6 +31,7 @@ const Dashboard = () => {
   const [width, setWidth] = useState<number>(0)
   const [highlightedCardID, setHighlightedCardID] = useState<string | null>(null)
   const [savedLayout, setSavedLayout] = useState<Layouts>()
+  const [resizeCardID, setResizeCardID] = useState<string | null>(null)
 
   // Default layout
   const defaultLayouts: Layouts = {
@@ -340,6 +342,13 @@ const Dashboard = () => {
           isDraggable={editMode}
           isResizable={editMode}
           isDroppable={editMode}
+          onResizeStart={(_layouts, _layout, newItem) => {
+            console.log('Dragging card with ID:', newItem.i)
+            setResizeCardID(newItem.i)
+          }}
+          onResizeStop={() => {
+            setResizeCardID(null)
+          }}
           containerPadding={[10, 10]}
           compactType={'vertical'}
           verticalCompact={true}
@@ -396,6 +405,7 @@ const Dashboard = () => {
                       width={width}
                       setHighlightedCardID={setHighlightedCardID}
                       configuration={details[item.i]}
+                      beingResized={resizeCardID === item.i}
                     />
                   </Card>
                 )
@@ -423,6 +433,7 @@ const Dashboard = () => {
                       width={width}
                       setHighlightedCardID={setHighlightedCardID}
                       configuration={details[item.i]}
+                      beingResized={resizeCardID === item.i}
                     />
                   </Card>
                 )
@@ -451,11 +462,38 @@ const Dashboard = () => {
                       setHighlightedCardID={setHighlightedCardID}
                       configuration={details[item.i]}
                       breakpoint={currentBreakpoint}
+                      beingResized={resizeCardID === item.i}
                     />
                   </Card>
                 )
               case 'switch':
               case 'entitycard':
+                return (
+                  <Card key={item.i} className={`${highlightedCardID === item.i ? 'z-10' : ''}`}>
+                    <EntityCard
+                      key={item.i}
+                      cardID={item.i}
+                      title={`Item ${item.i}`}
+                      layout={layouts![currentBreakpoint]}
+                      setLayout={(newLayout) => {
+                        const updatedLayouts = {
+                          ...layouts,
+                          [currentBreakpoint]: newLayout
+                        }
+                        setLayouts(updatedLayouts)
+                        saveToLS('layouts', updatedLayouts)
+                      }}
+                      editModeEnabled={editMode}
+                      breakPoint={currentBreakpoint}
+                      cols={cols}
+                      handleDeleteItem={handleDeleteItem}
+                      height={rowHeight}
+                      width={width}
+                      setHighlightedCardID={setHighlightedCardID}
+                      configuration={details[item.i]}
+                    />
+                  </Card>
+                )
               default:
                 return null
             }

@@ -39,12 +39,13 @@ interface TableCardProps {
   height: number
   width: number
   setHighlightedCardID: (id: string) => void
+  beingResized: boolean
 
   // Data
   configuration: any
 }
 
-export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration }: TableCardProps) => {
+export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, beingResized }: TableCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
@@ -165,6 +166,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
             console.log('Function name', functionName, 'Column index', columnIndex)
             console.log('Column index', columnIndex)
             // find each device in the column data for a specific function
+            // TODO: Finding by deviceId may not be sufficient ! There can be multiple rows for the same device
             const instanceData = column.find((data: any) => data.deviceId === row.instance.uid)
             if (instanceData) {
               // parse the stringified data
@@ -190,7 +192,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
     fetchDataAndPopulate()
   }, [tableConfig])
 
-  if (!tableConfig || !tableConfig.columns || !tableData) {
+  if (!tableConfig || !tableConfig.columns || !tableData || beingResized) {
     return <Skeleton className="w-full h-full" />
   }
 
@@ -202,7 +204,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
         </DragHandle>
       )}
       {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
-      <div className="pl-4 pt-2 font-semibold">{tableConfig.title}</div>
+      <div className="pl-2 pt-2 font-semibold">{tableConfig.title}</div>
       <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
         <table className="w-full h-fit">
           <thead className="border-b-[2px]">

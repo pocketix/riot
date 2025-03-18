@@ -28,7 +28,8 @@ export const entityCardSchema = z.object({
                   return z.NEVER
                 }
                 return data
-              })
+              }),
+            denotation: z.string().min(1, { message: 'Parameter denotation is required' })
           }),
           visualization: z
             .enum(['sparkline', 'immediate', 'switch'], { message: 'Invalid visualization type' })

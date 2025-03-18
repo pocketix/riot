@@ -88,22 +88,11 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
     }
   ]
 
-  const handleInstanceChange = (rowIndex: number, instance: SdInstance) => {
-    if (!instance) return
-    setSelectedInstance(instance)
-    form.setValue(`rows.${rowIndex}.instance`, { uid: instance.uid })
-  }
-
-  const handleParameterChange = (rowIndex: number, parameter: SdParameter) => {
-    if (!parameter) return
-    form.setValue(`rows.${rowIndex}.parameter`, { id: parameter.id })
-  }
-
   const handleSubmit = (values: z.infer<typeof entityCardSchema>) => {
-    const result : BuilderResult = {
+    const result: BuilderResult = {
       config: values,
       sizing: {
-        w: 2,
+        w: 1,
         h: Math.max(values.rows.length / 2, 1)
       }
     }
@@ -213,7 +202,9 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
                                 const instance = instances.find((instance) => instance.uid === value) || null
                                 if (!instance) return
                                 field.onChange(instance.uid)
-                                handleInstanceChange(rowIndex, instance)
+                                setSelectedInstance(instance)
+                                form.setValue(`rows.${rowIndex}.parameter.id`, null)
+                                form.setValue(`rows.${rowIndex}.parameter.denotation`, '')
                               }}
                               value={field.value}
                             >
@@ -245,7 +236,9 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
                                 const parameter = availableParameters[form.watch(`rows.${rowIndex}.instance.uid`)]?.find((param) => param.id === Number(value)) || null
                                 if (!parameter) return
                                 field.onChange(parameter.id)
-                                handleParameterChange(rowIndex, parameter)
+                                console.log('Parameter denotation', parameter.denotation)
+                                form.setValue(`rows.${rowIndex}.parameter.denotation`, parameter.denotation)
+                                console.log('Form values', form.getValues())
                               }}
                               value={field.value || ''}
                               disabled={!availableParameters[form.watch(`rows.${rowIndex}.instance.uid`)]}
@@ -334,7 +327,7 @@ export function EntityCardBuilder({ onDataSubmit, instances }: EntityCardBuilder
             <Button
               type="button"
               onClick={() => {
-                append({ name: '', instance: { uid: '' }, parameter: { id: null }, visualization: null, timeFrame: '' })
+                append({ name: '', instance: { uid: '' }, parameter: { id: null, denotation: '' }, visualization: null, timeFrame: '' })
               }}
               variant={'green'}
               size={'icon'}
