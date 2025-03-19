@@ -19,3 +19,10 @@ type SDCommandInvocation struct {
 	CommandID      uint32 // Which command was called
 	SDInstanceID   uint32 // To which device instance the invocation belongs
 }
+
+type SDCommand struct {
+	ID          uint32
+	Name        string
+	Description string
+	SdTypeID    uint32
+}

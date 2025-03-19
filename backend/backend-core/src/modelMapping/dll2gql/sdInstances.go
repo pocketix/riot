@@ -52,3 +52,25 @@ func ToDLLModelSDCommandInvocation(input graphQLModel.SDCommandInvocationInput) 
 		SDInstanceID:   input.SdInstanceID,
 	}
 }
+
+func ToDLLModelSDCommand(input graphQLModel.SDCommandInput) dllModel.SDCommand {
+	var description string
+	if input.Description != nil {
+		description = *input.Description
+	}
+
+	return dllModel.SDCommand{
+		Name:        input.Name,
+		Description: description,
+		SdTypeID:    input.SdTypeID,
+	}
+}
+
+func ToGraphQLModelSDCommand(command dllModel.SDCommand) graphQLModel.SDCommand {
+	return graphQLModel.SDCommand{
+		ID:          command.ID,
+		Name:        command.Name,
+		Description: &command.Description, // Musíme vrátit pointer na string
+		SdTypeID:    command.SdTypeID,
+	}
+}

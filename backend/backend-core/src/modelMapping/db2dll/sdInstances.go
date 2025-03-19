@@ -42,3 +42,12 @@ func ToDLLModelSDCommandInvocation(command dbModel.SDCommandInvocationEntity) dl
 		SDInstanceID:   command.SDInstanceID,
 	}
 }
+
+func ToDLLModelSDCommand(commandEntity dbModel.SDCommandEntity) dllModel.SDCommand {
+	return dllModel.SDCommand{
+		ID:          commandEntity.ID,
+		Name:        commandEntity.Name,
+		Description: commandEntity.Description,
+		SdTypeID:    commandEntity.SdTypeID,
+	}
+}

@@ -1,8 +1,9 @@
 package dbModel
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type KPIDefinitionEntity struct {
@@ -174,11 +175,11 @@ func (UserConfigEntity) TableName() string {
 }
 
 type SDCommandEntity struct {
-	ID         uint32 `gorm:"column:id;primaryKey;not null"`
-	SDTypeID   uint32 `gorm:"column:sd_type_id;not null"` // One type of smart device has the same set of commands
-	Denotation string `gorm:"column:denotation;not null"`
-	Type       string `gorm:"column:type;not null"`
-	Payload    string `gorm:"column:payload;not null"`
+	ID          uint32 `gorm:"column:id;primaryKey;not null"`
+	SdTypeID    uint32 `gorm:"column:sd_type_id;not null"` // One type of smart device has the same set of commands
+	Name        string `gorm:"column:denotation;not null"`
+	Type        string `gorm:"column:type;not null"`
+	Description string `gorm:"column:payload;not null"`
 }
 
 func (SDCommandEntity) TableName() string {

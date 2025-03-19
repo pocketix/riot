@@ -103,19 +103,38 @@ func (r *mutationResolver) DeleteUserConfig(ctx context.Context, userID uint32) 
 }
 
 func (r *mutationResolver) CreateSDCommand(ctx context.Context, input graphQLModel.SDCommandInput) (graphQLModel.SDCommand, error) {
-	panic(fmt.Errorf("not implemented: CreateSDCommand - CreateSDCommand"))
+	createSDCommandResult := domainLogicLayer.CreateSDCommand(input)
+	if createSDCommandResult.IsFailure() {
+		log.Printf("Error occurred (create SD command): %s\n", createSDCommandResult.GetError().Error())
+		return graphQLModel.SDCommand{}, createSDCommandResult.GetError()
+	}
+	return createSDCommandResult.Unwrap()
 }
 
 func (r *mutationResolver) UpdateSDCommand(ctx context.Context, id uint32, name *string, description *string) (graphQLModel.SDCommand, error) {
-	panic(fmt.Errorf("not implemented: UpdateSDCommand - updateSDCommand"))
+	updateSDCommandResult := domainLogicLayer.UpdateSDCommand(id, name, description)
+	if updateSDCommandResult.IsFailure() {
+		log.Printf("Error occurred (update SD command): %s\n", updateSDCommandResult.GetError().Error())
+		return graphQLModel.SDCommand{}, updateSDCommandResult.GetError()
+	}
+	return updateSDCommandResult.Unwrap()
 }
 
 func (r *mutationResolver) DeleteSDCommand(ctx context.Context, id uint32) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteSDCommand - deleteSDCommand"))
+	if err := domainLogicLayer.DeleteSDCommand(id); err != nil {
+		log.Printf("Error occurred (delete SD command): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *mutationResolver) CreateSDCommandInvocation(ctx context.Context, input graphQLModel.SDCommandInvocationInput) (graphQLModel.SDCommandInvocation, error) {
-	panic(fmt.Errorf("not implemented: CreateSDCommandInvocation - createSDCommandInvocation"))
+	createSDCommandInvocationResult := domainLogicLayer.CreateSDCommandInvocation(input)
+	if createSDCommandInvocationResult.IsFailure() {
+		log.Printf("Error occurred (create SD command invocation): %s\n", createSDCommandInvocationResult.GetError().Error())
+		return graphQLModel.SDCommandInvocation{}, createSDCommandInvocationResult.GetError()
+	}
+	return createSDCommandInvocationResult.Unwrap()
 }
 
 func (r *mutationResolver) InvokeSDCommand(ctx context.Context, id uint32) (bool, error) {
@@ -212,15 +231,30 @@ func (r *queryResolver) UserConfig(ctx context.Context, id uint32) (graphQLModel
 }
 
 func (r *queryResolver) SdCommand(ctx context.Context, id uint32) (graphQLModel.SDCommand, error) {
-	panic(fmt.Errorf("not implemented: SdCommand - SdCommand"))
+	getSDCommandResult := domainLogicLayer.GetSDCommand(id)
+	if getSDCommandResult.IsFailure() {
+		log.Printf("Error occurred (get SD command): %s\n", getSDCommandResult.GetError().Error())
+		return graphQLModel.SDCommand{}, getSDCommandResult.GetError()
+	}
+	return getSDCommandResult.Unwrap()
 }
 
 func (r *queryResolver) SdCommands(ctx context.Context) ([]graphQLModel.SDCommand, error) {
-	panic(fmt.Errorf("not implemented: SdCommands - sdCommands"))
+	getSDCommandsResult := domainLogicLayer.GetSDCommands()
+	if getSDCommandsResult.IsFailure() {
+		log.Printf("Error occurred (get SD commands): %s\n", getSDCommandsResult.GetError().Error())
+		return nil, getSDCommandsResult.GetError()
+	}
+	return getSDCommandsResult.Unwrap()
 }
 
 func (r *queryResolver) SdCommandInvocation(ctx context.Context, id uint32) (graphQLModel.SDCommandInvocation, error) {
-	panic(fmt.Errorf("not implemented: SdCommandInvocation - sdCommandInvocation"))
+	getSDCommandInvocationResult := domainLogicLayer.GetSDCommandInvocation(id)
+	if getSDCommandInvocationResult.IsFailure() {
+		log.Printf("Error occurred (get SD command invocation): %s\n", getSDCommandInvocationResult.GetError().Error())
+		return graphQLModel.SDCommandInvocation{}, getSDCommandInvocationResult.GetError()
+	}
+	return getSDCommandInvocationResult.Unwrap()
 }
 
 func (r *queryResolver) SdCommandInvocations(ctx context.Context) ([]graphQLModel.SDCommandInvocation, error) {

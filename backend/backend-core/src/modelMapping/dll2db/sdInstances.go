@@ -45,3 +45,12 @@ func ToDBModelEntitySDCommandInvocation(command dllModel.SDCommandInvocation) db
 		SDInstanceID:   command.SDInstanceID,
 	}
 }
+
+func ToDBModelEntitySDCommand(command dllModel.SDCommand) dbModel.SDCommandEntity {
+	return dbModel.SDCommandEntity{
+		ID:          command.ID,
+		Name:        command.Name,
+		Description: command.Description,
+		SdTypeID:    command.SdTypeID,
+	}
+}

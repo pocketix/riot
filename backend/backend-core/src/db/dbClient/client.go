@@ -55,6 +55,11 @@ type RelationalDatabaseClient interface {
 	LoadSDCommandInvocations() sharedUtils.Result[[]dllModel.SDCommandInvocation]
 	PersistSDCommandInvocation(sdCommandInvocation *dllModel.SDCommandInvocation) sharedUtils.Result[uint32]
 	InvokeCommand(id uint32) sharedUtils.Result[bool]
+	CreateSDCommand(sdCommand dllModel.SDCommand) sharedUtils.Result[uint32]
+	LoadSDCommand(id uint32) sharedUtils.Result[dllModel.SDCommand]
+	PersistSDCommand(sdCommand dllModel.SDCommand) sharedUtils.Result[uint32]
+	DeleteSDCommand(id uint32) error
+	LoadSDCommands() sharedUtils.Result[[]dllModel.SDCommand]
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -111,6 +116,52 @@ func (r *relationalDatabaseClientImpl) InvokeCommand(id uint32) sharedUtils.Resu
 	}
 	fmt.Printf("Invoking command with ID: %d\n", id)
 	return sharedUtils.NewSuccessResult[bool](true)
+}
+
+func (r *relationalDatabaseClientImpl) CreateSDCommand(sdCommand dllModel.SDCommand) sharedUtils.Result[uint32] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	entity := dll2db.ToDBModelEntitySDCommand(sdCommand)
+	if err := dbUtil.PersistEntityIntoDB(r.db, &entity); err != nil {
+		return sharedUtils.NewFailureResult[uint32](err)
+	}
+	return sharedUtils.NewSuccessResult[uint32](entity.ID)
+}
+
+func (r *relationalDatabaseClientImpl) LoadSDCommand(id uint32) sharedUtils.Result[dllModel.SDCommand] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	result := dbUtil.LoadEntityFromDB[dbModel.SDCommandEntity](r.db, dbUtil.Where("id = ?", id))
+	if result.IsFailure() {
+		return sharedUtils.NewFailureResult[dllModel.SDCommand](result.GetError())
+	}
+	return sharedUtils.NewSuccessResult[dllModel.SDCommand](db2dll.ToDLLModelSDCommand(result.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) PersistSDCommand(sdCommand dllModel.SDCommand) sharedUtils.Result[uint32] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	entity := dll2db.ToDBModelEntitySDCommand(sdCommand)
+	if err := dbUtil.PersistEntityIntoDB(r.db, &entity); err != nil {
+		return sharedUtils.NewFailureResult[uint32](err)
+	}
+	return sharedUtils.NewSuccessResult[uint32](entity.ID)
+}
+
+func (r *relationalDatabaseClientImpl) DeleteSDCommand(id uint32) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.SDCommandEntity](r.db, id)
+}
+
+func (r *relationalDatabaseClientImpl) LoadSDCommands() sharedUtils.Result[[]dllModel.SDCommand] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	result := dbUtil.LoadEntitiesFromDB[dbModel.SDCommandEntity](r.db)
+	if result.IsFailure() {
+		return sharedUtils.NewFailureResult[[]dllModel.SDCommand](result.GetError())
+	}
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(result.GetPayload(), db2dll.ToDLLModelSDCommand))
 }
 
 func (r *relationalDatabaseClientImpl) setup() {
