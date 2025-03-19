@@ -5,8 +5,8 @@ import { Card } from '@/components/ui/card'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
 import { SdParameterType } from '@/generated/graphql'
-import { EntityCardConfig } from '@/types/EntityCardConfig'
 import { Switch } from '@/components/ui/switch'
+import { EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
 
 export const VisualizationGalleryContainer = styled.div`
   display: flex;
@@ -157,25 +157,39 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
   ]
 
   const entityCardConfig: EntityCardConfig = {
-    _cardID: 'exampleCardID',
     title: 'Entity Card',
     rows: [
       {
         name: 'Sensor2',
-        instance: null,
-        parameter: null,
+        instance: {
+          uid: 'sensor2'
+        },
+        parameter: {
+          id: 1,
+          denotation: 'temperature'
+        },
         visualization: 'sparkline'
       },
       {
         name: 'Bathroom',
-        instance: null,
-        parameter: null,
+        instance: {
+          uid: 'sensor2'
+        },
+        parameter: {
+          id: 1,
+          denotation: 'temperature'
+        },
         visualization: 'immediate'
       },
       {
         name: 'Sensor1',
-        instance: null,
-        parameter: null,
+        instance: {
+          uid: 'sensor2'
+        },
+        parameter: {
+          id: 1,
+          denotation: 'temperature'
+        },
         visualization: 'switch'
       }
     ]

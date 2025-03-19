@@ -37,7 +37,7 @@ const Grid = styled.div`
 `;
 
 export default function DeviceTypesSettings() {
-  const { data, loading, refetch } = useQuery<
+  const { data, loading } = useQuery<
     SdTypesQuery,
     SdTypesQueryVariables
   >(GET_SD_TYPES);

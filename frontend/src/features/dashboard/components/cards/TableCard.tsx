@@ -10,6 +10,7 @@ import { useLazyQuery } from '@apollo/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TableCardConfig, tableCardSchema } from '@/schemas/dashboard/TableBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
+import { BuilderResult } from '../VisualizationBuilder'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -41,12 +42,13 @@ interface TableCardProps {
   width: number
   setHighlightedCardID: (id: string) => void
   beingResized: boolean
+  handleSaveEdit: (config: BuilderResult<TableCardConfig>) => void
 
   // Data
   configuration: any
 }
 
-export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, beingResized }: TableCardProps) => {
+export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, beingResized, handleSaveEdit }: TableCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
@@ -204,7 +206,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
       )}
       {editModeEnabled && (
         <DeleteEditContainer>
-          <CardEditDialog tableCardConfig={tableConfig} />
+          <CardEditDialog config={tableConfig} onSave={handleSaveEdit} visualizationType='table' />
           <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
         </DeleteEditContainer>
       )}

@@ -28,8 +28,10 @@ import { useDebounce } from 'use-debounce'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BuilderResult } from '../VisualizationBuilder'
 
+type LineBuilderResult = BuilderResult<ChartCardConfig>
+
 export interface LineChartBuilderProps {
-  onDataSubmit: (data: any) => void
+  onDataSubmit: (data: LineBuilderResult) => void
   instances: SdInstance[]
   config?: ChartCardConfig
 }
@@ -242,7 +244,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
   })
 
   const handleSubmit = (values: z.infer<typeof lineChartBuilderSchema>) => {
-    const result: BuilderResult = {
+    const result: LineBuilderResult = {
       config: values,
       sizing: {
         minH: 2,

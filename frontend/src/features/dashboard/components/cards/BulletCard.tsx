@@ -16,6 +16,7 @@ import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { toast } from 'sonner'
 import { CardEditDialog } from '../editors/CardEditDialog'
+import { BuilderResult } from '../VisualizationBuilder'
 
 // Styled components
 export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -46,9 +47,24 @@ interface BulletCardProps {
   beingResized: boolean
 
   configuration: any
+  handleSaveEdit: (config: BuilderResult<BulletCardConfig>) => void
 }
 
-export const BulletCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, beingResized }: BulletCardProps) => {
+export const BulletCard = ({
+  cardID,
+  layout,
+  setLayout,
+  cols,
+  breakPoint,
+  editModeEnabled,
+  handleDeleteItem,
+  width,
+  height,
+  setHighlightedCardID,
+  configuration,
+  beingResized,
+  handleSaveEdit
+}: BulletCardProps) => {
   const { isDarkMode } = useDarkMode()
   const [chartConfig, setChartConfig] = useState<BulletCardConfig>()
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
@@ -155,7 +171,7 @@ export const BulletCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
   useEffect(() => {
     if (configuration) {
       // Safe parse does not throw an error and we can leverage its success property
-      const parsedConfig = bulletChartBuilderSchema.safeParse(configuration.visualizationConfig.config)
+      const parsedConfig = bulletChartBuilderSchema.safeParse(configuration.visualizationConfig)
       if (parsedConfig.success) {
         console.log('Parsed config', parsedConfig.data)
         setChartConfig(parsedConfig.data)
@@ -176,7 +192,7 @@ export const BulletCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
       )}
       {editModeEnabled && (
         <DeleteEditContainer>
-          <CardEditDialog bulletCardConfig={chartConfig} />
+          <CardEditDialog config={chartConfig} onSave={handleSaveEdit} visualizationType="bullet" />
           <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
         </DeleteEditContainer>
       )}

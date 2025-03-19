@@ -18,12 +18,10 @@ import { ResponsiveLine } from '@nivo/line'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { TbTrash } from 'react-icons/tb'
-import { Sizing } from '@/types/CardGeneral'
+import { BuilderResult } from '../VisualizationBuilder'
 
-export type BuilderResult = {
-  config: EntityCardConfig
-  sizing?: Sizing
-}
+type EntityCardBuilderResult = BuilderResult<EntityCardConfig>
+
 
 export interface EntityCardBuilderProps {
   onDataSubmit: (data: any) => void
@@ -106,7 +104,7 @@ export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCar
   ]
 
   const handleSubmit = (values: z.infer<typeof entityCardSchema>) => {
-    const result: BuilderResult = {
+    const result: EntityCardBuilderResult = {
       config: values,
       sizing: {
         w: 1,

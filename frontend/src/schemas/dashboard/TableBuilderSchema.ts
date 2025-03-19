@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
 export const tableCardSchema = z.object({
-  _cardID: z.string().length(0, { message: 'Card ID cannot be set' }).optional(),
   title: z.string().min(1, { message: 'Title is required' }),
   tableTitle: z.string().min(1, { message: 'Table title is required' }),
   timeFrame: z.string().min(1, { message: 'Time frame must be at least 1' }),

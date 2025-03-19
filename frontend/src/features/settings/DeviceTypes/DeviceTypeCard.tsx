@@ -55,7 +55,7 @@ type DeviceTypeCardProps = {
 export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
   const navigate = useNavigate();
 
-  const { denotation, label, icon, parameters, id } = deviceType;
+  const { denotation, label, icon, id } = deviceType;
   const IconComponent = getIcon(icon || "TbQuestionMark");
 
   return (

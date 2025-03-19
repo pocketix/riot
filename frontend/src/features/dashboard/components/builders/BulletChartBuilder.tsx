@@ -20,12 +20,9 @@ import { GET_PARAMETERS, GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Badge } from '@/components/ui/badge'
 // import type { BulletCardConfig } from '@/types/BulletChartConfig'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Sizing } from '@/types/CardGeneral'
+import { BuilderResult } from '../VisualizationBuilder'
 
-export type BuilderResult = {
-  config: BulletCardConfig
-  sizing?: Sizing
-}
+type BulletChartBuilderResult = BuilderResult<BulletCardConfig>
 
 export interface BulletChartBuilderProps {
   onDataSubmit: (data: any) => void
@@ -167,7 +164,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
   }
 
   const handleSubmit = (values: z.infer<typeof bulletChartBuilderSchema>) => {
-    const result: BuilderResult = {
+    const result: BulletChartBuilderResult = {
       config: values,
       sizing: {
         h: values.rows.length,

@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { CardEditDialog } from '../editors/CardEditDialog'
+import { BuilderResult } from '../VisualizationBuilder'
 
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   position: relative;
@@ -47,6 +48,7 @@ interface EntityCardProps {
 
   // Data
   configuration: any
+  handleSaveEdit: (config: BuilderResult<EntityCardConfig>) => void
 }
 
 interface RowData {
@@ -54,7 +56,7 @@ interface RowData {
   value?: string | number
 }
 
-export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration }: EntityCardProps) => {
+export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, handleSaveEdit }: EntityCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const { isDarkMode } = useDarkMode()
 
@@ -149,7 +151,7 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
 
   useEffect(() => {
     if (configuration) {
-      const parsedConfig = entityCardSchema.safeParse(configuration.visualizationConfig.config)
+      const parsedConfig = entityCardSchema.safeParse(configuration.visualizationConfig)
       if (parsedConfig.success) {
         console.log('Parsed config', parsedConfig.data)
         setChartConfig(parsedConfig.data)
@@ -182,7 +184,7 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
       )}
       {editModeEnabled && (
         <DeleteEditContainer>
-          <CardEditDialog entityCardConfig={chartConfig} />
+          <CardEditDialog config={chartConfig} onSave={handleSaveEdit} visualizationType="entitycard" />
           <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
         </DeleteEditContainer>
       )}

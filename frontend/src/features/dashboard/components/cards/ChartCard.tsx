@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
+import { BuilderResult } from '../VisualizationBuilder'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -47,10 +48,25 @@ interface ChartCardProps {
   width: number
   configuration: any
   breakpoint: string // TODO: unused
-  beingResized: boolean // TODO: unused
+  beingResized: boolean
+  handleSaveEdit: (config: BuilderResult<ChartCardConfig>) => void
 }
 
-export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, beingResized }: ChartCardProps) => {
+export const ChartCard = ({
+  cardID,
+  layout,
+  setLayout,
+  cols,
+  breakPoint,
+  editModeEnabled,
+  handleDeleteItem,
+  width,
+  height,
+  setHighlightedCardID,
+  configuration,
+  beingResized,
+  handleSaveEdit
+}: ChartCardProps) => {
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const { isDarkMode } = useDarkMode()
@@ -87,7 +103,8 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
 
   useEffect(() => {
     if (configuration) {
-      const parsedConfig = lineChartBuilderSchema.safeParse(configuration.visualizationConfig.config)
+      const parsedConfig = lineChartBuilderSchema.safeParse(configuration.visualizationConfig)
+      console.log(configuration)
       if (parsedConfig.success) {
         console.log('Parsed config', parsedConfig.data)
         setChartConfig(parsedConfig.data)
@@ -176,7 +193,7 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
       )}
       {editModeEnabled && (
         <DeleteEditContainer>
-          <CardEditDialog chartCardConfig={chartConfig} />
+          <CardEditDialog config={chartConfig} onSave={handleSaveEdit} visualizationType="line" />
           <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
         </DeleteEditContainer>
       )}

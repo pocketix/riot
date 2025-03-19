@@ -20,6 +20,8 @@ import { TbTrash } from 'react-icons/tb'
 import { Label } from '@/components/ui/label'
 import { BuilderResult } from '../VisualizationBuilder'
 
+type TableCardBuilderResult = BuilderResult<TableCardConfig>
+
 export interface TableCardBuilderProps {
   onDataSubmit: (data: any) => void
   instances: SdInstance[]
@@ -89,8 +91,9 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
     control: form.control,
     name: 'rows'
   })
+
   const handleSubmit = (values: z.infer<typeof tableCardSchema>) => {
-    const result: BuilderResult = {
+    const result: TableCardBuilderResult = {
       config: values,
       sizing: {
         w: 2,

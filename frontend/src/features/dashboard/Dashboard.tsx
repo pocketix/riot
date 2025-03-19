@@ -17,6 +17,7 @@ import { MyHandle } from './components/cards/DragHandle'
 import { GridItem } from '@/types/GridItem'
 import { utils } from 'react-grid-layout'
 import { EntityCard } from './components/cards/EntityCard'
+import { BuilderResult } from './components/VisualizationBuilder'
 
 const Dashboard = () => {
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), [])
@@ -305,6 +306,23 @@ const Dashboard = () => {
     saveToLS('layouts', newLayouts)
   }
 
+  function handleSaveConfig<ConfigType>(builderResult: BuilderResult<ConfigType>, gridItem: GridItem) {
+    const newDetails = { ...details }
+
+    console.log('Saving config', builderResult.config)
+    // TODO: Automatic sizing adjustments HERE
+    // As the sizing config is 
+
+    const newGridItem: GridItem = {
+      ...gridItem,
+      visualizationConfig: builderResult.config
+    }
+
+    newDetails[gridItem?.layoutID!] = newGridItem
+    setDetails(newDetails)
+    saveDetailsToLS(newDetails)
+  }
+
   if (!mounted || !layouts || !details) {
     return <div>Loading...</div>
   }
@@ -406,6 +424,7 @@ const Dashboard = () => {
                       setHighlightedCardID={setHighlightedCardID}
                       configuration={details[item.i]}
                       beingResized={resizeCardID === item.i}
+                      handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
                     />
                   </Card>
                 )
@@ -434,6 +453,7 @@ const Dashboard = () => {
                       setHighlightedCardID={setHighlightedCardID}
                       configuration={details[item.i]}
                       beingResized={resizeCardID === item.i}
+                      handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
                     />
                   </Card>
                 )
@@ -463,6 +483,7 @@ const Dashboard = () => {
                       configuration={details[item.i]}
                       breakpoint={currentBreakpoint}
                       beingResized={resizeCardID === item.i}
+                      handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
                     />
                   </Card>
                 )
@@ -491,6 +512,7 @@ const Dashboard = () => {
                       width={width}
                       setHighlightedCardID={setHighlightedCardID}
                       configuration={details[item.i]}
+                      handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
                     />
                   </Card>
                 )

@@ -5,6 +5,10 @@ import { SdInstance } from '@/generated/graphql'
 import { TableCardBuilder } from './builders/TableCardBuilder'
 import { EntityCardBuilder } from './builders/EntityCardBuilder'
 import { Sizing } from '@/types/CardGeneral'
+import { EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
+import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
+import { BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 
 export const VisualizationBuilderContainer = styled.div`
   display: flex;
@@ -14,20 +18,20 @@ export const VisualizationBuilderContainer = styled.div`
   height: fit-content;
 `
 
-export type BuilderResult = {
-  config: any
+export type BuilderResult<ConfigType> = {
+  config: ConfigType
   sizing?: Sizing
 }
 
 export interface VisualizationBuilderProps {
   selectedVisualization: string | null
-  setVisualizationConfig: (Config: any) => void
+  setVisualizationConfig: (config: BuilderResult<EntityCardConfig | ChartCardConfig | TableCardConfig | BulletCardConfig>) => void
   setActiveTab: (tab: string) => void
   instances: SdInstance[]
 }
 
 export function VisualizationBuilder({ setVisualizationConfig, selectedVisualization, instances }: VisualizationBuilderProps) {
-  const handleDataChange = (data: BuilderResult) => {
+  const handleDataChange = (data: BuilderResult<EntityCardConfig | ChartCardConfig | TableCardConfig | BulletCardConfig>) => {
     setVisualizationConfig(data)
   }
 
@@ -37,10 +41,6 @@ export function VisualizationBuilder({ setVisualizationConfig, selectedVisualiza
       {selectedVisualization === 'bullet' && <BulletChartBuilder onDataSubmit={handleDataChange} instances={instances} />}
       {selectedVisualization === 'table' && <TableCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
       {selectedVisualization === 'entitycard' && <EntityCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
-      {/* <Button onClick={() => setActiveTab('visualization')} className="w-fit">
-        <FaArrowLeft />
-        Back
-      </Button> */}
     </VisualizationBuilderContainer>
   )
 }
