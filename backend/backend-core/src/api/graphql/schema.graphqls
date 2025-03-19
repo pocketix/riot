@@ -41,6 +41,12 @@ type SDCommand {
   sdTypeId: ID!
 }
 
+input SDCommandInput {
+  name: String!
+  description: String
+  sdTypeId: ID!
+}
+
 type SDCommandInvocation {
   id: ID!
   invocationTime: String!
@@ -365,7 +371,7 @@ type Mutation {
   statisticsMutate(inputData: InputData!): Boolean!
   updateUserConfig(userId: ID!, input: UserConfigInput!): UserConfig!
   deleteUserConfig(userId: ID!): Boolean!
-  createSDCommand(name: String!, description: String, sdTypeId: ID!): SDCommand! # Creating a command
+  createSDCommand(input: SDCommandInput!): SDCommand! # Creating a command
   updateSDCommand(id: ID!, name: String, description: String): SDCommand! # Updating a command
   deleteSDCommand(id: ID!): Boolean! # Deleting a command
   createSDCommandInvocation(input: SDCommandInvocationInput!): SDCommandInvocation! # Creating an invocation
