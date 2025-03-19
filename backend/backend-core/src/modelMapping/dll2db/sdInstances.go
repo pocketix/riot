@@ -51,6 +51,6 @@ func ToDBModelEntitySDCommand(command dllModel.SDCommand) dbModel.SDCommandEntit
 		ID:          command.ID,
 		Name:        command.Name,
 		Description: command.Description,
-		SdTypeID:    command.SdTypeID,
+		SDTypeID:    command.SdTypeID,
 	}
 }

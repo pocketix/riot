@@ -48,6 +48,6 @@ func ToDLLModelSDCommand(commandEntity dbModel.SDCommandEntity) dllModel.SDComma
 		ID:          commandEntity.ID,
 		Name:        commandEntity.Name,
 		Description: commandEntity.Description,
-		SdTypeID:    commandEntity.SdTypeID,
+		SdTypeID:    commandEntity.SDTypeID,
 	}
 }
