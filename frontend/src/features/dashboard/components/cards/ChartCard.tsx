@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
 import { BuilderResult } from '../VisualizationBuilder'
+import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
