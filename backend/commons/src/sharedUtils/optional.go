@@ -54,6 +54,14 @@ func (o Optional[T]) GetPayloadOrDefault(def T) T {
 	return def
 }
 
+func (o Optional[T]) ToPointer() *T {
+	if o.IsPresent() {
+		return &o.payload
+	} else {
+		return nil
+	}
+}
+
 func OptionalComparer[T comparable](x Optional[T], y Optional[T]) bool {
 	if (x.IsPresent() && y.IsEmpty()) || (x.IsEmpty() && y.IsPresent()) {
 		return false

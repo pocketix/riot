@@ -48,6 +48,11 @@ type RelationalDatabaseClient interface {
 	LoadSDInstanceGroup(id uint32) sharedUtils.Result[dllModel.SDInstanceGroup]
 	PersistSDInstanceGroup(sdInstanceGroup dllModel.SDInstanceGroup) sharedUtils.Result[uint32]
 	DeleteSDInstanceGroup(id uint32) error
+	PersistUser(user dllModel.User) sharedUtils.Result[uint]
+	LoadUserBasedOnOAuth2ProviderIssuedID(oauth2ProviderIssuedID string) sharedUtils.Result[sharedUtils.Optional[dllModel.User]]
+	LoadUser(id uint) sharedUtils.Result[dllModel.User]
+	LoadUserSessionBasedOnRefreshTokenHash(refreshTokenHash string) sharedUtils.Result[sharedUtils.Optional[dllModel.UserSession]]
+	PersistUserSession(userSession dllModel.UserSession) sharedUtils.Result[uint]
 	PersistUserConfig(userConfig dllModel.UserConfig) sharedUtils.Result[uint32]
 	LoadUserConfig(userId uint32) sharedUtils.Result[dllModel.UserConfig]
 	DeleteUserConfig(userId uint32) error
@@ -196,6 +201,8 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.UserEntity),
 		new(dbModel.SDCommandEntity),
 		new(dbModel.SDCommandInvocationEntity),
+		new(dbModel.UserEntity),
+		new(dbModel.UserSessionEntity),
 		new(dbModel.UserConfigEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
@@ -563,6 +570,63 @@ func (r *relationalDatabaseClientImpl) DeleteSDInstanceGroup(id uint32) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.SDInstanceGroupEntity](r.db, id)
+}
+
+func (r *relationalDatabaseClientImpl) PersistUser(user dllModel.User) sharedUtils.Result[uint] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	userEntity := dll2db.ToDBModelEntityUser(user)
+	if err := dbUtil.PersistEntityIntoDB(r.db, &userEntity); err != nil {
+		return sharedUtils.NewFailureResult[uint](err)
+	}
+	return sharedUtils.NewSuccessResult[uint](userEntity.Model.ID)
+}
+
+func (r *relationalDatabaseClientImpl) LoadUserBasedOnOAuth2ProviderIssuedID(oauth2ProviderIssuedID string) sharedUtils.Result[sharedUtils.Optional[dllModel.User]] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	userEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.UserEntity](r.db, dbUtil.Where("oauth2_provider_issued_id = ?", oauth2ProviderIssuedID))
+	if userEntityLoadResult.IsFailure() {
+		userEntityLoadError := userEntityLoadResult.GetError()
+		if errors.Is(userEntityLoadError, gorm.ErrRecordNotFound) {
+			return sharedUtils.NewSuccessResult[sharedUtils.Optional[dllModel.User]](sharedUtils.NewEmptyOptional[dllModel.User]())
+		} else {
+			return sharedUtils.NewFailureResult[sharedUtils.Optional[dllModel.User]](userEntityLoadError)
+		}
+	}
+	return sharedUtils.NewSuccessResult[sharedUtils.Optional[dllModel.User]](sharedUtils.NewOptionalOf(db2dll.ToDLLModelUser(userEntityLoadResult.GetPayload())))
+}
+
+func (r *relationalDatabaseClientImpl) LoadUser(id uint) sharedUtils.Result[dllModel.User] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	// TODO: Implement
+	return sharedUtils.NewFailureResult[dllModel.User](errors.New("[RDB client (GORM)]: not implemented"))
+}
+
+func (r *relationalDatabaseClientImpl) LoadUserSessionBasedOnRefreshTokenHash(refreshTokenHash string) sharedUtils.Result[sharedUtils.Optional[dllModel.UserSession]] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	userSessionEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.UserSessionEntity](r.db, dbUtil.Where("refresh_token_hash = ?", refreshTokenHash))
+	if userSessionEntityLoadResult.IsFailure() {
+		userSessionEntityLoadError := userSessionEntityLoadResult.GetError()
+		if errors.Is(userSessionEntityLoadError, gorm.ErrRecordNotFound) {
+			return sharedUtils.NewSuccessResult[sharedUtils.Optional[dllModel.UserSession]](sharedUtils.NewEmptyOptional[dllModel.UserSession]())
+		} else {
+			return sharedUtils.NewFailureResult[sharedUtils.Optional[dllModel.UserSession]](userSessionEntityLoadError)
+		}
+	}
+	return sharedUtils.NewSuccessResult[sharedUtils.Optional[dllModel.UserSession]](sharedUtils.NewOptionalOf(db2dll.ToDLLModelUserSession(userSessionEntityLoadResult.GetPayload())))
+}
+
+func (r *relationalDatabaseClientImpl) PersistUserSession(userSession dllModel.UserSession) sharedUtils.Result[uint] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	userSessionEntity := dll2db.ToDBModelEntityUserSession(userSession)
+	if err := dbUtil.PersistEntityIntoDB(r.db, &userSessionEntity); err != nil {
+		return sharedUtils.NewFailureResult[uint](err)
+	}
+	return sharedUtils.NewSuccessResult[uint](userSessionEntity.ID)
 }
 
 func (r *relationalDatabaseClientImpl) PersistUserConfig(userConfig dllModel.UserConfig) sharedUtils.Result[uint32] {

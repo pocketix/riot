@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
@@ -9,7 +10,9 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/xjohnp00/jiap/backend/shared/time-series-store/src/internal"
 	"log"
+	"net/url"
 	"os"
+	"time"
 )
 
 func main() {
@@ -18,6 +21,24 @@ func main() {
 	if hasError {
 		os.Exit(1)
 	}
+
+	log.Println("Waiting for dependencies...")
+	rawBackendCoreURL := sharedUtils.GetEnvironmentVariableValue("BACKEND_CORE_URL").GetPayloadOrDefault("http://riot-backend-core:9090")
+	parsedBackendCoreURL, err := url.Parse(rawBackendCoreURL)
+	sharedUtils.TerminateOnError(err, fmt.Sprintf("Unable to parse the backend-core URL: %s", rawBackendCoreURL))
+
+	parsedInfluxURL, err := url.Parse(environment.InfluxUrl)
+	sharedUtils.TerminateOnError(err, fmt.Sprintf("Unable to parse the InfluxDB URL: %s", environment.InfluxUrl))
+
+	parsedRabbitMQURL, err := url.Parse(environment.AmqpURLValue)
+	sharedUtils.TerminateOnError(err, fmt.Sprintf("Unable to parse the RabbitMQ URL: %s", environment.AmqpURLValue))
+
+	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute,
+		sharedUtils.NewPairOf(parsedBackendCoreURL.Hostname(), parsedBackendCoreURL.Port()),
+		sharedUtils.NewPairOf(parsedInfluxURL.Hostname(), parsedInfluxURL.Port()),
+		sharedUtils.NewPairOf(parsedRabbitMQURL.Hostname(), parsedRabbitMQURL.Port()),
+	), "Some dependencies of this application are inaccessible")
+	log.Println("Dependencies should be up and running...")
 
 	log.Println("Time Series Store Starting")
 

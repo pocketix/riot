@@ -1,5 +1,5 @@
 # Use an official Go runtime as a parent image
-FROM golang:1.22-alpine
+FROM golang:1.24.1-alpine AS build
 # Set the working directory inside the container
 WORKDIR /app
 # Copy the go.mod file, go.sum file, and src directory from backend-core
@@ -15,5 +15,10 @@ RUN go mod tidy
 RUN go mod download
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -o RIoT-backend-core src/main.go
-# Run the executable
+
+# Move to production alpine image
+FROM alpine AS prod
+
+COPY --from=build /app/backend-core/RIoT-backend-core /app/backend-core/RIoT-backend-core
+
 CMD ["/app/backend-core/RIoT-backend-core"]
