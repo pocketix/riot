@@ -49,7 +49,7 @@ export const GET_SD_TYPES = gql`
   }
 `
 
-export const GET_TABLE_DATA = gql`
+export const GET_TIME_SERIES_DATA = gql`
   query StatisticsQuerySensorsWithFields($sensors: SensorsWithFields!, $request: StatisticsInput) {
     statisticsQuerySensorsWithFields(sensors: $sensors, request: $request) {
       data

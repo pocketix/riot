@@ -3,313 +3,775 @@ import { ResponsiveLine, PointTooltipProps } from '@nivo/line'
 import { Card } from '@/components/ui/card'
 import { AxisLegendPosition } from '@nivo/axes'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { IoRemove, IoAdd } from 'react-icons/io5'
-import { ToolTip } from '../cards/tooltips/LineChartToolTip'
+import { ChartToolTip } from '../cards/tooltips/LineChartToolTip'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/ChartThemes'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { ChartCardInfo } from '@/types/ChartCardInfo'
+import { z } from 'zod'
+import { ChartCardConfig, lineChartBuilderSchema } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm, useFieldArray } from 'react-hook-form'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
+import { SdInstance, SdParameter } from '@/generated/graphql'
+import { useLazyQuery, useQuery } from '@apollo/client'
+import { GET_PARAMETERS, GET_TIME_SERIES_DATA } from '@/graphql/Queries'
+import { ParameterMultiSelect } from '@/components/ui/multi-select-parameter'
+import { TbTrash } from 'react-icons/tb'
+import { IoAdd } from 'react-icons/io5'
+import { Separator } from '@/components/ui/separator'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { HiOutlineQuestionMarkCircle } from 'react-icons/hi2'
+import { toast } from 'sonner'
+import { useDebounce } from 'use-debounce'
+import { Checkbox } from '@/components/ui/checkbox'
+import { BuilderResult } from '../VisualizationBuilder'
+
+type LineBuilderResult = BuilderResult<ChartCardConfig>
 
 export interface LineChartBuilderProps {
-  onDataSubmit: (data: any) => void
-  data?: any
-  parameterName?: string
+  onDataSubmit: (data: LineBuilderResult) => void
+  instances: SdInstance[]
+  config?: ChartCardConfig
 }
 
-export function LineChartBuilder({ onDataSubmit, data, parameterName }: LineChartBuilderProps) {
+export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartBuilderProps) {
   const containerRef = useRef(null)
   const { isDarkMode } = useDarkMode()
 
-  const initialChartConfig: ChartCardInfo = {
-    cardTitle: 'Line Chart',
-    sizing: {
-      minH: 2
-    },
-    toolTip: {
-      x: 'Time',
-      y: parameterName ? parameterName : 'Value'
-    },
-    margin: { top: 10, right: 20, bottom: 50, left: 50 },
-    xScale: { type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' },
-    xFormat: 'time:%Y-%m-%dT%H:%M:%SZ',
-    yScale: {
-      type: 'linear',
-      min: 'auto',
-      max: 'auto',
-      stacked: true,
-      reverse: false
-    },
-    animate: true,
-    yFormat: ' >-.2f',
-    axisBottom: {
-      format: '%H:%M',
-      tickValues: 'every 2 hours',
-      legend: 'Date',
-      legendOffset: 36,
-      legendPosition: 'middle' as AxisLegendPosition
-    },
-    axisLeft: {
-      tickSize: 5,
-      tickPadding: 5,
-      tickRotation: 0,
-      legend: 'Value',
-      legendOffset: -40,
-      truncateTickAt: 0,
-      legendPosition: 'middle' as AxisLegendPosition
-    },
-    pointSize: 3,
-    pointColor: { theme: 'background' },
-    pointBorderWidth: 0,
-    pointBorderColor: { from: 'serieColor' },
-    enableGridX: true,
-    enableGridY: true
+  const form = useForm<z.infer<typeof lineChartBuilderSchema>>({
+    resolver: zodResolver(lineChartBuilderSchema),
+    defaultValues: config || {
+      cardTitle: 'Line Chart',
+      toolTip: {
+        x: 'Time',
+        y: 'Value',
+        yFormat: ' >-.1~f'
+      },
+      pointSize: 3,
+      instances: [{ uid: '', parameters: [] }],
+      timeFrame: '60',
+      aggregateMinutes: 2,
+      decimalPlaces: 1,
+      axisLeft: {
+        legend: 'Value',
+        legendOffset: -40,
+        legendPosition: 'middle' as AxisLegendPosition
+        // tickSize: 5,
+        // tickPadding: 5,
+        // tickRotation: 0,
+        // truncateTickAt: 0
+      },
+      axisBottom: {
+        format: '%H:%M',
+        tickValues: 6,
+        legend: 'Date',
+        legendOffset: 36,
+        legendPosition: 'middle' as AxisLegendPosition
+      },
+      margin: { top: 10, right: 20, bottom: 50, left: 50 },
+      yScale: {
+        format: ' >-.1~f',
+        type: 'linear',
+        min: 'auto',
+        max: 'auto',
+        stacked: false
+      },
+      // xScale: { type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' },
+      // xFormat: 'time:%Y-%m-%dT%H:%M:%SZ',
+      // animate: true,
+      // yFormat: ' >-.3~f',
+      enableGridX: true,
+      enableGridY: true
+      // pointBorderColor: { from: 'serieColor' }
+    }
+  })
+
+  const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
+  const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
+  const [getChartData, { data: chartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
+  const [data, setData] = useState<any[]>([])
+  const [dataMaxValue, setDataMaxValue] = useState<number | null>(null)
+  const leftAxisMarginMockRef = useRef<HTMLHeadingElement | null>(null)
+
+  const [debouncedAggregateMinutes] = useDebounce(form.watch('aggregateMinutes'), 1000)
+
+  const fetchData = () => {
+    const instances = form.getValues('instances')
+    if (instances.length === 0) return
+    const sensors = instances.map((instance: { uid: string; parameters: { denotation: string }[] }) => ({
+      key: instance.uid,
+      values: instance.parameters ? instance.parameters.map((param) => param.denotation) : []
+    }))
+    const request = {
+      from: new Date(Date.now() - Number(form.getValues('timeFrame')) * 60 * 1000).toISOString(),
+      aggregateMinutes: form.getValues('aggregateMinutes'),
+      operation: 'last'
+    }
+
+    getChartData({
+      variables: {
+        sensors: { sensors },
+        request
+      }
+    })
   }
 
-  const [chartConfig, setChartConfig] = useState(initialChartConfig)
+  const [debouncedDecimalPlaces] = useDebounce(form.watch('decimalPlaces'), 1000)
 
   useEffect(() => {
-    setChartConfig((prevConfig) => {
-      const newMargin = { ...prevConfig.margin }
-      if (prevConfig.axisBottom.legend === null) {
-        newMargin.bottom = 30
-      } else {
-        newMargin.bottom = 50
+    // The format follows the pattern >-.x~f, where x is the number of decimal places
+    // This is checked in the zod schema too
+    if (form.watch('yScale')) {
+      const newYScale = {
+        ...form.watch('yScale'),
+        format: `>-.${debouncedDecimalPlaces}~f`
       }
-      if (prevConfig.axisLeft.legend === null) {
-        newMargin.left = 40
-      } else {
-        newMargin.left = 50
-      }
-      return { ...prevConfig, margin: newMargin }
-    })
-  }, [chartConfig.axisBottom.legend, chartConfig.axisLeft.legend])
+      form.setValue('yScale', newYScale)
 
-  const handleConfigChange = (property: string, value: any) => {
-    const newConfig = {
-      ...chartConfig,
-      [property]: value
+      // The tooltip value formatting has to be updated as well
+      const newToolTipFormat = {
+        ...form.watch('toolTip'),
+        yFormat: `>-.${debouncedDecimalPlaces}~f`
+      }
+      form.setValue('toolTip', newToolTipFormat)
     }
-    setChartConfig(newConfig)
+  }, [debouncedDecimalPlaces])
+
+  useEffect(() => {
+    if (!chartData) return
+    const instances = form.getValues('instances')
+
+    let maxValue: number = 0
+    let result: any[] = []
+
+    instances.forEach((instance: { uid: string; parameters: { denotation: string }[] }) => {
+      const sensorDataArray = chartData.statisticsQuerySensorsWithFields.filter((item: any) => item.deviceId === instance.uid)
+      instance.parameters.forEach((param) => {
+        const paramData = {
+          id: param.denotation + '-' + instance.uid,
+          data: sensorDataArray.map((sensorData: any) => {
+            const parsedData = JSON.parse(sensorData.data)
+            if (parsedData[param.denotation] > maxValue) maxValue = parsedData[param.denotation]
+            return {
+              x: sensorData.time,
+              y: parsedData[param.denotation]
+            }
+          })
+        }
+        if (paramData.data.length === 0) {
+          toast.error('One or more of the selected parameters have no data available for the selected time frame.')
+          return
+        }
+        result.push(paramData)
+      })
+    })
+
+    maxValue += 0.1
+    if (maxValue > Number(leftAxisMarginMockRef.current?.innerText) && leftAxisMarginMockRef.current) {
+      const decimalPlaces = form.watch('decimalPlaces')
+      const mockValue = parseFloat(maxValue.toFixed(decimalPlaces))
+      setDataMaxValue(mockValue)
+      leftAxisMarginMockRef.current.innerText = mockValue.toString()
+    }
+    setData(result)
+  }, [chartData])
+
+  useEffect(() => {
+    fetchData()
+  }, [form.watch('timeFrame'), debouncedAggregateMinutes])
+
+  const calculateLeftAxisMargin = () => {
+    if (leftAxisMarginMockRef.current) {
+      const yAxisTextWidth = leftAxisMarginMockRef.current.offsetWidth + 5
+      console.log('Mock Width', yAxisTextWidth)
+      const isLegendPresent = form.getValues('axisLeft.legend') === '' ? false : true
+      let yAxisWidth = yAxisTextWidth + 10 * 2 + 20
+
+      if (!isLegendPresent) yAxisWidth -= 20
+
+      form.setValue('margin.left', Math.ceil(yAxisWidth))
+      form.setValue('axisLeft.legendOffset', -yAxisTextWidth - 20)
+    }
   }
 
-  const linedata = [
-    {
-      id: 'temperature',
-      data: data
+  const calculateBottomAxisMargin = () => {
+    const isLegendPresent = form.getValues('axisBottom.legend') === '' ? false : true
+    form.setValue('margin.bottom', isLegendPresent ? 50 : 30)
+  }
+
+  useEffect(() => {
+    if (leftAxisMarginMockRef.current) {
+      console.log('Left axis margin mock', leftAxisMarginMockRef.current.innerText)
+      calculateLeftAxisMargin()
     }
-  ]
+  }, [leftAxisMarginMockRef.current?.innerText, dataMaxValue])
+
+  const { data: parametersData, refetch: refetchParameters } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
+    variables: { sdTypeId: selectedInstance?.type.id },
+    skip: !selectedInstance
+  })
+
+  useEffect(() => {
+    if (config) {
+      config.instances.forEach((instance: { uid: string; parameters: { id: number; denotation: string }[] }) => {
+        const selectedInstance = instances.find((inst) => inst.uid === instance.uid)
+        if (selectedInstance) {
+          refetchParameters({ sdTypeId: selectedInstance.type.id }).then((result) => {
+            setAvailableParameters((prev) => ({
+              ...prev,
+              [selectedInstance.uid]: result.data.sdType.parameters
+            }))
+          })
+        }
+      })
+    }
+  }, [config, instances, refetchParameters])
+
+  useEffect(() => {
+    if (parametersData && selectedInstance) {
+      setAvailableParameters((prev) => ({
+        ...prev,
+        [selectedInstance.uid]: parametersData.sdType.parameters
+      }))
+    }
+  }, [parametersData, selectedInstance])
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'instances'
+  })
+
+  const handleSubmit = (values: z.infer<typeof lineChartBuilderSchema>) => {
+    const result: LineBuilderResult = {
+      config: values,
+      sizing: {
+        minH: 2,
+        w: 2,
+        h: 2
+      }
+    }
+    onDataSubmit(result)
+  }
 
   return (
-    <div className="w-full">
-      <Card className="h-[220px] w-full overflow-hidden">
-        {chartConfig.cardTitle && <h3 className="text-md font-semibold ml-2">{chartConfig.cardTitle}</h3>}
-        <div className={`w-full ${chartConfig.cardTitle ? 'h-[200px]' : 'h-[220px]'}`} ref={containerRef}>
-          <ResponsiveLine
-            data={linedata}
-            margin={chartConfig.margin}
-            xScale={chartConfig.xScale as any}
-            yScale={chartConfig.yScale as any}
-            animate={chartConfig.animate}
-            yFormat={chartConfig.yFormat}
-            axisBottom={chartConfig.axisBottom}
-            axisLeft={chartConfig.axisLeft}
-            pointSize={chartConfig.pointSize}
-            pointColor={isDarkMode ? '#ffffff' : '#000000'}
-            pointBorderWidth={0}
-            colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
-            pointBorderColor={chartConfig.pointBorderColor}
-            pointLabelYOffset={-12}
-            enableTouchCrosshair={true}
-            useMesh={true}
-            enableGridX={chartConfig.enableGridX}
-            enableGridY={chartConfig.enableGridY}
-            tooltip={(pos: PointTooltipProps) => <ToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}
-            theme={isDarkMode ? darkTheme : lightTheme}
-          />
+    <div className="relative w-full">
+      <h3 className="absolute top-0 left-1/2 text-[11px] -z-10" ref={leftAxisMarginMockRef}>
+        {leftAxisMarginMockRef.current?.innerText}
+      </h3>
+      <Card className="h-[220px] w-full">
+        {form.watch('cardTitle') && <h3 className="text-md font-semibold ml-2">{form.watch('cardTitle')}</h3>}
+        <div className="relative w-full h-full">
+          {data.length === 0 && (
+            <div className="absolute z-10 w-full h-full flex items-center justify-center bg-transparent">
+              <p className="text-center text-destructive font-semibold">No data available, please select an instance and parameter to display data.</p>
+            </div>
+          )}
+          <div className={`relative w-full ${form.watch('cardTitle') ? 'h-[200px]' : 'h-[220px]'} ${data.length === 0 ? 'opacity-25' : 'opacity-100'}`} ref={containerRef}>
+            <ResponsiveLine
+              data={data}
+              margin={form.watch('margin')}
+              xFormat="time:%Y-%m-%dT%H:%M:%SZ"
+              xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
+              yScale={form.watch('yScale') as any}
+              animate={true}
+              yFormat={form.watch('toolTip.yFormat')}
+              axisBottom={form.watch('axisBottom')}
+              axisLeft={{ ...form.watch('axisLeft'), format: '~s' }}
+              pointSize={form.watch('pointSize')}
+              pointColor={isDarkMode ? '#ffffff' : '#000000'}
+              pointBorderWidth={0}
+              colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
+              pointBorderColor={{ from: 'serieColor' }}
+              pointLabelYOffset={-12}
+              enableTouchCrosshair={true}
+              useMesh={true}
+              enableGridX={form.watch('enableGridX')}
+              enableGridY={form.watch('enableGridY')}
+              tooltip={(pos: PointTooltipProps) => <ChartToolTip position={pos} containerRef={containerRef} xName={form.watch('toolTip.x')} yName={form.watch('toolTip.y')} />}
+              theme={isDarkMode ? darkTheme : lightTheme}
+            />
+          </div>
         </div>
       </Card>
-      <div className="flex gap-4 w-full mt-2">
-        <Label className="w-full">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              Card Title
-              <Checkbox
-                checked={chartConfig.cardTitle !== null}
-                onCheckedChange={(e) => {
-                  // e is a boolean
-                  if (e) {
-                    handleConfigChange('cardTitle', initialChartConfig.cardTitle)
-                  } else {
-                    handleConfigChange('cardTitle', null)
-                  }
-                }}
+      <Card className="h-fit w-full overflow-hidden p-2 pt-0 mt-4 shadow-lg">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+              }
+            }}
+          >
+            <div className="grid sm:grid-cols-2 grid-cols-1 gap-4 pt-2">
+              <FormField
+                control={form.control}
+                name="axisLeft.legend"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      Left Axis Legend
+                      <Checkbox
+                        checked={!!field.value}
+                        onCheckedChange={(e) => {
+                          field.onChange(e ? 'value' : '')
+                          calculateLeftAxisMargin()
+                        }}
+                      />
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="text" {...field} className="w-full" disabled={!field.value} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="axisBottom.legend"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      Bottom Axis Legend
+                      <Checkbox
+                        checked={!!field.value}
+                        onCheckedChange={(e) => {
+                          field.onChange(e ? 'date' : '')
+                          calculateBottomAxisMargin()
+                        }}
+                      />
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="text" {...field} className="w-full" disabled={!field.value} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="cardTitle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Card Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e)
+                        }}
+                        value={field.value}
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pointSize"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Point Size</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        min={1}
+                        onChange={(e) => {
+                          field.onChange(parseInt(e.target.value))
+                        }}
+                        value={field.value}
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="timeFrame"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Time Frame</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value)
+                          form.setValue('aggregateMinutes', Math.ceil(Number(value) / 32))
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a time frame" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="60">Last hour</SelectItem>
+                          <SelectItem value="360">Last 6 hours</SelectItem>
+                          <SelectItem value="480">Last 12 hours</SelectItem>
+                          <SelectItem value="1440">Last day</SelectItem>
+                          <SelectItem value="4320">Last 3 days</SelectItem>
+                          <SelectItem value="10080">Last week</SelectItem>
+                          <SelectItem value="43200">Last month</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="aggregateMinutes"
+                render={({ field }) => (
+                  <FormItem className="self-end">
+                    <FormLabel className="flex items-center gap-2">
+                      Aggregated Minutes
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <HiOutlineQuestionMarkCircle className="text-primary w-5 h-5" />
+                          </TooltipTrigger>
+                          <TooltipContent className="w-48">
+                            <p className="font-semibold">What is this?</p>
+                            <p className="font-thin">
+                              This value is <b>automatically</b> calculated based on the selected time frame.
+                            </p>
+                            <p>It corresponds to the number of minutes that will be aggregated into a single data point.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        min={0}
+                        onChange={(e) => {
+                          field.onChange(parseInt(e.target.value))
+                        }}
+                        value={field.value}
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-          </div>
-          <Input type="text" disabled={chartConfig.cardTitle == null} placeholder={chartConfig.cardTitle} onChange={(e) => handleConfigChange('cardTitle', e.target.value)} className="w-full" />
-        </Label>
-      </div>
-      <div className="flex gap-4 w-full mt-2">
-        <Label className="w-full">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              X-Axis Legend
-              <Checkbox
-                checked={chartConfig.axisBottom.legend !== null}
-                onCheckedChange={(e) => {
-                  // e is a boolean
-                  if (e) {
-                    handleConfigChange('axisBottom', {
-                      ...chartConfig.axisBottom,
-                      legend: initialChartConfig.axisBottom.legend
-                    })
-                  } else {
-                    handleConfigChange('axisBottom', {
-                      ...chartConfig.axisBottom,
-                      legend: null
-                    })
-                  }
-                  console.log('Show X-Axis:', e)
-                }}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              X-Axis Grid
-              <Checkbox
-                checked={chartConfig.enableGridX}
-                onCheckedChange={(e) => {
-                  // e is a boolean
-                  handleConfigChange('enableGridX', e)
-                }}
-              />
-            </div>
-          </div>
-          <Input
-            type="text"
-            disabled={chartConfig.axisBottom == null}
-            placeholder={(chartConfig.axisBottom?.legend as string) || ''}
-            onChange={(e) =>
-              handleConfigChange('axisBottom', {
-                ...chartConfig.axisBottom,
-                legend: e.target.value
-              })
-            }
-            className="w-full"
-          />
-        </Label>
-      </div>
-      <div className="flex gap-4 w-full mt-2">
-        <Label className="w-full">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              Y-Axis Legend
-              <Checkbox
-                checked={chartConfig.axisLeft.legend !== null}
-                onCheckedChange={(e) => {
-                  // e is a boolean
-                  if (e) {
-                    handleConfigChange('axisLeft', {
-                      ...chartConfig.axisLeft,
-                      legend: initialChartConfig.axisLeft.legend
-                    })
-                  } else {
-                    handleConfigChange('axisLeft', {
-                      ...chartConfig.axisLeft,
-                      legend: null
-                    })
-                  }
-                }}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              Y-Axis Grid
-              <Checkbox
-                checked={chartConfig.enableGridY}
-                onCheckedChange={(e) => {
-                  // e is a boolean
-                  handleConfigChange('enableGridY', e)
-                }}
-              />
-            </div>
-          </div>
-          <Input
-            type="text"
-            disabled={chartConfig.axisLeft == null}
-            placeholder={(chartConfig.axisLeft?.legend as string) || ''}
-            onChange={(e) =>
-              handleConfigChange('axisLeft', {
-                ...chartConfig.axisLeft,
-                legend: e.target.value
-              })
-            }
-            className="w-full"
-          />
-        </Label>
-      </div>
-      <div className="flex gap-4 w-1/2 mt-2">
-        <Label>
-          Point Size
-          <div className="flex items-center">
-            <Button onClick={() => handleConfigChange('pointSize', Math.max(chartConfig.pointSize - 1, 0))} variant={'destructive'} size={'icon'} className="flex items-center justify-center">
-              <IoRemove />
-            </Button>
-            <Input type="number" value={chartConfig.pointSize} onChange={(e) => handleConfigChange('pointSize', Number(e.target.value))} />
-            <Button onClick={() => handleConfigChange('pointSize', chartConfig.pointSize + 1)} variant={'green'} size={'icon'} className="flex items-center justify-center">
+            <Separator className="my-2" />
+            {fields.map((item, index) => (
+              <div key={item.id} className="relative border p-4 mb-4 rounded-lg">
+                <Button variant="destructive" size="icon" onClick={() => remove(index)} className="absolute top-2 right-2">
+                  <TbTrash />
+                </Button>
+                <FormField
+                  control={form.control}
+                  name={`instances.${index}.uid`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instance</FormLabel>
+                      <FormControl>
+                        <Select
+                          onValueChange={(value) => {
+                            const instance = instances.find((instance) => instance.uid === value)
+                            if (!instance) return
+                            setSelectedInstance(instance)
+                            field.onChange(value)
+                            form.setValue(`instances.${index}.parameters`, [])
+                          }}
+                          value={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an instance" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {instances.map((instance) => (
+                              <SelectItem key={instance.uid} value={instance.uid}>
+                                {instance.type.denotation}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`instances.${index}.parameters`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parameters</FormLabel>
+                      <FormControl>
+                        <ParameterMultiSelect
+                          onClose={() => {
+                            fetchData()
+                          }}
+                          options={
+                            form.getValues(`instances.${index}.uid`) && availableParameters[form.getValues(`instances.${index}.uid`)]
+                              ? availableParameters[form.getValues(`instances.${index}.uid`)].map((parameter) => ({
+                                  label: parameter.denotation,
+                                  value: parameter.id
+                                }))
+                              : []
+                          }
+                          reset={form.watch(`instances.${index}.uid`) !== config?.instances[index]?.uid}
+                          modalPopover={true}
+                          onValueChange={(value) => {
+                            const selectedParameters = value.map((param) => ({
+                              id: param,
+                              denotation: availableParameters[form.getValues(`instances.${index}.uid`)].find((paramWhole) => paramWhole.id === Number(param))?.denotation
+                            }))
+                            field.onChange(selectedParameters)
+                          }}
+                          defaultValue={field.value.map((param: { id: number }) => param.id)}
+                          placeholder="Select parameters"
+                          maxCount={2}
+                          disabled={!form.getValues(`instances.${index}.uid`)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            ))}
+            {form.formState.errors.instances && <p className="text-red-500 text-sm font-semibold">{form.formState.errors.instances.message}</p>}
+            {form.formState.errors.instances?.root! && <p className="text-red-500 text-sm font-semibold">{form.formState.errors.instances?.root.message}</p>}
+            <Button
+              type="button"
+              variant="green"
+              className="mt-4 flex items-center justify-center w-1/2 m-auto"
+              onClick={() => {
+                append({ uid: '', parameters: [] })
+              }}
+            >
               <IoAdd />
+              Add Instance
             </Button>
-          </div>
-        </Label>
-      </div>
-      <div className="flex gap-4 w-full mt-2">
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="item-1">
-            <AccordionTrigger>Tooltip options</AccordionTrigger>
-            <AccordionContent className="w-full flex gap-4">
-              {/* X and Y tooltip names */}
-              <Label className="w-full">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-2">X-Axis Tooltip Name</div>
-                </div>
-                <Input
-                  type="text"
-                  placeholder={chartConfig.toolTip.x}
-                  className="w-full"
-                  onChange={(e) =>
-                    handleConfigChange('toolTip', {
-                      ...chartConfig.toolTip,
-                      x: e.target.value
-                    })
-                  }
-                />
-              </Label>
-              <Label className="w-full">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-2">Y-Axis Tooltip Name</div>
-                </div>
-                <Input
-                  type="text"
-                  placeholder={chartConfig.toolTip.y}
-                  className="w-full"
-                  onChange={(e) =>
-                    handleConfigChange('toolTip', {
-                      ...chartConfig.toolTip,
-                      y: e.target.value
-                    })
-                  }
-                />
-              </Label>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
-      <div className="flex justify-end mt-2">
-        <Button onClick={() => onDataSubmit(chartConfig)} size={'default'}>
-          Submit
-        </Button>
-      </div>
+            <Accordion type="single" collapsible className="w-full mt-4">
+              <AccordionItem value="tooltip-options">
+                <AccordionTrigger>Tooltip options</AccordionTrigger>
+                <AccordionContent className="w-full flex gap-4">
+                  <FormField
+                    control={form.control}
+                    name="toolTip.x"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>X-Axis Tooltip Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e)
+                            }}
+                            value={field.value}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="toolTip.y"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Y-Axis Tooltip Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e)
+                            }}
+                            value={field.value}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+            <Accordion type="single" collapsible className="w-full mt-4">
+              <AccordionItem value="advanced-options">
+                <AccordionTrigger>Advanced options</AccordionTrigger>
+                <AccordionContent className="w-full sm:grid-cols-2 grid-cols-1 grid gap-4">
+                  <FormField
+                    control={form.control}
+                    name="margin.bottom"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bottom Margin</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={0}
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(parseInt(e.target.value))
+                            }}
+                            value={field.value}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="margin.left"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Left Margin</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={0}
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(parseInt(e.target.value))
+                            }}
+                            value={field.value}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="axisBottom.tickValues"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Number of Ticks</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={1}
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(parseInt(e.target.value))
+                            }}
+                            value={field.value}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="axisLeft.legendOffset"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Left Axis Legend Offset</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(parseInt(e.target.value))
+                            }}
+                            value={field.value}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {/* Field for min and max values */}
+                  <FormField
+                    control={form.control}
+                    name="yScale.min"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex gap-2 items-center justify-between">
+                          Min Value
+                          <div className="flex items-center gap-2">
+                            Auto
+                            <Checkbox
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked ? 'auto' : '')
+                              }}
+                              checked={field.value === 'auto'}
+                            />
+                          </div>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter min value"
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            disabled={field.value === 'auto'}
+                            value={field.value === 'auto' ? '' : field.value}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="yScale.max"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex gap-2 items-center justify-between">
+                          Max Value
+                          <div className="flex items-center gap-2">
+                            Auto
+                            <Checkbox
+                              onCheckedChange={(checked) => {
+                                // If value is set to auto, use the max value from the data
+                                if (checked && leftAxisMarginMockRef.current) {
+                                  leftAxisMarginMockRef.current.innerText = dataMaxValue?.toString() || ''
+                                }
+                                field.onChange(checked ? 'auto' : '')
+                              }}
+                              checked={field.value === 'auto'}
+                            />
+                          </div>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter max value"
+                            onChange={(e) => {
+                              if (Number(e.target.value) > dataMaxValue! && leftAxisMarginMockRef.current) {
+                                leftAxisMarginMockRef.current.innerText = e.target.value
+                              }
+                              field.onChange(Number(e.target.value))
+                            }}
+                            disabled={field.value === 'auto'}
+                            value={field.value === 'auto' ? '' : field.value}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+            <Button type="submit" className="w-fit mt-4" onClick={() => console.log('Form errors', form.formState.errors)}>
+              Submit
+            </Button>
+          </form>
+        </Form>
+      </Card>
     </div>
   )
 }

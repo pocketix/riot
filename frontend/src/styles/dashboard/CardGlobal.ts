@@ -64,13 +64,15 @@ export const Arrow = styled.button<{ disabled?: boolean; $red?: boolean; $green?
   }
 `
 
-export const DeleteIconContainer = styled.div`
+// TODO: remove ? used for the icon that delets a card
+export const DeleteEditContainer = styled.div`
   position: absolute;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
   top: 10px;
   right: 10px;
   z-index: 100;
-  cursor: pointer;
-  color: red;
   background-color: hsl(var(--primary));
   border: 1px solid hsl(var(--border));
   padding: 8px;

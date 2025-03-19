@@ -1,4 +1,3 @@
-import { ExtendedLayout } from '@/types/ExtendedLayout';
 import { Layout, utils } from 'react-grid-layout';
 
 type Direction = 'left' | 'right' | 'up' | 'down' | 'widthminus' | 'widthplus' | 'heightminus' | 'heightplus';

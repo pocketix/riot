@@ -10,7 +10,7 @@ export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' |
 const defaultOptions = {} as const;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string; }
+  ID: { input: number; output: number; }
   String: { input: string; output: string; }
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
@@ -466,19 +466,19 @@ export type UserConfigInput = {
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: string, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: string, denotation: string } }> };
+export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string } }> };
 
 export type SdTypeQueryVariables = Exact<{
   sdTypeId: Scalars['ID']['input'];
 }>;
 
 
-export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', id: string, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: string, label?: string | null, denotation: string, type: SdParameterType }> } };
+export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', denotation: string, id: number, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, type: SdParameterType }> } };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdTypesQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: string, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: string, label?: string | null, denotation: string, type: SdParameterType }> }> };
+export type SdTypesQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }> }> };
 
 export type StatisticsQuerySensorsWithFieldsQueryVariables = Exact<{
   sensors: SensorsWithFields;
