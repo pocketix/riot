@@ -227,7 +227,7 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
                               <div className="flex flex-col max-w-28">
                                 <span className="text-destructive font-semibold">No data available</span>
                                 <span className="text-xs break-words">Device: {row.instance.uid}</span>
-                                <span className="text-xs">Parameter: {row.parameter.denotation}</span>
+                                <span className="text-xs break-words">Parameter: {row.parameter.denotation}</span>
                               </div>
                             </TooltipContent>
                           </Tooltip>

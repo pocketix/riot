@@ -17,7 +17,6 @@ import { toast } from 'sonner'
 import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
 import { BuilderResult } from '../VisualizationBuilder'
-import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 // Styled components
@@ -74,7 +73,7 @@ export const ChartCard = ({
   const { isDarkMode } = useDarkMode()
   const [data, setData] = useState<any[]>([])
   const [chartConfig, setChartConfig] = useState<ChartCardConfig>()
-  const [unavilableData, setUnavailableData] = useState<string>()
+  const [unavilableData, setUnavailableData] = useState<{ device: string; parameter: string }[]>([])
 
   const [getChartData, { data: fetchedChartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
 
@@ -133,7 +132,6 @@ export const ChartCard = ({
     instances.forEach((instance: { uid: string; parameters: { denotation: string }[] }) => {
       const sensorDataArray = fetchedChartData.statisticsQuerySensorsWithFields.filter((item: any) => item.deviceId === instance.uid)
 
-      // Todo set unavailable data
       instance.parameters.forEach((param) => {
         const paramData = {
           id: param.denotation + '-' + instance.uid,
@@ -141,7 +139,6 @@ export const ChartCard = ({
             sensorDataArray.length > 0
               ? sensorDataArray.map((sensorData: any) => {
                   const parsedData = sensorData.data ? JSON.parse(sensorData.data) : null
-                  if (!parsedData) return
                   return {
                     x: sensorData.time,
                     y: parsedData[param.denotation]
@@ -150,6 +147,7 @@ export const ChartCard = ({
               : []
         }
         if (paramData.data?.length === 0) {
+          setUnavailableData((prev) => [...prev, { device: instance.uid, parameter: param.denotation }])
           toast.error('One or more of the selected parameters have no data available for the selected time frame.')
           return
         }
@@ -159,6 +157,10 @@ export const ChartCard = ({
 
     setData(result)
   }, [fetchedChartData])
+
+  useEffect(() => {
+    console.log('unavailable data', unavilableData)
+  }, [unavilableData])
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -208,24 +210,31 @@ export const ChartCard = ({
       )}
       <div className="p-2 pb-0 font-semibold flex justify-between items-center w-full">
         <span>{chartConfig.cardTitle}</span>
-        <Skeleton className="w-fit p-1 pt-0 h-full" disableAnimation>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <TooltipTrigger asChild>
-                  <span className="text-destructive truncate font-semibold text-xs">Unavailable</span>
+        {unavilableData?.length! > 0 && (
+          <Skeleton className="w-fit p-1 pt-0 h-full" disableAnimation>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <TooltipTrigger asChild>
+                    <span className="text-destructive truncate font-semibold text-xs">Unavailable</span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="flex flex-col max-w-28">
+                      <span className="text-center text-destructive font-bold">No data available</span>
+                      {unavilableData?.map((row) => (
+                        <div key={row.device + row.parameter} className="w-full flex flex-col">
+                          <span className="text-center text-xs text-gray-500 break-words">Device: {row.device}</span>
+                          <span className="text-center text-xs text-gray-500 break-words">Parameter: {row.parameter}</span>
+                        </div>
+                      ))}
+                      {/* <span className="text-xs">Parameter: {row.parameter.denotation}</span> */}
+                    </div>
+                  </TooltipContent>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <div className="flex flex-col max-w-28">
-                    <span className="text-destructive font-semibold">No data available</span>
-                    <span className="text-xs break-words">Device: {unavilableData}</span>
-                    {/* <span className="text-xs">Parameter: {row.parameter.denotation}</span> */}
-                  </div>
-                </TooltipContent>
-              </TooltipTrigger>
-            </Tooltip>
-          </TooltipProvider>
-        </Skeleton>
+              </Tooltip>
+            </TooltipProvider>
+          </Skeleton>
+        )}
       </div>
       <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
         <ResponsiveLine
@@ -245,7 +254,7 @@ export const ChartCard = ({
           colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
           pointBorderColor={{ from: 'serieColor' }}
           pointLabelYOffset={-12}
-          useMesh={true}
+          useMesh={data.length > 0}
           enableGridX={chartConfig.enableGridX}
           enableGridY={chartConfig.enableGridY}
           tooltip={(pos: PointTooltipProps) => <ChartToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}

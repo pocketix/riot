@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { TableCardConfig, tableCardSchema } from '@/schemas/dashboard/TableBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
 import { BuilderResult } from '../VisualizationBuilder'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -48,7 +49,21 @@ interface TableCardProps {
   configuration: any
 }
 
-export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, beingResized, handleSaveEdit }: TableCardProps) => {
+export const TableCard = ({
+  cardID,
+  layout,
+  setLayout,
+  cols,
+  breakPoint,
+  editModeEnabled,
+  handleDeleteItem,
+  width,
+  height,
+  setHighlightedCardID,
+  configuration,
+  beingResized,
+  handleSaveEdit
+}: TableCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
@@ -131,18 +146,18 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
   useEffect(() => {
     const fetchDataAndPopulate = async () => {
       if (!tableConfig) return
-  
+
       const sensors = tableConfig.rows.map((row) => ({
         key: row.instance.uid,
         values: row.parameter.denotation
       }))
-  
+
       const combinedSensors = combineSensors(sensors)
-  
+
       console.log('SENSORS', combinedSensors)
-  
+
       if (!combinedSensors.length) return
-  
+
       // Create array of promises for all operations
       let results
       try {
@@ -153,7 +168,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
             fetchData(combinedSensors, new Date(Date.now() - Number(tableConfig.timeFrame) * 60 * 1000).toISOString(), Number(tableConfig.timeFrame) * 1000, column.function)
           )
         )
-  
+
         console.log('RESULTS', results)
         const parsedData = results.map((result) => {
           if (result.status === 'fulfilled' && result.value.data.statisticsQuerySensorsWithFields.length > 0) {
@@ -163,7 +178,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
             return null
           }
         })
-  
+
         const updatedRows = tableConfig.rows.map((row) => {
           let columnIndex = 0
           const rowValues: any = []
@@ -192,16 +207,16 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
           })
           return { ...row, values: rowValues }
         })
-  
+
         console.log('Table data', updatedRows)
-  
+
         setTableData(updatedRows)
         console.log('CONFIG', tableConfig)
       } catch (error) {
         console.error('Fetch error:', error)
       }
     }
-  
+
     fetchDataAndPopulate()
   }, [tableConfig])
 
@@ -218,7 +233,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
       )}
       {editModeEnabled && (
         <DeleteEditContainer>
-          <CardEditDialog config={tableConfig} onSave={handleSaveEdit} visualizationType='table' />
+          <CardEditDialog config={tableConfig} onSave={handleSaveEdit} visualizationType="table" />
           <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
         </DeleteEditContainer>
       )}
@@ -239,11 +254,34 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
             {tableData?.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 <td className="text-sm">{row.name}</td>
-                {row.values?.map((data: { function: string; value: number }, valueIndex: number) => (
-                  <td key={valueIndex} className="text-sm text-center">
-                    {parseFloat(data.value.toFixed(tableConfig.decimalPlaces ?? 2))}
-                  </td>
-                ))}
+                {row.values?.map((data: { function: string; value?: number }, valueIndex: number) => {
+                  if (!data.value || isNaN(data.value))
+                    return (
+                      <td key={valueIndex} className="text-sm text-center">
+                        <Skeleton className="w-1/2 h-full m-auto" disableAnimation>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="text-destructive truncate font-semibold text-xs w-10">Unavailable</span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="flex flex-col max-w-28">
+                                  <span className="text-destructive font-semibold">No data available</span>
+                                  <span className="text-xs break-words">Device: {row.instance.uid}</span>
+                                  <span className="text-xs break-words">Parameter: {row.parameter.denotation}</span>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </Skeleton>
+                      </td>
+                    )
+                  return (
+                    <td key={valueIndex} className="text-sm text-center">
+                      {parseFloat(data?.value!.toFixed(tableConfig.decimalPlaces ?? 2))}
+                    </td>
+                  )
+                })}
               </tr>
             ))}
           </tbody>

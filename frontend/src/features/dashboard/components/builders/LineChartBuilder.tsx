@@ -291,7 +291,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
               pointBorderColor={{ from: 'serieColor' }}
               pointLabelYOffset={-12}
               enableTouchCrosshair={true}
-              useMesh={true}
+              useMesh={data.length > 0}
               enableGridX={form.watch('enableGridX')}
               enableGridY={form.watch('enableGridY')}
               tooltip={(pos: PointTooltipProps) => <ChartToolTip position={pos} containerRef={containerRef} xName={form.watch('toolTip.x')} yName={form.watch('toolTip.y')} />}
