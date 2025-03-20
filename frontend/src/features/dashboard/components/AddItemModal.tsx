@@ -3,9 +3,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { FaPlus } from 'react-icons/fa6'
 import { AddItemForm } from './AddItemForm'
 import { useState } from 'react'
+import { GridItem, AllConfigTypes } from '@/types/GridItem'
 
 export interface AddItemModalProps {
-  onAddItem: (item: any) => void
+  onAddItem<ConfigType extends AllConfigTypes>(item: GridItem<ConfigType>): void
 }
 
 export function AddItemModal({ onAddItem }: AddItemModalProps) {
@@ -13,7 +14,7 @@ export function AddItemModal({ onAddItem }: AddItemModalProps) {
 
   return (
     <Dialog open={dialogOpen} onOpenChange={() => setDialogOpen(!dialogOpen)}>
-      <DialogTrigger asChild className="fixed lg:bottom-4 bottom-[70px] right-2">
+      <DialogTrigger asChild className="fixed lg:bottom-4 bottom-[70px] right-2 z-50">
         <Button>
           <FaPlus />
         </Button>

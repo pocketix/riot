@@ -14,7 +14,7 @@ export const ToolTipContainer = styled.div<{ $offsetHorizontal: number; $offsetV
   border-radius: 5px;
   padding: 8px;
   border: ${(props) => (props.$isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)')};
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Corrected property */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   font-size: 12px;
   line-height: 16px;

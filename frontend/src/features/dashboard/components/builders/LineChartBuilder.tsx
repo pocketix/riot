@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ChartToolTip } from '../cards/tooltips/LineChartToolTip'
 import { useDarkMode } from '@/context/DarkModeContext'
-import { darkTheme, lightTheme } from '../cards/ChartThemes'
+import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { z } from 'zod'
 import { ChartCardConfig, lineChartBuilderSchema } from '@/schemas/dashboard/LineChartBuilderSchema'
@@ -26,7 +26,7 @@ import { HiOutlineQuestionMarkCircle } from 'react-icons/hi2'
 import { toast } from 'sonner'
 import { useDebounce } from 'use-debounce'
 import { Checkbox } from '@/components/ui/checkbox'
-import { BuilderResult } from '../VisualizationBuilder'
+import { BuilderResult } from '@/types/GridItem'
 
 type LineBuilderResult = BuilderResult<ChartCardConfig>
 

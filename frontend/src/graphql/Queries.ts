@@ -55,3 +55,12 @@ export const GET_TIME_SERIES_DATA = gql`
     }
   }
 `
+
+export const GET_USER_CONFIG = gql`
+  query UserConfig($userConfigId: ID!) {
+    userConfig(id: $userConfigId) {
+      userId
+      config
+    }
+  }
+`

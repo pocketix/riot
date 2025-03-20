@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useDarkMode } from '@/context/DarkModeContext'
-import { darkTheme, lightTheme } from '../cards/ChartThemes'
+import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
 import { SdInstance, SdParameter, StatisticsOperation } from '@/generated/graphql'
 import { z } from 'zod'
 import { BulletCardConfig, bulletChartBuilderSchema } from '@/schemas/dashboard/BulletChartBuilderSchema'
@@ -18,10 +18,9 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { useLazyQuery, useQuery } from '@apollo/client'
 import { GET_PARAMETERS, GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Badge } from '@/components/ui/badge'
-// import type { BulletCardConfig } from '@/types/BulletChartConfig'
 import { Checkbox } from '@/components/ui/checkbox'
-import { BuilderResult } from '../VisualizationBuilder'
 import { toast } from 'sonner'
+import { BuilderResult } from '@/types/GridItem'
 
 type BulletChartBuilderResult = BuilderResult<BulletCardConfig>
 

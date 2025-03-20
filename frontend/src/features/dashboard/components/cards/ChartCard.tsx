@@ -4,11 +4,11 @@ import { ResponsiveLine, PointTooltipProps } from '@nivo/line'
 import styled from 'styled-components'
 // import { Layout } from '@/types/Layout';
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
+import { ItemDeleteAlertDialog } from './components/ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
-import { AccessibilityContainer } from './AccessibilityContainer'
+import { AccessibilityContainer } from './components/AccessibilityContainer'
 import { useDarkMode } from '@/context/DarkModeContext'
-import { darkTheme, lightTheme } from './ChartThemes'
+import { darkTheme, lightTheme } from './components/ChartThemes'
 import { ChartToolTip } from './tooltips/LineChartToolTip'
 import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
@@ -16,8 +16,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
-import { BuilderResult } from '../VisualizationBuilder'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { BuilderResult } from '@/types/GridItem'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -148,7 +148,7 @@ export const ChartCard = ({
         }
         if (paramData.data?.length === 0) {
           setUnavailableData((prev) => [...prev, { device: instance.uid, parameter: param.denotation }])
-          toast.error('One or more of the selected parameters have no data available for the selected time frame.')
+          // toast.error('One or more of the selected parameters have no data available for the selected time frame.')
           return
         }
         result.push(paramData)
@@ -254,6 +254,8 @@ export const ChartCard = ({
           colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
           pointBorderColor={{ from: 'serieColor' }}
           pointLabelYOffset={-12}
+          isInteractive={true}
+          enableTouchCrosshair={true}
           useMesh={data.length > 0}
           enableGridX={chartConfig.enableGridX}
           enableGridY={chartConfig.enableGridY}

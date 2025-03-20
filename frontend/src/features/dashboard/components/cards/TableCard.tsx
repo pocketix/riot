@@ -2,16 +2,17 @@ import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/C
 import { AiOutlineDrag } from 'react-icons/ai'
 import styled from 'styled-components'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
+import { ItemDeleteAlertDialog } from './components/ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
-import { AccessibilityContainer } from './AccessibilityContainer'
+import { AccessibilityContainer } from './components/AccessibilityContainer'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { useLazyQuery } from '@apollo/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TableCardConfig, tableCardSchema } from '@/schemas/dashboard/TableBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
-import { BuilderResult } from '../VisualizationBuilder'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { BuilderResult } from '@/types/GridItem'
+import { toast } from 'sonner'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -118,10 +119,11 @@ export const TableCard = ({
 
   useEffect(() => {
     if (configuration) {
-      const parsedConfig = tableCardSchema.safeParse(configuration.visualizationConfig.config)
+      const parsedConfig = tableCardSchema.safeParse(configuration.visualizationConfig)
       if (parsedConfig.success) {
         setTableConfig(parsedConfig.data)
       } else {
+        toast.error('Failed to parse configuration')
         console.error('Failed to parse configuration')
       }
     }

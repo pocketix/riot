@@ -4,20 +4,20 @@ import { ResponsiveBullet } from '@nivo/bullet'
 import styled from 'styled-components'
 // import { Layout } from '@/types/Layout';
 import { useEffect, useMemo, useState } from 'react'
-import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
+import { ItemDeleteAlertDialog } from './components/ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
-import { AccessibilityContainer } from './AccessibilityContainer'
+import { AccessibilityContainer } from './components/AccessibilityContainer'
 import { useDarkMode } from '@/context/DarkModeContext'
-import { lightTheme, darkTheme } from './ChartThemes'
-import { ToolTipContainer } from './ChartGlobals'
+import { lightTheme, darkTheme } from './components/ChartThemes'
+import { ToolTipContainer } from './components/ChartGlobals'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { toast } from 'sonner'
 import { CardEditDialog } from '../editors/CardEditDialog'
-import { BuilderResult } from '../VisualizationBuilder'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { BuilderResult } from '@/types/GridItem'
 
 // Styled components
 export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -182,7 +182,7 @@ export const BulletCard = ({
     if (configuration) {
       // Safe parse does not throw an error and we can leverage its success property
       console.log('Configuration', configuration)
-      const parsedConfig = bulletChartBuilderSchema.safeParse(configuration.visualizationConfig.config)
+      const parsedConfig = bulletChartBuilderSchema.safeParse(configuration.visualizationConfig)
       if (parsedConfig.success) {
         console.log('Parsed config', parsedConfig.data)
         setChartConfig(parsedConfig.data)
