@@ -229,7 +229,7 @@ export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCar
                               <SelectContent>
                                 {instances.map((instance) => (
                                   <SelectItem key={instance.uid} value={instance.uid}>
-                                    {instance.type.denotation}
+                                    {instance.userIdentifier}
                                   </SelectItem>
                                 ))}
                               </SelectContent>

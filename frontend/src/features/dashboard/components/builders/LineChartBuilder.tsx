@@ -148,17 +148,22 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
 
     instances.forEach((instance: { uid: string; parameters: { denotation: string }[] }) => {
       const sensorDataArray = chartData.statisticsQuerySensorsWithFields.filter((item: any) => item.deviceId === instance.uid)
+      console.log('Sensor data array', sensorDataArray)
       instance.parameters.forEach((param) => {
         const paramData = {
           id: param.denotation + '-' + instance.uid,
-          data: sensorDataArray.map((sensorData: any) => {
-            const parsedData = JSON.parse(sensorData.data)
-            if (parsedData[param.denotation] > maxValue) maxValue = parsedData[param.denotation]
-            return {
-              x: sensorData.time,
-              y: parsedData[param.denotation]
-            }
-          })
+          data:
+            sensorDataArray.length > 0
+              ? sensorDataArray.map((sensorData: any) => {
+                  const parsedData = sensorData.data ? JSON.parse(sensorData.data) : null
+                  if (!parsedData) return
+                  if (parsedData[param.denotation] > maxValue) maxValue = parsedData[param.denotation]
+                  return {
+                    x: sensorData.time,
+                    y: parsedData[param.denotation]
+                  }
+                })
+              : []
         }
         if (paramData.data.length === 0) {
           toast.error('One or more of the selected parameters have no data available for the selected time frame.')
@@ -492,7 +497,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                           <SelectContent>
                             {instances.map((instance) => (
                               <SelectItem key={instance.uid} value={instance.uid}>
-                                {instance.type.denotation}
+                                {instance.userIdentifier}
                               </SelectItem>
                             ))}
                           </SelectContent>

@@ -344,7 +344,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                                   <SelectContent>
                                     {instances.map((instance) => (
                                       <SelectItem key={instance.uid} value={instance.uid}>
-                                        {instance.type.denotation}
+                                        {instance.userIdentifier}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>

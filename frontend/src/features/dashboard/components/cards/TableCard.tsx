@@ -131,32 +131,39 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
   useEffect(() => {
     const fetchDataAndPopulate = async () => {
       if (!tableConfig) return
-
+  
       const sensors = tableConfig.rows.map((row) => ({
         key: row.instance.uid,
         values: row.parameter.denotation
       }))
-
+  
       const combinedSensors = combineSensors(sensors)
-
+  
       console.log('SENSORS', combinedSensors)
-
+  
       if (!combinedSensors.length) return
-
+  
       // Create array of promises for all operations
       let results
       try {
         // Execute all queries in parallel
         // results are returned in the same order as the queries
-        results = await Promise.all(
+        results = await Promise.allSettled(
           tableConfig.columns.map((column) =>
             fetchData(combinedSensors, new Date(Date.now() - Number(tableConfig.timeFrame) * 60 * 1000).toISOString(), Number(tableConfig.timeFrame) * 1000, column.function)
           )
         )
-
+  
         console.log('RESULTS', results)
-        const parsedData = results.map((result) => result.data.statisticsQuerySensorsWithFields)
-
+        const parsedData = results.map((result) => {
+          if (result.status === 'fulfilled' && result.value.data.statisticsQuerySensorsWithFields.length > 0) {
+            return result.value.data.statisticsQuerySensorsWithFields
+          } else {
+            console.error('Fetch error:', result.status === 'rejected' ? result.reason : 'Empty data')
+            return null
+          }
+        })
+  
         const updatedRows = tableConfig.rows.map((row) => {
           let columnIndex = 0
           const rowValues: any = []
@@ -168,7 +175,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
             console.log('Column index', columnIndex)
             // find each device in the column data for a specific function
             // TODO: Finding by deviceId may not be sufficient ! There can be multiple rows for the same device
-            const instanceData = column.find((data: any) => data.deviceId === row.instance.uid)
+            const instanceData = column?.find((data: any) => data.deviceId === row.instance.uid)
             if (instanceData) {
               // parse the stringified data
               let parsedData = JSON.parse(instanceData.data)
@@ -176,20 +183,25 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
                 function: functionName,
                 value: parsedData[row.parameter.denotation]
               })
+            } else {
+              rowValues.push({
+                function: functionName,
+                value: 'NaN'
+              })
             }
           })
           return { ...row, values: rowValues }
         })
-
+  
         console.log('Table data', updatedRows)
-
+  
         setTableData(updatedRows)
         console.log('CONFIG', tableConfig)
       } catch (error) {
         console.error('Fetch error:', error)
       }
     }
-
+  
     fetchDataAndPopulate()
   }, [tableConfig])
 

@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 // import type { BulletCardConfig } from '@/types/BulletChartConfig'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BuilderResult } from '../VisualizationBuilder'
+import { toast } from 'sonner'
 
 type BulletChartBuilderResult = BuilderResult<BulletCardConfig>
 
@@ -71,7 +72,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
       name: row.config.name
     }))
 
-    const results = await Promise.all(
+    const results = await Promise.allSettled(
       rows.map((row) => {
         return getChartData({
           variables: {
@@ -93,15 +94,28 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
       })
     )
 
-    const parsedData = results.map((result) => result.data.statisticsQuerySensorsWithFields)
+    const parsedData = results.map((result) => {
+      if (result.status === 'fulfilled' && result.value.data.statisticsQuerySensorsWithFields.length > 0) {
+        return result.value.data.statisticsQuerySensorsWithFields
+      } else {
+        const sensor = result.status === 'fulfilled' ? result.value.variables?.sensors?.sensors[0]! : null
+        const instance = instances.find((inst) => inst.uid === sensor?.key)
+        if (instance) {
+          toast.error(`Failed to fetch data for '${instance.userIdentifier} - ${sensor?.values}'`)
+        }
+        console.error('Fetch error:', result.status === 'rejected' ? result.reason : 'Empty data')
+        return null
+      }
+    })
 
-    let index = 0
-    const newData = parsedData.map((parsed) => {
+    const newData = parsedData.map((parsed, index) => {
+      if (!parsed) return null
       const row = form.getValues(`rows.${index}`)
-      const value = JSON.parse(parsed[0].data)[row.parameter.denotation]
-
-      // Save the value to the form state, so that we do not have to fetch again upon changing the chart configuration
-      // form.setValue(`rows.${index}.config.measure`, value)
+      const parsedValue = parsed[0]?.data ? JSON.parse(parsed[0].data) : null
+      const value = parsedValue ? parsedValue[row.parameter.denotation] : undefined
+      if (value === undefined) {
+        return null
+      }
 
       const newDataItem = {
         id: row.config.name,
@@ -109,7 +123,6 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
         measures: [value],
         markers: row.config.markers || []
       }
-      index++
       return newDataItem
     })
 
@@ -184,6 +197,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
         {form.watch('cardTitle') ? <h3 className="ml-2 text-lg font-semibold">{form.watch('cardTitle')}</h3> : null}
         {fields.map((_, index) => {
           const row = form.watch(`rows.${index}`)
+          console.log('Data at index', data[index])
           if (!data[index]) return null
           return (
             <div className="h-[75px] w-full scale-[0.9] sm:scale-100" key={index}>
@@ -261,7 +275,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                   <SelectContent>
                                     {instances.map((instance) => (
                                       <SelectItem key={instance.uid} value={instance.uid}>
-                                        {instance.type.denotation}
+                                        {instance.userIdentifier}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
