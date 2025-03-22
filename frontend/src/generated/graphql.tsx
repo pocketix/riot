@@ -304,19 +304,8 @@ export type QueryUserConfigArgs = {
   id: Scalars['ID']['input'];
 };
 
-export type SdCommandInvocation = {
-  __typename?: 'SDCommandInvocation';
-  commandId: Scalars['ID']['output'];
-  id: Scalars['ID']['output'];
-  invocationTime: Scalars['String']['output'];
-  payload: Scalars['String']['output'];
-  sdInstanceId: Scalars['ID']['output'];
-  userId: Scalars['ID']['output'];
-};
-
 export type SdInstance = {
   __typename?: 'SDInstance';
-  commandInvocations: Array<SdCommandInvocation>;
   confirmedByUser: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   type: SdType;
@@ -509,7 +498,7 @@ export type SdTypeQueryVariables = Exact<{
 }>;
 
 
-export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', denotation: string, id: number, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, type: SdParameterType }> } };
+export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }> } };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
