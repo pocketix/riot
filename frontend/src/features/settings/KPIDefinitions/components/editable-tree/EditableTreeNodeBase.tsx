@@ -1,6 +1,6 @@
 import React, { ReactNode, useMemo } from 'react'
 import { editableTreeConfiguration } from './EditableTree'
-import { EffectFunction } from '../../../../util'
+import { EffectFunction } from '../util'
 
 interface EditableTreeNodeBaseProps {
   treeNodeContents: ReactNode

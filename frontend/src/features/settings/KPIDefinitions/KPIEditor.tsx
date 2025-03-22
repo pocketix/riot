@@ -35,7 +35,7 @@ import {
 import { toast } from 'sonner'
 
 export interface KPIDefinitionModel extends EditableTreeNodeDataModel {
-  id: string
+  id: number
   userIdentifier: string
   sdInstanceMode: SdInstanceMode
   selectedSDInstanceUIDs: string[]
@@ -86,7 +86,10 @@ export default function KPIEditor() {
     if (!restOfKPIDefinitionDetailPageData?.sdTypes || !kpiDefinitionDetailData?.kpiDefinition?.sdTypeSpecification) {
       return
     }
-    setSDTypeData(restOfKPIDefinitionDetailPageData.sdTypes.find((sdType) => sdType.denotation === kpiDefinitionDetailData.kpiDefinition.sdTypeSpecification))
+
+    const matchedSDType = restOfKPIDefinitionDetailPageData.sdTypes.find((sdType) => sdType.denotation === kpiDefinitionDetailData.kpiDefinition.sdTypeSpecification)
+
+    setSDTypeData(matchedSDType ?? null)
   }, [restOfKPIDefinitionDetailPageData, kpiDefinitionDetailData])
 
   const initiateLogicalOperationNodeModification = (nodeName: string) => {
@@ -98,7 +101,7 @@ export default function KPIEditor() {
 
   const initiateAtomNodeModification = (nodeName: string, sdParameterSpecification: string, atomNodeType: AtomNodeType, referenceValue: string | number | boolean) => {
     currentNodeNameRef.current = nodeName
-    const sdParameter = sdTypeData.parameters.find((sdParameter) => sdParameter.denotation === sdParameterSpecification)
+    const sdParameter = sdTypeData?.parameters.find((sdParameter) => sdParameter.denotation === sdParameterSpecification)
     const binaryRelation = ((atomNodeType: AtomNodeType): BinaryRelation => {
       switch (atomNodeType) {
         case AtomNodeType.StringEQ:
@@ -126,7 +129,7 @@ export default function KPIEditor() {
       }
     })(referenceValue)
     showAtomNodeModal({
-      sdTypeData: sdTypeData,
+      sdTypeData: sdTypeData ?? undefined,
       onConfirm: reconfigureAtomNode,
       sdParameter: sdParameter,
       binaryRelation: binaryRelation,
@@ -141,7 +144,7 @@ export default function KPIEditor() {
       })
     )
   }
-  const reconfigureAtomNode = (type: AtomNodeType, sdParameterID: string, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
+  const reconfigureAtomNode = (type: AtomNodeType, sdParameterID: number, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
     setDefinitionModel((definitionModel) =>
       produce(definitionModel, (draftDefinitionModel) => {
         modifyAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterID, sdParameterSpecification, referenceValue)
@@ -167,7 +170,7 @@ export default function KPIEditor() {
   const initiateNewAtomNodeCreation = () => {
     removeSelectNewNodeTypeModal()
     showAtomNodeModal({
-      sdTypeData: sdTypeData,
+      sdTypeData: sdTypeData ?? undefined,
       onConfirm: finalizeNewAtomNodeCreation
     })
   }
@@ -180,7 +183,7 @@ export default function KPIEditor() {
     removeSelectLogicalOperationTypeModal()
   }
 
-  const finalizeNewAtomNodeCreation = (type: AtomNodeType, sdParameterID: string, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
+  const finalizeNewAtomNodeCreation = (type: AtomNodeType, sdParameterID: number, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
     setDefinitionModel((definitionModel) =>
       produce(definitionModel, (draftDefinitionModel) => {
         crateNewAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterID, sdParameterSpecification, referenceValue)
@@ -198,10 +201,10 @@ export default function KPIEditor() {
         setDefinitionModel(initialKPIDefinitionModel)
       }}
       kpiDefinitionModel={definitionModel}
-      restOfKPIDefinitionDetailPageData={restOfKPIDefinitionDetailPageData}
-      sdTypeData={sdTypeData}
+      restOfKPIDefinitionDetailPageData={restOfKPIDefinitionDetailPageData!}
+      sdTypeData={sdTypeData!}
       canSubmit={useMemo(() => {
-        return !!sdTypeData && definitionModel.attributes.nodeType !== NodeType.NewNode
+        return !!sdTypeData && definitionModel.attributes?.nodeType !== NodeType.NewNode
       }, [sdTypeData, definitionModel])}
       anyLoadingOccurs={kpiDefinitionDetailLoading || restOfKPIDefinitionDetailPageDataLoading || createKPIDefinitionLoading || updateKPIDefinitionLoading}
       anyErrorOccurred={!!kpiDefinitionDetailError || !!restOfKPIDefinitionDetailPageDataError || !!createKPIDefinitionError || !!updateKPIDefinitionError}
@@ -209,7 +212,7 @@ export default function KPIEditor() {
       initiateNewNodeCreation={initiateNewNodeCreation}
       initiateNewLogicalOperationNodeCreation={initiateNewLogicalOperationNodeCreation}
       initiateNewAtomNodeCreation={initiateNewAtomNodeCreation}
-      handleSDTypeSelection={(sdTypeID: string) => {
+      handleSDTypeSelection={(sdTypeID: number | string) => {
         if (!restOfKPIDefinitionDetailPageData?.sdTypes) {
           return
         }
@@ -238,7 +241,7 @@ export default function KPIEditor() {
       }}
       initiateAtomNodeModification={initiateAtomNodeModification}
       onSubmitHandler={async () => {
-        const kpiDefinitionInput = kpiDefinitionModelToKPIDefinitionInput(definitionModel, sdTypeData.id, sdTypeData.denotation)
+        const kpiDefinitionInput = kpiDefinitionModelToKPIDefinitionInput(definitionModel, sdTypeData!.id, sdTypeData!.denotation)
         if (id) {
           await updateKPIDefinitionMutation({
             variables: {

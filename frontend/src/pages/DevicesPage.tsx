@@ -14,14 +14,6 @@ const StyledPage = styled.div`
   overflow: hidden;
 `
 
-const ContentWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 100%;
-`
 const TabsContainer = styled.div`
   @media (min-width: ${breakpoints.sm}) {
     align-self: flex-end;

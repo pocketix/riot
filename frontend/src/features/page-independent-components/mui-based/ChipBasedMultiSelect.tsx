@@ -27,7 +27,7 @@ const ChipBasedMultiSelect: React.FC<ChipBasedMultiSelectProps> = (props) => {
         value={props.selectedSelectionSubjects.map(({ id }) => id)}
         onChange={(e) => {
           const newValue = e.target.value
-          props.onChange(typeof newValue === 'string' ? newValue.split(',') : newValue)
+          props.onChange(typeof newValue === 'string' ? newValue.split(',') : (newValue as string[]))
           if (props.interactionDetectedRef) {
             props.interactionDetectedRef.current = true
           }

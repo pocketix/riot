@@ -8,7 +8,7 @@ import { ConsumerFunction, generateNewUUID, SelectionSubject } from '@/features/
 interface StandardSingleSelectProps {
   title: string
   allSelectionSubjects: SelectionSubject[]
-  selectedSelectionSubjectID: string
+  selectedSelectionSubjectID: string | number
   onChange: ConsumerFunction<string>
   error?: boolean
   sx?: SxProps<Theme>
@@ -26,7 +26,7 @@ const StandardSingleSelect: React.FC<StandardSingleSelectProps> = (props) => {
         error={props?.error ?? false}
         value={props.selectedSelectionSubjectID}
         label={props.title}
-        onChange={(e) => props.onChange(e.target.value)}
+        onChange={(e) => props.onChange(e.target.value as string)}
         sx={props.sx ? props.sx : {}}
       >
         {props.allSelectionSubjects.map(({ id, name }) => (

@@ -37,7 +37,7 @@ export const useChangeURL = () => {
 export const generateNewUUID = (): string => v4()
 
 export interface SelectionSubject {
-  id: string
+  id: string | number
   name: string
 }
 

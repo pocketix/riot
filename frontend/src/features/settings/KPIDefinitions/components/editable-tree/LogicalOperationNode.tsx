@@ -1,7 +1,7 @@
 import React from 'react'
 import { LogicalOperationNodeType } from './EditableTree'
 import EditableTreeNodeBase from './EditableTreeNodeBase'
-import { EffectFunction } from '../../../../util'
+import { EffectFunction } from '../util'
 
 interface LogicalOperationNodeProps {
   type: LogicalOperationNodeType

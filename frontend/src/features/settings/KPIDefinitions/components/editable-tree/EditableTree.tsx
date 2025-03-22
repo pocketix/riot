@@ -65,7 +65,7 @@ export interface EditableTreeNodeDataModel extends RawNodeDatum {
   attributes?: {
     nodeType: NodeType
     atomNodeType?: AtomNodeType
-    atomNodeSDParameterID?: string
+    atomNodeSDParameterID?: number
     atomNodeSDParameterSpecification?: string
     atomNodeReferenceValue?: string | boolean | number
     logicalOperationNodeType?: LogicalOperationNodeType
@@ -112,7 +112,7 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
 
   const renderTreeNodeBasedOnType = useCallback(
     (editableTreeNodeDataModel: EditableTreeNodeDataModel) => {
-      switch (editableTreeNodeDataModel.attributes.nodeType) {
+      switch (editableTreeNodeDataModel.attributes?.nodeType) {
         case NodeType.NewNode:
           return (
             <EditableTreeNodeBase
@@ -128,18 +128,18 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
           const referenceValue = editableTreeNodeDataModel.attributes.atomNodeReferenceValue
           return (
             <AtomNode
-              type={atomNodeType}
-              sdParameterSpecification={sdParameterSpecification}
-              referenceValue={referenceValue}
+              type={atomNodeType!}
+              sdParameterSpecification={sdParameterSpecification!}
+              referenceValue={referenceValue!}
               onClickHandler={() => {
-                props.initiateAtomNodeModification(editableTreeNodeDataModel.name, sdParameterSpecification, atomNodeType, referenceValue)
+                props.initiateAtomNodeModification(editableTreeNodeDataModel.name, sdParameterSpecification!, atomNodeType!, referenceValue!)
               }}
             />
           )
         case NodeType.LogicalOperationNode:
           return (
             <LogicalOperationNode
-              type={editableTreeNodeDataModel.attributes.logicalOperationNodeType}
+              type={editableTreeNodeDataModel.attributes.logicalOperationNodeType!}
               onClick={() => {
                 props.initiateLogicalOperationNodeModification(editableTreeNodeDataModel.name)
               }}
@@ -187,10 +187,10 @@ const EditableTree: React.FC<EditableTreeProps> = (props) => {
   })
 
   const [treeShown, setTreeShown] = useState(false)
-  const treeShownTimeoutRef = useRef(null)
+  const treeShownTimeoutRef = useRef<any>(null)
 
   useEffect(() => {
-    updateTreePositionWithinContainer(width, height)
+    updateTreePositionWithinContainer(width!, height!)
     if (!treeShown) {
       treeShownTimeoutRef.current = setTimeout(() => {
         setTreeShown(true)

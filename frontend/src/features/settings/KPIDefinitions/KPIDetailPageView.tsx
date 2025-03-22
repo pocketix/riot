@@ -40,7 +40,8 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
     }
     setSelectedSDInstanceIDs(
       props.kpiDefinitionModel.selectedSDInstanceUIDs.map((selectedSDInstanceUID) => {
-        return props.restOfKPIDefinitionDetailPageData.sdInstances.find((sdInstance) => sdInstance.uid === selectedSDInstanceUID).id
+        const found = props.restOfKPIDefinitionDetailPageData?.sdInstances.find((sdInstance) => sdInstance.uid === selectedSDInstanceUID)
+        return found?.id.toString() ?? ''
       })
     )
   }, [props.kpiDefinitionModel.selectedSDInstanceUIDs])
@@ -130,7 +131,7 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
                 }
                 selectedSelectionSubjects={
                   props?.restOfKPIDefinitionDetailPageData?.sdInstances
-                    .filter((sdInstance) => selectedSDInstanceIDs.indexOf(sdInstance.id) !== -1)
+                    .filter((sdInstance) => selectedSDInstanceIDs.indexOf(sdInstance.id.toString()) !== -1)
                     .map((sdInstance) => {
                       return {
                         id: sdInstance.id,
@@ -139,14 +140,17 @@ const KPIDetailPageView: React.FC<KPIDetailPageViewProps> = (props) => {
                     }) ?? []
                 }
                 onChange={(selectedSelectionSubjectIDs: string[]) => {
-                  if (!props?.restOfKPIDefinitionDetailPageData?.sdInstances) {
-                    return
-                  }
-                  props.updateSelectedSDInstanceUIDs(
-                    selectedSelectionSubjectIDs.map((selectedSelectionSubjectID) => {
-                      return props.restOfKPIDefinitionDetailPageData.sdInstances.find((sdInstance) => sdInstance.id === selectedSelectionSubjectID).uid
+                  const instances = props.restOfKPIDefinitionDetailPageData?.sdInstances
+                  if (!instances) return
+
+                  const selectedUIDs = selectedSelectionSubjectIDs
+                    .map((idStr) => {
+                      const found = instances.find((instance) => instance.id === Number(idStr))
+                      return found?.uid
                     })
-                  )
+                    .filter((uid): uid is string => !!uid) // filter out undefined
+
+                  props.updateSelectedSDInstanceUIDs(selectedUIDs)
                 }}
               />
             </FormControl>

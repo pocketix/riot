@@ -48,7 +48,7 @@ type KPIDefinitionCardProps = {
 
 export default function KPIDefinitionCard({ kpiDefinition, onDelete }: KPIDefinitionCardProps) {
   const navigate = useNavigate()
-  const { id, sdInstanceMode, sdTypeID, sdTypeSpecification, selectedSDInstanceUIDs, userIdentifier } = kpiDefinition
+  const { id, sdInstanceMode, sdTypeSpecification, selectedSDInstanceUIDs, userIdentifier } = kpiDefinition
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   return (

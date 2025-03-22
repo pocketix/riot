@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FormControl, Grid } from '@mui/material'
 import { Button } from '@/components/ui/button'
 import ModalBase from '../../../../page-independent-components/mui-based/ModalBase'
@@ -11,7 +11,7 @@ import { TetraConsumerFunction } from '../util'
 
 interface AtomNodeModalProps {
   sdTypeData: SdType
-  onConfirm: TetraConsumerFunction<AtomNodeType, string, string, string | boolean | number>
+  onConfirm: TetraConsumerFunction<AtomNodeType, number, string, string | boolean | number>
   sdParameter?: SdParameter
   binaryRelation?: BinaryRelation
   referenceValueString?: string
@@ -59,7 +59,7 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
   }, [sdParameter])
 
   const checkThenConfirm = () => {
-    const referenceValue = ((referenceValueString: string, sdParameterType: SdParameterType): string | boolean | number | undefined => {
+    const referenceValue = ((referenceValueString: string, sdParameterType: SdParameterType): string | boolean | number | undefined | null => {
       switch (sdParameterType) {
         case SdParameterType.String:
           return referenceValueString.replace(/^"+|"+$/g, '')
@@ -79,7 +79,7 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
             return null
           }
       }
-    })(referenceValueString, sdParameter.type)
+    })(referenceValueString, sdParameter!.type)
     if (referenceValue === null) {
       setIncorrectReferenceValueStringFlag(true)
       return
@@ -104,8 +104,8 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
               return AtomNodeType.NumericGEQ
           }
       }
-    })(sdParameter.type, binaryRelation)
-    props.onConfirm(atomNodeType, sdParameter.id, sdParameter.denotation, referenceValue)
+    })(sdParameter!.type, binaryRelation!)
+    props.onConfirm(atomNodeType, sdParameter!.id, sdParameter!.denotation, referenceValue!)
   }
 
   return (
@@ -117,13 +117,13 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
               title="Select SD type parameter"
               allSelectionSubjects={
                 props?.sdTypeData?.parameters.map((parameter) => ({
-                  id: parameter.id,
+                  id: parameter.id.toString(),
                   name: `${parameter.denotation} – ${parameter.type.toString()}`
                 })) ?? []
               }
-              selectedSelectionSubjectID={sdParameter ? sdParameter.id : ''}
+              selectedSelectionSubjectID={sdParameter ? sdParameter.id.toString() : ''}
               onChange={(selectedSelectionSubjectID) => {
-                const selectedSDParameter = props?.sdTypeData?.parameters.find((p) => p.id === selectedSelectionSubjectID)
+                const selectedSDParameter = props?.sdTypeData?.parameters.find((p) => p.id.toString() === selectedSelectionSubjectID)
                 selectedSDParameter && setSDParameter(selectedSDParameter)
               }}
             />
@@ -148,7 +148,7 @@ export default NiceModal.create<AtomNodeModalProps>((props) => {
           </FormControl>
         </Grid>
         <Grid item xs={6}>
-          <Button variant="secondary" fullWidth onClick={checkThenConfirm}>
+          <Button variant="secondary" onClick={checkThenConfirm}>
             Confirm
           </Button>
         </Grid>

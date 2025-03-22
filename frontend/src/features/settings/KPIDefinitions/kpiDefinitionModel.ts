@@ -29,8 +29,10 @@ const newNode = (): EditableTreeNodeDataModel => {
   }
 }
 
-const newAtomNode = (atomNodeType: AtomNodeType, sdParameterId: string, sdParameterSpecification: string, referenceValue: string | boolean | number): EditableTreeNodeDataModel => {
+const newAtomNode = (atomNodeType: AtomNodeType, sdParameterId: number, sdParameterSpecification: string, referenceValue: string | boolean | number): EditableTreeNodeDataModel => {
   const node = newNode()
+  node.attributes = node.attributes ?? { nodeType: NodeType.AtomNode }
+
   node.attributes.nodeType = NodeType.AtomNode
   node.attributes.atomNodeType = atomNodeType
   node.attributes.atomNodeSDParameterID = sdParameterId
@@ -41,8 +43,11 @@ const newAtomNode = (atomNodeType: AtomNodeType, sdParameterId: string, sdParame
 
 const newLogicalOperationNode = (logicalOperationNodeType: LogicalOperationNodeType): EditableTreeNodeDataModel => {
   const node = newNode()
-  node.attributes.nodeType = NodeType.LogicalOperationNode
-  node.attributes.logicalOperationNodeType = logicalOperationNodeType
+  node.attributes = {
+    nodeType: NodeType.LogicalOperationNode,
+    logicalOperationNodeType
+  }
+
   node.children = [newNode()]
   return node
 }
@@ -90,14 +95,17 @@ export const kpiDefinitionToKPIDefinitionModel = (kpiDefinition: KpiDefinition):
   kpiDefinition.nodes.forEach((node) => {
     nodeByIdMap[node.id] = kpiNodeToEditableTreeNodeDataModel(node)
   })
-  let rootNodeId: string | null = null
+  let rootNodeId: number | null = null
   kpiDefinition.nodes.forEach((node) => {
     if (node.parentNodeID) {
-      nodeByIdMap[node.parentNodeID].children.unshift(nodeByIdMap[node.id])
+      nodeByIdMap[node.parentNodeID].children?.unshift(nodeByIdMap[node.id])
     } else {
       rootNodeId = node.id
     }
   })
+  if (!rootNodeId || !nodeByIdMap[rootNodeId]) {
+    throw new Error('Failed to find root node of KPI definition.')
+  }
   return {
     id: kpiDefinition.id,
     userIdentifier: kpiDefinition.userIdentifier,
@@ -109,8 +117,8 @@ export const kpiDefinitionToKPIDefinitionModel = (kpiDefinition: KpiDefinition):
 
 const processTree = (currentNodeName: string, node: EditableTreeNodeDataModel, processNode: ConsumerFunction<EditableTreeNodeDataModel>, appendNewNode: boolean) => {
   const handleNode = (node: EditableTreeNodeDataModel): boolean => {
-    if (appendNewNode && node.children.some((child) => child.name === currentNodeName)) {
-      node.children.push(newNode())
+    if (appendNewNode && node.children?.some((child) => child.name === currentNodeName)) {
+      node.children?.push(newNode())
     }
     if (node.name === currentNodeName) {
       processNode(node)
@@ -128,15 +136,15 @@ const processTree = (currentNodeName: string, node: EditableTreeNodeDataModel, p
 
 export const changeTypeOfLogicalOperationNode = (currentNodeName: string, node: EditableTreeNodeDataModel, newLogicalOperationNodeType: LogicalOperationNodeType) => {
   const processNode = (node: EditableTreeNodeDataModel) => {
-    node.attributes.logicalOperationNodeType = newLogicalOperationNodeType
+    node.attributes!.logicalOperationNodeType = newLogicalOperationNodeType
   }
   processTree(currentNodeName, node, processNode, false)
 }
 
 export const crateNewLogicalOperationNode = (currentNodeName: string, node: EditableTreeNodeDataModel, logicalOperationNodeType: LogicalOperationNodeType) => {
   const processNode = (node: EditableTreeNodeDataModel) => {
-    node.attributes.nodeType = NodeType.LogicalOperationNode
-    node.attributes.logicalOperationNodeType = logicalOperationNodeType
+    node.attributes!.nodeType = NodeType.LogicalOperationNode
+    node.attributes!.logicalOperationNodeType = logicalOperationNodeType
     node.children = [newNode()]
   }
   processTree(currentNodeName, node, processNode, true)
@@ -146,15 +154,15 @@ export const modifyAtomNode = (
   currentNodeName: string,
   node: EditableTreeNodeDataModel,
   atomNodeType?: AtomNodeType,
-  sdParameterID?: string,
+  sdParameterID?: number,
   sdParameterSpecification?: string,
   referenceValue?: string | boolean | number
 ) => {
   const processNode = (node: EditableTreeNodeDataModel) => {
-    node.attributes.atomNodeType = atomNodeType ?? node.attributes.atomNodeType
-    node.attributes.atomNodeSDParameterID = sdParameterID ?? node.attributes.atomNodeSDParameterID
-    node.attributes.atomNodeSDParameterSpecification = sdParameterSpecification ?? node.attributes.atomNodeSDParameterSpecification
-    node.attributes.atomNodeReferenceValue = referenceValue ?? node.attributes.atomNodeReferenceValue
+    node.attributes!.atomNodeType = atomNodeType ?? node.attributes!.atomNodeType
+    node.attributes!.atomNodeSDParameterID = sdParameterID ?? node.attributes!.atomNodeSDParameterID
+    node.attributes!.atomNodeSDParameterSpecification = sdParameterSpecification ?? node.attributes!.atomNodeSDParameterSpecification
+    node.attributes!.atomNodeReferenceValue = referenceValue ?? node.attributes!.atomNodeReferenceValue
   }
   processTree(currentNodeName, node, processNode, false)
 }
@@ -163,16 +171,16 @@ export const crateNewAtomNode = (
   currentNodeName: string,
   node: EditableTreeNodeDataModel,
   atomNodeType: AtomNodeType,
-  sdParameterID: string,
+  sdParameterID: number,
   sdParameterSpecification: string,
   referenceValue: string | boolean | number
 ) => {
   const processNode = (node: EditableTreeNodeDataModel) => {
-    node.attributes.nodeType = NodeType.AtomNode
-    node.attributes.atomNodeType = atomNodeType
-    node.attributes.atomNodeSDParameterID = sdParameterID
-    node.attributes.atomNodeSDParameterSpecification = sdParameterSpecification
-    node.attributes.atomNodeReferenceValue = referenceValue
+    node.attributes!.nodeType = NodeType.AtomNode
+    node.attributes!.atomNodeType = atomNodeType
+    node.attributes!.atomNodeSDParameterID = sdParameterID
+    node.attributes!.atomNodeSDParameterSpecification = sdParameterSpecification
+    node.attributes!.atomNodeReferenceValue = referenceValue
   }
   processTree(currentNodeName, node, processNode, true)
 }
@@ -180,64 +188,64 @@ export const crateNewAtomNode = (
 const editableTreeNodeDataModelToKpiNodeInput = (
   editableTreeNodeDataModel: EditableTreeNodeDataModel,
   sequentialNumberGenerator: SequentialNumberGenerator,
-  parentNodeId?: string
+  parentNodeId?: number
 ): KpiNodeInput | null => {
   const kpiNodeInputBase = {
-    id: sequentialNumberGenerator.getNextNumber().toString(),
+    id: sequentialNumberGenerator.getNextNumber(),
     parentNodeID: parentNodeId
   }
-  const nodeType = editableTreeNodeDataModel.attributes.nodeType
+  const nodeType = editableTreeNodeDataModel.attributes!.nodeType
   if (nodeType === NodeType.AtomNode) {
     const kpiAtomNodeInputBase = {
       ...kpiNodeInputBase,
-      sdParameterID: editableTreeNodeDataModel.attributes.atomNodeSDParameterID,
-      sdParameterSpecification: editableTreeNodeDataModel.attributes.atomNodeSDParameterSpecification
+      sdParameterID: editableTreeNodeDataModel.attributes!.atomNodeSDParameterID,
+      sdParameterSpecification: editableTreeNodeDataModel.attributes!.atomNodeSDParameterSpecification
     }
-    switch (editableTreeNodeDataModel.attributes.atomNodeType) {
+    switch (editableTreeNodeDataModel.attributes!.atomNodeType) {
       case AtomNodeType.StringEQ:
         return {
           ...kpiAtomNodeInputBase,
           type: KpiNodeType.StringEqAtom,
-          stringReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as string
+          stringReferenceValue: editableTreeNodeDataModel.attributes!.atomNodeReferenceValue as string
         }
       case AtomNodeType.BooleanEQ:
         return {
           ...kpiAtomNodeInputBase,
           type: KpiNodeType.BooleanEqAtom,
-          booleanReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as boolean
+          booleanReferenceValue: editableTreeNodeDataModel.attributes!.atomNodeReferenceValue as boolean
         }
       case AtomNodeType.NumericEQ:
         return {
           ...kpiAtomNodeInputBase,
           type: KpiNodeType.NumericEqAtom,
-          numericReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as number
+          numericReferenceValue: editableTreeNodeDataModel.attributes!.atomNodeReferenceValue as number
         }
       case AtomNodeType.NumericGT:
         return {
           ...kpiAtomNodeInputBase,
           type: KpiNodeType.NumericGtAtom,
-          numericReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as number
+          numericReferenceValue: editableTreeNodeDataModel.attributes!.atomNodeReferenceValue as number
         }
       case AtomNodeType.NumericGEQ:
         return {
           ...kpiAtomNodeInputBase,
           type: KpiNodeType.NumericGeqAtom,
-          numericReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as number
+          numericReferenceValue: editableTreeNodeDataModel.attributes!.atomNodeReferenceValue as number
         }
       case AtomNodeType.NumericLT:
         return {
           ...kpiAtomNodeInputBase,
           type: KpiNodeType.NumericLtAtom,
-          numericReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as number
+          numericReferenceValue: editableTreeNodeDataModel.attributes!.atomNodeReferenceValue as number
         }
       case AtomNodeType.NumericLEQ:
         return {
           ...kpiAtomNodeInputBase,
           type: KpiNodeType.NumericLeqAtom,
-          numericReferenceValue: editableTreeNodeDataModel.attributes.atomNodeReferenceValue as number
+          numericReferenceValue: editableTreeNodeDataModel.attributes!.atomNodeReferenceValue as number
         }
     }
-  } else if (nodeType === NodeType.LogicalOperationNode) {
+  } else if (editableTreeNodeDataModel.attributes?.nodeType === NodeType.LogicalOperationNode && editableTreeNodeDataModel.attributes.logicalOperationNodeType !== undefined) {
     return {
       ...kpiNodeInputBase,
       type: KpiNodeType.LogicalOperation,
@@ -250,7 +258,7 @@ const editableTreeNodeDataModelToKpiNodeInput = (
           case LogicalOperationNodeType.NOR:
             return LogicalOperationType.Nor
         }
-      })(editableTreeNodeDataModel.attributes.logicalOperationNodeType)
+      })(editableTreeNodeDataModel.attributes.logicalOperationNodeType) // ✅ Now safe
     }
   }
   return null
@@ -258,11 +266,11 @@ const editableTreeNodeDataModelToKpiNodeInput = (
 
 const editableTreeNodeDataModelToKpiNodeInputs = (editableTreeNodeDataModel: EditableTreeNodeDataModel): KpiNodeInput[] => {
   const sequentialNumberGenerator = new SequentialNumberGenerator(1)
-  const processNode = (node: EditableTreeNodeDataModel, parentNodeId?: string) => {
+  const processNode = (node: EditableTreeNodeDataModel, parentNodeId?: number) => {
     const kpiNodeInput = editableTreeNodeDataModelToKpiNodeInput(node, sequentialNumberGenerator, parentNodeId)
     if (kpiNodeInput) {
       kpiNodeInputs.push(kpiNodeInput)
-      node.children.forEach((child) => processNode(child, kpiNodeInput.id))
+      node.children?.forEach((child) => processNode(child, kpiNodeInput.id))
     }
   }
   let kpiNodeInputs: KpiNodeInput[] = []
@@ -270,7 +278,7 @@ const editableTreeNodeDataModelToKpiNodeInputs = (editableTreeNodeDataModel: Edi
   return kpiNodeInputs
 }
 
-export const kpiDefinitionModelToKPIDefinitionInput = (kpiDefinitionModel: KPIDefinitionModel, sdTypeID: string, sdTypeSpecification: string): KpiDefinitionInput => {
+export const kpiDefinitionModelToKPIDefinitionInput = (kpiDefinitionModel: KPIDefinitionModel, sdTypeID: number, sdTypeSpecification: string): KpiDefinitionInput => {
   return {
     sdTypeID: sdTypeID,
     sdTypeSpecification: sdTypeSpecification,
@@ -282,7 +290,7 @@ export const kpiDefinitionModelToKPIDefinitionInput = (kpiDefinitionModel: KPIDe
 }
 
 export const initialKPIDefinitionModel: KPIDefinitionModel = {
-  id: '---',
+  id: 0,
   userIdentifier: 'Feel free to change the user identifier of this KPI definition',
   sdInstanceMode: SdInstanceMode.All,
   selectedSDInstanceUIDs: [],

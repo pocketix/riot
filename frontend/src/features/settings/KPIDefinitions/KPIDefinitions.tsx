@@ -7,8 +7,8 @@ import Spinner from '@/ui/Spinner'
 import { useMutation, useQuery } from '@apollo/client'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
-import KPIDefinitionCard from './KPiDefinitionCard'
 import { toast } from 'sonner'
+import KPIDefinitionCard from './KPIDefinitionCard'
 
 const Container = styled.div`
   display: flex;
@@ -70,8 +70,6 @@ export default function KPIDefinitions() {
 
   if (loading) return <Spinner />
   if (!data?.kpiDefinitions?.length) return <p>No KPI definitions found.</p>
-
-  console.log(data)
 
   return (
     <Container>

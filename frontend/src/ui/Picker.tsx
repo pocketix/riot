@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, act } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import { FaChevronDown } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'

@@ -1,4 +1,3 @@
-import React from 'react'
 import { Button, Grid } from '@mui/material'
 import NiceModal, { useModal } from '@ebay/nice-modal-react'
 import ModalBase from './mui-based/ModalBase'
