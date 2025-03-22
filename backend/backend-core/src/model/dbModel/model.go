@@ -1,8 +1,9 @@
 package dbModel
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type KPIDefinitionEntity struct {
@@ -59,6 +60,8 @@ func (AtomKPINodeEntity) TableName() string {
 type SDTypeEntity struct {
 	ID         uint32              `gorm:"column:id;primaryKey;not null"`
 	Denotation string              `gorm:"column:denotation;not null;index"` // Denotation is a separately indexed field
+	Label      string              `gorm:"column:label"`
+	Icon       string              `gorm:"column:icon"`
 	Parameters []SDParameterEntity `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
 	Commands   []SDCommandEntity   `gorm:"foreignKey:SDTypeID;constraint:OnDelete:CASCADE"`
 }
@@ -71,6 +74,7 @@ type SDParameterEntity struct {
 	ID                  uint32                      `gorm:"column:id;primaryKey;not null"`
 	SDTypeID            uint32                      `gorm:"column:sd_type_id;not null"`
 	Denotation          string                      `gorm:"column:denotation;not null"`
+	Label      string `gorm:"column:label"`
 	Type                string                      `gorm:"column:type;not null"`
 	SDParameterSnapshot []SDParameterSnapshotEntity `gorm:"foreignKey:SDParameterID;constraint:OnDelete:CASCADE"`
 }
@@ -81,7 +85,7 @@ func (SDParameterEntity) TableName() string {
 
 type SDInstanceEntity struct {
 	ID                                         uint32                                      `gorm:"column:id;primaryKey;not null"`
-	UID                                        string                                      `gorm:"column:uid;not null;index"` // UID is a separately indexed field
+	UID                                        string                                      `gorm:"column:uid;not null;index"`
 	ConfirmedByUser                            bool                                        `gorm:"column:confirmed_by_user;not null"`
 	UserIdentifier                             string                                      `gorm:"column:user_identifier;not null"`
 	SDTypeID                                   uint32                                      `gorm:"column:sd_type_id"`
@@ -90,6 +94,7 @@ type SDInstanceEntity struct {
 	KPIFulfillmentCheckResults                 []KPIFulfillmentCheckResultEntity           `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 	SDInstanceKPIDefinitionRelationshipRecords []SDInstanceKPIDefinitionRelationshipEntity `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 	SDParameterSnapshot                        []SDParameterSnapshotEntity                 `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
+	CommandInvocations                         []SDCommandInvocationEntity                 `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"` // Each instance has special command invocatios
 }
 
 func (SDInstanceEntity) TableName() string {
@@ -187,12 +192,11 @@ func (UserConfigEntity) TableName() string {
 }
 
 type SDCommandEntity struct {
-	ID          uint32                      `gorm:"column:id;primaryKey;not null"`
-	SDTypeID    uint32                      `gorm:"column:sd_type_id;not null"`
-	Denotation  string                      `gorm:"column:denotation;not null"`
-	Type        string                      `gorm:"column:type;not null"`
-	Payload     string                      `gorm:"column:payload;not null"`
-	Invocations []SDCommandInvocationEntity `gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
+	ID          uint32 `gorm:"column:id;primaryKey;not null"`
+	SDTypeID    uint32 `gorm:"column:sd_type_id;not null"` // One type of smart device has the same set of commands
+	Name        string `gorm:"column:denotation;not null"`
+	Type        string `gorm:"column:type;not null"`
+	Description string `gorm:"column:payload;not null"`
 }
 
 func (SDCommandEntity) TableName() string {
@@ -204,6 +208,8 @@ type SDCommandInvocationEntity struct {
 	InvocationTime time.Time
 	Payload        string `gorm:"column:payload;not null"`
 	UserId         uint32 `gorm:"column:user_id"`
+	CommandID      uint32 `gorm:"column:command_id;not null"`     // Binding to command
+	SDInstanceID   uint32 `gorm:"column:sd_instance_id;not null"` // New link to a specific instance
 }
 
 func (SDCommandInvocationEntity) TableName() string {

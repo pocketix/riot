@@ -2,6 +2,7 @@ package graphql
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql/gsc"
@@ -101,6 +102,50 @@ func (r *mutationResolver) DeleteUserConfig(ctx context.Context, userID uint32) 
 	return true, nil
 }
 
+func (r *mutationResolver) CreateSDCommand(ctx context.Context, input graphQLModel.SDCommandInput) (graphQLModel.SDCommand, error) {
+	createSDCommandResult := domainLogicLayer.CreateSDCommand(input)
+	if createSDCommandResult.IsFailure() {
+		log.Printf("Error occurred (create SD command): %s\n", createSDCommandResult.GetError().Error())
+		return graphQLModel.SDCommand{}, createSDCommandResult.GetError()
+	}
+	return createSDCommandResult.Unwrap()
+}
+
+func (r *mutationResolver) UpdateSDCommand(ctx context.Context, id uint32, name *string, description *string) (graphQLModel.SDCommand, error) {
+	updateSDCommandResult := domainLogicLayer.UpdateSDCommand(id, name, description)
+	if updateSDCommandResult.IsFailure() {
+		log.Printf("Error occurred (update SD command): %s\n", updateSDCommandResult.GetError().Error())
+		return graphQLModel.SDCommand{}, updateSDCommandResult.GetError()
+	}
+	return updateSDCommandResult.Unwrap()
+}
+
+func (r *mutationResolver) DeleteSDCommand(ctx context.Context, id uint32) (bool, error) {
+	if err := domainLogicLayer.DeleteSDCommand(id); err != nil {
+		log.Printf("Error occurred (delete SD command): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) CreateSDCommandInvocation(ctx context.Context, input graphQLModel.SDCommandInvocationInput) (graphQLModel.SDCommandInvocation, error) {
+	createSDCommandInvocationResult := domainLogicLayer.CreateSDCommandInvocation(input)
+	if createSDCommandInvocationResult.IsFailure() {
+		log.Printf("Error occurred (create SD command invocation): %s\n", createSDCommandInvocationResult.GetError().Error())
+		return graphQLModel.SDCommandInvocation{}, createSDCommandInvocationResult.GetError()
+	}
+	return createSDCommandInvocationResult.Unwrap()
+}
+
+func (r *mutationResolver) InvokeSDCommand(ctx context.Context, id uint32) (bool, error) {
+	invokeSDCommandResult := domainLogicLayer.InvokeSDCommand(id)
+	if invokeSDCommandResult.IsFailure() {
+		log.Printf("Error occurred (invoke SD command): %s\n", invokeSDCommandResult.GetError().Error())
+		return false, invokeSDCommandResult.GetError()
+	}
+	return true, nil
+}
+
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
 	getSDTypeResult := domainLogicLayer.GetSDType(id)
 	if getSDTypeResult.IsFailure() {
@@ -185,6 +230,41 @@ func (r *queryResolver) UserConfig(ctx context.Context, id uint32) (graphQLModel
 	return getUserConfigResult.Unwrap()
 }
 
+func (r *queryResolver) SdCommand(ctx context.Context, id uint32) (graphQLModel.SDCommand, error) {
+	getSDCommandResult := domainLogicLayer.GetSDCommand(id)
+	if getSDCommandResult.IsFailure() {
+		log.Printf("Error occurred (get SD command): %s\n", getSDCommandResult.GetError().Error())
+		return graphQLModel.SDCommand{}, getSDCommandResult.GetError()
+	}
+	return getSDCommandResult.Unwrap()
+}
+
+func (r *queryResolver) SdCommands(ctx context.Context) ([]graphQLModel.SDCommand, error) {
+	getSDCommandsResult := domainLogicLayer.GetSDCommands()
+	if getSDCommandsResult.IsFailure() {
+		log.Printf("Error occurred (get SD commands): %s\n", getSDCommandsResult.GetError().Error())
+		return nil, getSDCommandsResult.GetError()
+	}
+	return getSDCommandsResult.Unwrap()
+}
+
+func (r *queryResolver) SdCommandInvocation(ctx context.Context, id uint32) (graphQLModel.SDCommandInvocation, error) {
+	getSDCommandInvocationResult := domainLogicLayer.GetSDCommandInvocation(id)
+	if getSDCommandInvocationResult.IsFailure() {
+		log.Printf("Error occurred (get SD command invocation): %s\n", getSDCommandInvocationResult.GetError().Error())
+		return graphQLModel.SDCommandInvocation{}, getSDCommandInvocationResult.GetError()
+	}
+	return getSDCommandInvocationResult.Unwrap()
+}
+
+func (r *queryResolver) SdCommandInvocations(ctx context.Context) ([]graphQLModel.SDCommandInvocation, error) {
+	getSDCommandInvocationsResult := domainLogicLayer.GetSDCommandInvocations()
+	if getSDCommandInvocationsResult.IsFailure() {
+		log.Printf("Error occurred (get SD command invocations): %s\n", getSDCommandInvocationsResult.GetError().Error())
+	}
+	return getSDCommandInvocationsResult.Unwrap()
+}
+
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {
 	return SDInstanceGraphQLSubscriptionChannel, nil
 }
@@ -195,6 +275,10 @@ func (r *subscriptionResolver) OnKPIFulfillmentChecked(ctx context.Context) (<-c
 
 func (r *subscriptionResolver) OnSDParameterSnapshotUpdate(ctx context.Context) (<-chan graphQLModel.SDParameterSnapshot, error) {
 	return SDParameterSnapshotUpdateSubscriptionChannel, nil
+}
+
+func (r *subscriptionResolver) CommandInvocationStateChanged(ctx context.Context) (<-chan graphQLModel.SDCommandInvocation, error) {
+	panic(fmt.Errorf("not implemented: CommandInvocationStateChanged - commandInvocationStateChanged"))
 }
 
 func (r *Resolver) Mutation() gsc.MutationResolver { return &mutationResolver{r} }

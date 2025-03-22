@@ -221,12 +221,43 @@ type OutputData struct {
 type Query struct {
 }
 
+type SDCommand struct {
+	ID          uint32  `json:"id"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	SdTypeID    uint32  `json:"sdTypeId"`
+}
+
+type SDCommandInput struct {
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	SdTypeID    uint32  `json:"sdTypeId"`
+}
+
+type SDCommandInvocation struct {
+	ID             uint32 `json:"id"`
+	InvocationTime string `json:"invocationTime"`
+	Payload        string `json:"payload"`
+	UserID         uint32 `json:"userId"`
+	CommandID      uint32 `json:"commandId"`
+	SdInstanceID   uint32 `json:"sdInstanceId"`
+}
+
+type SDCommandInvocationInput struct {
+	InvocationTime string `json:"invocationTime"`
+	Payload        string `json:"payload"`
+	UserID         uint32 `json:"userId"`
+	CommandID      uint32 `json:"commandId"`
+	SdInstanceID   uint32 `json:"sdInstanceId"`
+}
+
 type SDInstance struct {
 	ID                 uint32                `json:"id"`
 	UID                string                `json:"uid"`
 	ConfirmedByUser    bool                  `json:"confirmedByUser"`
 	UserIdentifier     string                `json:"userIdentifier"`
 	Type               SDType                `json:"type"`
+	CommandInvocations []SDCommandInvocation `json:"commandInvocations"`
 	ParameterSnapshots []SDParameterSnapshot `json:"parameterSnapshots,omitempty"`
 }
 
@@ -249,12 +280,14 @@ type SDInstanceUpdateInput struct {
 type SDParameter struct {
 	ID                 uint32                `json:"id"`
 	Denotation         string                `json:"denotation"`
+	Label      *string         `json:"label,omitempty"`
 	Type               SDParameterType       `json:"type"`
 	ParameterSnapshots []SDParameterSnapshot `json:"parameterSnapshots"`
 }
 
 type SDParameterInput struct {
 	Denotation string          `json:"denotation"`
+	Label      *string         `json:"label,omitempty"`
 	Type       SDParameterType `json:"type"`
 }
 
@@ -270,11 +303,15 @@ type SDParameterSnapshot struct {
 type SDType struct {
 	ID         uint32        `json:"id"`
 	Denotation string        `json:"denotation"`
+	Label      *string       `json:"label,omitempty"`
+	Icon       *string       `json:"icon,omitempty"`
 	Parameters []SDParameter `json:"parameters"`
 }
 
 type SDTypeInput struct {
 	Denotation string             `json:"denotation"`
+	Label      *string            `json:"label,omitempty"`
+	Icon       *string            `json:"icon,omitempty"`
 	Parameters []SDParameterInput `json:"parameters"`
 }
 
