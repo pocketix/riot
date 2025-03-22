@@ -1,7 +1,7 @@
-import { Outlet } from "react-router-dom";
-import styled from "styled-components";
-import Navbar from "./Navbar";
-import { breakpoints } from "@/styles/Breakpoints";
+import { Outlet } from 'react-router-dom'
+import styled from 'styled-components'
+import Navbar from './Navbar'
+import { breakpoints } from '@/styles/Breakpoints'
 
 const StyledAppLayout = styled.div`
   position: relative;
@@ -10,21 +10,17 @@ const StyledAppLayout = styled.div`
   display: grid;
   grid-template-rows: 1fr auto;
   grid-template-areas:
-    "main"
-    "navbar";
+    'main'
+    'navbar';
 
   &::before {
-    content: "";
+    content: '';
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: linear-gradient(
-      to bottom,
-      var(--primary-background),
-      var(--secondary-background)
-    );
+    background-image: linear-gradient(to bottom, var(--primary-background), var(--secondary-background));
     opacity: 0.5; /* Adjust transparency */
     z-index: -1;
   }
@@ -32,9 +28,9 @@ const StyledAppLayout = styled.div`
   @media (min-width: ${breakpoints.md}) {
     grid-template-rows: none;
     grid-template-columns: auto 1fr;
-    grid-template-areas: "navbar main";
+    grid-template-areas: 'navbar main';
   }
-`;
+`
 
 const Main = styled.main`
   display: flex;
@@ -48,7 +44,7 @@ const Main = styled.main`
     align-items: flex-start;
     justify-content: flex-start;
   }
-`;
+`
 
 const Container = styled.div`
   display: flex;
@@ -66,11 +62,11 @@ const Container = styled.div`
   @media (min-width: ${breakpoints.md}) {
     max-width: 100%;
   }
-`;
+`
 
 const StyledNavbar = styled(Navbar)`
   grid-area: navbar;
-`;
+`
 
 export default function AppLayout() {
   return (
@@ -82,5 +78,5 @@ export default function AppLayout() {
       </Main>
       <StyledNavbar />
     </StyledAppLayout>
-  );
+  )
 }

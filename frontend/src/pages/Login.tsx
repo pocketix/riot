@@ -22,7 +22,7 @@ const backendCoreURL = import.meta.env.VITE_BACKEND_CORE_URL || 'https://tyrion.
 
 function Login() {
   const [searchParams] = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/'
+  const redirect = searchParams.get('redirect') || `${location.origin}`
 
   const handleOAuthLogin = () => {
     window.location.href = `${backendCoreURL}/auth/login?redirect=${encodeURIComponent(redirect)}`

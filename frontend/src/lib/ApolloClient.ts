@@ -23,6 +23,7 @@ const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
       onError(({ networkError }: ErrorResponse) => {
         if (networkError && 'statusCode' in networkError && (networkError as any).statusCode === 401 && !userRedirectedAlready) {
           userRedirectedAlready = true
+
           window.location.href = `/login?redirect=${encodeURIComponent(window.location.href)}`
         }
       }),
