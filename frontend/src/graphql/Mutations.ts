@@ -44,3 +44,12 @@ export const DELETE_KPI_DEFINITION = gql`
     deleteKPIDefinition(id: $id)
   }
 `
+
+export const UPDATE_USER_CONFIG = gql`
+  mutation UpdateUserConfig($userId: ID!, $input: UserConfigInput!) {
+    updateUserConfig(userId: $userId, input: $input) {
+      userId
+      config
+    }
+  }
+`

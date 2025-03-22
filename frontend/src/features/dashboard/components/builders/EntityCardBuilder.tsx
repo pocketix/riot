@@ -8,7 +8,7 @@ import { SdInstance, SdParameter } from '@/generated/graphql'
 import { useQuery } from '@apollo/client'
 import { GET_PARAMETERS } from '@/graphql/Queries'
 import { useDarkMode } from '@/context/DarkModeContext'
-import { darkTheme, lightTheme } from '../cards/ChartThemes'
+import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
 import { EntityCardConfig, entityCardSchema } from '@/schemas/dashboard/EntityCardBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useFieldArray } from 'react-hook-form'
@@ -18,10 +18,9 @@ import { ResponsiveLine } from '@nivo/line'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { TbTrash } from 'react-icons/tb'
-import { BuilderResult } from '../VisualizationBuilder'
+import { BuilderResult } from '@/types/GridItem'
 
 type EntityCardBuilderResult = BuilderResult<EntityCardConfig>
-
 
 export interface EntityCardBuilderProps {
   onDataSubmit: (data: any) => void
@@ -229,7 +228,7 @@ export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCar
                               <SelectContent>
                                 {instances.map((instance) => (
                                   <SelectItem key={instance.uid} value={instance.uid}>
-                                    {instance.type.denotation}
+                                    {instance.userIdentifier}
                                   </SelectItem>
                                 ))}
                               </SelectContent>

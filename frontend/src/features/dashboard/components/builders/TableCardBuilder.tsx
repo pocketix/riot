@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { TbTrash } from 'react-icons/tb'
 import { Label } from '@/components/ui/label'
-import { BuilderResult } from '../VisualizationBuilder'
+import { BuilderResult } from '@/types/GridItem'
 
 type TableCardBuilderResult = BuilderResult<TableCardConfig>
 
@@ -344,7 +344,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                                   <SelectContent>
                                     {instances.map((instance) => (
                                       <SelectItem key={instance.uid} value={instance.uid}>
-                                        {instance.type.denotation}
+                                        {instance.userIdentifier}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>

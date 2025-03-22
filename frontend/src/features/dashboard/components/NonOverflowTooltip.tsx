@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { ToolTipContainer } from './cards/ChartGlobals'
+import { ToolTipContainer } from './cards/components/ChartGlobals'
 
 // https://github.com/plouc/nivo/issues/580
 

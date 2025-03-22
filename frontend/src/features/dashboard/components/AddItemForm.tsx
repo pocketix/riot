@@ -5,13 +5,13 @@ import { GET_INSTANCES } from '@/graphql/Queries'
 import type { SdInstance } from '@/../../src/generated/graphql'
 import { VisualizationGallery } from './visualizationExamples/VisualizationGallery'
 import { VisualizationBuilder } from './VisualizationBuilder'
-import { GridItem } from '@/types/GridItem'
+import { BuilderResult, GridItem, AllConfigTypes } from '@/types/GridItem'
 import { Button } from '@/components/ui/button'
 import { FaArrowRight } from 'react-icons/fa6'
 
 export interface AddItemFormProps {
   setDialogOpen: (open: boolean) => void
-  onAddItem: (item: GridItem) => void
+  onAddItem<ConfigType extends AllConfigTypes>(item: GridItem<ConfigType>) : void
 }
 
 export function AddItemForm({ setDialogOpen, onAddItem }: AddItemFormProps) {
@@ -23,10 +23,10 @@ export function AddItemForm({ setDialogOpen, onAddItem }: AddItemFormProps) {
     setSelectedVisualization(visualization)
   }
 
-  const handleAddItem = (details: any) => {
-    const item: GridItem = {
+  function handleAddItem<ConfigType extends AllConfigTypes>(config: BuilderResult<ConfigType>)  {
+    const item: GridItem<ConfigType> = {
       visualization: selectedVisualization!,
-      visualizationConfig: details
+      visualizationConfig: config
     }
     onAddItem(item)
     setDialogOpen(false)

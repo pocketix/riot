@@ -2,15 +2,17 @@ import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/C
 import { AiOutlineDrag } from 'react-icons/ai'
 import styled from 'styled-components'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
+import { ItemDeleteAlertDialog } from './components/ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
-import { AccessibilityContainer } from './AccessibilityContainer'
+import { AccessibilityContainer } from './components/AccessibilityContainer'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { useLazyQuery } from '@apollo/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TableCardConfig, tableCardSchema } from '@/schemas/dashboard/TableBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
-import { BuilderResult } from '../VisualizationBuilder'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { BuilderResult } from '@/types/GridItem'
+import { toast } from 'sonner'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -48,7 +50,21 @@ interface TableCardProps {
   configuration: any
 }
 
-export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, beingResized, handleSaveEdit }: TableCardProps) => {
+export const TableCard = ({
+  cardID,
+  layout,
+  setLayout,
+  cols,
+  breakPoint,
+  editModeEnabled,
+  handleDeleteItem,
+  width,
+  height,
+  setHighlightedCardID,
+  configuration,
+  beingResized,
+  handleSaveEdit
+}: TableCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
@@ -103,10 +119,11 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
 
   useEffect(() => {
     if (configuration) {
-      const parsedConfig = tableCardSchema.safeParse(configuration.visualizationConfig.config)
+      const parsedConfig = tableCardSchema.safeParse(configuration.visualizationConfig)
       if (parsedConfig.success) {
         setTableConfig(parsedConfig.data)
       } else {
+        toast.error('Failed to parse configuration')
         console.error('Failed to parse configuration')
       }
     }
@@ -148,14 +165,21 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
       try {
         // Execute all queries in parallel
         // results are returned in the same order as the queries
-        results = await Promise.all(
+        results = await Promise.allSettled(
           tableConfig.columns.map((column) =>
             fetchData(combinedSensors, new Date(Date.now() - Number(tableConfig.timeFrame) * 60 * 1000).toISOString(), Number(tableConfig.timeFrame) * 1000, column.function)
           )
         )
 
         console.log('RESULTS', results)
-        const parsedData = results.map((result) => result.data.statisticsQuerySensorsWithFields)
+        const parsedData = results.map((result) => {
+          if (result.status === 'fulfilled' && result.value.data.statisticsQuerySensorsWithFields.length > 0) {
+            return result.value.data.statisticsQuerySensorsWithFields
+          } else {
+            console.error('Fetch error:', result.status === 'rejected' ? result.reason : 'Empty data')
+            return null
+          }
+        })
 
         const updatedRows = tableConfig.rows.map((row) => {
           let columnIndex = 0
@@ -168,13 +192,18 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
             console.log('Column index', columnIndex)
             // find each device in the column data for a specific function
             // TODO: Finding by deviceId may not be sufficient ! There can be multiple rows for the same device
-            const instanceData = column.find((data: any) => data.deviceId === row.instance.uid)
+            const instanceData = column?.find((data: any) => data.deviceId === row.instance.uid)
             if (instanceData) {
               // parse the stringified data
               let parsedData = JSON.parse(instanceData.data)
               rowValues.push({
                 function: functionName,
                 value: parsedData[row.parameter.denotation]
+              })
+            } else {
+              rowValues.push({
+                function: functionName,
+                value: 'NaN'
               })
             }
           })
@@ -206,7 +235,7 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
       )}
       {editModeEnabled && (
         <DeleteEditContainer>
-          <CardEditDialog config={tableConfig} onSave={handleSaveEdit} visualizationType='table' />
+          <CardEditDialog config={tableConfig} onSave={handleSaveEdit} visualizationType="table" />
           <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
         </DeleteEditContainer>
       )}
@@ -227,11 +256,34 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
             {tableData?.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 <td className="text-sm">{row.name}</td>
-                {row.values?.map((data: { function: string; value: number }, valueIndex: number) => (
-                  <td key={valueIndex} className="text-sm text-center">
-                    {parseFloat(data.value.toFixed(tableConfig.decimalPlaces ?? 2))}
-                  </td>
-                ))}
+                {row.values?.map((data: { function: string; value?: number }, valueIndex: number) => {
+                  if (!data.value || isNaN(data.value))
+                    return (
+                      <td key={valueIndex} className="text-sm text-center">
+                        <Skeleton className="w-1/2 h-full m-auto" disableAnimation>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="text-destructive truncate font-semibold text-xs w-10">Unavailable</span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="flex flex-col max-w-28">
+                                  <span className="text-destructive font-semibold">No data available</span>
+                                  <span className="text-xs break-words">Device: {row.instance.uid}</span>
+                                  <span className="text-xs break-words">Parameter: {row.parameter.denotation}</span>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </Skeleton>
+                      </td>
+                    )
+                  return (
+                    <td key={valueIndex} className="text-sm text-center">
+                      {parseFloat(data?.value!.toFixed(tableConfig.decimalPlaces ?? 2))}
+                    </td>
+                  )
+                })}
               </tr>
             ))}
           </tbody>

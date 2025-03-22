@@ -13,16 +13,32 @@ import { toast } from 'sonner'
 import { RestoreLayoutDialog } from './components/RestoreLayoutDialog'
 import { TableCard } from './components/cards/TableCard'
 import { Card } from '@/components/ui/card'
-import { MyHandle } from './components/cards/DragHandle'
-import { GridItem } from '@/types/GridItem'
+import { MyHandle } from './components/cards/components/DragHandle'
 import { utils } from 'react-grid-layout'
 import { EntityCard } from './components/cards/EntityCard'
-import { BuilderResult } from './components/VisualizationBuilder'
+import { useMutation, useQuery } from '@apollo/client'
+import { UPDATE_USER_CONFIG } from '@/graphql/Mutations'
+import { AllConfigTypes, GridItem, BuilderResult } from '@/types/GridItem'
+import { DBItemDetails } from '@/types/DBItem'
+import { GET_USER_CONFIG } from '@/graphql/Queries'
+import _ from 'lodash'
 
 const Dashboard = () => {
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), [])
+  const userID = 1 // TODO: This will get replaced by user context
+  const [updateUserConfig, { data: saveConfigData, loading: saveConfigLoading, error: saveConfigError }] = useMutation(UPDATE_USER_CONFIG)
+  const {
+    data: fetchedConfigData,
+    loading: fetchedConfigLoading,
+    error: fetchedConfigError
+  } = useQuery(GET_USER_CONFIG, {
+    variables: {
+      userConfigId: userID
+    },
+    skip: !userID
+  })
 
-  const [editMode, setEditMode] = useState<boolean>(false) // TODO: ked sa skonci edit, prompt na ulozenie do DB
+  const [editMode, setEditMode] = useState<boolean>(false)
   const [isMobileView, setIsMobileView] = useState(false)
   const scrollRef = useRef<'up' | 'down' | null>(null)
   const scrollAnimationFrame = useRef<number | null>(null)
@@ -34,116 +50,10 @@ const Dashboard = () => {
   const [savedLayout, setSavedLayout] = useState<Layouts>()
   const [resizeCardID, setResizeCardID] = useState<string | null>(null)
 
-  // Default layout
-  const defaultLayouts: Layouts = {
-    lg: [],
-    md: [],
-    xs: [],
-    xxs: []
-  }
-
   const [layouts, setLayouts] = useState<{ [key: string]: Layout[] }>()
-  const [details, setDetails] = useState<{ [key: string]: GridItem }>({})
+  const [details, setDetails] = useState<{ [key: string]: DBItemDetails<AllConfigTypes> }>({})
   const [currentBreakpoint, setCurrentBreakpoint] = useState('lg')
-
-  // https://github.com/react-grid-layout/react-grid-layout/blob/master/test/examples/07-localstorage.jsx
-  // Function to get layouts from local storage
-  function getFromLS(key: string): { [key: string]: Layout[] } {
-    let ls: { [key: string]: any } = {}
-    if (window.localStorage) {
-      try {
-        const item = window.localStorage.getItem('layouts')
-        ls = item ? JSON.parse(item) : {}
-      } catch (e) {
-        /*Ignore*/
-      }
-    }
-    console.log('getFromLS', ls[key])
-    return ls[key]
-  }
-
-  // Function to save layouts to local storage
-  function saveToLS(key: string, value: { [key: string]: Layout[] }) {
-    if (window.localStorage) {
-      const data = {
-        layouts: value,
-        layoutsLastUpdate: new Date().toISOString() // TODO: Database sync
-      }
-      window.localStorage.setItem(key, JSON.stringify(data))
-    }
-  }
-
-  // Fetch layouts from database
-  async function fetchLayoutsFromDB(): Promise<{
-    [key: string]: Layout[]
-  } | null> {
-    try {
-      const response = await fetch('/api/get-layouts') // Replace with your API endpoint
-      const data = await response.json()
-      return data.layouts
-    } catch (error) {
-      console.error('Failed to fetch layouts from DB:', error)
-      return null
-    }
-  }
-
-  async function getDetailsFromLS(): Promise<{ [key: string]: GridItem } | undefined> {
-    if (window.localStorage) {
-      try {
-        const item = window.localStorage.getItem('details')
-        return item ? JSON.parse(item) : undefined
-      } catch (e) {
-        /*Ignore*/
-      }
-    }
-  }
-
-  async function saveDetailsToLS(value: { [key: string]: GridItem }) {
-    if (window.localStorage) {
-      window.localStorage.setItem('details', JSON.stringify(value))
-    }
-  }
-
-  // Get layouts on mount, in order of priority: local storage -> database -> default TODO
-  useEffect(() => {
-    const initializeLayouts = async () => {
-      // Try to get layouts from local storage
-      const lsLayouts = getFromLS('layouts')
-
-      console.log('Got layouts from LS', lsLayouts)
-
-      const storedDetails = await getDetailsFromLS()
-      if (storedDetails) {
-        setDetails(storedDetails)
-      }
-
-      if (lsLayouts) {
-        setLayouts(lsLayouts)
-      } else {
-        // If not in local storage, try to fetch from DB
-        const dbLayouts = await fetchLayoutsFromDB()
-
-        if (dbLayouts) {
-          setLayouts(dbLayouts)
-          saveToLS('layouts', dbLayouts)
-        } else {
-          // Fallback
-          console.log('Using default layouts')
-          setLayouts(defaultLayouts)
-          console.log('Saving default layouts', defaultLayouts)
-        }
-      }
-    }
-
-    initializeLayouts()
-    setMounted(true)
-
-    // Scroll bar fix
-    setTimeout(() => {
-      const event = new CustomEvent('resize')
-      window.dispatchEvent(event)
-    }, 200)
-  }, [])
+  const loadingToastRef = useRef<string | number | null>(null)
 
   // Handle window resize for mobile view
   // TODO: Phone scroll on drag ??
@@ -159,16 +69,45 @@ const Dashboard = () => {
   }, [])
 
   const layoutChanged = useCallback(
-    (_: Layout[], newLayouts: { [key: string]: Layout[] }) => {
-      // Only change layouts, if the layout has changed
-      // Check if the layout has changed
-      if (JSON.stringify(newLayouts) === JSON.stringify(layouts)) return
+    (_layout: Layout[], newLayouts: { [key: string]: Layout[] }) => {
+      if (!newLayouts) return
 
-      console.log('layoutChanged', newLayouts)
-      saveToLS('layouts', newLayouts)
+      // As the newLayouts are returned with all properties explicitly defined,
+      // we must normalize the layouts before comparing them, thus remove the undefined properties
+      const normalizeLayouts = (layouts: { [key: string]: Layout[] }) => {
+        const normalized = { ...layouts }
+        for (const breakpoint in normalized) {
+          normalized[breakpoint] = normalized[breakpoint].map((item) => {
+            return {
+              w: item.w,
+              h: item.h,
+              x: item.x,
+              y: item.y,
+              i: item.i,
+              minW: item.minW || 0,
+              minH: item.minH || 0,
+              maxW: item.maxW,
+              maxH: item.maxH,
+              moved: item.moved || false,
+              static: item.static || false
+              // Other properties are not needed for comparison
+            }
+          })
+        }
+        return normalized
+      }
+
+      const normalizedOldLayouts = normalizeLayouts(layouts ?? {})
+      const normalizedNewLayouts = normalizeLayouts(newLayouts)
+
+      // Deep compare the normalized layouts
+      if (_.isEqual(normalizedOldLayouts, normalizedNewLayouts)) return
+
+      // Update layouts and save to DB
       setLayouts(newLayouts)
+      handleSaveToDB(newLayouts, details)
     },
-    [layouts]
+    [layouts, details, handleSaveToDB]
   )
 
   const breakpointChanged = (newBreakpoint: string) => {
@@ -207,12 +146,12 @@ const Dashboard = () => {
   const adjustSpeed = (distanceFromEdge: number) => {
     if (distanceFromEdge < 10) {
       scrollSpeedMultiplier.current = 3
-      console.log('scrollSpeedMultiplier.current', scrollSpeedMultiplier.current)
+      // console.log('scrollSpeedMultiplier.current', scrollSpeedMultiplier.current)
     } else if (distanceFromEdge < 30) {
-      console.log('scrollSpeedMultiplier.current', scrollSpeedMultiplier.current)
+      // console.log('scrollSpeedMultiplier.current', scrollSpeedMultiplier.current)
       scrollSpeedMultiplier.current = 2
     } else {
-      console.log('scrollSpeedMultiplier.current', scrollSpeedMultiplier.current)
+      // console.log('scrollSpeedMultiplier.current', scrollSpeedMultiplier.current)
       scrollSpeedMultiplier.current = 1
     }
   }
@@ -225,7 +164,10 @@ const Dashboard = () => {
       newLayouts[key] = newLayouts[key].filter((item) => item.i !== id)
     }
     setLayouts(newLayouts)
-    saveToLS('layouts', newLayouts)
+    const newDetails = { ...details }
+    delete newDetails[id]
+    setDetails(newDetails)
+    handleSaveToDB(newLayouts, newDetails)
   }
 
   // Upon resizing the window, get the current width of a single item and divide it by its w
@@ -256,12 +198,12 @@ const Dashboard = () => {
   const handleRestoreLayout = () => {
     if (savedLayout) {
       setLayouts(savedLayout)
-      saveToLS('layouts', savedLayout)
+      handleSaveToDB(savedLayout, details)
       toast.success('Layout has been restored.')
     }
   }
 
-  const handleAddItem = (item: GridItem) => {
+  function handleAddItem<ConfigType extends AllConfigTypes>(item: GridItem<ConfigType>) {
     const newLayouts = { ...layouts }
 
     // Get the largest index in the layout
@@ -276,8 +218,10 @@ const Dashboard = () => {
 
     const sizing = item.visualizationConfig?.sizing
 
+    // Calculate the new index and make the y position Infinity
+    // the position will be adjusted by the vertical compaction
     const newIndex = (largestIndex + 1).toString()
-    const newCard: Layout = {
+    const itemLayout: Layout = {
       w: sizing?.w! || 2,
       h: sizing?.h! || 2,
       x: 0,
@@ -287,10 +231,11 @@ const Dashboard = () => {
       minW: sizing?.minW! || 0
     }
 
+    // Insert the new item into all of the layouts
     Object.keys(newLayouts).forEach((breakpoint) => {
-      newLayouts[breakpoint].push({ ...newCard })
+      newLayouts[breakpoint].push({ ...itemLayout })
       newLayouts[breakpoint] = utils.compact(
-        utils.moveElement(newLayouts[breakpoint], newCard, 0, 0, true, false, 'vertical', cols[breakpoint as keyof typeof cols], false),
+        utils.moveElement(newLayouts[breakpoint], itemLayout, 0, 0, true, false, 'vertical', cols[breakpoint as keyof typeof cols], false),
         'vertical',
         cols[breakpoint as keyof typeof cols]
       )
@@ -298,29 +243,108 @@ const Dashboard = () => {
 
     item.layoutID = newIndex
 
-    const newDetails = { ...details, [newIndex]: item }
+    // Construct a new item
+    const dbItemDetails: DBItemDetails<AllConfigTypes> = {
+      layoutID: newIndex,
+      visualization: item.visualization,
+      visualizationConfig: item.visualizationConfig.config
+    }
 
-    saveDetailsToLS(newDetails)
+    const newDetails = { ...details, [newIndex]: dbItemDetails }
+
     setDetails(newDetails)
     setLayouts(newLayouts)
-    saveToLS('layouts', newLayouts)
+    // Save to DB
+    handleSaveToDB(newLayouts, newDetails)
   }
 
-  function handleSaveConfig<ConfigType>(builderResult: BuilderResult<ConfigType>, gridItem: GridItem) {
+  useEffect(() => {
+    if (fetchedConfigLoading && !loadingToastRef.current) {
+      loadingToastRef.current = toast.loading('Fetching from database...')
+    }
+
+    if (!fetchedConfigLoading && loadingToastRef.current) {
+      toast.dismiss(loadingToastRef.current)
+
+      if (fetchedConfigError) {
+        toast.error('Failed to fetch from database')
+        console.error('Failed to fetch from database:', fetchedConfigError)
+      }
+
+      if (fetchedConfigData) {
+        toast.success('Fetched from database')
+        console.log('Fetched from database', fetchedConfigData)
+        const config = fetchedConfigData.userConfig.config
+        const parsedConfig = JSON.parse(config)
+        setLayouts(parsedConfig.layout)
+        setDetails(parsedConfig.details)
+        setMounted(true)
+
+        // // Scroll bar fix TODO: might not be necessary
+        // setTimeout(() => {
+        //   const event = new CustomEvent('resize')
+        //   window.dispatchEvent(event)
+        // }, 200)
+      }
+    }
+  }, [fetchedConfigLoading, fetchedConfigError, fetchedConfigData])
+
+  function handleSaveToDB(layout: Layouts, details: { [key: string]: DBItemDetails<AllConfigTypes> }) {
+    updateUserConfig({
+      variables: {
+        userId: userID,
+        input: {
+          config: JSON.stringify({ layout, details })
+        }
+      }
+    })
+  }
+
+  useEffect(() => {
+    if (saveConfigLoading) {
+      toast.info('Saving to database')
+    }
+
+    if (saveConfigError) {
+      toast.error('Failed to save to database')
+      console.error('Failed to save to DB:', saveConfigError)
+    }
+
+    if (saveConfigData) {
+      console.log('Saved to DB:', saveConfigData)
+      toast.success('Saved to database')
+    }
+  }, [saveConfigLoading, saveConfigError, saveConfigData])
+
+  function handleSaveConfig<ConfigType extends AllConfigTypes>(builderResult: BuilderResult<ConfigType>, dbItemDetails: DBItemDetails<ConfigType>) {
     const newDetails = { ...details }
 
-    console.log('Saving config', builderResult.config)
-    // TODO: Automatic sizing adjustments HERE
-    // As the sizing config is 
-
-    const newGridItem: GridItem = {
-      ...gridItem,
+    const newDetailsItem: DBItemDetails<AllConfigTypes> = {
+      layoutID: dbItemDetails.layoutID,
+      visualization: dbItemDetails.visualization,
       visualizationConfig: builderResult.config
     }
 
-    newDetails[gridItem?.layoutID!] = newGridItem
+    // Find the item in layouts and update its size based on builderResult.sizing
+    const newLayouts = { ...layouts }
+    Object.keys(newLayouts).forEach((breakpoint) => {
+      newLayouts[breakpoint] = newLayouts[breakpoint].map((layoutItem) => {
+        if (layoutItem.i === dbItemDetails.layoutID) {
+          return {
+            ...layoutItem,
+            w: builderResult.sizing?.w || layoutItem.w,
+            h: builderResult.sizing?.h || layoutItem.h
+          }
+        }
+        return layoutItem
+      })
+    })
+
+    setLayouts(newLayouts)
+
+    newDetails[dbItemDetails?.layoutID!] = newDetailsItem
     setDetails(newDetails)
-    saveDetailsToLS(newDetails)
+    handleSaveToDB(newLayouts, newDetails)
   }
 
   if (!mounted || !layouts || !details) {
@@ -347,7 +371,6 @@ const Dashboard = () => {
         <ResponsiveGridLayout
           className="layout"
           layouts={layouts}
-          // onLayoutChange={layoutChanged}
           onBreakpointChange={(breakpoint) => {
             breakpointChanged(breakpoint)
           }}
@@ -355,7 +378,7 @@ const Dashboard = () => {
           cols={cols}
           draggableHandle=".drag-handle"
           measureBeforeMount={false}
-          useCSSTransforms={mounted}
+          useCSSTransforms={true}
           rowHeight={rowHeight}
           isDraggable={editMode}
           isResizable={editMode}
@@ -412,8 +435,7 @@ const Dashboard = () => {
                           [currentBreakpoint]: newLayout
                         }
                         setLayouts(updatedLayouts)
-                        saveToLS('layouts', updatedLayouts)
-                        console.log('Saving layout from TableCard', updatedLayouts)
+                        handleSaveToDB(updatedLayouts, details)
                       }}
                       editModeEnabled={editMode}
                       breakPoint={currentBreakpoint}
@@ -442,7 +464,7 @@ const Dashboard = () => {
                           [currentBreakpoint]: newLayout
                         }
                         setLayouts(updatedLayouts)
-                        saveToLS('layouts', updatedLayouts)
+                        handleSaveToDB(updatedLayouts, details)
                       }}
                       editModeEnabled={editMode}
                       breakPoint={currentBreakpoint}
@@ -471,7 +493,7 @@ const Dashboard = () => {
                           [currentBreakpoint]: newLayout
                         }
                         setLayouts(updatedLayouts)
-                        saveToLS('layouts', updatedLayouts)
+                        handleSaveToDB(updatedLayouts, details)
                       }}
                       editModeEnabled={editMode}
                       breakPoint={currentBreakpoint}
@@ -502,7 +524,7 @@ const Dashboard = () => {
                           [currentBreakpoint]: newLayout
                         }
                         setLayouts(updatedLayouts)
-                        saveToLS('layouts', updatedLayouts)
+                        handleSaveToDB(updatedLayouts, details)
                       }}
                       editModeEnabled={editMode}
                       breakPoint={currentBreakpoint}

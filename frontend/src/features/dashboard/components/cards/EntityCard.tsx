@@ -2,20 +2,21 @@ import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/C
 import { AiOutlineDrag } from 'react-icons/ai'
 import styled from 'styled-components'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
+import { ItemDeleteAlertDialog } from './components/ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
-import { AccessibilityContainer } from './AccessibilityContainer'
+import { AccessibilityContainer } from './components/AccessibilityContainer'
 import { entityCardSchema, EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ResponsiveLine } from '@nivo/line'
 import { Switch } from '@/components/ui/switch'
 import { useDarkMode } from '@/context/DarkModeContext'
-import { darkTheme, lightTheme } from '../cards/ChartThemes'
+import { darkTheme, lightTheme } from './components/ChartThemes'
 import { toast } from 'sonner'
 import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { CardEditDialog } from '../editors/CardEditDialog'
-import { BuilderResult } from '../VisualizationBuilder'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { BuilderResult } from '@/types/GridItem'
 
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   position: relative;
@@ -104,7 +105,9 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
         aggregatedMinutes: row.visualization === 'sparkline' ? Number(row.timeFrame) / 32 : Number(row.timeFrame)
       }))
 
-      const results = await Promise.all(
+      console.log('Rows to fetch', rowsToFetch)
+
+      const results = await Promise.allSettled(
         rowsToFetch.map((row) => {
           return fetchData({
             variables: {
@@ -118,7 +121,7 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
               },
               request: {
                 from: new Date(Date.now() - row.timeFrame * 60 * 1000).toISOString(),
-                aggregateMinutes: row.aggregatedMinutes,
+                aggregateMinutes: Math.ceil(row.aggregatedMinutes),
                 operation: 'last'
               }
             }
@@ -126,11 +129,20 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
         })
       )
 
-      const parsedData = results.map((result) => result.data.statisticsQuerySensorsWithFields)
+      const parsedData = results.map((result, index) => {
+        if (result.status === 'fulfilled' && result.value.data?.statisticsQuerySensorsWithFields?.length > 0) {
+          return result.value.data.statisticsQuerySensorsWithFields
+        } else {
+          console.error(`Error fetching data for row ${index}:`, result.status === 'rejected' ? result.reason : 'Empty data')
+          return null
+        }
+      })
+
       const rowValues: RowData[] = []
       chartConfig.rows.forEach((row, index) => {
         const data = parsedData[index]
-        if (row.visualization === 'sparkline') {
+        console.log('Data', data)
+        if (row.visualization === 'sparkline' && data) {
           const sparklineData = data.map((item: any) => {
             const value = JSON.parse(item.data)
             return {
@@ -139,9 +151,11 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
             }
           })
           rowValues.push({ sparklineData: { data: sparklineData } })
-        } else {
+        } else if (row.visualization === 'immediate' && data) {
           const value = JSON.parse(data[0].data)
           rowValues.push({ value: value[row.parameter.denotation] })
+        } else {
+          rowValues.push({ value: undefined })
         }
       })
       setData(rowValues)
@@ -197,43 +211,69 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
             </tr>
           </thead>
           <tbody>
-            {chartConfig.rows.map((row, rowIndex) => (
-              <tr key={rowIndex}>
-                <td className="text-sm">{row.name}</td>
-                {row.visualization === 'sparkline' && data[rowIndex]?.sparklineData && (
-                  <td className="text-sm text-center w-[75px] h-[24px]">
-                    <ResponsiveLine
-                      data={[
-                        {
-                          id: row.instance.uid + '-' + row.parameter.denotation,
-                          data: data[rowIndex].sparklineData!.data
-                        }
-                      ]}
-                      margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-                      xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
-                      xFormat="time:%Y-%m-%dT%H:%M:%SZ"
-                      yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: true, reverse: false }}
-                      animate={false}
-                      pointSize={0}
-                      axisBottom={null}
-                      axisLeft={null}
-                      curve="cardinal"
-                      lineWidth={4}
-                      enableGridX={false}
-                      enableGridY={false}
-                      useMesh={false}
-                      theme={isDarkMode ? darkTheme : lightTheme}
-                    />
-                  </td>
-                )}
-                {row.visualization === 'immediate' && <td className="text-sm text-center">{data[rowIndex]?.value}</td>}
-                {row.visualization === 'switch' && (
-                  <td className="text-sm text-center">
-                    <Switch checked={data[rowIndex]?.value === 'on'} />
-                  </td>
-                )}
-              </tr>
-            ))}
+            {chartConfig.rows.map((row, rowIndex) => {
+              if (!data[rowIndex] || (row.visualization === 'sparkline' && !data[rowIndex].sparklineData) || (row.visualization !== 'sparkline' && !data[rowIndex].value))
+                return (
+                  <tr key={rowIndex}>
+                    <td className="text-sm">{row.name}</td>
+                    <td className="text-sm text-center w-[75px] h-[24px]">
+                      <Skeleton className="w-full h-full" disableAnimation>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-destructive truncate font-semibold text-xs">Unavailable</span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <div className="flex flex-col max-w-28">
+                                <span className="text-destructive font-semibold">No data available</span>
+                                <span className="text-xs break-words">Device: {row.instance.uid}</span>
+                                <span className="text-xs break-words">Parameter: {row.parameter.denotation}</span>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </Skeleton>
+                    </td>
+                  </tr>
+                )
+              return (
+                <tr key={rowIndex}>
+                  <td className="text-sm">{row.name}</td>
+                  {row.visualization === 'sparkline' && (
+                    <td className="text-sm text-center w-[75px] h-[24px]">
+                      <ResponsiveLine
+                        data={[
+                          {
+                            id: row.instance.uid + '-' + row.parameter.denotation,
+                            data: data[rowIndex].sparklineData!.data
+                          }
+                        ]}
+                        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                        xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
+                        xFormat="time:%Y-%m-%dT%H:%M:%SZ"
+                        yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: true, reverse: false }}
+                        animate={false}
+                        pointSize={0}
+                        axisBottom={null}
+                        axisLeft={null}
+                        curve="cardinal"
+                        lineWidth={4}
+                        enableGridX={false}
+                        enableGridY={false}
+                        useMesh={false}
+                        theme={isDarkMode ? darkTheme : lightTheme}
+                      />
+                    </td>
+                  )}
+                  {row.visualization === 'immediate' && <td className="text-sm text-center">{data[rowIndex].value}</td>}
+                  {row.visualization === 'switch' && (
+                    <td className="text-sm text-center">
+                      <Switch checked={data[rowIndex].value === 'on'} />
+                    </td>
+                  )}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </ChartContainer>

@@ -58,6 +58,15 @@ export const GET_TIME_SERIES_DATA = gql`
     }
   }
 `
+
+export const GET_USER_CONFIG = gql`
+  query UserConfig($userConfigId: ID!) {
+    userConfig(id: $userConfigId) {
+      userId
+      config
+    }
+  }
+`
 export const GET_KPI_DEFINITIONS = gql`
   query KPIDefinitions {
     kpiDefinitions {

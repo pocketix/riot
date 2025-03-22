@@ -4,19 +4,20 @@ import { ResponsiveBullet } from '@nivo/bullet'
 import styled from 'styled-components'
 // import { Layout } from '@/types/Layout';
 import { useEffect, useMemo, useState } from 'react'
-import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
+import { ItemDeleteAlertDialog } from './components/ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
-import { AccessibilityContainer } from './AccessibilityContainer'
+import { AccessibilityContainer } from './components/AccessibilityContainer'
 import { useDarkMode } from '@/context/DarkModeContext'
-import { lightTheme, darkTheme } from './ChartThemes'
-import { ToolTipContainer } from './ChartGlobals'
+import { lightTheme, darkTheme } from './components/ChartThemes'
+import { ToolTipContainer } from './components/ChartGlobals'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLazyQuery } from '@apollo/client'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { toast } from 'sonner'
 import { CardEditDialog } from '../editors/CardEditDialog'
-import { BuilderResult } from '../VisualizationBuilder'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { BuilderResult } from '@/types/GridItem'
 
 // Styled components
 export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -109,7 +110,7 @@ export const BulletCard = ({
       console.log('Fetching data')
       console.log('CONFIGS', rows)
 
-      const results = await Promise.all(
+      const results = await Promise.allSettled(
         rows.map(async (row) => {
           return getChartData({
             variables: {
@@ -131,17 +132,26 @@ export const BulletCard = ({
         })
       )
 
-      const parsedData = results
-        .map((result) => {
-          if (!result || !result.data) return null
-          return result.data.statisticsQuerySensorsWithFields
-        })
-        .filter(Boolean)
+      const parsedData = results.map((result) => {
+        if (result.status === 'fulfilled' && result.value.data.statisticsQuerySensorsWithFields.length > 0) {
+          return result.value.data.statisticsQuerySensorsWithFields
+        } else {
+          const sensor = result.status === 'fulfilled' ? result.value.variables?.sensors?.sensors[0]! : null
+          console.error('Failed to fetch data for sensor', sensor)
+          console.error('Fetch error:', result.status === 'rejected' ? result.reason : 'Empty data')
+          return null
+        }
+      })
 
-      console.log('PARSED DATA', parsedData)
       const newData = parsedData.map((parsed, index) => {
+        if (!parsed) return null
         const row = rows[index]
-        const value = JSON.parse(parsed[0].data)[row.parameter.denotation]
+        const parsedValue = parsed[0]?.data ? JSON.parse(parsed[0].data) : null
+        const value = parsedValue ? parsedValue[row.parameter.denotation] : undefined
+        if (value === undefined) {
+          return null
+        }
+        console.log('value at index', index, value)
         return {
           id: row.config.name,
           measures: [value],
@@ -171,6 +181,7 @@ export const BulletCard = ({
   useEffect(() => {
     if (configuration) {
       // Safe parse does not throw an error and we can leverage its success property
+      console.log('Configuration', configuration)
       const parsedConfig = bulletChartBuilderSchema.safeParse(configuration.visualizationConfig)
       if (parsedConfig.success) {
         console.log('Parsed config', parsedConfig.data)
@@ -200,7 +211,32 @@ export const BulletCard = ({
       {chartConfig.rows?.map((row, index) => {
         console.log('ROW', row)
         console.log('DATA AT INDEX', data[index])
-        if (!data[index]) return null
+        if (!data[index])
+          return (
+            // Return a skeleton if data is not available
+            <BulletContainer key={index} $editModeEnabled={editModeEnabled}>
+              <Skeleton className="w-full h-full p-2" disableAnimation>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex flex-col items-center justify-center w-full">
+                        <span className="text-center text-destructive font-bold truncate w-full">Data not available</span>
+                        <span className="text-center text-xs text-gray-500 truncate w-full">Device: {row.instance.uid}</span>
+                        <span className="text-center text-xs text-gray-500 truncate w-full">Parameter: {row.parameter.denotation}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="flex flex-col max-w-28">
+                        <span className="text-destructive font-semibold">No data available</span>
+                        <span className="text-xs break-words">Device: {row.instance.uid}</span>
+                        <span className="text-xs">Parameter: {row.parameter.denotation}</span>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Skeleton>
+            </BulletContainer>
+          )
         return (
           <BulletContainer key={index} $editModeEnabled={editModeEnabled}>
             <ResponsiveBullet

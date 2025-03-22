@@ -4,18 +4,19 @@ import { ResponsiveLine, PointTooltipProps } from '@nivo/line'
 import styled from 'styled-components'
 // import { Layout } from '@/types/Layout';
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
+import { ItemDeleteAlertDialog } from './components/ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
-import { AccessibilityContainer } from './AccessibilityContainer'
+import { AccessibilityContainer } from './components/AccessibilityContainer'
 import { useDarkMode } from '@/context/DarkModeContext'
-import { darkTheme, lightTheme } from './ChartThemes'
+import { darkTheme, lightTheme } from './components/ChartThemes'
 import { ChartToolTip } from './tooltips/LineChartToolTip'
 import { useLazyQuery } from '@apollo/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
-import { BuilderResult } from '../VisualizationBuilder'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { BuilderResult } from '@/types/GridItem'
 import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 
 // Styled components
@@ -72,6 +73,7 @@ export const ChartCard = ({
   const { isDarkMode } = useDarkMode()
   const [data, setData] = useState<any[]>([])
   const [chartConfig, setChartConfig] = useState<ChartCardConfig>()
+  const [unavilableData, setUnavailableData] = useState<{ device: string; parameter: string }[]>([])
 
   const [getChartData, { data: fetchedChartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
 
@@ -129,19 +131,24 @@ export const ChartCard = ({
 
     instances.forEach((instance: { uid: string; parameters: { denotation: string }[] }) => {
       const sensorDataArray = fetchedChartData.statisticsQuerySensorsWithFields.filter((item: any) => item.deviceId === instance.uid)
+
       instance.parameters.forEach((param) => {
         const paramData = {
           id: param.denotation + '-' + instance.uid,
-          data: sensorDataArray.map((sensorData: any) => {
-            const parsedData = JSON.parse(sensorData.data)
-            return {
-              x: sensorData.time,
-              y: parsedData[param.denotation]
-            }
-          })
+          data:
+            sensorDataArray.length > 0
+              ? sensorDataArray.map((sensorData: any) => {
+                  const parsedData = sensorData.data ? JSON.parse(sensorData.data) : null
+                  return {
+                    x: sensorData.time,
+                    y: parsedData[param.denotation]
+                  }
+                })
+              : []
         }
-        if (paramData.data.length === 0) {
-          toast.error('One or more of the selected parameters have no data available for the selected time frame.')
+        if (paramData.data?.length === 0) {
+          setUnavailableData((prev) => [...prev, { device: instance.uid, parameter: param.denotation }])
+          // toast.error('One or more of the selected parameters have no data available for the selected time frame.')
           return
         }
         result.push(paramData)
@@ -150,6 +157,10 @@ export const ChartCard = ({
 
     setData(result)
   }, [fetchedChartData])
+
+  useEffect(() => {
+    console.log('unavailable data', unavilableData)
+  }, [unavilableData])
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -197,38 +208,61 @@ export const ChartCard = ({
           <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
         </DeleteEditContainer>
       )}
-      {data && data.length > 0 ? (
-        <>
-          <div className="pl-4 pt-2 font-semibold">{chartConfig.cardTitle}</div>
-          <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
-            <ResponsiveLine
-              data={data}
-              margin={chartConfig.margin}
-              xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
-              xFormat="time:%Y-%m-%dT%H:%M:%SZ"
-              yScale={chartConfig.yScale as any}
-              animate={true}
-              yFormat={chartConfig.toolTip.yFormat}
-              axisBottom={chartConfig.axisBottom}
-              axisLeft={{ ...chartConfig.axisLeft, format: '~s' }}
-              // axisLeft={{ ...form.watch('axisLeft'), format: '~s' }}
-              pointSize={chartConfig.pointSize}
-              pointColor={isDarkMode ? '#ffffff' : '#000000'}
-              pointBorderWidth={0}
-              colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
-              pointBorderColor={{ from: 'serieColor' }}
-              pointLabelYOffset={-12}
-              useMesh={true}
-              enableGridX={chartConfig.enableGridX}
-              enableGridY={chartConfig.enableGridY}
-              tooltip={(pos: PointTooltipProps) => <ChartToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}
-              theme={isDarkMode ? darkTheme : lightTheme}
-            />
-          </ChartContainer>
-        </>
-      ) : (
-        <Skeleton className="w-full h-full" />
-      )}
+      <div className="p-2 pb-0 font-semibold flex justify-between items-center w-full">
+        <span>{chartConfig.cardTitle}</span>
+        {unavilableData?.length! > 0 && (
+          <Skeleton className="w-fit p-1 pt-0 h-full" disableAnimation>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <TooltipTrigger asChild>
+                    <span className="text-destructive truncate font-semibold text-xs">Unavailable</span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="flex flex-col max-w-28">
+                      <span className="text-center text-destructive font-bold">No data available</span>
+                      {unavilableData?.map((row) => (
+                        <div key={row.device + row.parameter} className="w-full flex flex-col">
+                          <span className="text-center text-xs text-gray-500 break-words">Device: {row.device}</span>
+                          <span className="text-center text-xs text-gray-500 break-words">Parameter: {row.parameter}</span>
+                        </div>
+                      ))}
+                      {/* <span className="text-xs">Parameter: {row.parameter.denotation}</span> */}
+                    </div>
+                  </TooltipContent>
+                </TooltipTrigger>
+              </Tooltip>
+            </TooltipProvider>
+          </Skeleton>
+        )}
+      </div>
+      <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
+        <ResponsiveLine
+          data={data}
+          margin={chartConfig.margin}
+          xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
+          xFormat="time:%Y-%m-%dT%H:%M:%SZ"
+          yScale={chartConfig.yScale as any}
+          animate={true}
+          yFormat={chartConfig.toolTip.yFormat}
+          axisBottom={chartConfig.axisBottom}
+          axisLeft={{ ...chartConfig.axisLeft, format: '~s' }}
+          // axisLeft={{ ...form.watch('axisLeft'), format: '~s' }}
+          pointSize={chartConfig.pointSize}
+          pointColor={isDarkMode ? '#ffffff' : '#000000'}
+          pointBorderWidth={0}
+          colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
+          pointBorderColor={{ from: 'serieColor' }}
+          pointLabelYOffset={-12}
+          isInteractive={true}
+          enableTouchCrosshair={true}
+          useMesh={data.length > 0}
+          enableGridX={chartConfig.enableGridX}
+          enableGridY={chartConfig.enableGridY}
+          tooltip={(pos: PointTooltipProps) => <ChartToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}
+          theme={isDarkMode ? darkTheme : lightTheme}
+        />
+      </ChartContainer>
       {editModeEnabled && (
         <AccessibilityContainer
           cols={cols}

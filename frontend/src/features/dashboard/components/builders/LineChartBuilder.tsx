@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ChartToolTip } from '../cards/tooltips/LineChartToolTip'
 import { useDarkMode } from '@/context/DarkModeContext'
-import { darkTheme, lightTheme } from '../cards/ChartThemes'
+import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { z } from 'zod'
 import { ChartCardConfig, lineChartBuilderSchema } from '@/schemas/dashboard/LineChartBuilderSchema'
@@ -26,7 +26,7 @@ import { HiOutlineQuestionMarkCircle } from 'react-icons/hi2'
 import { toast } from 'sonner'
 import { useDebounce } from 'use-debounce'
 import { Checkbox } from '@/components/ui/checkbox'
-import { BuilderResult } from '../VisualizationBuilder'
+import { BuilderResult } from '@/types/GridItem'
 
 type LineBuilderResult = BuilderResult<ChartCardConfig>
 
@@ -148,17 +148,22 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
 
     instances.forEach((instance: { uid: string; parameters: { denotation: string }[] }) => {
       const sensorDataArray = chartData.statisticsQuerySensorsWithFields.filter((item: any) => item.deviceId === instance.uid)
+      console.log('Sensor data array', sensorDataArray)
       instance.parameters.forEach((param) => {
         const paramData = {
           id: param.denotation + '-' + instance.uid,
-          data: sensorDataArray.map((sensorData: any) => {
-            const parsedData = JSON.parse(sensorData.data)
-            if (parsedData[param.denotation] > maxValue) maxValue = parsedData[param.denotation]
-            return {
-              x: sensorData.time,
-              y: parsedData[param.denotation]
-            }
-          })
+          data:
+            sensorDataArray.length > 0
+              ? sensorDataArray.map((sensorData: any) => {
+                  const parsedData = sensorData.data ? JSON.parse(sensorData.data) : null
+                  if (!parsedData) return
+                  if (parsedData[param.denotation] > maxValue) maxValue = parsedData[param.denotation]
+                  return {
+                    x: sensorData.time,
+                    y: parsedData[param.denotation]
+                  }
+                })
+              : []
         }
         if (paramData.data.length === 0) {
           toast.error('One or more of the selected parameters have no data available for the selected time frame.')
@@ -286,7 +291,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
               pointBorderColor={{ from: 'serieColor' }}
               pointLabelYOffset={-12}
               enableTouchCrosshair={true}
-              useMesh={true}
+              useMesh={data.length > 0}
               enableGridX={form.watch('enableGridX')}
               enableGridY={form.watch('enableGridY')}
               tooltip={(pos: PointTooltipProps) => <ChartToolTip position={pos} containerRef={containerRef} xName={form.watch('toolTip.x')} yName={form.watch('toolTip.y')} />}
@@ -492,7 +497,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                           <SelectContent>
                             {instances.map((instance) => (
                               <SelectItem key={instance.uid} value={instance.uid}>
-                                {instance.type.denotation}
+                                {instance.userIdentifier}
                               </SelectItem>
                             ))}
                           </SelectContent>
