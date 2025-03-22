@@ -90,6 +90,36 @@ const ButtonsContainer = styled.div`
   }
 `
 
+const ParamTable = styled.div`
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+`
+
+const ParamHeaderRow = styled.div`
+  display: table-row;
+  background-color: var(--color-grey-300);
+  font-weight: 600;
+  font-size: 0.95rem;
+`
+
+const ParamRow = styled.div`
+  width: 100%;
+  display: table-row;
+  background-color: var(--color-grey-100);
+  &:nth-child(even) {
+    background-color: var(--color-grey-50);
+  }
+`
+
+const ParamCell = styled.div`
+  width: 100%;
+  display: table-cell;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--color-grey-200);
+`
+
 export default function DeviceTypeDetail() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
@@ -103,7 +133,7 @@ export default function DeviceTypeDetail() {
     label: '',
     denotation: '',
     icon: '',
-    parameters: [] as { denotation: string; type: string }[]
+    parameters: [] as { denotation: string; type: string; label?: string | null }[]
   })
 
   const {
@@ -132,7 +162,8 @@ export default function DeviceTypeDetail() {
           parameters:
             fetchedData.sdType.parameters.map((param) => ({
               denotation: param.denotation,
-              type: param.type
+              type: param.type,
+              label: param.label
             })) || []
         }
 
@@ -160,7 +191,8 @@ export default function DeviceTypeDetail() {
               label: data.label,
               parameters: data.parameters.map((p: any) => ({
                 denotation: p.denotation,
-                type: p.type as SdParameterType
+                type: p.type as SdParameterType,
+                label: p.label
               }))
             }
           }
@@ -175,7 +207,7 @@ export default function DeviceTypeDetail() {
         }
       } else {
         console.log('Editing:', data)
-        // Here you would call the update mutation if it exists
+        // TODO: add update mutation
       }
 
       setEditMode(false)
@@ -213,7 +245,7 @@ export default function DeviceTypeDetail() {
   }
 
   const addParameter = () => {
-    setValue('parameters', [{ denotation: '', type: 'NUMBER' }, ...getValues('parameters')])
+    setValue('parameters', [{ denotation: '', type: 'NUMBER', label: '' }, ...getValues('parameters')])
   }
 
   if (loading) return <Spinner />
@@ -330,48 +362,71 @@ export default function DeviceTypeDetail() {
 
       {watch('parameters').length > 0 && (
         <ParametersContainer>
-          {watch('parameters').map((param, index) => (
-            <div key={index} className="flex gap-4 p-1">
-              {editMode ? (
-                <>
-                  <div className="w-full flex flex-col gap-2">
-                    <Input {...register(`parameters.${index}.denotation`, { required: 'Denotation is required' })} placeholder="Denotation" />
-                    {errors.parameters?.[index]?.denotation && <p className="text-red-500 text-sm">{errors.parameters[index].denotation.message}</p>}
-                  </div>
+          <ParamTable>
+            <ParamHeaderRow>
+              <ParamCell>Denotation</ParamCell>
+              <ParamCell>Label</ParamCell>
+              <ParamCell>Type</ParamCell>
+            </ParamHeaderRow>
+            {watch('parameters').map((param, index) =>
+              editMode ? (
+                <ParamRow key={index}>
+                  <ParamCell>
+                    <div className="flex flex-col gap-2">
+                      <Input
+                        {...register(`parameters.${index}.denotation`, {
+                          required: 'Denotation is required'
+                        })}
+                        placeholder="Denotation"
+                      />
+                      {errors.parameters?.[index]?.denotation && <p className="text-red-500 text-sm">{errors.parameters[index].denotation.message}</p>}
+                    </div>
+                  </ParamCell>
+                  <ParamCell>
+                    <div className="flex flex-col gap-2 min-w-max">
+                      <Input {...register(`parameters.${index}.label`)} placeholder="Label" />
+                      {errors.parameters?.[index]?.label && <p className="text-red-500 text-sm">{errors.parameters[index].label.message}</p>}
+                    </div>
+                  </ParamCell>
+                  <ParamCell>
+                    <div className="flex items-center gap-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline">{param.type}</Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          {['NUMBER', 'STRING', 'BOOLEAN'].map((option) => (
+                            <DropdownMenuItem key={option} onClick={() => setValue(`parameters.${index}.type`, option)}>
+                              {option}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline">{param.type}</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      {['NUMBER', 'STRING', 'BOOLEAN'].map((option) => (
-                        <DropdownMenuItem key={option} onClick={() => setValue(`parameters.${index}.type`, option)}>
-                          {option}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <Button
-                    variant="destructive"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      setValue(
-                        'parameters',
-                        watch('parameters').filter((_, i) => i !== index)
-                      )
-                    }}
-                  >
-                    <TbTrash />
-                  </Button>
-                </>
+                      <Button
+                        variant="destructive"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          setValue(
+                            'parameters',
+                            watch('parameters').filter((_, i) => i !== index)
+                          )
+                        }}
+                      >
+                        <TbTrash />
+                      </Button>
+                    </div>
+                  </ParamCell>
+                </ParamRow>
               ) : (
-                <span>
-                  {param.denotation} - {param.type}
-                </span>
-              )}
-            </div>
-          ))}
+                <ParamRow key={index}>
+                  <ParamCell>{param.denotation}</ParamCell>
+                  <ParamCell>{param.label || '-'}</ParamCell>
+                  <ParamCell>{param.type}</ParamCell>
+                </ParamRow>
+              )
+            )}
+          </ParamTable>
         </ParametersContainer>
       )}
     </PageContainer>
