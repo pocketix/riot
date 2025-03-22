@@ -8,6 +8,8 @@ import Heading from '@/ui/Heading'
 import { Button } from '@/components/ui/button'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useNavigate } from 'react-router-dom'
+import { Input } from '@/components/ui/input'
+import { useState } from 'react'
 
 const Container = styled.div`
   display: flex;
@@ -17,14 +19,19 @@ const Container = styled.div`
 
 const Header = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
+
+  @media (min-width: ${breakpoints.sm}) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 `
 
 const Grid = styled.div`
   display: grid;
   gap: 1.5rem;
-  /* align-items: start; */
   justify-content: center;
   grid-template-columns: 1fr;
 
@@ -42,33 +49,33 @@ export default function DeviceTypesSettings() {
     fetchPolicy: 'cache-first',
     nextFetchPolicy: 'cache-first'
   })
-  const naviagate = useNavigate()
+
+  const [searchQuery, setSearchQuery] = useState('')
+  const navigate = useNavigate()
 
   if (loading) return <Spinner />
   if (!data?.sdTypes?.length) return <p>No device types found.</p>
+
+  const filteredDeviceTypes = data.sdTypes.filter((type) => `${type.label ?? ''} ${type.denotation ?? ''}`.toLowerCase().includes(searchQuery.toLowerCase()))
 
   return (
     <Container>
       <Header>
         <Heading as="h2">
-          Manage your device types here{' '}
-          <span
-            style={{
-              fontWeight: '200',
-              fontStyle: 'italic',
-              textWrap: 'nowrap'
-            }}
-          >
-            ({data?.sdTypes?.length} types)
-          </span>
-          .{' '}
+          Manage your device types <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>({filteredDeviceTypes.length} shown)</span>
         </Heading>
-        <Button onClick={() => naviagate('/settings/device-types/addNewType')}>+ Add new</Button>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 ">
+          <Input placeholder="Search by name or denotation..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full sm:w-64 bg-[--color-grey-300]" />
+          <Button onClick={() => navigate('/settings/device-types/addNewType')}>+ Add new</Button>
+        </div>
       </Header>
+
       <Grid>
-        {data.sdTypes.map((deviceType) => (
-          <DeviceTypeCard key={deviceType.id} deviceType={deviceType} />
-        ))}
+        {filteredDeviceTypes.length > 0 ? (
+          filteredDeviceTypes.map((deviceType) => <DeviceTypeCard key={deviceType.id} deviceType={deviceType} />)
+        ) : (
+          <p className="text-center col-span-full">No device types match your search.</p>
+        )}
       </Grid>
     </Container>
   )
