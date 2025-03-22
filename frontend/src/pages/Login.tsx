@@ -3,6 +3,7 @@ import Logo from '../ui/Logo'
 import Heading from '../ui/Heading'
 import LoginForm from '@/features/authentication/LoginForm'
 import { breakpoints } from '@/styles/Breakpoints'
+import { useSearchParams } from 'react-router-dom'
 
 const LoginLayout = styled.main`
   min-height: 100vh;
@@ -17,15 +18,30 @@ const LoginLayout = styled.main`
     gap: 1.8rem;
   }
 `
+const backendCoreURL = import.meta.env.VITE_BACKEND_CORE_URL || 'https://tyrion.fit.vutbr.cz/riot/api'
 
 function Login() {
+  const [searchParams] = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/'
+
+  const handleOAuthLogin = () => {
+    window.location.href = `${backendCoreURL}/auth/login?redirect=${encodeURIComponent(redirect)}`
+  }
+
   return (
     <LoginLayout>
       <Logo hideLogo={false} />
-      <Heading as={'h1'} align="center">
+      <Heading as="h1" align="center">
         Log in to your account
       </Heading>
       <LoginForm />
+      <button
+        onClick={handleOAuthLogin}
+        className="flex items-center justify-center gap-3 px-6 py-2 border border-gray-300 rounded-md shadow-sm bg-white hover:bg-gray-100 transition-colors duration-150"
+      >
+        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" className="w-5 h-5" />
+        <span className="text-sm font-medium text-gray-700">Sign in with Google</span>
+      </button>
     </LoginLayout>
   )
 }

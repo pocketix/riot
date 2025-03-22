@@ -37,7 +37,9 @@ function LoginForm() {
       <Input type="email" id="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
       <Label htmlFor="password">Password</Label>
       <Input type="password" id="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      <Button size={'lg'}>{false ? <SpinnerMini /> : 'Login'}</Button>
+      <Button disabled={true} size={'lg'}>
+        {false ? <SpinnerMini /> : 'Login'}
+      </Button>
     </StyledForm>
   )
 }
