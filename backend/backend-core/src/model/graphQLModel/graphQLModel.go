@@ -257,8 +257,8 @@ type SDInstance struct {
 	ConfirmedByUser    bool                  `json:"confirmedByUser"`
 	UserIdentifier     string                `json:"userIdentifier"`
 	Type               SDType                `json:"type"`
-	CommandInvocations []SDCommandInvocation `json:"commandInvocations"`
 	ParameterSnapshots []SDParameterSnapshot `json:"parameterSnapshots,omitempty"`
+	CommandInvocations []SDCommandInvocation `json:"commandInvocations"`
 }
 
 type SDInstanceGroup struct {
@@ -280,7 +280,7 @@ type SDInstanceUpdateInput struct {
 type SDParameter struct {
 	ID                 uint32                `json:"id"`
 	Denotation         string                `json:"denotation"`
-	Label      *string         `json:"label,omitempty"`
+	Label              *string               `json:"label,omitempty"`
 	Type               SDParameterType       `json:"type"`
 	ParameterSnapshots []SDParameterSnapshot `json:"parameterSnapshots"`
 }
