@@ -13,12 +13,13 @@ export function AddItemModal({ onAddItem }: AddItemModalProps) {
 
   return (
     <Dialog open={dialogOpen} onOpenChange={() => setDialogOpen(!dialogOpen)}>
-      <DialogTrigger asChild className="fixed bottom-4 right-4">
+      <DialogTrigger asChild className="fixed lg:bottom-4 bottom-[70px] right-2">
         <Button>
           <FaPlus />
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-full sm:w-fit max-h-[80vh] p-1 sm:p-6 overflow-y-auto overflow-x-hidden">
+      {/* <DialogContent className="w-full max-h-screen pt-6 sm:pt-1 overflow-y-auto overflow-x-hidden"> */}
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Add new item to dashboard</DialogTitle>
           <DialogDescription>Select a device you wish to add to the dashboard.</DialogDescription>

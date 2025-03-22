@@ -1,15 +1,22 @@
-import { Container, DragHandle } from '@/styles/dashboard/CardGlobal'
+import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/CardGlobal'
 import { AiOutlineDrag } from 'react-icons/ai'
 import styled from 'styled-components'
-// import { Layout } from '@/types/Layout';
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './AccessibilityContainer'
-import { TableCardInfo } from '@/types/TableCardInfo'
-import { SdParameterType } from '@/generated/graphql'
+import { entityCardSchema, EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
+import { Skeleton } from '@/components/ui/skeleton'
+import { ResponsiveLine } from '@nivo/line'
+import { Switch } from '@/components/ui/switch'
+import { useDarkMode } from '@/context/DarkModeContext'
+import { darkTheme, lightTheme } from '../cards/ChartThemes'
+import { toast } from 'sonner'
+import { useLazyQuery } from '@apollo/client'
+import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
+import { CardEditDialog } from '../editors/CardEditDialog'
+import { BuilderResult } from '../VisualizationBuilder'
 
-// Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   position: relative;
   margin: 0;
@@ -26,7 +33,7 @@ export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   transition: opacity 0.3s;
 `
 
-interface TableCardProps {
+interface EntityCardProps {
   cardID: string
   title: string
   layout: Layout[]
@@ -40,13 +47,23 @@ interface TableCardProps {
   setHighlightedCardID: (id: string) => void
 
   // Data
-  data?: TableCardInfo
+  configuration: any
+  handleSaveEdit: (config: BuilderResult<EntityCardConfig>) => void
 }
 
-export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, data }: TableCardProps) => {
+interface RowData {
+  sparklineData?: { data: { x: string; y: number }[] }
+  value?: string | number
+}
+
+export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, handleSaveEdit }: EntityCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
+  const { isDarkMode } = useDarkMode()
 
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
+  const [data, setData] = useState<RowData[]>([])
+  const [chartConfig, setChartConfig] = useState<EntityCardConfig>()
+  const [fetchData] = useLazyQuery(GET_TIME_SERIES_DATA)
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -74,125 +91,147 @@ export const TableCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
     }, [layout, item])
   }
 
+  const getData = async () => {
+    console.log('Chart config', chartConfig)
+    if (chartConfig) {
+      const rows = chartConfig?.rows
+      if (!rows) return
+      console.log('Fetching data')
+      const rowsToFetch = rows.map((row) => ({
+        key: row.instance.uid,
+        values: row.parameter.denotation,
+        timeFrame: row.visualization === 'sparkline' ? Number(row.timeFrame) : 1440,
+        aggregatedMinutes: row.visualization === 'sparkline' ? Number(row.timeFrame) / 32 : Number(row.timeFrame)
+      }))
+
+      const results = await Promise.all(
+        rowsToFetch.map((row) => {
+          return fetchData({
+            variables: {
+              sensors: {
+                sensors: [
+                  {
+                    key: row.key,
+                    values: [row.values]
+                  }
+                ]
+              },
+              request: {
+                from: new Date(Date.now() - row.timeFrame * 60 * 1000).toISOString(),
+                aggregateMinutes: row.aggregatedMinutes,
+                operation: 'last'
+              }
+            }
+          })
+        })
+      )
+
+      const parsedData = results.map((result) => result.data.statisticsQuerySensorsWithFields)
+      const rowValues: RowData[] = []
+      chartConfig.rows.forEach((row, index) => {
+        const data = parsedData[index]
+        if (row.visualization === 'sparkline') {
+          const sparklineData = data.map((item: any) => {
+            const value = JSON.parse(item.data)
+            return {
+              x: item.time,
+              y: value[row.parameter.denotation]
+            }
+          })
+          rowValues.push({ sparklineData: { data: sparklineData } })
+        } else {
+          const value = JSON.parse(data[0].data)
+          rowValues.push({ value: value[row.parameter.denotation] })
+        }
+      })
+      setData(rowValues)
+      console.log('Result', rowValues)
+    }
+  }
+
+  useEffect(() => {
+    if (configuration) {
+      const parsedConfig = entityCardSchema.safeParse(configuration.visualizationConfig)
+      if (parsedConfig.success) {
+        console.log('Parsed config', parsedConfig.data)
+        setChartConfig(parsedConfig.data)
+      } else {
+        toast.error('Failed to parse configuration')
+      }
+    }
+  }, [configuration])
+
+  useEffect(() => {
+    if (chartConfig) {
+      getData()
+    }
+  }, [chartConfig])
+
   useEffect(() => {
     if (highlight) setHighlightedCardID(cardID)
   }, [cardID, highlight])
 
-  // calculate height and width from getboundingclientrect
-  const example_data: TableCardInfo = {
-    _cardID: 'exampleCardID',
-    title: 'Sensor',
-    icon: 'temperature-icon',
-    aggregatedTime: '1h',
-    instances: [
-      {
-        order: 1,
-        instance: {
-          uid: 'instance1',
-          id: 'instance1-id',
-          userIdentifier: 'example-user'
-        },
-        params: [
-          {
-            denotation: 'temperature',
-            id: '1',
-            type: SdParameterType.Number
-          }
-        ]
-      }
-    ],
-    columns: [
-      {
-        header: 'Mean',
-        function: 'MEAN'
-      },
-      {
-        header: 'Min',
-        function: 'MIN'
-      },
-      {
-        header: 'Max',
-        function: 'MAX'
-      }
-    ],
-    rows: [
-      {
-        name: 'Kitchen',
-        values: [
-          {
-            value: '22.5'
-          },
-          {
-            value: '20.5'
-          },
-          {
-            value: '24.5'
-          }
-        ]
-      },
-      {
-        name: 'Living Room',
-        values: [
-          {
-            value: '23.1'
-          },
-          {
-            value: '21.5'
-          },
-          {
-            value: '24.5'
-          }
-        ]
-      },
-      {
-        name: 'Bathroom',
-        values: [
-          {
-            value: '21.8'
-          },
-          {
-            value: '19.5'
-          },
-          {
-            value: '24.3'
-          }
-        ]
-      }
-    ]
+  if (!chartConfig || !chartConfig.rows) {
+    return <Skeleton className="w-full h-full" />
   }
-
-  data = example_data
 
   return (
     <Container key={cardID} className={`${cardID}`}>
       {editModeEnabled && (
         <DragHandle>
-          <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 bg-white rounded-lg border-2" />
+          <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 border-2 rounded-lg" />
         </DragHandle>
       )}
-      {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
-      {/* <div className="pl-4 pt-2 font-semibold">{title}</div> */}
+      {editModeEnabled && (
+        <DeleteEditContainer>
+          <CardEditDialog config={chartConfig} onSave={handleSaveEdit} visualizationType="entitycard" />
+          <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+        </DeleteEditContainer>
+      )}
+      <div className="pl-2 pt-2 font-semibold">{chartConfig.title}</div>
       <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
         <table className="w-full h-fit">
           <thead className="border-b-[2px]">
             <tr>
-              <th className="text-left text-md">{data.title}</th>
-              {data.columns.map((column, index) => (
-                <th key={index} className="text-center text-xs">
-                  {column.header}
-                </th>
-              ))}
+              <th className="text-left text-md">Name</th>
             </tr>
           </thead>
           <tbody>
-            {data.rows.map((row, rowIndex) => (
+            {chartConfig.rows.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 <td className="text-sm">{row.name}</td>
-                {row.values.map((value, valueIndex) => (
-                  <td key={valueIndex} className="text-sm text-center">
-                    {value.value}
+                {row.visualization === 'sparkline' && data[rowIndex]?.sparklineData && (
+                  <td className="text-sm text-center w-[75px] h-[24px]">
+                    <ResponsiveLine
+                      data={[
+                        {
+                          id: row.instance.uid + '-' + row.parameter.denotation,
+                          data: data[rowIndex].sparklineData!.data
+                        }
+                      ]}
+                      margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                      xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
+                      xFormat="time:%Y-%m-%dT%H:%M:%SZ"
+                      yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: true, reverse: false }}
+                      animate={false}
+                      pointSize={0}
+                      axisBottom={null}
+                      axisLeft={null}
+                      curve="cardinal"
+                      lineWidth={4}
+                      enableGridX={false}
+                      enableGridY={false}
+                      useMesh={false}
+                      theme={isDarkMode ? darkTheme : lightTheme}
+                    />
                   </td>
-                ))}
+                )}
+                {row.visualization === 'immediate' && <td className="text-sm text-center">{data[rowIndex]?.value}</td>}
+                {row.visualization === 'switch' && (
+                  <td className="text-sm text-center">
+                    <Switch checked={data[rowIndex]?.value === 'on'} />
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

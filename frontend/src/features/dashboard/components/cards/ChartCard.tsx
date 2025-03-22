@@ -1,4 +1,4 @@
-import { Container, DragHandle } from '@/styles/dashboard/CardGlobal'
+import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/CardGlobal'
 import { AiOutlineDrag } from 'react-icons/ai'
 import { ResponsiveLine, PointTooltipProps } from '@nivo/line'
 import styled from 'styled-components'
@@ -9,11 +9,14 @@ import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './AccessibilityContainer'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from './ChartThemes'
-import { ToolTip } from './tooltips/LineChartToolTip'
+import { ChartToolTip } from './tooltips/LineChartToolTip'
 import { useLazyQuery } from '@apollo/client'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ChartCardInfo } from '@/types/ChartCardInfo'
-import { GET_TABLE_DATA } from '@/graphql/Queries'
+import { toast } from 'sonner'
+import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { CardEditDialog } from '../editors/CardEditDialog'
+import { BuilderResult } from '../VisualizationBuilder'
+import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -44,35 +47,55 @@ interface ChartCardProps {
   height: number
   width: number
   configuration: any
-  breakpoint: string
+  breakpoint: string // TODO: unused
+  beingResized: boolean
+  handleSaveEdit: (config: BuilderResult<ChartCardConfig>) => void
 }
 
-export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, breakpoint }: ChartCardProps) => {
+export const ChartCard = ({
+  cardID,
+  layout,
+  setLayout,
+  cols,
+  breakPoint,
+  editModeEnabled,
+  handleDeleteItem,
+  width,
+  height,
+  setHighlightedCardID,
+  configuration,
+  beingResized,
+  handleSaveEdit
+}: ChartCardProps) => {
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const { isDarkMode } = useDarkMode()
-  const [data, setData] = useState([])
-  const [chartConfig, setChartConfig] = useState<ChartCardInfo>()
+  const [data, setData] = useState<any[]>([])
+  const [chartConfig, setChartConfig] = useState<ChartCardConfig>()
 
-  const [getChartData, { error, data: chartData }] = useLazyQuery(GET_TABLE_DATA)
+  const [getChartData, { data: fetchedChartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
 
   const fetchData = () => {
-    if (configuration) {
+    console.log('Chart config', chartConfig)
+    if (chartConfig) {
+      const instances = chartConfig?.instances
+      if (!instances) return
+      console.log('Fetching data')
+      const sensors = instances.map((instance: { uid: string; parameters: { denotation: string }[] }) => ({
+        key: instance.uid,
+        values: instance.parameters ? instance.parameters.map((param) => param.denotation) : []
+      }))
+
+      const request = {
+        from: new Date(Date.now() - Number(chartConfig.timeFrame) * 60 * 1000).toISOString(),
+        aggregateMinutes: chartConfig.aggregateMinutes,
+        operation: 'last'
+      }
+
       getChartData({
         variables: {
-          sensors: {
-            sensors: [
-              {
-                key: configuration.instance.uid,
-                values: [configuration.parameters[0].denotation]
-              }
-            ]
-          },
-          request: {
-            from: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-            aggregateMinutes: '30',
-            operation: 'last'
-          }
+          sensors: { sensors },
+          request
         }
       })
     }
@@ -80,27 +103,53 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
 
   useEffect(() => {
     if (configuration) {
-      setChartConfig(JSON.parse(configuration.visualizationConfig))
-      console.log(JSON.parse(configuration.visualizationConfig))
-      fetchData()
+      const parsedConfig = lineChartBuilderSchema.safeParse(configuration.visualizationConfig)
+      console.log(configuration)
+      if (parsedConfig.success) {
+        console.log('Parsed config', parsedConfig.data)
+        setChartConfig(parsedConfig.data)
+      } else {
+        toast.error('Failed to parse configuration')
+      }
     }
   }, [configuration])
 
   useEffect(() => {
-    if (chartData) {
-      const processedData = chartData.statisticsQuerySensorsWithFields.map((item: any) => {
-        const parsedData = JSON.parse(item.data)
-        const { host, ...rest } = parsedData
-        return {
-          x: item.time,
-          y: rest[configuration.parameters[0].denotation]
-        }
-      })
-      console.log(processedData)
-      setData(processedData)
+    if (chartConfig) {
+      fetchData()
     }
-    console.log(error)
-  }, [chartData, configuration])
+  }, [chartConfig])
+
+  useEffect(() => {
+    if (!chartConfig) return
+    if (!fetchedChartData) return
+    const instances = chartConfig?.instances
+
+    let result: any[] = []
+
+    instances.forEach((instance: { uid: string; parameters: { denotation: string }[] }) => {
+      const sensorDataArray = fetchedChartData.statisticsQuerySensorsWithFields.filter((item: any) => item.deviceId === instance.uid)
+      instance.parameters.forEach((param) => {
+        const paramData = {
+          id: param.denotation + '-' + instance.uid,
+          data: sensorDataArray.map((sensorData: any) => {
+            const parsedData = JSON.parse(sensorData.data)
+            return {
+              x: sensorData.time,
+              y: parsedData[param.denotation]
+            }
+          })
+        }
+        if (paramData.data.length === 0) {
+          toast.error('One or more of the selected parameters have no data available for the selected time frame.')
+          return
+        }
+        result.push(paramData)
+      })
+    })
+
+    setData(result)
+  }, [fetchedChartData])
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -132,39 +181,8 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
     if (highlight) setHighlightedCardID(cardID)
   }, [cardID, highlight])
 
-  // calculate height and width from getboundingclientrect
-
-  const lineData = [
-    {
-      id: 'data',
-      data: data
-    }
-  ]
-
-  // TODO: ???
-  // useEffect(() => {
-  //   if (!chartConfig) return
-
-  //   const newChartConfig = { ...chartConfig }
-  //   console.log(newChartConfig)
-
-  //   newChartConfig.axisBottom = {
-  //     ...newChartConfig.axisBottom,
-  //     tickRotation: breakpoint === 'xs' || breakpoint === 'xxs' ? -90 : breakpoint === 'sm' ? -45 : 0,
-  //     legendOffset: breakpoint === 'xs' || breakpoint === 'xxs' ? 55 : breakpoint === 'sm' ? 30 : 36
-  //   }
-
-  //   newChartConfig.margin = {
-  //     ...newChartConfig.margin,
-  //     bottom: breakpoint === 'xs' || breakpoint === 'xxs' ? 70 : breakpoint === 'sm' ? 70 : 50
-  //   }
-
-  //   console.log(newChartConfig)
-  //   setChartConfig(newChartConfig)
-  // }, [breakpoint])
-
   // TODO: Alert
-  if (!chartConfig || !data) return null
+  if (!chartConfig || !data || beingResized) return <Skeleton className="w-full h-full" />
 
   return (
     <Container key={cardID} className={`${cardID}`}>
@@ -173,28 +191,37 @@ export const ChartCard = ({ cardID, layout, setLayout, cols, breakPoint, editMod
           <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 rounded-lg border-2" />
         </DragHandle>
       )}
-      {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
+      {editModeEnabled && (
+        <DeleteEditContainer>
+          <CardEditDialog config={chartConfig} onSave={handleSaveEdit} visualizationType="line" />
+          <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+        </DeleteEditContainer>
+      )}
       {data && data.length > 0 ? (
         <>
           <div className="pl-4 pt-2 font-semibold">{chartConfig.cardTitle}</div>
           <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
             <ResponsiveLine
-              data={lineData}
+              data={data}
               margin={chartConfig.margin}
-              xScale={chartConfig.xScale as any}
+              xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
+              xFormat="time:%Y-%m-%dT%H:%M:%SZ"
               yScale={chartConfig.yScale as any}
-              animate={chartConfig.animate}
-              yFormat={chartConfig.yFormat}
+              animate={true}
+              yFormat={chartConfig.toolTip.yFormat}
               axisBottom={chartConfig.axisBottom}
-              axisLeft={chartConfig.axisLeft}
+              axisLeft={{ ...chartConfig.axisLeft, format: '~s' }}
+              // axisLeft={{ ...form.watch('axisLeft'), format: '~s' }}
               pointSize={chartConfig.pointSize}
               pointColor={isDarkMode ? '#ffffff' : '#000000'}
               pointBorderWidth={0}
               colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
+              pointBorderColor={{ from: 'serieColor' }}
+              pointLabelYOffset={-12}
               useMesh={true}
               enableGridX={chartConfig.enableGridX}
               enableGridY={chartConfig.enableGridY}
-              tooltip={(pos: PointTooltipProps) => <ToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}
+              tooltip={(pos: PointTooltipProps) => <ChartToolTip position={pos} containerRef={containerRef} xName={chartConfig.toolTip.x} yName={chartConfig.toolTip.y} />}
               theme={isDarkMode ? darkTheme : lightTheme}
             />
           </ChartContainer>

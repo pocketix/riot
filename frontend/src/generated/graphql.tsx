@@ -509,7 +509,7 @@ export type SdTypeQueryVariables = Exact<{
 }>;
 
 
-export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }> } };
+export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', denotation: string, id: number, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, type: SdParameterType }> } };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 

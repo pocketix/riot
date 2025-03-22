@@ -7,7 +7,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { DashboardRoot, Navbar, MainGrid } from '@/styles/dashboard/DashboardGlobal'
 import { Button } from '@/components/ui/button'
 import { ChartCard } from './components/cards/ChartCard'
-import { AddItemModal } from './components/AddItem'
+import { AddItemModal } from './components/AddItemModal'
 import { BulletCard } from './components/cards/BulletCard'
 import { toast } from 'sonner'
 import { RestoreLayoutDialog } from './components/RestoreLayoutDialog'
@@ -16,6 +16,8 @@ import { Card } from '@/components/ui/card'
 import { MyHandle } from './components/cards/DragHandle'
 import { GridItem } from '@/types/GridItem'
 import { utils } from 'react-grid-layout'
+import { EntityCard } from './components/cards/EntityCard'
+import { BuilderResult } from './components/VisualizationBuilder'
 
 const Dashboard = () => {
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), [])
@@ -30,6 +32,7 @@ const Dashboard = () => {
   const [width, setWidth] = useState<number>(0)
   const [highlightedCardID, setHighlightedCardID] = useState<string | null>(null)
   const [savedLayout, setSavedLayout] = useState<Layouts>()
+  const [resizeCardID, setResizeCardID] = useState<string | null>(null)
 
   // Default layout
   const defaultLayouts: Layouts = {
@@ -271,17 +274,17 @@ const Dashboard = () => {
       })
     })
 
-    const sizing = JSON.parse(item.visualizationConfig).sizing
+    const sizing = item.visualizationConfig?.sizing
 
     const newIndex = (largestIndex + 1).toString()
     const newCard: Layout = {
-      w: sizing.w ?? 2,
-      h: sizing.h ?? 2,
+      w: sizing?.w! || 2,
+      h: sizing?.h! || 2,
       x: 0,
       y: Infinity,
       i: newIndex,
-      minH: sizing.minH ?? 0,
-      minW: sizing.minW ?? 0
+      minH: sizing?.minH! || 0,
+      minW: sizing?.minW! || 0
     }
 
     Object.keys(newLayouts).forEach((breakpoint) => {
@@ -301,6 +304,23 @@ const Dashboard = () => {
     setDetails(newDetails)
     setLayouts(newLayouts)
     saveToLS('layouts', newLayouts)
+  }
+
+  function handleSaveConfig<ConfigType>(builderResult: BuilderResult<ConfigType>, gridItem: GridItem) {
+    const newDetails = { ...details }
+
+    console.log('Saving config', builderResult.config)
+    // TODO: Automatic sizing adjustments HERE
+    // As the sizing config is 
+
+    const newGridItem: GridItem = {
+      ...gridItem,
+      visualizationConfig: builderResult.config
+    }
+
+    newDetails[gridItem?.layoutID!] = newGridItem
+    setDetails(newDetails)
+    saveDetailsToLS(newDetails)
   }
 
   if (!mounted || !layouts || !details) {
@@ -340,6 +360,13 @@ const Dashboard = () => {
           isDraggable={editMode}
           isResizable={editMode}
           isDroppable={editMode}
+          onResizeStart={(_layouts, _layout, newItem) => {
+            console.log('Dragging card with ID:', newItem.i)
+            setResizeCardID(newItem.i)
+          }}
+          onResizeStop={() => {
+            setResizeCardID(null)
+          }}
           containerPadding={[10, 10]}
           compactType={'vertical'}
           verticalCompact={true}
@@ -396,6 +423,8 @@ const Dashboard = () => {
                       width={width}
                       setHighlightedCardID={setHighlightedCardID}
                       configuration={details[item.i]}
+                      beingResized={resizeCardID === item.i}
+                      handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
                     />
                   </Card>
                 )
@@ -422,6 +451,9 @@ const Dashboard = () => {
                       height={rowHeight}
                       width={width}
                       setHighlightedCardID={setHighlightedCardID}
+                      configuration={details[item.i]}
+                      beingResized={resizeCardID === item.i}
+                      handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
                     />
                   </Card>
                 )
@@ -450,11 +482,40 @@ const Dashboard = () => {
                       setHighlightedCardID={setHighlightedCardID}
                       configuration={details[item.i]}
                       breakpoint={currentBreakpoint}
+                      beingResized={resizeCardID === item.i}
+                      handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
                     />
                   </Card>
                 )
               case 'switch':
               case 'entitycard':
+                return (
+                  <Card key={item.i} className={`${highlightedCardID === item.i ? 'z-10' : ''}`}>
+                    <EntityCard
+                      key={item.i}
+                      cardID={item.i}
+                      title={`Item ${item.i}`}
+                      layout={layouts![currentBreakpoint]}
+                      setLayout={(newLayout) => {
+                        const updatedLayouts = {
+                          ...layouts,
+                          [currentBreakpoint]: newLayout
+                        }
+                        setLayouts(updatedLayouts)
+                        saveToLS('layouts', updatedLayouts)
+                      }}
+                      editModeEnabled={editMode}
+                      breakPoint={currentBreakpoint}
+                      cols={cols}
+                      handleDeleteItem={handleDeleteItem}
+                      height={rowHeight}
+                      width={width}
+                      setHighlightedCardID={setHighlightedCardID}
+                      configuration={details[item.i]}
+                      handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
+                    />
+                  </Card>
+                )
               default:
                 return null
             }

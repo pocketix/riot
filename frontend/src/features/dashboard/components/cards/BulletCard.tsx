@@ -1,15 +1,22 @@
-import { Container, DragHandle } from '@/styles/dashboard/CardGlobal'
+import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/CardGlobal'
 import { AiOutlineDrag } from 'react-icons/ai'
 import { ResponsiveBullet } from '@nivo/bullet'
 import styled from 'styled-components'
 // import { Layout } from '@/types/Layout';
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ItemDeleteAlertDialog } from './ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './AccessibilityContainer'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { lightTheme, darkTheme } from './ChartThemes'
 import { ToolTipContainer } from './ChartGlobals'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useLazyQuery } from '@apollo/client'
+import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
+import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
+import { toast } from 'sonner'
+import { CardEditDialog } from '../editors/CardEditDialog'
+import { BuilderResult } from '../VisualizationBuilder'
 
 // Styled components
 export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -29,21 +36,40 @@ interface BulletCardProps {
   cardID: string
   title: string
   layout: Layout[]
-  setLayout: (layout: Layout[]) => void
   breakPoint: string
   editModeEnabled: boolean
   cols: { lg: number; md: number; sm: number; xs: number; xxs: number }
-  handleDeleteItem: (id: string) => void
   height: number
   width: number
+  setLayout: (layout: Layout[]) => void
+  handleDeleteItem: (id: string) => void
   setHighlightedCardID: (id: string) => void
+  beingResized: boolean
+
+  configuration: any
+  handleSaveEdit: (config: BuilderResult<BulletCardConfig>) => void
 }
 
-export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID }: BulletCardProps) => {
-  const containerRef = useRef<HTMLDivElement>(null)
+export const BulletCard = ({
+  cardID,
+  layout,
+  setLayout,
+  cols,
+  breakPoint,
+  editModeEnabled,
+  handleDeleteItem,
+  width,
+  height,
+  setHighlightedCardID,
+  configuration,
+  beingResized,
+  handleSaveEdit
+}: BulletCardProps) => {
   const { isDarkMode } = useDarkMode()
-
+  const [chartConfig, setChartConfig] = useState<BulletCardConfig>()
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
+  const [data, setData] = useState<any[]>([])
+  const [getChartData] = useLazyQuery(GET_TIME_SERIES_DATA)
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -75,16 +101,87 @@ export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint,
     if (highlight) setHighlightedCardID(cardID)
   }, [cardID, highlight])
 
+  const fetchData = async () => {
+    if (chartConfig) {
+      const rows = chartConfig.rows
+      if (!rows) return
+
+      console.log('Fetching data')
+      console.log('CONFIGS', rows)
+
+      const results = await Promise.all(
+        rows.map(async (row) => {
+          return getChartData({
+            variables: {
+              sensors: {
+                sensors: [
+                  {
+                    key: row.instance.uid,
+                    values: row.parameter.denotation
+                  }
+                ]
+              },
+              request: {
+                from: new Date(Date.now() - Number(row.config.timeFrame) * 60 * 1000).toISOString(),
+                aggregateMinutes: Number(row.config.timeFrame) * 1000,
+                operation: row.config.function
+              }
+            }
+          })
+        })
+      )
+
+      const parsedData = results
+        .map((result) => {
+          if (!result || !result.data) return null
+          return result.data.statisticsQuerySensorsWithFields
+        })
+        .filter(Boolean)
+
+      console.log('PARSED DATA', parsedData)
+      const newData = parsedData.map((parsed, index) => {
+        const row = rows[index]
+        const value = JSON.parse(parsed[0].data)[row.parameter.denotation]
+        return {
+          id: row.config.name,
+          measures: [value],
+          markers: row.config.markers,
+          ranges: row.config.ranges ? row.config.ranges.flatMap((range) => [range.min, range.max]) : [0, 0]
+        }
+      })
+      setData(newData)
+    }
+  }
+
+  useEffect(() => {
+    if (data) {
+      console.log('Data', data)
+    }
+  }, [data])
+
+  useEffect(() => {
+    if (chartConfig) {
+      console.log('Chart config', chartConfig)
+      fetchData()
+    }
+  }, [chartConfig])
+
   // calculate height and width from getboundingclientrect
 
-  const data = [
-    {
-      id: 'temp.',
-      ranges: [41, 5, 93, 0, 100],
-      measures: [64],
-      markers: [44]
+  useEffect(() => {
+    if (configuration) {
+      // Safe parse does not throw an error and we can leverage its success property
+      const parsedConfig = bulletChartBuilderSchema.safeParse(configuration.visualizationConfig)
+      if (parsedConfig.success) {
+        console.log('Parsed config', parsedConfig.data)
+        setChartConfig(parsedConfig.data)
+      } else {
+        toast.error('Failed to parse configuration')
+      }
     }
-  ]
+  }, [configuration])
+
+  if (!chartConfig || !data || beingResized) return <Skeleton className="w-full h-full" />
 
   return (
     <Container key={cardID} className={`${cardID}`}>
@@ -93,37 +190,49 @@ export const BulletCard = ({ cardID, title, layout, setLayout, cols, breakPoint,
           <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 rounded-lg border-2" />
         </DragHandle>
       )}
-      {editModeEnabled && <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />}
-      <div className="pl-4 pt-2 font-semibold">{title}</div>
-      <BulletContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
-        <ResponsiveBullet
-          data={data}
-          margin={{ top: 5, right: 10, bottom: 30, left: 10 }}
-          spacing={46}
-          titleAlign="start"
-          titleOffsetX={-70}
-          titleOffsetY={-10}
-          measureSize={0.2}
-          rangeColors="nivo"
-          theme={isDarkMode ? darkTheme : lightTheme}
-          tooltip={() => {
-            return (
-              <ToolTipContainer $offsetHorizontal={0} $offsetVertical={0} $isDarkMode={isDarkMode}>
-                <div className="flex flex-col">
-                  <div>
-                    <span>Value: </span>
-                    <span className="font-bold">{data[0].measures}</span>
-                  </div>
-                  <div>
-                    <span>Target: </span>
-                    <span className="font-bold">{data[0].markers}</span>
-                  </div>
-                </div>
-              </ToolTipContainer>
-            )
-          }}
-        />
-      </BulletContainer>
+      {editModeEnabled && (
+        <DeleteEditContainer>
+          <CardEditDialog config={chartConfig} onSave={handleSaveEdit} visualizationType="bullet" />
+          <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+        </DeleteEditContainer>
+      )}
+      {chartConfig.cardTitle ? <div className="pl-4 pt-2 font-semibold">{chartConfig.cardTitle}</div> : null}
+      {chartConfig.rows?.map((row, index) => {
+        console.log('ROW', row)
+        console.log('DATA AT INDEX', data[index])
+        if (!data[index]) return null
+        return (
+          <BulletContainer key={index} $editModeEnabled={editModeEnabled}>
+            <ResponsiveBullet
+              data={[data[index]]}
+              margin={row.config.margin}
+              titleOffsetX={row.config.titleOffsetX}
+              measureSize={row.config.measureSize}
+              minValue={row.config.minValue || 'auto'}
+              maxValue={row.config.maxValue || 'auto'}
+              rangeColors={row.config.colorScheme === 'greys' ? ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3'] : 'seq:cool'}
+              measureColors={row.config.colorScheme === 'greys' ? ['pink'] : 'seq:red_purple'}
+              theme={isDarkMode ? darkTheme : lightTheme}
+              tooltip={() => {
+                return (
+                  <ToolTipContainer $offsetHorizontal={0} $offsetVertical={0} $isDarkMode={isDarkMode}>
+                    <div className="flex flex-col">
+                      <div>
+                        <span>Value: </span>
+                        <span className="font-bold">{data[index].measures}</span>
+                      </div>
+                      <div>
+                        <span>Target: </span>
+                        <span className="font-bold">{data[index].markers}</span>
+                      </div>
+                    </div>
+                  </ToolTipContainer>
+                )
+              }}
+            />
+          </BulletContainer>
+        )
+      })}
       {editModeEnabled && (
         <AccessibilityContainer
           cols={cols}

@@ -1,8 +1,14 @@
 import styled from 'styled-components'
 import { LineChartBuilder } from './builders/LineChartBuilder'
 import { BulletChartBuilder } from './builders/BulletChartBuilder'
-import { SdInstance, SdParameter } from '@/generated/graphql'
+import { SdInstance } from '@/generated/graphql'
 import { TableCardBuilder } from './builders/TableCardBuilder'
+import { EntityCardBuilder } from './builders/EntityCardBuilder'
+import { Sizing } from '@/types/CardGeneral'
+import { EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
+import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
+import { BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 
 export const VisualizationBuilderContainer = styled.div`
   display: flex;
@@ -12,24 +18,29 @@ export const VisualizationBuilderContainer = styled.div`
   height: fit-content;
 `
 
+export type BuilderResult<ConfigType> = {
+  config: ConfigType
+  sizing?: Sizing
+}
+
 export interface VisualizationBuilderProps {
   selectedVisualization: string | null
-  selectedParameter: SdParameter
-  setVisualizationDetails: (details: string) => void
-  data?: any
+  setVisualizationConfig: (config: BuilderResult<EntityCardConfig | ChartCardConfig | TableCardConfig | BulletCardConfig>) => void
+  setActiveTab: (tab: string) => void
   instances: SdInstance[]
 }
 
-export function VisualizationBuilder({ setVisualizationDetails, selectedVisualization, selectedParameter, data, instances }: VisualizationBuilderProps) {
-  const handleDataChange = (data: any) => {
-    setVisualizationDetails(JSON.stringify(data))
+export function VisualizationBuilder({ setVisualizationConfig, selectedVisualization, instances }: VisualizationBuilderProps) {
+  const handleDataChange = (data: BuilderResult<EntityCardConfig | ChartCardConfig | TableCardConfig | BulletCardConfig>) => {
+    setVisualizationConfig(data)
   }
 
   return (
     <VisualizationBuilderContainer>
-      {selectedVisualization === 'line' && <LineChartBuilder onDataSubmit={handleDataChange} data={data} parameterName={selectedParameter.denotation} />}
-      {selectedVisualization === 'bullet' && <BulletChartBuilder onDataSubmit={handleDataChange} parameterName={selectedParameter.denotation} />}
+      {selectedVisualization === 'line' && <LineChartBuilder onDataSubmit={handleDataChange} instances={instances} />}
+      {selectedVisualization === 'bullet' && <BulletChartBuilder onDataSubmit={handleDataChange} instances={instances} />}
       {selectedVisualization === 'table' && <TableCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
+      {selectedVisualization === 'entitycard' && <EntityCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
     </VisualizationBuilderContainer>
   )
 }
