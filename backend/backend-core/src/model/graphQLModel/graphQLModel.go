@@ -222,11 +222,12 @@ type Query struct {
 }
 
 type SDInstance struct {
-	ID              uint32 `json:"id"`
-	UID             string `json:"uid"`
-	ConfirmedByUser bool   `json:"confirmedByUser"`
-	UserIdentifier  string `json:"userIdentifier"`
-	Type            SDType `json:"type"`
+	ID                 uint32                `json:"id"`
+	UID                string                `json:"uid"`
+	ConfirmedByUser    bool                  `json:"confirmedByUser"`
+	UserIdentifier     string                `json:"userIdentifier"`
+	Type               SDType                `json:"type"`
+	ParameterSnapshots []SDParameterSnapshot `json:"parameterSnapshots,omitempty"`
 }
 
 type SDInstanceGroup struct {
@@ -246,14 +247,24 @@ type SDInstanceUpdateInput struct {
 }
 
 type SDParameter struct {
-	ID         uint32          `json:"id"`
-	Denotation string          `json:"denotation"`
-	Type       SDParameterType `json:"type"`
+	ID                 uint32                `json:"id"`
+	Denotation         string                `json:"denotation"`
+	Type               SDParameterType       `json:"type"`
+	ParameterSnapshots []SDParameterSnapshot `json:"parameterSnapshots"`
 }
 
 type SDParameterInput struct {
 	Denotation string          `json:"denotation"`
 	Type       SDParameterType `json:"type"`
+}
+
+type SDParameterSnapshot struct {
+	InstanceUID         string   `json:"instanceUid"`
+	ParameterDenotation string   `json:"parameterDenotation"`
+	String              *string  `json:"string,omitempty"`
+	Number              *float64 `json:"number,omitempty"`
+	Boolean             *bool    `json:"boolean,omitempty"`
+	UpdatedAt           string   `json:"updatedAt"`
 }
 
 type SDType struct {

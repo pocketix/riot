@@ -10,6 +10,7 @@ type SDParameter {
   id: ID!
   denotation: String!
   type: SDParameterType!
+  parameterSnapshots: [SDParameterSnapshot!]!
 }
 
 type SDType {
@@ -34,11 +35,21 @@ type SDInstance {
   confirmedByUser: Boolean!
   userIdentifier: String!
   type: SDType!
+  parameterSnapshots: [SDParameterSnapshot!]
 }
 
 input SDInstanceUpdateInput {
   userIdentifier: String
   confirmedByUser: Boolean
+}
+
+type SDParameterSnapshot {
+  instanceUid: String!
+  parameterDenotation: String!
+  string:      String
+  number:      Float
+  boolean:     Boolean
+  updatedAt:   Date!
 }
 
 # ----- KPI definitions and nodes -----
@@ -335,4 +346,5 @@ type Mutation {
 type Subscription {
   onSDInstanceRegistered: SDInstance!
   onKPIFulfillmentChecked: KPIFulfillmentCheckResultTuple!
+  onSDParameterSnapshotUpdate: SDParameterSnapshot!
 }

@@ -73,6 +73,7 @@ const (
 func determineSDInstanceScenario(uid string) sdInstanceScenario {
 	var scenario sdInstanceScenario
 	sdInstancesMutex.Lock()
+	log.Printf("%d", sdInstances.Size())
 	if sdInstances.Contains(sharedModel.SDInstanceInfo{SDInstanceUID: uid, ConfirmedByUser: true}) {
 		scenario = confirmedSDInstance
 	} else if sdInstances.Contains(sharedModel.SDInstanceInfo{SDInstanceUID: uid, ConfirmedByUser: false}) {
@@ -133,31 +134,81 @@ func processMQTTMessagePayload(mqttMessagePayload []byte, rabbitMQClient rabbitm
 	}
 	messagePayloadObject := jsonDeserializationResult.GetPayload()
 	sd := messagePayloadObject.Data.SDArray[0]
+	timestamp := messagePayloadObject.Notification.Timestamp
 
-	inputData := sharedModel.InputData{
-		Timestamp:           messagePayloadObject.Notification.Timestamp,
-		SDInstanceUID:       sd.UID,
-		SDTypeSpecification: sd.Type,
-		Parameters:          sd.Parameters,
-	}
-	jsonSerializationResult := sharedUtils.SerializeToJSON(inputData)
+	log.Printf("Processing: %s, Scenario: %s", sd.UID, determineSDInstanceScenario(sd.UID))
 
-	err := rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesStoreDataQueueName), jsonSerializationResult.GetPayload())
-	if err != nil {
-		log.Println("Failed to publish a time series store request message")
-		return
-	}
-
-	log.Printf("Succesfully to published a time series store request message for %s with timestamp %s", inputData.SDInstanceUID, inputData.Timestamp)
+	publishTimeSeriesStoreRequest(sd.UID, sd.Type, sd.Parameters, timestamp, rabbitMQClient)
 
 	if !mqttMessageSDTypeCorrespondsToSDTypeDefinitions(sd.Type) {
 		return
 	}
 	switch determineSDInstanceScenario(sd.UID) {
 	case unknownSDInstance:
-		generateSDInstanceRegistrationRequest(sd.UID, sd.Type, float32(messagePayloadObject.Notification.Timestamp), rabbitMQClient)
+		generateSDInstanceRegistrationRequest(sd.UID, sd.Type, float32(timestamp), rabbitMQClient)
 	case confirmedSDInstance:
-		generateKPIFulfillmentCheckRequest(sd.UID, sd.Type, sd.Parameters, float32(messagePayloadObject.Notification.Timestamp), rabbitMQClient)
+		generateKPIFulfillmentCheckRequest(sd.UID, sd.Type, sd.Parameters, float32(timestamp), rabbitMQClient)
+		generateSDParameterSnapshotsInfoMessage(sd.UID, sd.Parameters.(map[string]any), timestamp, rabbitMQClient)
+	}
+}
+
+func generateSDParameterSnapshotsInfoMessage(uid string, parameters map[string]any, timestamp float64, rabbitMQClient rabbitmq.Client) {
+	log.Printf("Sending snapshots %s", uid)
+	var snapshots []sharedModel.SDParameterSnapshot
+
+	for parameter, value := range parameters {
+		snapshot := sharedModel.SDParameterSnapshot{
+			SDInstanceUID: uid,
+			SdParameter:   parameter,
+			UpdatedAt:     timestamp,
+		}
+
+		switch v := value.(type) {
+		case string:
+			snapshot.String = &v
+		case float64:
+			snapshot.Number = &v
+		case bool:
+			snapshot.Boolean = &v
+		default:
+			strValue := fmt.Sprintf("%v", v)
+			snapshot.String = &strValue
+		}
+
+		snapshots = append(snapshots, snapshot)
+	}
+	jsonSerializationResult := sharedUtils.SerializeToJSON(snapshots)
+
+	fmt.Printf("sending snapshot info %s", jsonSerializationResult.GetPayload())
+
+	err := rabbitMQClient.PublishJSONMessage(
+		sharedUtils.NewEmptyOptional[string](),
+		sharedUtils.NewOptionalOf(sharedConstants.SDCurrentSnapshotsInfoQueueName),
+		jsonSerializationResult.GetPayload(),
+	)
+
+	if err != nil {
+		log.Println("Failed to publish a time series store request message")
+	}
+}
+
+func publishTimeSeriesStoreRequest(uid string, sdType string, parameters any, timestamp float64, rabbitMQClient rabbitmq.Client) {
+	inputData := sharedModel.InputData{
+		Timestamp:           timestamp,
+		SDInstanceUID:       uid,
+		SDTypeSpecification: sdType,
+		Parameters:          parameters,
+	}
+	jsonSerializationResult := sharedUtils.SerializeToJSON(inputData)
+
+	err := rabbitMQClient.PublishJSONMessage(
+		sharedUtils.NewEmptyOptional[string](),
+		sharedUtils.NewOptionalOf(sharedConstants.TimeSeriesStoreDataQueueName),
+		jsonSerializationResult.GetPayload(),
+	)
+
+	if err != nil {
+		log.Println("Failed to publish a time series store request message")
 	}
 }
 

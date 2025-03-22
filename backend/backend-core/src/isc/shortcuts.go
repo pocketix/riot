@@ -25,3 +25,9 @@ func consumeKPIFulfillmentCheckResultJSONMessages(kpiFulfillmentCheckResultConsu
 	errorMessage := fmt.Sprintf("[ISC] Consumption of messages from the '%s' queue has failed", sharedConstants.KPIFulfillmentCheckResultsQueueName)
 	sharedUtils.TerminateOnError(err, errorMessage)
 }
+
+func consumeParameterSnapshotUpdateJSONMessages(parameterSnapshotUpdateConsumerFunction func(parameterSnapshotInfoMessage sharedModel.SDParameterSnapshotInfoMessage) error, rabbitMQClient rabbitmq.Client) {
+	err := rabbitmq.ConsumeJSONMessages[sharedModel.SDParameterSnapshotInfoMessage](rabbitMQClient, sharedConstants.SDCurrentSnapshotsInfoQueueName, parameterSnapshotUpdateConsumerFunction)
+	errorMessage := fmt.Sprintf("[ISC] Consumption of messages from the '%s' queue has failed", sharedConstants.SDCurrentSnapshotsInfoQueueName)
+	sharedUtils.TerminateOnError(err, errorMessage)
+}

@@ -38,3 +38,14 @@ type ReadRequestResponseOrError struct {
 	Data  []OutputData `json:"data,omitempty"`
 	Error string       `json:"error,omitempty"`
 }
+
+type SDParameterSnapshot struct {
+	SDInstanceUID string   `json:"sdInstanceUID"`
+	SdParameter   string   `json:"sdParameter"`
+	String        *string  `json:"string,omitempty"`
+	Number        *float64 `json:"number,omitempty"`
+	Boolean       *bool    `json:"boolean,omitempty"`
+	UpdatedAt     float64  `json:"updatedAt"`
+}
+
+type SDParameterSnapshotInfoMessage []SDParameterSnapshot

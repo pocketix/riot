@@ -68,10 +68,11 @@ func (SDTypeEntity) TableName() string {
 }
 
 type SDParameterEntity struct {
-	ID         uint32 `gorm:"column:id;primaryKey;not null"`
-	SDTypeID   uint32 `gorm:"column:sd_type_id;not null"`
-	Denotation string `gorm:"column:denotation;not null"`
-	Type       string `gorm:"column:type;not null"`
+	ID                  uint32                      `gorm:"column:id;primaryKey;not null"`
+	SDTypeID            uint32                      `gorm:"column:sd_type_id;not null"`
+	Denotation          string                      `gorm:"column:denotation;not null"`
+	Type                string                      `gorm:"column:type;not null"`
+	SDParameterSnapshot []SDParameterSnapshotEntity `gorm:"foreignKey:SDParameterID;constraint:OnDelete:CASCADE"`
 }
 
 func (SDParameterEntity) TableName() string {
@@ -88,10 +89,24 @@ type SDInstanceEntity struct {
 	GroupMembershipRecords                     []SDInstanceGroupMembershipEntity           `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 	KPIFulfillmentCheckResults                 []KPIFulfillmentCheckResultEntity           `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 	SDInstanceKPIDefinitionRelationshipRecords []SDInstanceKPIDefinitionRelationshipEntity `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
+	SDParameterSnapshot                        []SDParameterSnapshotEntity                 `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 }
 
 func (SDInstanceEntity) TableName() string {
 	return "sd_instances"
+}
+
+type SDParameterSnapshotEntity struct {
+	SDInstanceID  uint32    `gorm:"column:sd_instance_id;primaryKey;not null"`
+	SDParameterID uint32    `gorm:"column:sd_parameter_id;primaryKey;not null"`
+	String        *string   `gorm:"column:string"`
+	Number        *float64  `gorm:"column:number"`
+	Boolean       *bool     `gorm:"column:boolean"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (SDParameterSnapshotEntity) TableName() string {
+	return "sd_parameter_snapshots"
 }
 
 type KPIFulfillmentCheckResultEntity struct {

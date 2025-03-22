@@ -193,6 +193,10 @@ func (r *subscriptionResolver) OnKPIFulfillmentChecked(ctx context.Context) (<-c
 	return KPIFulfillmentCheckResulTupleGraphQLSubscriptionChannel, nil
 }
 
+func (r *subscriptionResolver) OnSDParameterSnapshotUpdate(ctx context.Context) (<-chan graphQLModel.SDParameterSnapshot, error) {
+	return SDParameterSnapshotUpdateSubscriptionChannel, nil
+}
+
 func (r *Resolver) Mutation() gsc.MutationResolver { return &mutationResolver{r} }
 
 func (r *Resolver) Query() gsc.QueryResolver { return &queryResolver{r} }

@@ -20,6 +20,7 @@ import (
 var (
 	SDInstanceGraphQLSubscriptionChannel                    = make(chan graphQLModel.SDInstance)
 	KPIFulfillmentCheckResulTupleGraphQLSubscriptionChannel = make(chan graphQLModel.KPIFulfillmentCheckResultTuple)
+	SDParameterSnapshotUpdateSubscriptionChannel            = make(chan graphQLModel.SDParameterSnapshot)
 )
 
 func SetupGraphQLServer() {

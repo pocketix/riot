@@ -55,6 +55,7 @@ type RelationalDatabaseClient interface {
 	PersistUserConfig(userConfig dllModel.UserConfig) sharedUtils.Result[uint32]
 	LoadUserConfig(userId uint32) sharedUtils.Result[dllModel.UserConfig]
 	DeleteUserConfig(userId uint32) error
+	PersistSDParameterSnapshot(snapshot dllModel.SDParameterSnapshot) sharedUtils.Result[sharedUtils.Pair[uint32, uint32]]
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -104,6 +105,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.UserEntity),
 		new(dbModel.UserSessionEntity),
 		new(dbModel.UserConfigEntity),
+		new(dbModel.SDParameterSnapshotEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
 
@@ -341,7 +343,11 @@ func (r *relationalDatabaseClientImpl) PersistNewSDInstance(uid string, sdTypeSp
 func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) sharedUtils.Result[dllModel.SDInstance] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](r.db, dbUtil.Preload("SDType"), dbUtil.Where("id = ?", id))
+	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](
+		r.db,
+		dbUtil.Preload("SDType"), dbUtil.Where("id = ?", id),
+		dbUtil.Preload("SDParameterSnapshot"), dbUtil.Where("sd_instance_id = ?", id),
+	)
 	if sdInstanceEntityLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[dllModel.SDInstance](sdInstanceEntityLoadResult.GetError())
 	}
@@ -366,7 +372,11 @@ func (r *relationalDatabaseClientImpl) LoadSDInstanceBasedOnUID(uid string) shar
 func (r *relationalDatabaseClientImpl) LoadSDInstances() sharedUtils.Result[[]dllModel.SDInstance] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	sdInstanceEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDInstanceEntity](r.db, dbUtil.Preload("SDType"))
+	sdInstanceEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDInstanceEntity](
+		r.db,
+		dbUtil.Preload("SDType"),
+		dbUtil.Preload("SDParameterSnapshot"),
+	)
 	if sdInstanceEntitiesLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[[]dllModel.SDInstance](sdInstanceEntitiesLoadResult.GetError())
 	}
@@ -560,4 +570,32 @@ func (r *relationalDatabaseClientImpl) DeleteUserConfig(userId uint32) error {
 	defer r.mu.Unlock()
 
 	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.UserConfigEntity](r.db, userId)
+}
+
+func (r *relationalDatabaseClientImpl) PersistSDParameterSnapshot(snapshot dllModel.SDParameterSnapshot) sharedUtils.Result[sharedUtils.Pair[uint32, uint32]] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	sdInstance := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](r.db, dbUtil.Where("uid = ?", snapshot.SDInstance))
+
+	if sdInstance.IsFailure() {
+		return sharedUtils.NewFailureResult[sharedUtils.Pair[uint32, uint32]](sdInstance.GetError())
+	}
+
+	parameter := dbUtil.LoadEntityFromDB[dbModel.SDParameterEntity](
+		r.db,
+		dbUtil.Where("sd_type_id = ? AND denotation = ?", sdInstance.GetPayload().SDTypeID, snapshot.SDParameter),
+	)
+
+	if parameter.IsFailure() {
+		return sharedUtils.NewFailureResult[sharedUtils.Pair[uint32, uint32]](parameter.GetError())
+	}
+
+	snapshotEntity := dll2db.ToDBModelEntitySDParameterSnapshot(snapshot, sdInstance.GetPayload().ID, parameter.GetPayload().ID)
+
+	if err := dbUtil.PersistEntityIntoDB(r.db, &snapshotEntity); err != nil {
+		return sharedUtils.NewFailureResult[sharedUtils.Pair[uint32, uint32]](err)
+	}
+
+	return sharedUtils.NewSuccessResult[sharedUtils.Pair[uint32, uint32]](sharedUtils.NewPairOf(snapshotEntity.SDParameterID, snapshotEntity.SDInstanceID))
 }

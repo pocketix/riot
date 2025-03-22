@@ -12,6 +12,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"log"
+	"time"
 )
 
 func ProcessIncomingMessageProcessingUnitConnectionNotifications() {
@@ -68,6 +69,35 @@ func ProcessIncomingKPIFulfillmentCheckResults(kpiFulfillmentCheckResultGraphQLS
 			}
 		} else if kpiFulfillmentCheckResultTuplePersistError := kpiFulfillmentCheckResultTuplePersistResult.GetError(); !errors.Is(kpiFulfillmentCheckResultTuplePersistError, dbClient.ErrOperationWouldLeadToForeignKeyIntegrityBreach) {
 			return fmt.Errorf("failed to persist KPI fulfillment check result tuple: %w", kpiFulfillmentCheckResultTuplePersistError)
+		}
+		return nil
+	}, rabbitMQClient)
+}
+
+func ProcessIncomingSDParameterSnapshotUpdates(parameterSnapshotUpdateSubscriptionChannel *chan graphQLModel.SDParameterSnapshot) {
+	rabbitMQClient := rabbitmq.NewClient()
+	defer rabbitMQClient.Dispose()
+	consumeParameterSnapshotUpdateJSONMessages(func(parameterSnapshotInfoMessage sharedModel.SDParameterSnapshotInfoMessage) error {
+		for _, snapshot := range parameterSnapshotInfoMessage {
+			dllSnapshot := dllModel.SDParameterSnapshot{
+				SDInstance:  snapshot.SDInstanceUID,
+				SDParameter: snapshot.SdParameter,
+				String:      snapshot.String,
+				Number:      snapshot.Number,
+				Boolean:     snapshot.Boolean,
+				UpdatedAt:   time.Time{},
+			}
+
+			snapshotTuplePersistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDParameterSnapshot(dllSnapshot)
+			if snapshotTuplePersistResult.IsSuccess() {
+				snapshot := dll2gql.ToGraphQLModelSdParameterSnapshot(dllSnapshot)
+				select {
+				case *parameterSnapshotUpdateSubscriptionChannel <- snapshot:
+				default:
+				}
+			} else if kpiFulfillmentCheckResultTuplePersistError := snapshotTuplePersistResult.GetError(); !errors.Is(kpiFulfillmentCheckResultTuplePersistError, dbClient.ErrOperationWouldLeadToForeignKeyIntegrityBreach) {
+				log.Printf("failed to persist KPI fulfillment check result tuple: %w", kpiFulfillmentCheckResultTuplePersistError)
+			}
 		}
 		return nil
 	}, rabbitMQClient)
