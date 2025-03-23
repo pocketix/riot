@@ -10,14 +10,13 @@ import { AccessibilityContainer } from './components/AccessibilityContainer'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from './components/ChartThemes'
 import { ChartToolTip } from './tooltips/LineChartToolTip'
-import { useLazyQuery } from '@apollo/client'
-import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { BuilderResult } from '@/types/GridItem'
+import { StatisticsInput, StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -75,7 +74,7 @@ export const ChartCard = ({
   const [chartConfig, setChartConfig] = useState<ChartCardConfig>()
   const [unavilableData, setUnavailableData] = useState<{ device: string; parameter: string }[]>([])
 
-  const [getChartData, { data: fetchedChartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
+  const [getChartData, { data: fetchedChartData }] = useStatisticsQuerySensorsWithFieldsLazyQuery()
 
   const fetchData = () => {
     console.log('Chart config', chartConfig)
@@ -88,10 +87,10 @@ export const ChartCard = ({
         values: instance.parameters ? instance.parameters.map((param) => param.denotation) : []
       }))
 
-      const request = {
+      const request : StatisticsInput = {
         from: new Date(Date.now() - Number(chartConfig.timeFrame) * 60 * 1000).toISOString(),
         aggregateMinutes: chartConfig.aggregateMinutes,
-        operation: 'last'
+        operation: StatisticsOperation.Last
       }
 
       getChartData({

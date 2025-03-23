@@ -11,13 +11,12 @@ import { useDarkMode } from '@/context/DarkModeContext'
 import { lightTheme, darkTheme } from './components/ChartThemes'
 import { ToolTipContainer } from './components/ChartGlobals'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useLazyQuery } from '@apollo/client'
-import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { toast } from 'sonner'
 import { CardEditDialog } from '../editors/CardEditDialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { BuilderResult } from '@/types/GridItem'
+import { StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 
 // Styled components
 export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -70,7 +69,7 @@ export const BulletCard = ({
   const [chartConfig, setChartConfig] = useState<BulletCardConfig>()
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const [data, setData] = useState<any[]>([])
-  const [getChartData] = useLazyQuery(GET_TIME_SERIES_DATA)
+  const [getChartData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -118,14 +117,14 @@ export const BulletCard = ({
                 sensors: [
                   {
                     key: row.instance.uid,
-                    values: row.parameter.denotation
+                    values: [row.parameter.denotation]
                   }
                 ]
               },
               request: {
                 from: new Date(Date.now() - Number(row.config.timeFrame) * 60 * 1000).toISOString(),
                 aggregateMinutes: Number(row.config.timeFrame) * 1000,
-                operation: row.config.function
+                operation: row.config.function as StatisticsOperation
               }
             }
           })
@@ -133,8 +132,8 @@ export const BulletCard = ({
       )
 
       const parsedData = results.map((result) => {
-        if (result.status === 'fulfilled' && result.value.data.statisticsQuerySensorsWithFields.length > 0) {
-          return result.value.data.statisticsQuerySensorsWithFields
+        if (result.status === 'fulfilled' && result.value.data?.statisticsQuerySensorsWithFields.length! > 0) {
+          return result.value.data?.statisticsQuerySensorsWithFields
         } else {
           const sensor = result.status === 'fulfilled' ? result.value.variables?.sensors?.sensors[0]! : null
           console.error('Failed to fetch data for sensor', sensor)

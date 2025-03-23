@@ -14,9 +14,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
-import { SdInstance, SdParameter } from '@/generated/graphql'
-import { useLazyQuery, useQuery } from '@apollo/client'
-import { GET_PARAMETERS, GET_TIME_SERIES_DATA } from '@/graphql/Queries'
+import {
+  SdInstance,
+  SdParameter,
+  SdParameterType,
+  StatisticsOperation,
+  useSdTypeParametersQuery,
+  useStatisticsQuerySensorsWithFieldsLazyQuery
+} from '@/generated/graphql'
 import { ParameterMultiSelect } from '@/components/ui/multi-select-parameter'
 import { TbTrash } from 'react-icons/tb'
 import { IoAdd } from 'react-icons/io5'
@@ -27,6 +32,7 @@ import { toast } from 'sonner'
 import { useDebounce } from 'use-debounce'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BuilderResult } from '@/types/GridItem'
+import { SingleInstanceCombobox } from './components/single-instance-combobox'
 
 type LineBuilderResult = BuilderResult<ChartCardConfig>
 
@@ -58,10 +64,6 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
         legend: 'Value',
         legendOffset: -40,
         legendPosition: 'middle' as AxisLegendPosition
-        // tickSize: 5,
-        // tickPadding: 5,
-        // tickRotation: 0,
-        // truncateTickAt: 0
       },
       axisBottom: {
         format: '%H:%M',
@@ -78,19 +80,14 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
         max: 'auto',
         stacked: false
       },
-      // xScale: { type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' },
-      // xFormat: 'time:%Y-%m-%dT%H:%M:%SZ',
-      // animate: true,
-      // yFormat: ' >-.3~f',
       enableGridX: true,
       enableGridY: true
-      // pointBorderColor: { from: 'serieColor' }
     }
   })
 
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
-  const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
-  const [getChartData, { data: chartData }] = useLazyQuery(GET_TIME_SERIES_DATA)
+  const [availableParameters, setAvailableParameters] = useState<{ [typeID: number]: SdParameter[] }>({})
+  const [getChartData, { data: chartData }] = useStatisticsQuerySensorsWithFieldsLazyQuery()
   const [data, setData] = useState<any[]>([])
   const [dataMaxValue, setDataMaxValue] = useState<number | null>(null)
   const leftAxisMarginMockRef = useRef<HTMLHeadingElement | null>(null)
@@ -107,7 +104,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
     const request = {
       from: new Date(Date.now() - Number(form.getValues('timeFrame')) * 60 * 1000).toISOString(),
       aggregateMinutes: form.getValues('aggregateMinutes'),
-      operation: 'last'
+      operation: StatisticsOperation.Last
     }
 
     getChartData({
@@ -147,7 +144,9 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
     let result: any[] = []
 
     instances.forEach((instance: { uid: string; parameters: { denotation: string }[] }) => {
-      const sensorDataArray = chartData.statisticsQuerySensorsWithFields.filter((item: any) => item.deviceId === instance.uid)
+      const sensorDataArray = chartData.statisticsQuerySensorsWithFields.filter(
+        (item: any) => item.deviceId === instance.uid
+      )
       console.log('Sensor data array', sensorDataArray)
       instance.parameters.forEach((param) => {
         const paramData = {
@@ -213,32 +212,40 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
     }
   }, [leftAxisMarginMockRef.current?.innerText, dataMaxValue])
 
-  const { data: parametersData, refetch: refetchParameters } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
-    variables: { sdTypeId: selectedInstance?.type.id },
+  const { data: parametersData, refetch: refetchParameters } = useSdTypeParametersQuery({
+    variables: { sdTypeId: selectedInstance?.type?.id! },
     skip: !selectedInstance
   })
 
   useEffect(() => {
     if (config) {
       config.instances.forEach((instance: { uid: string; parameters: { id: number; denotation: string }[] }) => {
-        const selectedInstance = instances.find((inst) => inst.uid === instance.uid)
-        if (selectedInstance) {
-          refetchParameters({ sdTypeId: selectedInstance.type.id }).then((result) => {
+        // Find the whole instance, so that we can get its type id
+        const wholeInstance = instances.find((inst) => inst.uid === instance.uid)
+
+        if (wholeInstance) {
+          refetchParameters({ sdTypeId: wholeInstance.type.id }).then((result) => {
+            // Keep only parameters with type NUMBER
+            const numberParameters = result.data.sdType.parameters.filter(
+              (param) => param.type === SdParameterType.Number
+            )
             setAvailableParameters((prev) => ({
               ...prev,
-              [selectedInstance.uid]: result.data.sdType.parameters
+              [wholeInstance.type.id]: numberParameters
             }))
           })
         }
       })
     }
-  }, [config, instances, refetchParameters])
+  }, [config, refetchParameters])
 
   useEffect(() => {
     if (parametersData && selectedInstance) {
+      const numberParameters = parametersData.sdType.parameters.filter((param) => param.type === SdParameterType.Number)
       setAvailableParameters((prev) => ({
         ...prev,
-        [selectedInstance.uid]: parametersData.sdType.parameters
+        // Multiple devices can have the same type id
+        [selectedInstance.type.id]: numberParameters
       }))
     }
   }, [parametersData, selectedInstance])
@@ -260,20 +267,37 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
     onDataSubmit(result)
   }
 
+  const getParameterOptions = (instanceUID: string) => {
+    const instance = instances.find((inst) => inst.uid === instanceUID)
+    if (!instance) return []
+    const parameters = availableParameters[instance.type?.id!]
+    if (!parameters) return []
+    const numberParameters = parameters.filter((param) => param.type === SdParameterType.Number)
+    return numberParameters.map((param) => ({
+      label: param.denotation,
+      value: param.id
+    }))
+  }
+
   return (
     <div className="relative w-full">
-      <h3 className="absolute top-0 left-1/2 text-[11px] -z-10" ref={leftAxisMarginMockRef}>
+      <h3 className="absolute left-1/2 top-0 -z-10 text-[11px]" ref={leftAxisMarginMockRef}>
         {leftAxisMarginMockRef.current?.innerText}
       </h3>
       <Card className="h-[220px] w-full">
-        {form.watch('cardTitle') && <h3 className="text-md font-semibold ml-2">{form.watch('cardTitle')}</h3>}
-        <div className="relative w-full h-full">
+        {form.watch('cardTitle') && <h3 className="text-md ml-2 font-semibold">{form.watch('cardTitle')}</h3>}
+        <div className="relative h-full w-full">
           {data.length === 0 && (
-            <div className="absolute z-10 w-full h-full flex items-center justify-center bg-transparent">
-              <p className="text-center text-destructive font-semibold">No data available, please select an instance and parameter to display data.</p>
+            <div className="absolute z-10 flex h-full w-full items-center justify-center bg-transparent">
+              <p className="text-center font-semibold text-destructive">
+                No data available, please select an instance and parameter to display data.
+              </p>
             </div>
           )}
-          <div className={`relative w-full ${form.watch('cardTitle') ? 'h-[200px]' : 'h-[220px]'} ${data.length === 0 ? 'opacity-25' : 'opacity-100'}`} ref={containerRef}>
+          <div
+            className={`relative w-full ${form.watch('cardTitle') ? 'h-[200px]' : 'h-[220px]'} ${data.length === 0 ? 'opacity-25' : 'opacity-100'}`}
+            ref={containerRef}
+          >
             <ResponsiveLine
               data={data}
               margin={form.watch('margin')}
@@ -294,13 +318,20 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
               useMesh={data.length > 0}
               enableGridX={form.watch('enableGridX')}
               enableGridY={form.watch('enableGridY')}
-              tooltip={(pos: PointTooltipProps) => <ChartToolTip position={pos} containerRef={containerRef} xName={form.watch('toolTip.x')} yName={form.watch('toolTip.y')} />}
+              tooltip={(pos: PointTooltipProps) => (
+                <ChartToolTip
+                  position={pos}
+                  containerRef={containerRef}
+                  xName={form.watch('toolTip.x')}
+                  yName={form.watch('toolTip.y')}
+                />
+              )}
               theme={isDarkMode ? darkTheme : lightTheme}
             />
           </div>
         </div>
       </Card>
-      <Card className="h-fit w-full overflow-hidden p-2 pt-0 mt-4 shadow-lg">
+      <Card className="mt-4 h-fit w-full overflow-hidden p-2 pt-0 shadow-lg">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
@@ -310,7 +341,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
               }
             }}
           >
-            <div className="grid sm:grid-cols-2 grid-cols-1 gap-4 pt-2">
+            <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="axisLeft.legend"
@@ -439,14 +470,16 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger>
-                            <HiOutlineQuestionMarkCircle className="text-primary w-5 h-5" />
+                            <HiOutlineQuestionMarkCircle className="h-5 w-5 text-primary" />
                           </TooltipTrigger>
                           <TooltipContent className="w-48">
                             <p className="font-semibold">What is this?</p>
                             <p className="font-thin">
                               This value is <b>automatically</b> calculated based on the selected time frame.
                             </p>
-                            <p>It corresponds to the number of minutes that will be aggregated into a single data point.</p>
+                            <p>
+                              It corresponds to the number of minutes that will be aggregated into a single data point.
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -470,8 +503,13 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
             </div>
             <Separator className="my-2" />
             {fields.map((item, index) => (
-              <div key={item.id} className="relative border p-4 mb-4 rounded-lg">
-                <Button variant="destructive" size="icon" onClick={() => remove(index)} className="absolute top-2 right-2">
+              <div key={item.id} className="relative mb-4 rounded-lg border p-4">
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => remove(index)}
+                  className="absolute right-2 top-2"
+                >
                   <TbTrash />
                 </Button>
                 <FormField
@@ -481,27 +519,15 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                     <FormItem>
                       <FormLabel>Instance</FormLabel>
                       <FormControl>
-                        <Select
+                        <SingleInstanceCombobox
+                          instances={instances}
                           onValueChange={(value) => {
-                            const instance = instances.find((instance) => instance.uid === value)
-                            if (!instance) return
-                            setSelectedInstance(instance)
-                            field.onChange(value)
+                            setSelectedInstance(value)
+                            field.onChange(value.uid)
                             form.setValue(`instances.${index}.parameters`, [])
                           }}
                           value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select an instance" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {instances.map((instance) => (
-                              <SelectItem key={instance.uid} value={instance.uid}>
-                                {instance.userIdentifier}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -519,21 +545,18 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                             fetchData()
                           }}
                           options={
-                            form.getValues(`instances.${index}.uid`) && availableParameters[form.getValues(`instances.${index}.uid`)]
-                              ? availableParameters[form.getValues(`instances.${index}.uid`)].map((parameter) => ({
-                                  label: parameter.denotation,
-                                  value: parameter.id
-                                }))
+                            form.getValues(`instances.${index}.uid`)
+                              ? getParameterOptions(form.getValues(`instances.${index}.uid`))
                               : []
                           }
-                          reset={form.watch(`instances.${index}.uid`) !== config?.instances[index]?.uid}
+                          reset={
+                            config
+                              ? form.watch(`instances.${index}.uid`) !== config?.instances[index]?.uid
+                              : form.watch(`instances.${index}.uid`)
+                          }
                           modalPopover={true}
                           onValueChange={(value) => {
-                            const selectedParameters = value.map((param) => ({
-                              id: param,
-                              denotation: availableParameters[form.getValues(`instances.${index}.uid`)].find((paramWhole) => paramWhole.id === Number(param))?.denotation
-                            }))
-                            field.onChange(selectedParameters)
+                            field.onChange(value)
                           }}
                           defaultValue={field.value.map((param: { id: number }) => param.id)}
                           placeholder="Select parameters"
@@ -547,12 +570,16 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                 />
               </div>
             ))}
-            {form.formState.errors.instances && <p className="text-red-500 text-sm font-semibold">{form.formState.errors.instances.message}</p>}
-            {form.formState.errors.instances?.root! && <p className="text-red-500 text-sm font-semibold">{form.formState.errors.instances?.root.message}</p>}
+            {form.formState.errors.instances && (
+              <p className="text-sm font-semibold text-red-500">{form.formState.errors.instances.message}</p>
+            )}
+            {form.formState.errors.instances?.root! && (
+              <p className="text-sm font-semibold text-red-500">{form.formState.errors.instances?.root.message}</p>
+            )}
             <Button
               type="button"
               variant="green"
-              className="mt-4 flex items-center justify-center w-1/2 m-auto"
+              className="m-auto mt-4 flex w-1/2 items-center justify-center"
               onClick={() => {
                 append({ uid: '', parameters: [] })
               }}
@@ -560,10 +587,10 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
               <IoAdd />
               Add Instance
             </Button>
-            <Accordion type="single" collapsible className="w-full mt-4">
+            <Accordion type="single" collapsible className="mt-4 w-full">
               <AccordionItem value="tooltip-options">
                 <AccordionTrigger>Tooltip options</AccordionTrigger>
-                <AccordionContent className="w-full flex gap-4">
+                <AccordionContent className="flex w-full gap-4">
                   <FormField
                     control={form.control}
                     name="toolTip.x"
@@ -607,10 +634,10 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-            <Accordion type="single" collapsible className="w-full mt-4">
+            <Accordion type="single" collapsible className="mt-4 w-full">
               <AccordionItem value="advanced-options">
                 <AccordionTrigger>Advanced options</AccordionTrigger>
-                <AccordionContent className="w-full sm:grid-cols-2 grid-cols-1 grid gap-4">
+                <AccordionContent className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="margin.bottom"
@@ -704,7 +731,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                     name="yScale.min"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex gap-2 items-center justify-between">
+                        <FormLabel className="flex items-center justify-between gap-2">
                           Min Value
                           <div className="flex items-center gap-2">
                             Auto
@@ -734,7 +761,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                     name="yScale.max"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex gap-2 items-center justify-between">
+                        <FormLabel className="flex items-center justify-between gap-2">
                           Max Value
                           <div className="flex items-center gap-2">
                             Auto
@@ -771,7 +798,11 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-            <Button type="submit" className="w-fit mt-4" onClick={() => console.log('Form errors', form.formState.errors)}>
+            <Button
+              type="submit"
+              className="mt-4 w-fit"
+              onClick={() => console.log('Form errors', form.formState.errors)}
+            >
               Submit
             </Button>
           </form>

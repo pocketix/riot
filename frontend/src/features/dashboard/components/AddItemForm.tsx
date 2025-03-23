@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useQuery } from '@apollo/client'
-import { GET_INSTANCES } from '@/graphql/Queries'
-import type { SdInstance } from '@/../../src/generated/graphql'
+import { useSdInstancesWithParamsQuery } from '@/generated/graphql'
 import { VisualizationGallery } from './visualizationExamples/VisualizationGallery'
 import { VisualizationBuilder } from './VisualizationBuilder'
 import { BuilderResult, GridItem, AllConfigTypes } from '@/types/GridItem'
@@ -11,11 +9,11 @@ import { FaArrowRight } from 'react-icons/fa6'
 
 export interface AddItemFormProps {
   setDialogOpen: (open: boolean) => void
-  onAddItem<ConfigType extends AllConfigTypes>(item: GridItem<ConfigType>) : void
+  onAddItem<ConfigType extends AllConfigTypes>(item: GridItem<ConfigType>): void
 }
 
 export function AddItemForm({ setDialogOpen, onAddItem }: AddItemFormProps) {
-  const { data } = useQuery<{ sdInstances: SdInstance[] }>(GET_INSTANCES)
+  const { data } = useSdInstancesWithParamsQuery()
   const [selectedVisualization, setSelectedVisualization] = useState<'line' | 'switch' | 'table' | 'bullet' | 'entitycard' | null>(null)
   const [activeTab, setActiveTab] = useState('visualization')
 
@@ -23,7 +21,7 @@ export function AddItemForm({ setDialogOpen, onAddItem }: AddItemFormProps) {
     setSelectedVisualization(visualization)
   }
 
-  function handleAddItem<ConfigType extends AllConfigTypes>(config: BuilderResult<ConfigType>)  {
+  function handleAddItem<ConfigType extends AllConfigTypes>(config: BuilderResult<ConfigType>) {
     const item: GridItem<ConfigType> = {
       visualization: selectedVisualization!,
       visualizationConfig: config

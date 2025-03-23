@@ -25,3 +25,5 @@ frontend/src/generated/graphql.tsx
 
 # Ignore backend executables
 backend/bin
+.vscode/settings.json
+frontend/package-lock.json

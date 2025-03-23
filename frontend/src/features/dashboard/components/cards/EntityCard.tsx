@@ -12,11 +12,10 @@ import { Switch } from '@/components/ui/switch'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from './components/ChartThemes'
 import { toast } from 'sonner'
-import { useLazyQuery } from '@apollo/client'
-import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { CardEditDialog } from '../editors/CardEditDialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { BuilderResult } from '@/types/GridItem'
+import { StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   position: relative;
@@ -57,14 +56,27 @@ interface RowData {
   value?: string | number
 }
 
-export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editModeEnabled, handleDeleteItem, width, height, setHighlightedCardID, configuration, handleSaveEdit }: EntityCardProps) => {
+export const EntityCard = ({
+  cardID,
+  layout,
+  setLayout,
+  cols,
+  breakPoint,
+  editModeEnabled,
+  handleDeleteItem,
+  width,
+  height,
+  setHighlightedCardID,
+  configuration,
+  handleSaveEdit
+}: EntityCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const { isDarkMode } = useDarkMode()
 
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const [data, setData] = useState<RowData[]>([])
   const [chartConfig, setChartConfig] = useState<EntityCardConfig>()
-  const [fetchData] = useLazyQuery(GET_TIME_SERIES_DATA)
+  const [fetchData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -122,7 +134,7 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
               request: {
                 from: new Date(Date.now() - row.timeFrame * 60 * 1000).toISOString(),
                 aggregateMinutes: Math.ceil(row.aggregatedMinutes),
-                operation: 'last'
+                operation: StatisticsOperation.Last
               }
             }
           })
@@ -130,10 +142,13 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
       )
 
       const parsedData = results.map((result, index) => {
-        if (result.status === 'fulfilled' && result.value.data?.statisticsQuerySensorsWithFields?.length > 0) {
-          return result.value.data.statisticsQuerySensorsWithFields
+        if (result.status === 'fulfilled' && result.value.data?.statisticsQuerySensorsWithFields.length! > 0) {
+          return result.value.data?.statisticsQuerySensorsWithFields
         } else {
-          console.error(`Error fetching data for row ${index}:`, result.status === 'rejected' ? result.reason : 'Empty data')
+          console.error(
+            `Error fetching data for row ${index}:`,
+            result.status === 'rejected' ? result.reason : 'Empty data'
+          )
           return null
         }
       })
@@ -186,14 +201,14 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
   }, [cardID, highlight])
 
   if (!chartConfig || !chartConfig.rows) {
-    return <Skeleton className="w-full h-full" />
+    return <Skeleton className="h-full w-full" />
   }
 
   return (
     <Container key={cardID} className={`${cardID}`}>
       {editModeEnabled && (
         <DragHandle>
-          <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 border-2 rounded-lg" />
+          <AiOutlineDrag className="drag-handle h-[40px] w-[40px] rounded-lg border-2 p-1" />
         </DragHandle>
       )}
       {editModeEnabled && (
@@ -204,30 +219,34 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
       )}
       <div className="pl-2 pt-2 font-semibold">{chartConfig.title}</div>
       <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
-        <table className="w-full h-fit">
+        <table className="h-fit w-full">
           <thead className="border-b-[2px]">
             <tr>
-              <th className="text-left text-md">Name</th>
+              <th className="text-md text-left">Name</th>
             </tr>
           </thead>
           <tbody>
             {chartConfig.rows.map((row, rowIndex) => {
-              if (!data[rowIndex] || (row.visualization === 'sparkline' && !data[rowIndex].sparklineData) || (row.visualization !== 'sparkline' && !data[rowIndex].value))
+              if (
+                !data[rowIndex] ||
+                (row.visualization === 'sparkline' && !data[rowIndex].sparklineData) ||
+                (row.visualization !== 'sparkline' && !data[rowIndex].value)
+              )
                 return (
                   <tr key={rowIndex}>
                     <td className="text-sm">{row.name}</td>
-                    <td className="text-sm text-center w-[75px] h-[24px]">
-                      <Skeleton className="w-full h-full" disableAnimation>
+                    <td className="h-[24px] w-[75px] text-center text-sm">
+                      <Skeleton className="h-full w-full" disableAnimation>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="text-destructive truncate font-semibold text-xs">Unavailable</span>
+                              <span className="truncate text-xs font-semibold text-destructive">Unavailable</span>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <div className="flex flex-col max-w-28">
-                                <span className="text-destructive font-semibold">No data available</span>
-                                <span className="text-xs break-words">Device: {row.instance.uid}</span>
-                                <span className="text-xs break-words">Parameter: {row.parameter.denotation}</span>
+                              <div className="flex max-w-28 flex-col">
+                                <span className="font-semibold text-destructive">No data available</span>
+                                <span className="break-words text-xs">Device: {row.instance.uid}</span>
+                                <span className="break-words text-xs">Parameter: {row.parameter.denotation}</span>
                               </div>
                             </TooltipContent>
                           </Tooltip>
@@ -240,7 +259,7 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
                 <tr key={rowIndex}>
                   <td className="text-sm">{row.name}</td>
                   {row.visualization === 'sparkline' && (
-                    <td className="text-sm text-center w-[75px] h-[24px]">
+                    <td className="h-[24px] w-[75px] text-center text-sm">
                       <ResponsiveLine
                         data={[
                           {
@@ -265,9 +284,9 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
                       />
                     </td>
                   )}
-                  {row.visualization === 'immediate' && <td className="text-sm text-center">{data[rowIndex].value}</td>}
+                  {row.visualization === 'immediate' && <td className="text-center text-sm">{data[rowIndex].value}</td>}
                   {row.visualization === 'switch' && (
-                    <td className="text-sm text-center">
+                    <td className="text-center text-sm">
                       <Switch checked={data[rowIndex].value === 'on'} />
                     </td>
                   )}
@@ -295,20 +314,32 @@ export const EntityCard = ({ cardID, layout, setLayout, cols, breakPoint, editMo
       {highlight === 'width' && (
         <>
           {!isAtRightEdge && item?.w !== item?.maxW && (
-            <div style={{ width: `${width}px` }} className={`h-full absolute top-0 left-full ${highlight ? 'opacity-50' : 'opacity-0'} transition-opacity duration-200 bg-green-400 rounded-r-lg`} />
+            <div
+              style={{ width: `${width}px` }}
+              className={`absolute left-full top-0 h-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-r-lg bg-green-400 transition-opacity duration-200`}
+            />
           )}
           {item?.w !== 1 && item?.w !== item?.minW && (
-            <div style={{ width: `${width}px` }} className={`h-full absolute top-0 right-0  ${highlight ? 'opacity-50' : 'opacity-0'} transition-opacity duration-200 bg-red-400 rounded-r-lg`} />
+            <div
+              style={{ width: `${width}px` }}
+              className={`absolute right-0 top-0 h-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-r-lg bg-red-400 transition-opacity duration-200`}
+            />
           )}
         </>
       )}
       {highlight === 'height' && (
         <>
           {item?.h !== item?.maxH && (
-            <div style={{ height: `${height}px` }} className={`w-full absolute top-full left-0 ${highlight ? 'opacity-50' : 'opacity-0'} transition-opacity duration-200 bg-green-400 rounded-b-lg`} />
+            <div
+              style={{ height: `${height}px` }}
+              className={`absolute left-0 top-full w-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-b-lg bg-green-400 transition-opacity duration-200`}
+            />
           )}
           {item?.h !== item?.minH && item?.h !== 1 && (
-            <div style={{ height: `${height}px` }} className={`w-full absolute bottom-0 left-0 ${highlight ? 'opacity-50' : 'opacity-0'} transition-opacity duration-200 bg-red-400 rounded-b-lg`} />
+            <div
+              style={{ height: `${height}px` }}
+              className={`absolute bottom-0 left-0 w-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-b-lg bg-red-400 transition-opacity duration-200`}
+            />
           )}
         </>
       )}

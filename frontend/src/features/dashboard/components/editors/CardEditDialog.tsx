@@ -9,22 +9,20 @@ import { TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
 import { TableCardBuilder } from '../builders/TableCardBuilder'
 import { BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { BulletChartBuilder } from '../builders/BulletChartBuilder'
-import { useQuery } from '@apollo/client'
-import { SdInstance } from '@/generated/graphql'
-import { GET_INSTANCES } from '@/graphql/Queries'
+import { useSdInstancesWithParamsQuery } from '@/generated/graphql'
 import { toast } from 'sonner'
 import { DialogDescription } from '@radix-ui/react-dialog'
-import { BuilderResult } from '../VisualizationBuilder'
+import { AllConfigTypes, BuilderResult } from '@/types/GridItem'
 
-export interface CardEditDialogProps<ConfigType> {
+export interface CardEditDialogProps<ConfigType extends AllConfigTypes> {
   config?: ConfigType
   visualizationType: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard'
   onSave: (result: BuilderResult<ConfigType>) => void
 }
 
-export function CardEditDialog<ConfigType extends EntityCardConfig | ChartCardConfig | TableCardConfig | BulletCardConfig>({ config, onSave, visualizationType }: CardEditDialogProps<ConfigType>) {
+export function CardEditDialog<ConfigType extends AllConfigTypes>({ config, onSave, visualizationType }: CardEditDialogProps<ConfigType>) {
   const [dialogOpen, setDialogOpen] = useState(false)
-  const { data } = useQuery<{ sdInstances: SdInstance[] }>(GET_INSTANCES)
+  const { data } = useSdInstancesWithParamsQuery()
 
   const handleSave = (result: BuilderResult<ConfigType>) => {
     onSave(result)

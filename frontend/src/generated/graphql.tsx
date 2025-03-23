@@ -304,19 +304,8 @@ export type QueryUserConfigArgs = {
   id: Scalars['ID']['input'];
 };
 
-export type SdCommandInvocation = {
-  __typename?: 'SDCommandInvocation';
-  commandId: Scalars['ID']['output'];
-  id: Scalars['ID']['output'];
-  invocationTime: Scalars['String']['output'];
-  payload: Scalars['String']['output'];
-  sdInstanceId: Scalars['ID']['output'];
-  userId: Scalars['ID']['output'];
-};
-
 export type SdInstance = {
   __typename?: 'SDInstance';
-  commandInvocations: Array<SdCommandInvocation>;
   confirmedByUser: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   type: SdType;
@@ -463,6 +452,14 @@ export type UserConfigInput = {
   config: Scalars['JSON']['input'];
 };
 
+export type UpdateUserConfigMutationVariables = Exact<{
+  userId: Scalars['ID']['input'];
+  input: UserConfigInput;
+}>;
+
+
+export type UpdateUserConfigMutation = { __typename?: 'Mutation', updateUserConfig: { __typename?: 'UserConfig', userId: number, config: any } };
+
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -480,6 +477,25 @@ export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type SdTypesQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }> }> };
 
+export type UserConfigQueryVariables = Exact<{
+  userConfigId: Scalars['ID']['input'];
+}>;
+
+
+export type UserConfigQuery = { __typename?: 'Query', userConfig: { __typename?: 'UserConfig', userId: number, config: any } };
+
+export type SdInstancesWithParamsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SdInstancesWithParamsQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, denotation: string, label?: string | null, type: SdParameterType }> } }> };
+
+export type SdTypeParametersQueryVariables = Exact<{
+  sdTypeId: Scalars['ID']['input'];
+}>;
+
+
+export type SdTypeParametersQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', denotation: string, id: number, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, type: SdParameterType }> } };
+
 export type StatisticsQuerySensorsWithFieldsQueryVariables = Exact<{
   sensors: SensorsWithFields;
   request?: InputMaybe<StatisticsInput>;
@@ -489,6 +505,41 @@ export type StatisticsQuerySensorsWithFieldsQueryVariables = Exact<{
 export type StatisticsQuerySensorsWithFieldsQuery = { __typename?: 'Query', statisticsQuerySensorsWithFields: Array<{ __typename?: 'OutputData', data: any, time: any, deviceId: string }> };
 
 
+export const UpdateUserConfigDocument = gql`
+    mutation UpdateUserConfig($userId: ID!, $input: UserConfigInput!) {
+  updateUserConfig(userId: $userId, input: $input) {
+    userId
+    config
+  }
+}
+    `;
+export type UpdateUserConfigMutationFn = Apollo.MutationFunction<UpdateUserConfigMutation, UpdateUserConfigMutationVariables>;
+
+/**
+ * __useUpdateUserConfigMutation__
+ *
+ * To run a mutation, you first call `useUpdateUserConfigMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateUserConfigMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateUserConfigMutation, { data, loading, error }] = useUpdateUserConfigMutation({
+ *   variables: {
+ *      userId: // value for 'userId'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateUserConfigMutation(baseOptions?: Apollo.MutationHookOptions<UpdateUserConfigMutation, UpdateUserConfigMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateUserConfigMutation, UpdateUserConfigMutationVariables>(UpdateUserConfigDocument, options);
+      }
+export type UpdateUserConfigMutationHookResult = ReturnType<typeof useUpdateUserConfigMutation>;
+export type UpdateUserConfigMutationResult = Apollo.MutationResult<UpdateUserConfigMutation>;
+export type UpdateUserConfigMutationOptions = Apollo.BaseMutationOptions<UpdateUserConfigMutation, UpdateUserConfigMutationVariables>;
 export const SdInstancesDocument = gql`
     query SdInstances {
   sdInstances {
@@ -629,6 +680,147 @@ export type SdTypesQueryHookResult = ReturnType<typeof useSdTypesQuery>;
 export type SdTypesLazyQueryHookResult = ReturnType<typeof useSdTypesLazyQuery>;
 export type SdTypesSuspenseQueryHookResult = ReturnType<typeof useSdTypesSuspenseQuery>;
 export type SdTypesQueryResult = Apollo.QueryResult<SdTypesQuery, SdTypesQueryVariables>;
+export const UserConfigDocument = gql`
+    query UserConfig($userConfigId: ID!) {
+  userConfig(id: $userConfigId) {
+    userId
+    config
+  }
+}
+    `;
+
+/**
+ * __useUserConfigQuery__
+ *
+ * To run a query within a React component, call `useUserConfigQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUserConfigQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUserConfigQuery({
+ *   variables: {
+ *      userConfigId: // value for 'userConfigId'
+ *   },
+ * });
+ */
+export function useUserConfigQuery(baseOptions: Apollo.QueryHookOptions<UserConfigQuery, UserConfigQueryVariables> & ({ variables: UserConfigQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<UserConfigQuery, UserConfigQueryVariables>(UserConfigDocument, options);
+      }
+export function useUserConfigLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UserConfigQuery, UserConfigQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<UserConfigQuery, UserConfigQueryVariables>(UserConfigDocument, options);
+        }
+export function useUserConfigSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<UserConfigQuery, UserConfigQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<UserConfigQuery, UserConfigQueryVariables>(UserConfigDocument, options);
+        }
+export type UserConfigQueryHookResult = ReturnType<typeof useUserConfigQuery>;
+export type UserConfigLazyQueryHookResult = ReturnType<typeof useUserConfigLazyQuery>;
+export type UserConfigSuspenseQueryHookResult = ReturnType<typeof useUserConfigSuspenseQuery>;
+export type UserConfigQueryResult = Apollo.QueryResult<UserConfigQuery, UserConfigQueryVariables>;
+export const SdInstancesWithParamsDocument = gql`
+    query SdInstancesWithParams {
+  sdInstances {
+    id
+    uid
+    confirmedByUser
+    userIdentifier
+    type {
+      id
+      denotation
+      label
+      icon
+      parameters {
+        id
+        denotation
+        label
+        type
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useSdInstancesWithParamsQuery__
+ *
+ * To run a query within a React component, call `useSdInstancesWithParamsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSdInstancesWithParamsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSdInstancesWithParamsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useSdInstancesWithParamsQuery(baseOptions?: Apollo.QueryHookOptions<SdInstancesWithParamsQuery, SdInstancesWithParamsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<SdInstancesWithParamsQuery, SdInstancesWithParamsQueryVariables>(SdInstancesWithParamsDocument, options);
+      }
+export function useSdInstancesWithParamsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SdInstancesWithParamsQuery, SdInstancesWithParamsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<SdInstancesWithParamsQuery, SdInstancesWithParamsQueryVariables>(SdInstancesWithParamsDocument, options);
+        }
+export function useSdInstancesWithParamsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<SdInstancesWithParamsQuery, SdInstancesWithParamsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<SdInstancesWithParamsQuery, SdInstancesWithParamsQueryVariables>(SdInstancesWithParamsDocument, options);
+        }
+export type SdInstancesWithParamsQueryHookResult = ReturnType<typeof useSdInstancesWithParamsQuery>;
+export type SdInstancesWithParamsLazyQueryHookResult = ReturnType<typeof useSdInstancesWithParamsLazyQuery>;
+export type SdInstancesWithParamsSuspenseQueryHookResult = ReturnType<typeof useSdInstancesWithParamsSuspenseQuery>;
+export type SdInstancesWithParamsQueryResult = Apollo.QueryResult<SdInstancesWithParamsQuery, SdInstancesWithParamsQueryVariables>;
+export const SdTypeParametersDocument = gql`
+    query SdTypeParameters($sdTypeId: ID!) {
+  sdType(id: $sdTypeId) {
+    denotation
+    id
+    parameters {
+      denotation
+      id
+      type
+    }
+  }
+}
+    `;
+
+/**
+ * __useSdTypeParametersQuery__
+ *
+ * To run a query within a React component, call `useSdTypeParametersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSdTypeParametersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSdTypeParametersQuery({
+ *   variables: {
+ *      sdTypeId: // value for 'sdTypeId'
+ *   },
+ * });
+ */
+export function useSdTypeParametersQuery(baseOptions: Apollo.QueryHookOptions<SdTypeParametersQuery, SdTypeParametersQueryVariables> & ({ variables: SdTypeParametersQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<SdTypeParametersQuery, SdTypeParametersQueryVariables>(SdTypeParametersDocument, options);
+      }
+export function useSdTypeParametersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SdTypeParametersQuery, SdTypeParametersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<SdTypeParametersQuery, SdTypeParametersQueryVariables>(SdTypeParametersDocument, options);
+        }
+export function useSdTypeParametersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<SdTypeParametersQuery, SdTypeParametersQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<SdTypeParametersQuery, SdTypeParametersQueryVariables>(SdTypeParametersDocument, options);
+        }
+export type SdTypeParametersQueryHookResult = ReturnType<typeof useSdTypeParametersQuery>;
+export type SdTypeParametersLazyQueryHookResult = ReturnType<typeof useSdTypeParametersLazyQuery>;
+export type SdTypeParametersSuspenseQueryHookResult = ReturnType<typeof useSdTypeParametersSuspenseQuery>;
+export type SdTypeParametersQueryResult = Apollo.QueryResult<SdTypeParametersQuery, SdTypeParametersQueryVariables>;
 export const StatisticsQuerySensorsWithFieldsDocument = gql`
     query StatisticsQuerySensorsWithFields($sensors: SensorsWithFields!, $request: StatisticsInput) {
   statisticsQuerySensorsWithFields(sensors: $sensors, request: $request) {

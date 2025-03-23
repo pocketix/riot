@@ -5,7 +5,14 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
-import { SdInstance, SdParameter, StatisticsOperation } from '@/generated/graphql'
+import {
+  SdInstance,
+  SdParameter,
+  SdParameterType,
+  StatisticsOperation,
+  useSdTypeParametersQuery,
+  useStatisticsQuerySensorsWithFieldsLazyQuery
+} from '@/generated/graphql'
 import { z } from 'zod'
 import { BulletCardConfig, bulletChartBuilderSchema } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -15,12 +22,12 @@ import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@
 import { TbTrash } from 'react-icons/tb'
 import { IoAdd } from 'react-icons/io5'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
-import { useLazyQuery, useQuery } from '@apollo/client'
-import { GET_PARAMETERS, GET_TIME_SERIES_DATA } from '@/graphql/Queries'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { BuilderResult } from '@/types/GridItem'
+import { SingleInstanceCombobox } from './components/single-instance-combobox'
+import { SingleParameterCombobox } from './components/single-parameter-combobox'
 
 type BulletChartBuilderResult = BuilderResult<BulletCardConfig>
 
@@ -36,7 +43,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
 
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
   const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
-  const [getChartData] = useLazyQuery(GET_TIME_SERIES_DATA)
+  const [getChartData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
   const [data, setData] = useState<any[]>([])
   const [rangeInput, setRangeInput] = useState<string>('')
   const [markerInput, setMarkerInput] = useState<string>('')
@@ -49,7 +56,16 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
         {
           instance: { uid: '' },
           parameter: { denotation: '', id: null },
-          config: { name: '', function: '', timeFrame: '1440', measureSize: 0.2, markers: [], margin: { top: 10, right: 10, bottom: 30, left: 30 }, titleOffsetX: 0, colorScheme: 'nivo' }
+          config: {
+            name: '',
+            function: '',
+            timeFrame: '1440',
+            measureSize: 0.2,
+            markers: [],
+            margin: { top: 10, right: 10, bottom: 30, left: 30 },
+            titleOffsetX: 0,
+            colorScheme: 'nivo'
+          }
         }
       ]
     }
@@ -79,14 +95,14 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
               sensors: [
                 {
                   key: row.key,
-                  values: row.value
+                  values: [row.value]
                 }
               ]
             },
             request: {
               from: new Date(Date.now() - Number(row.timeFrame) * 60 * 1000).toISOString(),
               aggregateMinutes: Number(row.timeFrame) * 1000,
-              operation: row.function
+              operation: row.function as StatisticsOperation
             }
           }
         })
@@ -94,8 +110,8 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
     )
 
     const parsedData = results.map((result) => {
-      if (result.status === 'fulfilled' && result.value.data.statisticsQuerySensorsWithFields.length > 0) {
-        return result.value.data.statisticsQuerySensorsWithFields
+      if (result.status === 'fulfilled' && result.value.data?.statisticsQuerySensorsWithFields.length! > 0) {
+        return result.value.data?.statisticsQuerySensorsWithFields
       } else {
         const sensor = result.status === 'fulfilled' ? result.value.variables?.sensors?.sensors[0]! : null
         const instance = instances.find((inst) => inst.uid === sensor?.key)
@@ -128,20 +144,29 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
     setData(newData)
   }
 
-  const { data: parametersData, refetch: refetchParameters } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
-    variables: { sdTypeId: selectedInstance?.type.id },
+  const { data: parametersData, refetch: refetchParameters } = useSdTypeParametersQuery({
+    variables: { sdTypeId: selectedInstance?.type.id! },
     skip: !selectedInstance
   })
 
   useEffect(() => {
+    if (parametersData && selectedInstance) {
+      setAvailableParameters((prev) => ({
+        ...prev,
+        [selectedInstance.type.id]: parametersData.sdType.parameters
+      }))
+    }
+  }, [parametersData, selectedInstance])
+
+  useEffect(() => {
     if (config) {
       config.rows.forEach((row) => {
-        const selectedInstance = instances.find((inst) => inst.uid === row.instance.uid)
-        if (selectedInstance) {
-          refetchParameters({ sdTypeId: selectedInstance.type.id }).then((result) => {
+        const instance = instances.find((inst) => inst.uid === row.instance.uid)
+        if (instance) {
+          refetchParameters({ sdTypeId: instance.type.id }).then((result) => {
             setAvailableParameters((prev) => ({
               ...prev,
-              [selectedInstance.uid]: result.data.sdType.parameters
+              [instance.type.id]: result.data.sdType.parameters
             }))
           })
         }
@@ -149,14 +174,13 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
     }
   }, [config, instances, refetchParameters])
 
-  useEffect(() => {
-    if (parametersData && selectedInstance) {
-      setAvailableParameters((prev) => ({
-        ...prev,
-        [selectedInstance.uid]: parametersData.sdType.parameters
-      }))
-    }
-  }, [parametersData, selectedInstance])
+  const getParameterOptions = (instanceUID: string) => {
+    const instance = instances.find((inst) => inst.uid === instanceUID)
+    if (!instance) return []
+    const parameters = availableParameters[instance.type?.id!]
+    if (!parameters) return []
+    return parameters.filter((param) => param.type === SdParameterType.Number)
+  }
 
   const handleDataChange = (index: number, ranges?: number[], markers?: number[], id?: string): void => {
     const newData = [...data]
@@ -189,7 +213,10 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
 
   return (
     <div className="w-full">
-      <span className="absolute top-0 left-1/2 transform -translate-x-1/2 text-[11px] font-semibold invisible" ref={parameterNameMock}>
+      <span
+        className="invisible absolute left-1/2 top-0 -translate-x-1/2 transform text-[11px] font-semibold"
+        ref={parameterNameMock}
+      >
         {parameterNameMock.current?.innerText}
       </span>
       <Card className="h-fit w-full">
@@ -207,7 +234,11 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                 measureSize={row.config.measureSize}
                 minValue={row.config.minValue || 'auto'}
                 maxValue={row.config.maxValue || 'auto'}
-                rangeColors={row.config.colorScheme === 'greys' ? ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3'] : 'seq:cool'}
+                rangeColors={
+                  row.config.colorScheme === 'greys'
+                    ? ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3']
+                    : 'seq:cool'
+                }
                 measureColors={row.config.colorScheme === 'greys' ? ['pink'] : 'seq:red_purple'}
                 theme={isDarkMode ? darkTheme : lightTheme}
               />
@@ -215,7 +246,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
           )
         })}
       </Card>
-      <Card className="h-fit w-full overflow-hidden p-2 pt-0 mt-4 shadow-lg">
+      <Card className="mt-4 h-fit w-full overflow-hidden p-2 pt-0 shadow-lg">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
@@ -225,7 +256,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
               }
             }}
           >
-            <div className="grid sm:grid-cols-2 grid-cols-1 pt-2">
+            <div className="grid grid-cols-1 pt-2 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="cardTitle"
@@ -240,16 +271,21 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                 )}
               />
             </div>
-            <Accordion type="single" collapsible className="w-full mt-4">
+            <Accordion type="single" collapsible className="mt-4 w-full">
               <AccordionItem value="instances">
                 <AccordionTrigger>Instances</AccordionTrigger>
                 <AccordionContent className="w-full">
                   {fields.map((item, index) => (
-                    <div key={item.id} className="relative border p-4 mb-4 rounded-lg">
-                      <Button variant="destructive" size="icon" onClick={() => remove(index)} className="absolute top-0 right-0">
+                    <div key={item.id} className="relative mb-4 rounded-lg border p-4">
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => remove(index)}
+                        className="absolute right-0 top-0"
+                      >
                         <TbTrash />
                       </Button>
-                      <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <FormField
                           control={form.control}
                           name={`rows.${index}.instance.uid`}
@@ -257,28 +293,15 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                             <FormItem>
                               <FormLabel>Instance</FormLabel>
                               <FormControl>
-                                <Select
-                                  onValueChange={(value) => {
-                                    const instance = instances.find((instance) => instance.uid === value)
-                                    if (!instance) return
+                                <SingleInstanceCombobox
+                                  instances={instances}
+                                  onValueChange={(instance) => {
                                     setSelectedInstance(instance)
-                                    form.setValue(`rows.${index}.parameter.id`, -1)
-                                    form.setValue(`rows.${index}.parameter.denotation`, '')
-                                    field.onChange(value)
+                                    field.onChange(instance.uid)
+                                    form.setValue(`rows.${index}.parameter`, { denotation: '', id: null })
                                   }}
                                   value={field.value}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select an instance" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {instances.map((instance) => (
-                                      <SelectItem key={instance.uid} value={instance.uid}>
-                                        {instance.userIdentifier}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -286,38 +309,19 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                         />
                         <FormField
                           control={form.control}
-                          name={`rows.${index}.parameter.id`}
+                          name={`rows.${index}.parameter`}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Parameter</FormLabel>
                               <FormControl>
-                                <Select
-                                  onValueChange={(value) => {
-                                    if (!value) return
-                                    const selectedParameter = availableParameters[form.getValues(`rows.${index}.instance.uid`)!].find((parameter) => parameter.id === Number(value))
-                                    if (!selectedParameter) return
-                                    field.onChange(selectedParameter.id)
-                                    form.setValue(`rows.${index}.parameter.denotation`, selectedParameter.denotation)
-                                    form.setValue(`rows.${index}.config.name`, selectedParameter.denotation)
-                                    automaticOffset(index, selectedParameter.denotation)
-                                    handleDataChange(index, undefined, undefined, selectedParameter.denotation)
-                                  }}
-                                  value={field.value || ''}
+                                <SingleParameterCombobox
+                                  value={
+                                    field.value ? { id: field.value.id!, denotation: field.value.denotation } : null
+                                  }
+                                  onValueChange={field.onChange}
+                                  options={form.watch(`rows.${index}.instance.uid`) ? getParameterOptions(form.watch(`rows.${index}.instance.uid`)) : []}
                                   disabled={!form.getValues(`rows.${index}.instance.uid`)}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select a parameter" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {form.getValues(`rows.${index}.instance.uid`) &&
-                                      availableParameters[form.getValues(`rows.${index}.instance.uid`)] &&
-                                      availableParameters[form.getValues(`rows.${index}.instance.uid`)].map((parameter) => (
-                                        <SelectItem key={parameter.id} value={parameter.id}>
-                                          {parameter.denotation}
-                                        </SelectItem>
-                                      ))}
-                                  </SelectContent>
-                                </Select>
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -377,42 +381,43 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                             </FormItem>
                           )}
                         />
-                        {form.watch(`rows.${index}.config.function`) !== 'last' && form.watch(`rows.${index}.config.function`) !== '' && (
-                          <FormField
-                            control={form.control}
-                            name={`rows.${index}.config.timeFrame`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Time Frame</FormLabel>
-                                <FormControl>
-                                  <Select
-                                    value={field.value}
-                                    onValueChange={(value) => {
-                                      fetchData()
-                                      field.onChange(value)
-                                    }}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select a time frame" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="60">Last hour</SelectItem>
-                                      <SelectItem value="360">Last 6 hours</SelectItem>
-                                      <SelectItem value="480">Last 12 hours</SelectItem>
-                                      <SelectItem value="1440">Last day</SelectItem>
-                                      <SelectItem value="4320">Last 3 days</SelectItem>
-                                      <SelectItem value="10080">Last week</SelectItem>
-                                      <SelectItem value="43200">Last month</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
+                        {form.watch(`rows.${index}.config.function`) !== 'last' &&
+                          form.watch(`rows.${index}.config.function`) !== '' && (
+                            <FormField
+                              control={form.control}
+                              name={`rows.${index}.config.timeFrame`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Time Frame</FormLabel>
+                                  <FormControl>
+                                    <Select
+                                      value={field.value}
+                                      onValueChange={(value) => {
+                                        fetchData()
+                                        field.onChange(value)
+                                      }}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select a time frame" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="60">Last hour</SelectItem>
+                                        <SelectItem value="360">Last 6 hours</SelectItem>
+                                        <SelectItem value="480">Last 12 hours</SelectItem>
+                                        <SelectItem value="1440">Last day</SelectItem>
+                                        <SelectItem value="4320">Last 3 days</SelectItem>
+                                        <SelectItem value="10080">Last week</SelectItem>
+                                        <SelectItem value="43200">Last month</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
                       </div>
-                      <Accordion type="single" collapsible className="w-full mt-4">
+                      <Accordion type="single" collapsible className="mt-4 w-full">
                         <AccordionItem value="ranges">
                           <AccordionTrigger>Ranges</AccordionTrigger>
                           <AccordionContent className="w-full">
@@ -430,7 +435,11 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                           if (!field.value) return
                                           const newRanges = field.value?.filter((_, i) => i !== rangeIndex)
                                           field.onChange(newRanges)
-                                          setRangeInput(newRanges.map((r: { min: number; max: number }) => `${r.min}:${r.max}`).join(', '))
+                                          setRangeInput(
+                                            newRanges
+                                              .map((r: { min: number; max: number }) => `${r.min}:${r.max}`)
+                                              .join(', ')
+                                          )
                                           handleDataChange(
                                             index,
                                             newRanges.flatMap((range) => [range.min, range.max]),
@@ -471,7 +480,9 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                             />
                           </AccordionContent>
                         </AccordionItem>
-                        {form.formState.errors?.rows?.[index]?.config?.ranges && <FormMessage>{form.formState.errors.rows[index].config.ranges.message}</FormMessage>}
+                        {form.formState.errors?.rows?.[index]?.config?.ranges && (
+                          <FormMessage>{form.formState.errors.rows[index].config.ranges.message}</FormMessage>
+                        )}
                         <AccordionItem value="markers">
                           <AccordionTrigger>Targets</AccordionTrigger>
                           <AccordionContent className="w-full">
@@ -521,10 +532,12 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                             />
                           </AccordionContent>
                         </AccordionItem>
-                        {form.formState.errors?.rows?.[index]?.config?.markers && <FormMessage>{form.formState.errors.rows[index].config.markers.message}</FormMessage>}
+                        {form.formState.errors?.rows?.[index]?.config?.markers && (
+                          <FormMessage>{form.formState.errors.rows[index].config.markers.message}</FormMessage>
+                        )}
                         <AccordionItem value="advanced">
                           <AccordionTrigger>Advanced Options</AccordionTrigger>
-                          <AccordionContent className="w-full grid sm:grid-cols-2 grid-cols-1 gap-4 p-1">
+                          <AccordionContent className="grid w-full grid-cols-1 gap-4 p-1 sm:grid-cols-2">
                             <FormField
                               control={form.control}
                               name={`rows.${index}.config.measureSize`}
@@ -566,7 +579,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                               name={`rows.${index}.config.minValue`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="flex gap-2 items-center justify-between">
+                                  <FormLabel className="flex items-center justify-between gap-2">
                                     Min Value
                                     <div className="flex items-center gap-2">
                                       Auto
@@ -596,7 +609,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                               name={`rows.${index}.config.maxValue`}
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="flex gap-2 items-center justify-between">
+                                  <FormLabel className="flex items-center justify-between gap-2">
                                     Max Value
                                     <div className="flex items-center gap-2">
                                       Auto
@@ -650,7 +663,12 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                 <FormItem>
                                   <FormLabel>Margin Top</FormLabel>
                                   <FormControl>
-                                    <Input type="number" placeholder="Enter margin top" onChange={(e) => field.onChange(Number(e.target.value))} value={field.value} />
+                                    <Input
+                                      type="number"
+                                      placeholder="Enter margin top"
+                                      onChange={(e) => field.onChange(Number(e.target.value))}
+                                      value={field.value}
+                                    />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -663,7 +681,12 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                 <FormItem>
                                   <FormLabel>Margin Right</FormLabel>
                                   <FormControl>
-                                    <Input type="number" placeholder="Enter margin right" onChange={(e) => field.onChange(Number(e.target.value))} value={field.value} />
+                                    <Input
+                                      type="number"
+                                      placeholder="Enter margin right"
+                                      onChange={(e) => field.onChange(Number(e.target.value))}
+                                      value={field.value}
+                                    />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -676,7 +699,12 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                 <FormItem>
                                   <FormLabel>Margin Bottom</FormLabel>
                                   <FormControl>
-                                    <Input type="number" placeholder="Enter margin bottom" onChange={(e) => field.onChange(Number(e.target.value))} value={field.value} />
+                                    <Input
+                                      type="number"
+                                      placeholder="Enter margin bottom"
+                                      onChange={(e) => field.onChange(Number(e.target.value))}
+                                      value={field.value}
+                                    />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -689,7 +717,12 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                 <FormItem>
                                   <FormLabel>Margin Left</FormLabel>
                                   <FormControl>
-                                    <Input type="number" placeholder="Enter margin left" onChange={(e) => field.onChange(Number(e.target.value))} value={field.value} />
+                                    <Input
+                                      type="number"
+                                      placeholder="Enter margin left"
+                                      onChange={(e) => field.onChange(Number(e.target.value))}
+                                      value={field.value}
+                                    />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -703,7 +736,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                   <Button
                     type="button"
                     variant="green"
-                    className="mt-4 flex items-center justify-center w-1/2 m-auto"
+                    className="m-auto mt-4 flex w-1/2 items-center justify-center"
                     onClick={() => {
                       append({
                         instance: { uid: '' },
@@ -727,7 +760,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-            <Button type="submit" className="flex justify-center mt-4 w-3/4 mx-auto">
+            <Button type="submit" className="mx-auto mt-4 flex w-3/4 justify-center">
               Submit
             </Button>
             <Button type="button" onClick={() => console.log('Form state', form.getValues())}>

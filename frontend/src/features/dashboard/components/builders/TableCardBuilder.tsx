@@ -4,9 +4,13 @@ import { Button } from '@/components/ui/button'
 import { IoAdd } from 'react-icons/io5'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
-import { SdInstance, SdParameter, StatisticsOperation } from '@/generated/graphql'
-import { useQuery } from '@apollo/client'
-import { GET_PARAMETERS } from '@/graphql/Queries'
+import {
+  SdInstance,
+  SdParameter,
+  SdParameterType,
+  StatisticsOperation,
+  useSdTypeParametersQuery
+} from '@/generated/graphql'
 import { HiOutlineQuestionMarkCircle } from 'react-icons/hi2'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { z } from 'zod'
@@ -19,6 +23,8 @@ import { Separator } from '@/components/ui/separator'
 import { TbTrash } from 'react-icons/tb'
 import { Label } from '@/components/ui/label'
 import { BuilderResult } from '@/types/GridItem'
+import { SingleInstanceCombobox } from './components/single-instance-combobox'
+import { SingleParameterCombobox } from './components/single-parameter-combobox'
 
 type TableCardBuilderResult = BuilderResult<TableCardConfig>
 
@@ -32,32 +38,34 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
   const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
 
-  const { data: parametersData, refetch: refetchParameters } = useQuery<{ sdType: { parameters: SdParameter[] } }>(GET_PARAMETERS, {
-    variables: { sdTypeId: selectedInstance?.type.id },
+  const { data: parametersData, refetch: refetchParameters } = useSdTypeParametersQuery({
+    variables: { sdTypeId: selectedInstance?.type?.id! },
     skip: !selectedInstance
   })
 
   useEffect(() => {
     if (config) {
       config.rows.forEach((row) => {
-        const selectedInstance = instances.find((inst) => inst.uid === row.instance.uid)
-        if (selectedInstance) {
-          refetchParameters({ sdTypeId: selectedInstance.type.id }).then((result) => {
+        const wholeInstance = instances.find((inst) => inst.uid === row.instance.uid)
+
+        if (wholeInstance) {
+          refetchParameters({ sdTypeId: wholeInstance?.type?.id! }).then((result) => {
             setAvailableParameters((prev) => ({
               ...prev,
-              [selectedInstance.uid]: result.data.sdType.parameters
+              [wholeInstance?.type.id!]: result.data.sdType.parameters
             }))
           })
         }
       })
     }
-  }, [config, instances, refetchParameters])
+  }, [config, refetchParameters])
 
   useEffect(() => {
     if (parametersData && selectedInstance) {
+      console.log('Got parameters data', parametersData, 'for instance', selectedInstance)
       setAvailableParameters((prev) => ({
         ...prev,
-        [selectedInstance.uid]: parametersData.sdType.parameters
+        [selectedInstance?.type.id!]: parametersData.sdType.parameters
       }))
     }
   }, [parametersData, selectedInstance])
@@ -92,6 +100,21 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
     name: 'rows'
   })
 
+  const getParameterOptions = (instanceUID: string) => {
+    const instance = instances.find((inst) => inst.uid === instanceUID)
+    if (!instance) return []
+    const parameters = availableParameters[instance.type?.id!]
+    if (!parameters) return []
+
+    // If any of the columns' functions are not 'last', return only number parameters
+    // we cannot calculate statistics on non-number parameters
+    // TODO: Make the user select columns first ?
+    if (columnFields.some((column) => column.function !== 'last')) {
+      return parameters.filter((param) => param.type === SdParameterType.Number)
+    }
+    return parameters
+  }
+
   const handleSubmit = (values: z.infer<typeof tableCardSchema>) => {
     const result: TableCardBuilderResult = {
       config: values,
@@ -107,10 +130,10 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
     <div className="w-full">
       <Card className="h-fit w-full overflow-hidden p-2 pt-0">
         {form.watch('title') && <h3 className="text-lg font-semibold">{form.watch('title')}</h3>}
-        <table className="w-full h-fit">
+        <table className="h-fit w-full">
           <thead className="border-b-[2px]">
             <tr>
-              <th className="text-left text-md">{form.watch('tableTitle')}</th>
+              <th className="text-md text-left">{form.watch('tableTitle')}</th>
               {columnFields.map((_, index) => (
                 <th key={index} className="text-center text-xs">
                   {form.watch(`columns.${index}.header`)}
@@ -123,7 +146,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
               <tr key={rowIndex}>
                 <td className="text-sm">{form.watch(`rows.${rowIndex}.name`)}</td>
                 {columnFields.map((_, columnIndex) => (
-                  <td key={columnIndex} className="text-sm text-center">
+                  <td key={columnIndex} className="text-center text-sm">
                     {(Math.random() * 100).toFixed(form.watch('decimalPlaces') ?? 2)}
                   </td>
                 ))}
@@ -132,7 +155,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
           </tbody>
         </table>
       </Card>
-      <Card className="h-fit w-full overflow-hidden p-2 pt-0 mt-4 shadow-lg">
+      <Card className="mt-4 h-fit w-full overflow-hidden p-2 pt-0 shadow-lg">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
@@ -142,7 +165,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
               }
             }}
           >
-            <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="title"
@@ -180,7 +203,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger type="button">
-                              <HiOutlineQuestionMarkCircle className="text-primary w-5 h-5" />
+                              <HiOutlineQuestionMarkCircle className="h-5 w-5 text-primary" />
                             </TooltipTrigger>
                             <TooltipContent>
                               <p className="font-thin">The number of decimal places to display in the table.</p>
@@ -227,20 +250,20 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                 )}
               />
             </div>
-            <Accordion type="single" collapsible className="w-full mt-4">
+            <Accordion type="single" collapsible className="mt-4 w-full">
               <AccordionItem value="columns">
                 <AccordionTrigger>Columns</AccordionTrigger>
-                <AccordionContent className="w-full flex flex-col mt-2 px-1 border-2 rounded-md p-2">
+                <AccordionContent className="mt-2 flex w-full flex-col rounded-md border-2 p-2 px-1">
                   {columnFields.map((column, index) => (
                     <div key={column.id} className="flex flex-col">
-                      <div className="flex gap-2 items-center justify-between w-full">
+                      <div className="flex w-full items-center justify-between gap-2">
                         <h4 className="font-semibold">Column {index + 1}</h4>
                         <Button onClick={() => removeColumn(index)} variant={'destructive'} size={'icon'}>
                           <TbTrash />
                         </Button>
                       </div>
                       <Separator className="my-2" />
-                      <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <FormField
                           control={form.control}
                           name={`columns.${index}.header`}
@@ -249,7 +272,12 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                               <FormControl>
                                 <Label>
                                   Header
-                                  <Input value={field.value} onChange={field.onChange} placeholder="Header" className="w-full" />
+                                  <Input
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Header"
+                                    className="w-full"
+                                  />
                                 </Label>
                               </FormControl>
                               <FormMessage />
@@ -286,20 +314,27 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                       <Separator className="my-2" />
                     </div>
                   ))}
-                  <Button onClick={() => appendColumn({ header: '', function: '' })} variant={'green'} size={'icon'} className="flex items-center justify-center w-1/2 m-auto">
+                  <Button
+                    onClick={() => appendColumn({ header: '', function: '' })}
+                    variant={'green'}
+                    size={'icon'}
+                    className="m-auto flex w-1/2 items-center justify-center"
+                  >
                     <IoAdd />
                     Add Column
                   </Button>
                 </AccordionContent>
               </AccordionItem>
               {form.formState.errors.columns && <FormMessage>{form.formState.errors.columns.message}</FormMessage>}
-              {form.formState.errors.columns?.root && <FormMessage>{form.formState.errors.columns.root?.message}</FormMessage>}
+              {form.formState.errors.columns?.root && (
+                <FormMessage>{form.formState.errors.columns.root?.message}</FormMessage>
+              )}
               <AccordionItem value="rows">
                 <AccordionTrigger>Rows</AccordionTrigger>
-                <AccordionContent className="w-full flex flex-col gap-4 mt-2 border-2 rounded-md p-2">
+                <AccordionContent className="mt-2 flex w-full flex-col gap-4 rounded-md border-2 p-2">
                   {rowFields.map((row, rowIndex) => (
                     <div key={row.id} className="flex flex-col">
-                      <div className="flex gap-2 items-center justify-between w-full">
+                      <div className="flex w-full items-center justify-between gap-2">
                         <h4 className="font-semibold">Row {rowIndex + 1}</h4>
                         <Button onClick={() => removeRow(rowIndex)} variant={'destructive'} size={'icon'}>
                           <TbTrash />
@@ -314,7 +349,12 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                             <FormControl>
                               <Label>
                                 Row Name
-                                <Input value={field.value} onChange={field.onChange} placeholder="Row Name" className="w-full" />
+                                <Input
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  placeholder="Row Name"
+                                  className="w-full"
+                                />
                               </Label>
                             </FormControl>
                             <FormMessage />
@@ -329,26 +369,15 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                             <FormControl>
                               <Label>
                                 Instance
-                                <Select
+                                <SingleInstanceCombobox
                                   onValueChange={(value) => {
-                                    const instance = instances.find((instance) => instance.uid === value) || null
-                                    if (!instance) return
-                                    field.onChange(instance.uid)
-                                    setSelectedInstance(instance)
+                                    field.onChange(value.uid)
+                                    setSelectedInstance(value)
+                                    form.setValue(`rows.${rowIndex}.parameter`, { id: null, denotation: '' })
                                   }}
                                   value={field.value}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select an instance" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {instances.map((instance) => (
-                                      <SelectItem key={instance.uid} value={instance.uid}>
-                                        {instance.userIdentifier}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                  instances={instances}
+                                />
                               </Label>
                             </FormControl>
                             <FormMessage />
@@ -357,33 +386,24 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                       />
                       <FormField
                         control={form.control}
-                        name={`rows.${rowIndex}.parameter.id`}
+                        name={`rows.${rowIndex}.parameter`}
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
                               <Label>
                                 Parameter
-                                <Select
-                                  onValueChange={(value) => {
-                                    const parameter = availableParameters[form.watch(`rows.${rowIndex}.instance.uid`)]?.find((param) => param.id === Number(value)) || null
-                                    if (!parameter) return
-                                    field.onChange(parameter.id)
-                                    form.setValue(`rows.${rowIndex}.parameter.denotation`, parameter.denotation)
-                                  }}
-                                  value={field.value || ''}
-                                  disabled={!availableParameters[form.watch(`rows.${rowIndex}.instance.uid`)]}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select a parameter" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {availableParameters[form.watch(`rows.${rowIndex}.instance.uid`)]?.map((parameter) => (
-                                      <SelectItem key={parameter.id} value={parameter.id}>
-                                        {parameter.denotation}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <SingleParameterCombobox
+                                  options={
+                                    form.watch(`rows.${rowIndex}.instance.uid`)
+                                      ? getParameterOptions(form.watch(`rows.${rowIndex}.instance.uid`))
+                                      : []
+                                  }
+                                  value={
+                                    field.value ? { id: field.value.id!, denotation: field.value.denotation } : null
+                                  }
+                                  onValueChange={(value) => field.onChange(value)}
+                                  disabled={!form.watch(`rows.${rowIndex}.instance.uid`)}
+                                />
                               </Label>
                             </FormControl>
                             <FormMessage />
@@ -393,10 +413,12 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                     </div>
                   ))}
                   <Button
-                    onClick={() => appendRow({ name: '', instance: { uid: '' }, parameter: { id: null, denotation: '' } })}
+                    onClick={() =>
+                      appendRow({ name: '', instance: { uid: '' }, parameter: { id: null, denotation: '' } })
+                    }
                     variant={'green'}
                     size={'icon'}
-                    className="flex items-center justify-center w-1/2 m-auto"
+                    className="m-auto flex w-1/2 items-center justify-center"
                   >
                     <IoAdd /> Add Row
                   </Button>
@@ -405,7 +427,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
             </Accordion>
             {form.formState.errors.rows && <FormMessage>{form.formState.errors.rows.message}</FormMessage>}
             {form.formState.errors.rows?.root && <FormMessage>{form.formState.errors.rows.root?.message}</FormMessage>}
-            <Button type="submit" className="w-fit mt-4">
+            <Button type="submit" className="mt-4 w-fit">
               Submit
             </Button>
           </form>

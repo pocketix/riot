@@ -5,14 +5,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ItemDeleteAlertDialog } from './components/ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './components/AccessibilityContainer'
-import { GET_TIME_SERIES_DATA } from '@/graphql/Queries'
-import { useLazyQuery } from '@apollo/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TableCardConfig, tableCardSchema } from '@/schemas/dashboard/TableBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { BuilderResult } from '@/types/GridItem'
 import { toast } from 'sonner'
+import { SensorField, StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -70,7 +69,7 @@ export const TableCard = ({
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const [tableConfig, setTableConfig] = useState<TableCardConfig>()
   const [tableData, setTableData] = useState<any[]>([])
-  const [fetchTableData] = useLazyQuery(GET_TIME_SERIES_DATA)
+  const [fetchTableData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -98,7 +97,7 @@ export const TableCard = ({
     }, [layout, item])
   }
 
-  const fetchData = async (sensors: { key: string; values: string | string[] }[], from: string, aggregateMinutes: number, operation: string) => {
+  const fetchData = async (sensors: SensorField[], from: string, aggregateMinutes: number, operation: string) => {
     return fetchTableData({
       variables: {
         sensors: {
@@ -107,7 +106,7 @@ export const TableCard = ({
         request: {
           from: from,
           aggregateMinutes: aggregateMinutes,
-          operation: operation
+          operation: operation as StatisticsOperation
         }
       }
     })
@@ -129,14 +128,14 @@ export const TableCard = ({
     }
   }, [configuration])
 
-  function combineSensors(sensors: { key: string; values: string }[]): { key: string; values: string[] }[] {
+  function combineSensors(sensors: SensorField[]): SensorField[] {
     const combinedSensors: { [key: string]: string[] } = {}
 
     sensors.forEach((sensor) => {
       if (!combinedSensors[sensor.key]) {
         combinedSensors[sensor.key] = []
       }
-      combinedSensors[sensor.key].push(sensor.values)
+      combinedSensors[sensor.key] = [...combinedSensors[sensor.key], ...sensor.values]
     })
 
     return Object.keys(combinedSensors).map((key) => ({
@@ -149,9 +148,9 @@ export const TableCard = ({
     const fetchDataAndPopulate = async () => {
       if (!tableConfig) return
 
-      const sensors = tableConfig.rows.map((row) => ({
+      const sensors : SensorField[] = tableConfig.rows.map((row) => ({
         key: row.instance.uid,
-        values: row.parameter.denotation
+        values: [row.parameter.denotation]
       }))
 
       const combinedSensors = combineSensors(sensors)
@@ -173,8 +172,8 @@ export const TableCard = ({
 
         console.log('RESULTS', results)
         const parsedData = results.map((result) => {
-          if (result.status === 'fulfilled' && result.value.data.statisticsQuerySensorsWithFields.length > 0) {
-            return result.value.data.statisticsQuerySensorsWithFields
+          if (result.status === 'fulfilled' && result.value.data?.statisticsQuerySensorsWithFields.length! > 0) {
+            return result.value.data?.statisticsQuerySensorsWithFields
           } else {
             console.error('Fetch error:', result.status === 'rejected' ? result.reason : 'Empty data')
             return null

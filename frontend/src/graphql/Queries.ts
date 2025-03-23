@@ -45,22 +45,3 @@ export const GET_SD_TYPES = gql`
     }
   }
 `
-
-export const GET_TIME_SERIES_DATA = gql`
-  query StatisticsQuerySensorsWithFields($sensors: SensorsWithFields!, $request: StatisticsInput) {
-    statisticsQuerySensorsWithFields(sensors: $sensors, request: $request) {
-      data
-      time
-      deviceId
-    }
-  }
-`
-
-export const GET_USER_CONFIG = gql`
-  query UserConfig($userConfigId: ID!) {
-    userConfig(id: $userConfigId) {
-      userId
-      config
-    }
-  }
-`

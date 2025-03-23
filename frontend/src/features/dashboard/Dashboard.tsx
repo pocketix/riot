@@ -16,35 +16,34 @@ import { Card } from '@/components/ui/card'
 import { MyHandle } from './components/cards/components/DragHandle'
 import { utils } from 'react-grid-layout'
 import { EntityCard } from './components/cards/EntityCard'
-import { useMutation, useQuery } from '@apollo/client'
-import { UPDATE_USER_CONFIG } from '@/graphql/Mutations'
 import { AllConfigTypes, GridItem, BuilderResult } from '@/types/GridItem'
 import { DBItemDetails } from '@/types/DBItem'
-import { GET_USER_CONFIG } from '@/graphql/Queries'
 import _ from 'lodash'
+import { useUpdateUserConfigMutation, useUserConfigQuery } from '@/generated/graphql'
 
 const Dashboard = () => {
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), [])
   const userID = 1 // TODO: This will get replaced by user context
-  const [updateUserConfig, { data: saveConfigData, loading: saveConfigLoading, error: saveConfigError }] = useMutation(UPDATE_USER_CONFIG)
+  const [updateUserConfig, { data: saveConfigData, loading: saveConfigLoading, error: saveConfigError }] =
+    useUpdateUserConfigMutation()
   const {
     data: fetchedConfigData,
     loading: fetchedConfigLoading,
     error: fetchedConfigError
-  } = useQuery(GET_USER_CONFIG, {
+  } = useUserConfigQuery({
     variables: {
       userConfigId: userID
     },
     skip: !userID
   })
 
+  const rowHeight: number = 100
   const [editMode, setEditMode] = useState<boolean>(false)
   const [isMobileView, setIsMobileView] = useState(false)
   const scrollRef = useRef<'up' | 'down' | null>(null)
   const scrollAnimationFrame = useRef<number | null>(null)
   const scrollSpeedMultiplier = useRef(1)
   const [mounted, setMounted] = useState<boolean>(false) // TODO: Problem kvoli scroll baru..
-  const rowHeight: number = 100
   const [width, setWidth] = useState<number>(0)
   const [highlightedCardID, setHighlightedCardID] = useState<string | null>(null)
   const [savedLayout, setSavedLayout] = useState<Layouts>()
@@ -235,7 +234,17 @@ const Dashboard = () => {
     Object.keys(newLayouts).forEach((breakpoint) => {
       newLayouts[breakpoint].push({ ...itemLayout })
       newLayouts[breakpoint] = utils.compact(
-        utils.moveElement(newLayouts[breakpoint], itemLayout, 0, 0, true, false, 'vertical', cols[breakpoint as keyof typeof cols], false),
+        utils.moveElement(
+          newLayouts[breakpoint],
+          itemLayout,
+          0,
+          0,
+          true,
+          false,
+          'vertical',
+          cols[breakpoint as keyof typeof cols],
+          false
+        ),
         'vertical',
         cols[breakpoint as keyof typeof cols]
       )
@@ -316,7 +325,10 @@ const Dashboard = () => {
     }
   }, [saveConfigLoading, saveConfigError, saveConfigData])
 
-  function handleSaveConfig<ConfigType extends AllConfigTypes>(builderResult: BuilderResult<ConfigType>, dbItemDetails: DBItemDetails<ConfigType>) {
+  function handleSaveConfig<ConfigType extends AllConfigTypes>(
+    builderResult: BuilderResult<ConfigType>,
+    dbItemDetails: DBItemDetails<ConfigType>
+  ) {
     const newDetails = { ...details }
 
     const newDetailsItem: DBItemDetails<AllConfigTypes> = {
