@@ -75,6 +75,7 @@ export function SingleInstanceCombobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           aria-expanded={open}
@@ -89,28 +90,30 @@ export function SingleInstanceCombobox({
         <Command>
           <CommandInput placeholder="Search instances..." />
           <CommandList>
-            <ScrollArea className="h-[200px]">
-              <CommandEmpty>No instance found.</CommandEmpty>
-              {instanceGroups.map((group) => (
-                <CommandGroup key={group.typeID} heading={group.typeLabel}>
-                  {group.instances.map((instance) => (
-                    <CommandItem
-                      key={instance.uid}
-                      value={instance.userIdentifier}
-                      onSelect={() => {
-                        if (value === instance.uid) {
+            <ScrollArea>
+              <div className="h-fit max-h-[150px]">
+                <CommandEmpty>No instance found.</CommandEmpty>
+                {instanceGroups.map((group) => (
+                  <CommandGroup key={group.typeID} heading={group.typeLabel}>
+                    {group.instances.map((instance) => (
+                      <CommandItem
+                        key={instance.uid}
+                        value={instance.userIdentifier}
+                        onSelect={() => {
+                          if (value === instance.uid) {
+                            setOpen(false)
+                          }
+                          onValueChange(instance)
                           setOpen(false)
-                        }
-                        onValueChange(instance)
-                        setOpen(false)
-                      }}
-                    >
-                      <Check className={cn(value === instance.uid ? 'opacity-100' : 'opacity-0')} />
-                      {instance.userIdentifier}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              ))}
+                        }}
+                      >
+                        <Check className={cn(value === instance.uid ? 'opacity-100' : 'opacity-0')} />
+                        {instance.userIdentifier}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                ))}
+              </div>
             </ScrollArea>
           </CommandList>
         </Command>
