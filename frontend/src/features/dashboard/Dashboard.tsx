@@ -20,6 +20,7 @@ import { AllConfigTypes, GridItem, BuilderResult } from '@/types/GridItem'
 import { DBItemDetails } from '@/types/DBItem'
 import _ from 'lodash'
 import { useSdInstancesWithSnapshotsQuery, useUpdateUserConfigMutation, useUserConfigQuery } from '@/generated/graphql'
+import { RiotDashboardConfig } from '@/types/dashboard/dashboard'
 // import StatusTimeline from './components/details/StatusTimeLine'
 
 const Dashboard = () => {
@@ -284,11 +285,17 @@ const Dashboard = () => {
 
       if (fetchedConfigData) {
         toast.success('Fetched from database')
-        console.log('Fetched from database', fetchedConfigData)
         const config = fetchedConfigData.userConfig.config
-        const parsedConfig = JSON.parse(config)
-        setLayouts(parsedConfig.layout)
-        setDetails(parsedConfig.details)
+        const parsedConfig: RiotDashboardConfig = JSON.parse(config)
+
+        if (!parsedConfig.riot) {
+          console.error('Invalid config format')
+          toast.error('Failed to fetch dashboard configuration')
+          return
+        }
+
+        setLayouts(parsedConfig.riot.layout)
+        setDetails(parsedConfig.riot.details)
         setMounted(true)
 
         // // Scroll bar fix TODO: might not be necessary
@@ -301,11 +308,18 @@ const Dashboard = () => {
   }, [fetchedConfigLoading, fetchedConfigError, fetchedConfigData])
 
   function handleSaveToDB(layout: Layouts, details: { [key: string]: DBItemDetails<AllConfigTypes> }) {
+    const DBDataStructure: RiotDashboardConfig = {
+      riot: {
+        layout,
+        details
+      }
+    }
+
     updateUserConfig({
       variables: {
         userId: userID,
         input: {
-          config: JSON.stringify({ layout, details })
+          config: JSON.stringify(DBDataStructure)
         }
       }
     })
