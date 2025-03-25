@@ -5,7 +5,7 @@ import { IoAdd } from 'react-icons/io5'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import {
-  SdInstance,
+  SdInstancesWithParamsQuery,
   SdParameterType,
   SdTypeParametersWithSnapshotsQuery,
   StatisticsOperation,
@@ -22,7 +22,7 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { TbTrash } from 'react-icons/tb'
 import { Label } from '@/components/ui/label'
-import { BuilderResult } from '@/types/GridItem'
+import { BuilderResult } from '@/types/dashboard/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
 
@@ -30,12 +30,12 @@ type TableCardBuilderResult = BuilderResult<TableCardConfig>
 
 export interface TableCardBuilderProps {
   onDataSubmit: (data: any) => void
-  instances: SdInstance[]
+  instances: SdInstancesWithParamsQuery['sdInstances']
   config?: TableCardConfig
 }
 
 export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardBuilderProps) {
-  const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
+  const [selectedInstance, setSelectedInstance] = useState<SdInstancesWithParamsQuery['sdInstances'][number] | null>(null)
   const [availableParameters, setAvailableParameters] = useState<{
     [key: string]: SdTypeParametersWithSnapshotsQuery['sdType']['parameters']
   }>({})

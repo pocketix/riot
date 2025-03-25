@@ -51,7 +51,9 @@ export const Arrow = styled.button<{ disabled?: boolean; $red?: boolean; $green?
   }};
   opacity: ${(props) => (props.disabled ? 0.5 : 1)};
   color: hsl(var(--primary-foreground));
-  transition: background-color 0.3s, opacity 0.3s;
+  transition:
+    background-color 0.3s,
+    opacity 0.3s;
   cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};
   padding: 4px 8px;
   border: 1px solid hsl(var(--border));

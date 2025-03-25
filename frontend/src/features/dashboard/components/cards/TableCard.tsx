@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { TableCardConfig, tableCardSchema } from '@/schemas/dashboard/TableBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { BuilderResult } from '@/types/GridItem'
+import { BuilderResult } from '@/types/dashboard/GridItem'
 import { toast } from 'sonner'
 import { SensorField, StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 
@@ -148,7 +148,7 @@ export const TableCard = ({
     const fetchDataAndPopulate = async () => {
       if (!tableConfig) return
 
-      const sensors : SensorField[] = tableConfig.rows.map((row) => ({
+      const sensors: SensorField[] = tableConfig.rows.map((row) => ({
         key: row.instance.uid,
         values: [row.parameter.denotation]
       }))
@@ -166,7 +166,12 @@ export const TableCard = ({
         // results are returned in the same order as the queries
         results = await Promise.allSettled(
           tableConfig.columns.map((column) =>
-            fetchData(combinedSensors, new Date(Date.now() - Number(tableConfig.timeFrame) * 60 * 1000).toISOString(), Number(tableConfig.timeFrame) * 1000, column.function)
+            fetchData(
+              combinedSensors,
+              new Date(Date.now() - Number(tableConfig.timeFrame) * 60 * 1000).toISOString(),
+              Number(tableConfig.timeFrame) * 1000,
+              column.function
+            )
           )
         )
 
@@ -222,14 +227,14 @@ export const TableCard = ({
   }, [tableConfig])
 
   if (!tableConfig || !tableConfig.columns || !tableData || beingResized) {
-    return <Skeleton className="w-full h-full" />
+    return <Skeleton className="h-full w-full" />
   }
 
   return (
     <Container key={cardID} className={`${cardID}`}>
       {editModeEnabled && (
         <DragHandle>
-          <AiOutlineDrag className="drag-handle w-[40px] h-[40px] p-1 border-2 rounded-lg" />
+          <AiOutlineDrag className="drag-handle h-[40px] w-[40px] rounded-lg border-2 p-1" />
         </DragHandle>
       )}
       {editModeEnabled && (
@@ -240,10 +245,10 @@ export const TableCard = ({
       )}
       <div className="pl-2 pt-2 font-semibold">{tableConfig.title}</div>
       <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
-        <table className="w-full h-fit">
+        <table className="h-fit w-full">
           <thead className="border-b-[2px]">
             <tr>
-              <th className="text-left text-md">{tableConfig?.tableTitle!}</th>
+              <th className="text-md text-left">{tableConfig?.tableTitle!}</th>
               {tableConfig?.columns.map((column, index) => (
                 <th key={index} className="text-center text-xs">
                   {column.header}
@@ -258,18 +263,20 @@ export const TableCard = ({
                 {row.values?.map((data: { function: string; value?: number }, valueIndex: number) => {
                   if (!data.value || isNaN(data.value))
                     return (
-                      <td key={valueIndex} className="text-sm text-center">
-                        <Skeleton className="w-1/2 h-full m-auto" disableAnimation>
+                      <td key={valueIndex} className="text-center text-sm">
+                        <Skeleton className="m-auto h-full w-1/2" disableAnimation>
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="text-destructive truncate font-semibold text-xs w-10">Unavailable</span>
+                                <span className="w-10 truncate text-xs font-semibold text-destructive">
+                                  Unavailable
+                                </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <div className="flex flex-col max-w-28">
-                                  <span className="text-destructive font-semibold">No data available</span>
-                                  <span className="text-xs break-words">Device: {row.instance.uid}</span>
-                                  <span className="text-xs break-words">Parameter: {row.parameter.denotation}</span>
+                                <div className="flex max-w-28 flex-col">
+                                  <span className="font-semibold text-destructive">No data available</span>
+                                  <span className="break-words text-xs">Device: {row.instance.uid}</span>
+                                  <span className="break-words text-xs">Parameter: {row.parameter.denotation}</span>
                                 </div>
                               </TooltipContent>
                             </Tooltip>
@@ -278,7 +285,7 @@ export const TableCard = ({
                       </td>
                     )
                   return (
-                    <td key={valueIndex} className="text-sm text-center">
+                    <td key={valueIndex} className="text-center text-sm">
                       {parseFloat(data?.value!.toFixed(tableConfig.decimalPlaces ?? 2))}
                     </td>
                   )
@@ -306,20 +313,32 @@ export const TableCard = ({
       {highlight === 'width' && (
         <>
           {!isAtRightEdge && item?.w !== item?.maxW && (
-            <div style={{ width: `${width}px` }} className={`h-full absolute top-0 left-full ${highlight ? 'opacity-50' : 'opacity-0'} transition-opacity duration-200 bg-green-400 rounded-r-lg`} />
+            <div
+              style={{ width: `${width}px` }}
+              className={`absolute left-full top-0 h-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-r-lg bg-green-400 transition-opacity duration-200`}
+            />
           )}
           {item?.w !== 1 && item?.w !== item?.minW && (
-            <div style={{ width: `${width}px` }} className={`h-full absolute top-0 right-0  ${highlight ? 'opacity-50' : 'opacity-0'} transition-opacity duration-200 bg-red-400 rounded-r-lg`} />
+            <div
+              style={{ width: `${width}px` }}
+              className={`absolute right-0 top-0 h-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-r-lg bg-red-400 transition-opacity duration-200`}
+            />
           )}
         </>
       )}
       {highlight === 'height' && (
         <>
           {item?.h !== item?.maxH && (
-            <div style={{ height: `${height}px` }} className={`w-full absolute top-full left-0 ${highlight ? 'opacity-50' : 'opacity-0'} transition-opacity duration-200 bg-green-400 rounded-b-lg`} />
+            <div
+              style={{ height: `${height}px` }}
+              className={`absolute left-0 top-full w-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-b-lg bg-green-400 transition-opacity duration-200`}
+            />
           )}
           {item?.h !== item?.minH && item?.h !== 1 && (
-            <div style={{ height: `${height}px` }} className={`w-full absolute bottom-0 left-0 ${highlight ? 'opacity-50' : 'opacity-0'} transition-opacity duration-200 bg-red-400 rounded-b-lg`} />
+            <div
+              style={{ height: `${height}px` }}
+              className={`absolute bottom-0 left-0 w-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-b-lg bg-red-400 transition-opacity duration-200`}
+            />
           )}
         </>
       )}

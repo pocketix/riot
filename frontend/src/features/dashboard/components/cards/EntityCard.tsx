@@ -14,7 +14,7 @@ import { darkTheme, lightTheme } from './components/ChartThemes'
 import { toast } from 'sonner'
 import { CardEditDialog } from '../editors/CardEditDialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { BuilderResult } from '@/types/GridItem'
+import { BuilderResult } from '@/types/dashboard/GridItem'
 import { StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`

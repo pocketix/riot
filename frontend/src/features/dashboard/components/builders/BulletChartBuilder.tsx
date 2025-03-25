@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
 import {
-  SdInstance,
   SdParameterType,
   StatisticsOperation,
   SdTypeParametersWithSnapshotsQuery,
   useSdTypeParametersWithSnapshotsQuery,
-  useStatisticsQuerySensorsWithFieldsLazyQuery
+  useStatisticsQuerySensorsWithFieldsLazyQuery,
+  SdInstancesWithParamsQuery
 } from '@/generated/graphql'
 import { z } from 'zod'
 import { BulletCardConfig, bulletChartBuilderSchema } from '@/schemas/dashboard/BulletChartBuilderSchema'
@@ -25,7 +25,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
-import { BuilderResult } from '@/types/GridItem'
+import { BuilderResult } from '@/types/dashboard/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
 import { BulletChartToolTip } from '../cards/tooltips/BulletChartToolTIp'
@@ -34,7 +34,7 @@ type BulletChartBuilderResult = BuilderResult<BulletCardConfig>
 
 export interface BulletChartBuilderProps {
   onDataSubmit: (data: any) => void
-  instances: SdInstance[]
+  instances: SdInstancesWithParamsQuery['sdInstances']
   config?: BulletCardConfig
 }
 
@@ -42,7 +42,9 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
   const parameterNameMock = useRef<HTMLSpanElement | null>(null)
   const { isDarkMode } = useDarkMode()
 
-  const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
+  const [selectedInstance, setSelectedInstance] = useState<SdInstancesWithParamsQuery['sdInstances'][number] | null>(
+    null
+  )
   const [availableParameters, setAvailableParameters] = useState<{
     [key: string]: SdTypeParametersWithSnapshotsQuery['sdType']['parameters']
   }>({})

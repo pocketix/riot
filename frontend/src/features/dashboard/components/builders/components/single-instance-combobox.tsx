@@ -4,12 +4,12 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { SdInstance } from '@/generated/graphql'
+import { SdInstancesWithParamsQuery } from '@/generated/graphql'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface SingleInstanceComboboxProps {
-  instances: SdInstance[]
-  onValueChange: (value: SdInstance) => void
+  instances: SdInstancesWithParamsQuery['sdInstances']
+  onValueChange: (value: SdInstancesWithParamsQuery['sdInstances'][number]) => void
   value?: string | null
   placeholder?: string
   disabled?: boolean
@@ -20,7 +20,7 @@ type InstanceGroup = {
   typeID: number
   typeLabel: string
   typeIcon: string
-  instances: SdInstance[]
+  instances: SdInstancesWithParamsQuery['sdInstances']
 }
 
 export function SingleInstanceCombobox({

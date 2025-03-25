@@ -1,10 +1,10 @@
 import styled from 'styled-components'
 import { LineChartBuilder } from './builders/LineChartBuilder'
 import { BulletChartBuilder } from './builders/BulletChartBuilder'
-import { SdInstance } from '@/generated/graphql'
+import { SdInstancesWithParamsQuery } from '@/generated/graphql'
 import { TableCardBuilder } from './builders/TableCardBuilder'
 import { EntityCardBuilder } from './builders/EntityCardBuilder'
-import { AllConfigTypes, BuilderResult } from '@/types/GridItem'
+import { AllConfigTypes, BuilderResult } from '@/types/dashboard/GridItem'
 
 export const VisualizationBuilderContainer = styled.div`
   display: flex;
@@ -18,10 +18,14 @@ export interface VisualizationBuilderProps {
   selectedVisualization: string | null
   setVisualizationConfig<ConfigType extends AllConfigTypes>(config: BuilderResult<ConfigType>): void
   setActiveTab: (tab: string) => void
-  instances: SdInstance[]
+  instances: SdInstancesWithParamsQuery['sdInstances']
 }
 
-export function VisualizationBuilder({ setVisualizationConfig, selectedVisualization, instances }: VisualizationBuilderProps) {
+export function VisualizationBuilder({
+  setVisualizationConfig,
+  selectedVisualization,
+  instances
+}: VisualizationBuilderProps) {
   function handleDataChange<ConfigType extends AllConfigTypes>(data: BuilderResult<ConfigType>) {
     setVisualizationConfig(data)
   }
@@ -29,9 +33,13 @@ export function VisualizationBuilder({ setVisualizationConfig, selectedVisualiza
   return (
     <VisualizationBuilderContainer>
       {selectedVisualization === 'line' && <LineChartBuilder onDataSubmit={handleDataChange} instances={instances} />}
-      {selectedVisualization === 'bullet' && <BulletChartBuilder onDataSubmit={handleDataChange} instances={instances} />}
+      {selectedVisualization === 'bullet' && (
+        <BulletChartBuilder onDataSubmit={handleDataChange} instances={instances} />
+      )}
       {selectedVisualization === 'table' && <TableCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
-      {selectedVisualization === 'entitycard' && <EntityCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
+      {selectedVisualization === 'entitycard' && (
+        <EntityCardBuilder onDataSubmit={handleDataChange} instances={instances} />
+      )}
     </VisualizationBuilderContainer>
   )
 }

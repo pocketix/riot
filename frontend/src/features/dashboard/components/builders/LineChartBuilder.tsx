@@ -15,7 +15,7 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import {
-  SdInstance,
+  SdInstancesWithParamsQuery,
   SdParameterType,
   SdTypeParametersQuery,
   StatisticsOperation,
@@ -31,14 +31,14 @@ import { HiOutlineQuestionMarkCircle } from 'react-icons/hi2'
 import { toast } from 'sonner'
 import { useDebounce } from 'use-debounce'
 import { Checkbox } from '@/components/ui/checkbox'
-import { BuilderResult } from '@/types/GridItem'
+import { BuilderResult } from '@/types/dashboard/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 
 type LineBuilderResult = BuilderResult<ChartCardConfig>
 
 export interface LineChartBuilderProps {
   onDataSubmit: (data: LineBuilderResult) => void
-  instances: SdInstance[]
+  instances: SdInstancesWithParamsQuery['sdInstances']
   config?: ChartCardConfig
 }
 
@@ -85,7 +85,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
     }
   })
 
-  const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
+  const [selectedInstance, setSelectedInstance] = useState<SdInstancesWithParamsQuery['sdInstances'][number] | null>(null)
   const [availableParameters, setAvailableParameters] = useState<{
     [typeID: number]: SdTypeParametersQuery['sdType']['parameters']
   }>({})

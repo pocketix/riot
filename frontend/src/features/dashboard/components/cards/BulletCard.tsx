@@ -13,7 +13,7 @@ import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/
 import { toast } from 'sonner'
 import { CardEditDialog } from '../editors/CardEditDialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { BuilderResult } from '@/types/GridItem'
+import { BuilderResult } from '@/types/dashboard/GridItem'
 import {
   SdInstancesWithSnapshotsQuery,
   StatisticsOperation,

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { IoAdd } from 'react-icons/io5'
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import {
-  SdInstance,
+  SdInstancesWithParamsQuery,
   SdParameterType,
   SdTypeParametersWithSnapshotsQuery,
   useSdTypeParametersWithSnapshotsQuery
@@ -21,7 +21,7 @@ import { ResponsiveLine } from '@nivo/line'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { TbTrash } from 'react-icons/tb'
-import { BuilderResult } from '@/types/GridItem'
+import { BuilderResult } from '@/types/dashboard/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
 
@@ -29,13 +29,15 @@ type EntityCardBuilderResult = BuilderResult<EntityCardConfig>
 
 export interface EntityCardBuilderProps {
   onDataSubmit: (data: any) => void
-  instances: SdInstance[]
+  instances: SdInstancesWithParamsQuery['sdInstances']
   config?: EntityCardConfig
 }
 
 export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCardBuilderProps) {
   const { isDarkMode } = useDarkMode()
-  const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
+  const [selectedInstance, setSelectedInstance] = useState<SdInstancesWithParamsQuery['sdInstances'][number] | null>(
+    null
+  )
   const [availableParameters, setAvailableParameters] = useState<{
     [key: string]: SdTypeParametersWithSnapshotsQuery['sdType']['parameters']
   }>({})

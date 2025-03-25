@@ -12,7 +12,7 @@ import { BulletChartBuilder } from '../builders/BulletChartBuilder'
 import { useSdInstancesWithParamsQuery } from '@/generated/graphql'
 import { toast } from 'sonner'
 import { DialogDescription } from '@radix-ui/react-dialog'
-import { AllConfigTypes, BuilderResult } from '@/types/GridItem'
+import { AllConfigTypes, BuilderResult } from '@/types/dashboard/GridItem'
 
 export interface CardEditDialogProps<ConfigType extends AllConfigTypes> {
   config?: ConfigType
@@ -20,7 +20,11 @@ export interface CardEditDialogProps<ConfigType extends AllConfigTypes> {
   onSave: (result: BuilderResult<ConfigType>) => void
 }
 
-export function CardEditDialog<ConfigType extends AllConfigTypes>({ config, onSave, visualizationType }: CardEditDialogProps<ConfigType>) {
+export function CardEditDialog<ConfigType extends AllConfigTypes>({
+  config,
+  onSave,
+  visualizationType
+}: CardEditDialogProps<ConfigType>) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const { data } = useSdInstancesWithParamsQuery()
 

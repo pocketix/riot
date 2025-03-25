@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSdInstancesWithParamsQuery } from '@/generated/graphql'
 import { VisualizationGallery } from './visualizationExamples/VisualizationGallery'
 import { VisualizationBuilder } from './VisualizationBuilder'
-import { BuilderResult, GridItem, AllConfigTypes } from '@/types/GridItem'
+import { BuilderResult, GridItem, AllConfigTypes } from '@/types/dashboard/GridItem'
 import { Button } from '@/components/ui/button'
 import { FaArrowRight } from 'react-icons/fa6'
 
@@ -14,7 +14,9 @@ export interface AddItemFormProps {
 
 export function AddItemForm({ setDialogOpen, onAddItem }: AddItemFormProps) {
   const { data } = useSdInstancesWithParamsQuery()
-  const [selectedVisualization, setSelectedVisualization] = useState<'line' | 'switch' | 'table' | 'bullet' | 'entitycard' | null>(null)
+  const [selectedVisualization, setSelectedVisualization] = useState<
+    'line' | 'switch' | 'table' | 'bullet' | 'entitycard' | null
+  >(null)
   const [activeTab, setActiveTab] = useState('visualization')
 
   const handleVisualizationSelect = (visualization: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard') => {
@@ -40,8 +42,11 @@ export function AddItemForm({ setDialogOpen, onAddItem }: AddItemFormProps) {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="visualization" className="w-full">
-          <VisualizationGallery selectedVisualization={selectedVisualization} setSelectedVisualization={handleVisualizationSelect} />
-          <div className="flex justify-end mt-4">
+          <VisualizationGallery
+            selectedVisualization={selectedVisualization}
+            setSelectedVisualization={handleVisualizationSelect}
+          />
+          <div className="mt-4 flex justify-end">
             <Button onClick={() => setActiveTab('builder')} disabled={!selectedVisualization}>
               Next
               <FaArrowRight className="ml-2" />
@@ -50,7 +55,12 @@ export function AddItemForm({ setDialogOpen, onAddItem }: AddItemFormProps) {
         </TabsContent>
         <TabsContent value="builder">
           {selectedVisualization && (
-            <VisualizationBuilder selectedVisualization={selectedVisualization} setVisualizationConfig={handleAddItem} setActiveTab={setActiveTab} instances={data?.sdInstances || []} />
+            <VisualizationBuilder
+              selectedVisualization={selectedVisualization}
+              setVisualizationConfig={handleAddItem}
+              setActiveTab={setActiveTab}
+              instances={data?.sdInstances || []}
+            />
           )}
         </TabsContent>
       </Tabs>
