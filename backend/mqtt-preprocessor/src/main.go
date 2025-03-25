@@ -73,7 +73,6 @@ const (
 func determineSDInstanceScenario(uid string) sdInstanceScenario {
 	var scenario sdInstanceScenario
 	sdInstancesMutex.Lock()
-	log.Printf("%d", sdInstances.Size())
 	if sdInstances.Contains(sharedModel.SDInstanceInfo{SDInstanceUID: uid, ConfirmedByUser: true}) {
 		scenario = confirmedSDInstance
 	} else if sdInstances.Contains(sharedModel.SDInstanceInfo{SDInstanceUID: uid, ConfirmedByUser: false}) {
@@ -136,7 +135,10 @@ func processMQTTMessagePayload(mqttMessagePayload []byte, rabbitMQClient rabbitm
 	sd := messagePayloadObject.Data.SDArray[0]
 	timestamp := messagePayloadObject.Notification.Timestamp
 
-	log.Printf("Processing: %s, Scenario: %s", sd.UID, determineSDInstanceScenario(sd.UID))
+	// If timestamp is not sent use current time
+	if int(timestamp) == 0 {
+		timestamp = float64(time.Now().Unix())
+	}
 
 	publishTimeSeriesStoreRequest(sd.UID, sd.Type, sd.Parameters, timestamp, rabbitMQClient)
 
