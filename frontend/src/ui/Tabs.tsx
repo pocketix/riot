@@ -1,19 +1,18 @@
-import { NavLink } from "react-router-dom";
-import styled from "styled-components";
+import { NavLink } from 'react-router-dom'
+import styled from 'styled-components'
 
 const TabsContainer = styled.div`
   display: flex;
   justify-content: flex-start;
   width: max-content;
   backdrop-filter: blur(12px);
-  margin-bottom: 1rem;
   padding: 0.1rem;
   border: 1px solid var(--color-grey-300);
   transition: all 0.3s ease-in-out;
   align-self: flex-start;
   border-radius: 12px;
   gap: 0.7rem;
-`;
+`
 
 const TabButton = styled(NavLink)`
   position: relative;
@@ -31,10 +30,10 @@ const TabButton = styled(NavLink)`
     color: var(--color-grey-900);
     background: var(--color-grey-300);
   }
-`;
+`
 
 interface TabsProps {
-  tabs: { name: string; path: string }[];
+  tabs: { name: string; path: string }[]
 }
 
 export default function Tabs({ tabs }: TabsProps) {
@@ -46,5 +45,5 @@ export default function Tabs({ tabs }: TabsProps) {
         </TabButton>
       ))}
     </TabsContainer>
-  );
+  )
 }

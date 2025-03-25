@@ -1,13 +1,13 @@
-import { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
-import { FaChevronDown } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from 'react'
+import styled from 'styled-components'
+import { FaChevronDown } from 'react-icons/fa'
+import { useNavigate } from 'react-router-dom'
 
 const PickerContainer = styled.div`
   position: relative;
   width: 100%;
   z-index: 10;
-`;
+`
 
 const PickerButton = styled.button`
   width: 100%;
@@ -22,7 +22,7 @@ const PickerButton = styled.button`
   display: flex;
   justify-content: space-between;
   align-items: center;
-`;
+`
 
 const Dropdown = styled.ul`
   position: absolute;
@@ -36,9 +36,8 @@ const Dropdown = styled.ul`
   list-style: none;
   padding: 0;
   margin: 0;
-  max-height: 160px;
   overflow-y: auto;
-`;
+`
 
 const DropdownItem = styled.li`
   padding: 0.8rem;
@@ -51,37 +50,33 @@ const DropdownItem = styled.li`
   &:hover {
     background: var(--color-grey-400);
   }
-`;
+`
 
-// ✅ Define Props Type
 interface PickerProps {
-  activeTab: string;
-  tabs: { name: string; path: string }[];
+  activeTab: string
+  tabs: { name: string; path: string }[]
 }
 
 export default function Picker({ activeTab, tabs }: PickerProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement | null>(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <PickerContainer ref={dropdownRef}>
       <PickerButton onClick={() => setIsOpen((prev) => !prev)}>
-        {activeTab}
+        {tabs.filter((tab) => tab.path.endsWith(`${activeTab}`))[0]?.name}
         <FaChevronDown />
       </PickerButton>
       {isOpen && (
@@ -90,14 +85,15 @@ export default function Picker({ activeTab, tabs }: PickerProps) {
             <DropdownItem
               key={tab.name}
               onClick={() => {
-                navigate(tab.path);
-                setIsOpen(false);
-              }}>
+                navigate(tab.path)
+                setIsOpen(false)
+              }}
+            >
               {tab.name}
             </DropdownItem>
           ))}
         </Dropdown>
       )}
     </PickerContainer>
-  );
+  )
 }

@@ -1,32 +1,27 @@
-import { useDarkMode } from "@/context/DarkModeContext";
-import { breakpoints } from "@/styles/Breakpoints";
-import { useMediaQuery } from "react-responsive";
-import styled from "styled-components";
+import { useDarkMode } from '@/context/DarkModeContext'
+import { breakpoints } from '@/styles/Breakpoints'
+import styled from 'styled-components'
 
 const StyledLogo = styled.div`
-  display: none;
+  display: block;
   margin: 0 auto;
-  @media (min-width: ${breakpoints.md}) {
-    display: block;
-  }
-`;
+`
 
 const Img = styled.img`
-  height: 5.2rem;
+  height: 4.8rem;
   width: auto;
-`;
 
-function Logo() {
-  const { isDarkMode } = useDarkMode();
-  const isMobile = useMediaQuery({ maxWidth: parseInt(breakpoints.sm) - 1 });
+  @media (min-width: ${breakpoints.sm}) {
+    height: 5.2rem;
+  }
+`
 
-  const logo = isMobile
-    ? "/riot-phone.svg"
-    : isDarkMode
-    ? "/riot-light.svg"
-    : "/riot-dark.svg";
+function Logo({ hideLogo = false }) {
+  const { isDarkMode } = useDarkMode()
 
-  return <StyledLogo>{logo && <Img src={logo} alt="Logo" />}</StyledLogo>;
+  const logoColor = isDarkMode ? '/riot-light.svg' : '/riot-dark.svg'
+
+  return <StyledLogo>{!hideLogo && <Img src={logoColor} alt="Logo" />}</StyledLogo>
 }
 
-export default Logo;
+export default Logo

@@ -21,8 +21,6 @@ frontend/.env
 frontend/dist
 .vscode/launch.json
 
-frontend/src/generated/graphql.tsx
-
 # Ignore backend executables
 backend/bin
 .vscode/settings.json

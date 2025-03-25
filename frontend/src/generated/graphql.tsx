@@ -384,7 +384,6 @@ export type SdCommandInvocationInput = {
 
 export type SdInstance = {
   __typename?: 'SDInstance';
-  commandInvocations: Array<SdCommandInvocation>;
   confirmedByUser: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   parameterSnapshots?: Maybe<Array<SdParameterSnapshot>>;
@@ -563,7 +562,7 @@ export type SdTypeQueryVariables = Exact<{
 }>;
 
 
-export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', denotation: string, id: number, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, type: SdParameterType }> } };
+export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }> } };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -699,11 +698,14 @@ export type SdInstancesQueryResult = Apollo.QueryResult<SdInstancesQuery, SdInst
 export const SdTypeDocument = gql`
     query SdType($sdTypeId: ID!) {
   sdType(id: $sdTypeId) {
-    denotation
     id
+    denotation
+    label
+    icon
     parameters {
-      denotation
       id
+      label
+      denotation
       type
     }
   }
@@ -1080,37 +1082,3 @@ export type StatisticsQuerySensorsWithFieldsQueryHookResult = ReturnType<typeof 
 export type StatisticsQuerySensorsWithFieldsLazyQueryHookResult = ReturnType<typeof useStatisticsQuerySensorsWithFieldsLazyQuery>;
 export type StatisticsQuerySensorsWithFieldsSuspenseQueryHookResult = ReturnType<typeof useStatisticsQuerySensorsWithFieldsSuspenseQuery>;
 export type StatisticsQuerySensorsWithFieldsQueryResult = Apollo.QueryResult<StatisticsQuerySensorsWithFieldsQuery, StatisticsQuerySensorsWithFieldsQueryVariables>;
-export const OnSdParameterSnapshotUpdateDocument = gql`
-    subscription OnSDParameterSnapshotUpdate {
-  onSDParameterSnapshotUpdate {
-    instanceUid
-    parameterDenotation
-    string
-    number
-    boolean
-    updatedAt
-  }
-}
-    `;
-
-/**
- * __useOnSdParameterSnapshotUpdateSubscription__
- *
- * To run a query within a React component, call `useOnSdParameterSnapshotUpdateSubscription` and pass it any options that fit your needs.
- * When your component renders, `useOnSdParameterSnapshotUpdateSubscription` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useOnSdParameterSnapshotUpdateSubscription({
- *   variables: {
- *   },
- * });
- */
-export function useOnSdParameterSnapshotUpdateSubscription(baseOptions?: Apollo.SubscriptionHookOptions<OnSdParameterSnapshotUpdateSubscription, OnSdParameterSnapshotUpdateSubscriptionVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useSubscription<OnSdParameterSnapshotUpdateSubscription, OnSdParameterSnapshotUpdateSubscriptionVariables>(OnSdParameterSnapshotUpdateDocument, options);
-      }
-export type OnSdParameterSnapshotUpdateSubscriptionHookResult = ReturnType<typeof useOnSdParameterSnapshotUpdateSubscription>;
-export type OnSdParameterSnapshotUpdateSubscriptionResult = Apollo.SubscriptionResult<OnSdParameterSnapshotUpdateSubscription>;
