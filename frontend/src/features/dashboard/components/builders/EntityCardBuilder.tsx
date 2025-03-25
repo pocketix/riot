@@ -4,7 +4,12 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { IoAdd } from 'react-icons/io5'
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
-import { SdInstance, SdParameter, SdParameterType, useSdTypeParametersQuery } from '@/generated/graphql'
+import {
+  SdInstance,
+  SdParameterType,
+  SdTypeParametersWithSnapshotsQuery,
+  useSdTypeParametersWithSnapshotsQuery
+} from '@/generated/graphql'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
 import { EntityCardConfig, entityCardSchema } from '@/schemas/dashboard/EntityCardBuilderSchema'
@@ -31,9 +36,11 @@ export interface EntityCardBuilderProps {
 export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCardBuilderProps) {
   const { isDarkMode } = useDarkMode()
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
-  const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
+  const [availableParameters, setAvailableParameters] = useState<{
+    [key: string]: SdTypeParametersWithSnapshotsQuery['sdType']['parameters']
+  }>({})
 
-  const { data: parametersData, refetch: refetchParameters } = useSdTypeParametersQuery({
+  const { data: parametersData, refetch: refetchParameters } = useSdTypeParametersWithSnapshotsQuery({
     variables: { sdTypeId: selectedInstance?.type.id! },
     skip: !selectedInstance
   })
@@ -49,7 +56,6 @@ export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCar
 
   useEffect(() => {
     if (config) {
-      console.log('fetching parameters for each instance in the rows')
       config.rows.forEach((row) => {
         const instance = instances.find((instance) => instance.uid === row.instance.uid)
         if (instance) {
@@ -214,7 +220,7 @@ export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCar
                     </Button>
                   </div>
                   <Separator className="my-2" />
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
                       control={form.control}
                       name={`rows.${rowIndex}.name`}

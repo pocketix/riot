@@ -6,10 +6,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import {
   SdInstance,
-  SdParameter,
   SdParameterType,
+  SdTypeParametersWithSnapshotsQuery,
   StatisticsOperation,
-  useSdTypeParametersQuery
+  useSdTypeParametersWithSnapshotsQuery
 } from '@/generated/graphql'
 import { HiOutlineQuestionMarkCircle } from 'react-icons/hi2'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -36,9 +36,11 @@ export interface TableCardBuilderProps {
 
 export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardBuilderProps) {
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
-  const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
+  const [availableParameters, setAvailableParameters] = useState<{
+    [key: string]: SdTypeParametersWithSnapshotsQuery['sdType']['parameters']
+  }>({})
 
-  const { data: parametersData, refetch: refetchParameters } = useSdTypeParametersQuery({
+  const { data: parametersData, refetch: refetchParameters } = useSdTypeParametersWithSnapshotsQuery({
     variables: { sdTypeId: selectedInstance?.type?.id! },
     skip: !selectedInstance
   })
@@ -258,7 +260,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                     <div key={column.id} className="flex flex-col">
                       <div className="flex w-full items-center justify-between gap-2">
                         <h4 className="font-semibold">Column {index + 1}</h4>
-                        <Button onClick={() => removeColumn(index)} variant={'destructive'} size={'icon'}>
+                        <Button type="button" onClick={() => removeColumn(index)} variant={'destructive'} size={'icon'}>
                           <TbTrash />
                         </Button>
                       </div>
@@ -315,6 +317,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                     </div>
                   ))}
                   <Button
+                    type="button"
                     onClick={() => appendColumn({ header: '', function: '' })}
                     variant={'green'}
                     size={'icon'}
@@ -336,7 +339,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                     <div key={row.id} className="flex flex-col">
                       <div className="flex w-full items-center justify-between gap-2">
                         <h4 className="font-semibold">Row {rowIndex + 1}</h4>
-                        <Button onClick={() => removeRow(rowIndex)} variant={'destructive'} size={'icon'}>
+                        <Button type="button" onClick={() => removeRow(rowIndex)} variant={'destructive'} size={'icon'}>
                           <TbTrash />
                         </Button>
                       </div>
@@ -413,6 +416,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                     </div>
                   ))}
                   <Button
+                    type="button"
                     onClick={() =>
                       appendRow({ name: '', instance: { uid: '' }, parameter: { id: null, denotation: '' } })
                     }

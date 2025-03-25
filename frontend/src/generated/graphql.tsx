@@ -122,14 +122,19 @@ export enum LogicalOperationType {
 export type Mutation = {
   __typename?: 'Mutation';
   createKPIDefinition: KpiDefinition;
+  createSDCommand: SdCommand;
+  createSDCommandInvocation: SdCommandInvocation;
   createSDInstanceGroup: SdInstanceGroup;
   createSDType: SdType;
   deleteKPIDefinition: Scalars['Boolean']['output'];
+  deleteSDCommand: Scalars['Boolean']['output'];
   deleteSDInstanceGroup: Scalars['Boolean']['output'];
   deleteSDType: Scalars['Boolean']['output'];
   deleteUserConfig: Scalars['Boolean']['output'];
+  invokeSDCommand: Scalars['Boolean']['output'];
   statisticsMutate: Scalars['Boolean']['output'];
   updateKPIDefinition: KpiDefinition;
+  updateSDCommand: SdCommand;
   updateSDInstance: SdInstance;
   updateSDInstanceGroup: SdInstanceGroup;
   updateUserConfig: UserConfig;
@@ -138,6 +143,16 @@ export type Mutation = {
 
 export type MutationCreateKpiDefinitionArgs = {
   input: KpiDefinitionInput;
+};
+
+
+export type MutationCreateSdCommandArgs = {
+  input: SdCommandInput;
+};
+
+
+export type MutationCreateSdCommandInvocationArgs = {
+  input: SdCommandInvocationInput;
 };
 
 
@@ -152,6 +167,11 @@ export type MutationCreateSdTypeArgs = {
 
 
 export type MutationDeleteKpiDefinitionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteSdCommandArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -171,6 +191,11 @@ export type MutationDeleteUserConfigArgs = {
 };
 
 
+export type MutationInvokeSdCommandArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationStatisticsMutateArgs = {
   inputData: InputData;
 };
@@ -179,6 +204,13 @@ export type MutationStatisticsMutateArgs = {
 export type MutationUpdateKpiDefinitionArgs = {
   id: Scalars['ID']['input'];
   input: KpiDefinitionInput;
+};
+
+
+export type MutationUpdateSdCommandArgs = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -262,6 +294,10 @@ export type Query = {
   kpiDefinition: KpiDefinition;
   kpiDefinitions: Array<KpiDefinition>;
   kpiFulfillmentCheckResults: Array<KpiFulfillmentCheckResult>;
+  sdCommand: SdCommand;
+  sdCommandInvocation: SdCommandInvocation;
+  sdCommandInvocations: Array<SdCommandInvocation>;
+  sdCommands: Array<SdCommand>;
   sdInstanceGroup: SdInstanceGroup;
   sdInstanceGroups: Array<SdInstanceGroup>;
   sdInstances: Array<SdInstance>;
@@ -274,6 +310,16 @@ export type Query = {
 
 
 export type QueryKpiDefinitionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QuerySdCommandArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QuerySdCommandInvocationArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -304,10 +350,44 @@ export type QueryUserConfigArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type SdCommand = {
+  __typename?: 'SDCommand';
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  sdTypeId: Scalars['ID']['output'];
+};
+
+export type SdCommandInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  sdTypeId: Scalars['ID']['input'];
+};
+
+export type SdCommandInvocation = {
+  __typename?: 'SDCommandInvocation';
+  commandId: Scalars['ID']['output'];
+  id: Scalars['ID']['output'];
+  invocationTime: Scalars['String']['output'];
+  payload: Scalars['String']['output'];
+  sdInstanceId: Scalars['ID']['output'];
+  userId: Scalars['ID']['output'];
+};
+
+export type SdCommandInvocationInput = {
+  commandId: Scalars['ID']['input'];
+  invocationTime: Scalars['String']['input'];
+  payload: Scalars['String']['input'];
+  sdInstanceId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
 export type SdInstance = {
   __typename?: 'SDInstance';
+  commandInvocations: Array<SdCommandInvocation>;
   confirmedByUser: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
+  parameterSnapshots?: Maybe<Array<SdParameterSnapshot>>;
   type: SdType;
   uid: Scalars['String']['output'];
   userIdentifier: Scalars['String']['output'];
@@ -340,6 +420,7 @@ export type SdParameter = {
   denotation: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   label?: Maybe<Scalars['String']['output']>;
+  parameterSnapshots: Array<SdParameterSnapshot>;
   type: SdParameterType;
 };
 
@@ -347,6 +428,16 @@ export type SdParameterInput = {
   denotation: Scalars['String']['input'];
   label?: InputMaybe<Scalars['String']['input']>;
   type: SdParameterType;
+};
+
+export type SdParameterSnapshot = {
+  __typename?: 'SDParameterSnapshot';
+  boolean?: Maybe<Scalars['Boolean']['output']>;
+  instanceUid: Scalars['String']['output'];
+  number?: Maybe<Scalars['Float']['output']>;
+  parameterDenotation: Scalars['String']['output'];
+  string?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['Date']['output'];
 };
 
 export enum SdParameterType {
@@ -438,8 +529,10 @@ export type StringEqAtomKpiNode = AtomKpiNode & KpiNode & {
 
 export type Subscription = {
   __typename?: 'Subscription';
+  commandInvocationStateChanged: SdCommandInvocation;
   onKPIFulfillmentChecked: KpiFulfillmentCheckResultTuple;
   onSDInstanceRegistered: SdInstance;
+  onSDParameterSnapshotUpdate: SdParameterSnapshot;
 };
 
 export type UserConfig = {
@@ -484,6 +577,11 @@ export type UserConfigQueryVariables = Exact<{
 
 export type UserConfigQuery = { __typename?: 'Query', userConfig: { __typename?: 'UserConfig', userId: number, config: any } };
 
+export type SdInstancesWithSnapshotsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SdInstancesWithSnapshotsQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', confirmedByUser: boolean, id: number, uid: string, userIdentifier: string, parameterSnapshots?: Array<{ __typename?: 'SDParameterSnapshot', parameterDenotation: string, boolean?: boolean | null, instanceUid: string, number?: number | null, string?: string | null, updatedAt: any }> | null }> };
+
 export type SdInstancesWithParamsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -494,7 +592,14 @@ export type SdTypeParametersQueryVariables = Exact<{
 }>;
 
 
-export type SdTypeParametersQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', denotation: string, id: number, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, type: SdParameterType }> } };
+export type SdTypeParametersQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', denotation: string, id: number, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, type: SdParameterType, label?: string | null }> } };
+
+export type SdTypeParametersWithSnapshotsQueryVariables = Exact<{
+  sdTypeId: Scalars['ID']['input'];
+}>;
+
+
+export type SdTypeParametersWithSnapshotsQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', denotation: string, id: number, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, type: SdParameterType, label?: string | null, parameterSnapshots: Array<{ __typename?: 'SDParameterSnapshot', instanceUid: string, parameterDenotation: string, string?: string | null, number?: number | null, boolean?: boolean | null, updatedAt: any }> }> } };
 
 export type StatisticsQuerySensorsWithFieldsQueryVariables = Exact<{
   sensors: SensorsWithFields;
@@ -503,6 +608,11 @@ export type StatisticsQuerySensorsWithFieldsQueryVariables = Exact<{
 
 
 export type StatisticsQuerySensorsWithFieldsQuery = { __typename?: 'Query', statisticsQuerySensorsWithFields: Array<{ __typename?: 'OutputData', data: any, time: any, deviceId: string }> };
+
+export type OnSdParameterSnapshotUpdateSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type OnSdParameterSnapshotUpdateSubscription = { __typename?: 'Subscription', onSDParameterSnapshotUpdate: { __typename?: 'SDParameterSnapshot', instanceUid: string, parameterDenotation: string, string?: string | null, number?: number | null, boolean?: boolean | null, updatedAt: any } };
 
 
 export const UpdateUserConfigDocument = gql`
@@ -721,6 +831,56 @@ export type UserConfigQueryHookResult = ReturnType<typeof useUserConfigQuery>;
 export type UserConfigLazyQueryHookResult = ReturnType<typeof useUserConfigLazyQuery>;
 export type UserConfigSuspenseQueryHookResult = ReturnType<typeof useUserConfigSuspenseQuery>;
 export type UserConfigQueryResult = Apollo.QueryResult<UserConfigQuery, UserConfigQueryVariables>;
+export const SdInstancesWithSnapshotsDocument = gql`
+    query SdInstancesWithSnapshots {
+  sdInstances {
+    confirmedByUser
+    id
+    uid
+    userIdentifier
+    parameterSnapshots {
+      parameterDenotation
+      boolean
+      instanceUid
+      number
+      string
+      updatedAt
+    }
+  }
+}
+    `;
+
+/**
+ * __useSdInstancesWithSnapshotsQuery__
+ *
+ * To run a query within a React component, call `useSdInstancesWithSnapshotsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSdInstancesWithSnapshotsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSdInstancesWithSnapshotsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useSdInstancesWithSnapshotsQuery(baseOptions?: Apollo.QueryHookOptions<SdInstancesWithSnapshotsQuery, SdInstancesWithSnapshotsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<SdInstancesWithSnapshotsQuery, SdInstancesWithSnapshotsQueryVariables>(SdInstancesWithSnapshotsDocument, options);
+      }
+export function useSdInstancesWithSnapshotsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SdInstancesWithSnapshotsQuery, SdInstancesWithSnapshotsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<SdInstancesWithSnapshotsQuery, SdInstancesWithSnapshotsQueryVariables>(SdInstancesWithSnapshotsDocument, options);
+        }
+export function useSdInstancesWithSnapshotsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<SdInstancesWithSnapshotsQuery, SdInstancesWithSnapshotsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<SdInstancesWithSnapshotsQuery, SdInstancesWithSnapshotsQueryVariables>(SdInstancesWithSnapshotsDocument, options);
+        }
+export type SdInstancesWithSnapshotsQueryHookResult = ReturnType<typeof useSdInstancesWithSnapshotsQuery>;
+export type SdInstancesWithSnapshotsLazyQueryHookResult = ReturnType<typeof useSdInstancesWithSnapshotsLazyQuery>;
+export type SdInstancesWithSnapshotsSuspenseQueryHookResult = ReturnType<typeof useSdInstancesWithSnapshotsSuspenseQuery>;
+export type SdInstancesWithSnapshotsQueryResult = Apollo.QueryResult<SdInstancesWithSnapshotsQuery, SdInstancesWithSnapshotsQueryVariables>;
 export const SdInstancesWithParamsDocument = gql`
     query SdInstancesWithParams {
   sdInstances {
@@ -784,6 +944,7 @@ export const SdTypeParametersDocument = gql`
       denotation
       id
       type
+      label
     }
   }
 }
@@ -821,6 +982,61 @@ export type SdTypeParametersQueryHookResult = ReturnType<typeof useSdTypeParamet
 export type SdTypeParametersLazyQueryHookResult = ReturnType<typeof useSdTypeParametersLazyQuery>;
 export type SdTypeParametersSuspenseQueryHookResult = ReturnType<typeof useSdTypeParametersSuspenseQuery>;
 export type SdTypeParametersQueryResult = Apollo.QueryResult<SdTypeParametersQuery, SdTypeParametersQueryVariables>;
+export const SdTypeParametersWithSnapshotsDocument = gql`
+    query SdTypeParametersWithSnapshots($sdTypeId: ID!) {
+  sdType(id: $sdTypeId) {
+    denotation
+    id
+    parameters {
+      denotation
+      id
+      type
+      label
+      parameterSnapshots {
+        instanceUid
+        parameterDenotation
+        string
+        number
+        boolean
+        updatedAt
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useSdTypeParametersWithSnapshotsQuery__
+ *
+ * To run a query within a React component, call `useSdTypeParametersWithSnapshotsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSdTypeParametersWithSnapshotsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSdTypeParametersWithSnapshotsQuery({
+ *   variables: {
+ *      sdTypeId: // value for 'sdTypeId'
+ *   },
+ * });
+ */
+export function useSdTypeParametersWithSnapshotsQuery(baseOptions: Apollo.QueryHookOptions<SdTypeParametersWithSnapshotsQuery, SdTypeParametersWithSnapshotsQueryVariables> & ({ variables: SdTypeParametersWithSnapshotsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<SdTypeParametersWithSnapshotsQuery, SdTypeParametersWithSnapshotsQueryVariables>(SdTypeParametersWithSnapshotsDocument, options);
+      }
+export function useSdTypeParametersWithSnapshotsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SdTypeParametersWithSnapshotsQuery, SdTypeParametersWithSnapshotsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<SdTypeParametersWithSnapshotsQuery, SdTypeParametersWithSnapshotsQueryVariables>(SdTypeParametersWithSnapshotsDocument, options);
+        }
+export function useSdTypeParametersWithSnapshotsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<SdTypeParametersWithSnapshotsQuery, SdTypeParametersWithSnapshotsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<SdTypeParametersWithSnapshotsQuery, SdTypeParametersWithSnapshotsQueryVariables>(SdTypeParametersWithSnapshotsDocument, options);
+        }
+export type SdTypeParametersWithSnapshotsQueryHookResult = ReturnType<typeof useSdTypeParametersWithSnapshotsQuery>;
+export type SdTypeParametersWithSnapshotsLazyQueryHookResult = ReturnType<typeof useSdTypeParametersWithSnapshotsLazyQuery>;
+export type SdTypeParametersWithSnapshotsSuspenseQueryHookResult = ReturnType<typeof useSdTypeParametersWithSnapshotsSuspenseQuery>;
+export type SdTypeParametersWithSnapshotsQueryResult = Apollo.QueryResult<SdTypeParametersWithSnapshotsQuery, SdTypeParametersWithSnapshotsQueryVariables>;
 export const StatisticsQuerySensorsWithFieldsDocument = gql`
     query StatisticsQuerySensorsWithFields($sensors: SensorsWithFields!, $request: StatisticsInput) {
   statisticsQuerySensorsWithFields(sensors: $sensors, request: $request) {
@@ -864,3 +1080,37 @@ export type StatisticsQuerySensorsWithFieldsQueryHookResult = ReturnType<typeof 
 export type StatisticsQuerySensorsWithFieldsLazyQueryHookResult = ReturnType<typeof useStatisticsQuerySensorsWithFieldsLazyQuery>;
 export type StatisticsQuerySensorsWithFieldsSuspenseQueryHookResult = ReturnType<typeof useStatisticsQuerySensorsWithFieldsSuspenseQuery>;
 export type StatisticsQuerySensorsWithFieldsQueryResult = Apollo.QueryResult<StatisticsQuerySensorsWithFieldsQuery, StatisticsQuerySensorsWithFieldsQueryVariables>;
+export const OnSdParameterSnapshotUpdateDocument = gql`
+    subscription OnSDParameterSnapshotUpdate {
+  onSDParameterSnapshotUpdate {
+    instanceUid
+    parameterDenotation
+    string
+    number
+    boolean
+    updatedAt
+  }
+}
+    `;
+
+/**
+ * __useOnSdParameterSnapshotUpdateSubscription__
+ *
+ * To run a query within a React component, call `useOnSdParameterSnapshotUpdateSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useOnSdParameterSnapshotUpdateSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOnSdParameterSnapshotUpdateSubscription({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useOnSdParameterSnapshotUpdateSubscription(baseOptions?: Apollo.SubscriptionHookOptions<OnSdParameterSnapshotUpdateSubscription, OnSdParameterSnapshotUpdateSubscriptionVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useSubscription<OnSdParameterSnapshotUpdateSubscription, OnSdParameterSnapshotUpdateSubscriptionVariables>(OnSdParameterSnapshotUpdateDocument, options);
+      }
+export type OnSdParameterSnapshotUpdateSubscriptionHookResult = ReturnType<typeof useOnSdParameterSnapshotUpdateSubscription>;
+export type OnSdParameterSnapshotUpdateSubscriptionResult = Apollo.SubscriptionResult<OnSdParameterSnapshotUpdateSubscription>;

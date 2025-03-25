@@ -32,6 +32,29 @@ export const GET_SDTYPE_PARAMETERS = gql`
         denotation
         id
         type
+        label
+      }
+    }
+  }
+`
+export const GET_SDTYPE_PARAMETERS_WITH_SNAPSHOTS = gql`
+  query SdTypeParametersWithSnapshots($sdTypeId: ID!) {
+    sdType(id: $sdTypeId) {
+      denotation
+      id
+      parameters {
+        denotation
+        id
+        type
+        label
+        parameterSnapshots {
+          instanceUid
+          parameterDenotation
+          string
+          number
+          boolean
+          updatedAt
+        }
       }
     }
   }

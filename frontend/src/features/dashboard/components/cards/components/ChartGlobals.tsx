@@ -1,16 +1,20 @@
 import styled from 'styled-components'
 
-export const ToolTipContainer = styled.div<{ $offsetHorizontal: number; $offsetVertical: number; $isDarkMode?: boolean }>`
+export const ToolTipContainer = styled.div<{
+  $offsetHorizontal: number
+  $offsetVertical: number
+  $isDarkMode?: boolean
+}>`
   position: relative;
   left: ${(props) => props.$offsetHorizontal}px;
-  right: 0;
   top: ${(props) => props.$offsetVertical}px;
+  right: 0;
   bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: start;
   justify-content: center;
-  background-color: ${(props) => (props.$isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)')};
+  background-color: ${(props) => (props.$isDarkMode ? 'black' : 'white')};
   border-radius: 5px;
   padding: 8px;
   border: ${(props) => (props.$isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)')};

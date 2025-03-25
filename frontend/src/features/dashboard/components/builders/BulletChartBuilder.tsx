@@ -7,10 +7,10 @@ import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
 import {
   SdInstance,
-  SdParameter,
   SdParameterType,
   StatisticsOperation,
-  useSdTypeParametersQuery,
+  SdTypeParametersWithSnapshotsQuery,
+  useSdTypeParametersWithSnapshotsQuery,
   useStatisticsQuerySensorsWithFieldsLazyQuery
 } from '@/generated/graphql'
 import { z } from 'zod'
@@ -28,6 +28,7 @@ import { toast } from 'sonner'
 import { BuilderResult } from '@/types/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
+import { BulletChartToolTip } from '../cards/tooltips/BulletChartToolTIp'
 
 type BulletChartBuilderResult = BuilderResult<BulletCardConfig>
 
@@ -42,7 +43,9 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
   const { isDarkMode } = useDarkMode()
 
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
-  const [availableParameters, setAvailableParameters] = useState<{ [key: string]: SdParameter[] }>({})
+  const [availableParameters, setAvailableParameters] = useState<{
+    [key: string]: SdTypeParametersWithSnapshotsQuery['sdType']['parameters']
+  }>({})
   const [getChartData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
   const [data, setData] = useState<any[]>([])
   const [rangeInput, setRangeInput] = useState<string>('')
@@ -144,7 +147,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
     setData(newData)
   }
 
-  const { data: parametersData, refetch: refetchParameters } = useSdTypeParametersQuery({
+  const { data: parametersData, refetch: refetchParameters } = useSdTypeParametersWithSnapshotsQuery({
     variables: { sdTypeId: selectedInstance?.type.id! },
     skip: !selectedInstance
   })
@@ -241,6 +244,17 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                 }
                 measureColors={row.config.colorScheme === 'greys' ? ['pink'] : 'seq:red_purple'}
                 theme={isDarkMode ? darkTheme : lightTheme}
+                tooltip={() => {
+                  const instanceName = instances.find((inst) => inst.uid === row.instance.uid)?.userIdentifier
+                  return (
+                    <BulletChartToolTip
+                      instanceName={instanceName}
+                      parameterName={row.parameter.denotation}
+                      currentValue={data[index].measures[0]}
+                      targetValues={data[index].markers}
+                    />
+                  )
+                }}
               />
             </div>
           )
@@ -319,7 +333,11 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                     field.value ? { id: field.value.id!, denotation: field.value.denotation } : null
                                   }
                                   onValueChange={field.onChange}
-                                  options={form.watch(`rows.${index}.instance.uid`) ? getParameterOptions(form.watch(`rows.${index}.instance.uid`)) : []}
+                                  options={
+                                    form.watch(`rows.${index}.instance.uid`)
+                                      ? getParameterOptions(form.watch(`rows.${index}.instance.uid`))
+                                      : []
+                                  }
                                   disabled={!form.getValues(`rows.${index}.instance.uid`)}
                                 />
                               </FormControl>

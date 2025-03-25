@@ -16,8 +16,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import {
   SdInstance,
-  SdParameter,
   SdParameterType,
+  SdTypeParametersQuery,
   StatisticsOperation,
   useSdTypeParametersQuery,
   useStatisticsQuerySensorsWithFieldsLazyQuery
@@ -86,7 +86,9 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
   })
 
   const [selectedInstance, setSelectedInstance] = useState<SdInstance | null>(null)
-  const [availableParameters, setAvailableParameters] = useState<{ [typeID: number]: SdParameter[] }>({})
+  const [availableParameters, setAvailableParameters] = useState<{
+    [typeID: number]: SdTypeParametersQuery['sdType']['parameters']
+  }>({})
   const [getChartData, { data: chartData }] = useStatisticsQuerySensorsWithFieldsLazyQuery()
   const [data, setData] = useState<any[]>([])
   const [dataMaxValue, setDataMaxValue] = useState<number | null>(null)
@@ -150,7 +152,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
       console.log('Sensor data array', sensorDataArray)
       instance.parameters.forEach((param) => {
         const paramData = {
-          id: param.denotation + '-' + instance.uid,
+          id: param.denotation + ' ' + instance.uid,
           data:
             sensorDataArray.length > 0
               ? sensorDataArray.map((sensorData: any) => {
@@ -318,14 +320,25 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
               useMesh={data.length > 0}
               enableGridX={form.watch('enableGridX')}
               enableGridY={form.watch('enableGridY')}
-              tooltip={(pos: PointTooltipProps) => (
-                <ChartToolTip
-                  position={pos}
-                  containerRef={containerRef}
-                  xName={form.watch('toolTip.x')}
-                  yName={form.watch('toolTip.y')}
-                />
-              )}
+              tooltip={(pos: PointTooltipProps) => {
+                // The pointToolTipProps object contains the point id,
+                // which is a combination of the parameter name and the instance UID + point index
+                const pointIdParts = pos.point.id.split(' ')
+                const rawInstanceUID = pointIdParts.length > 1 ? pointIdParts[1].trim() : ''
+
+                // Find the last occurrence of "." and remove everything after it, that is the point index
+                const lastDotIndex = rawInstanceUID.lastIndexOf('.')
+                const instanceUID = lastDotIndex !== -1 ? rawInstanceUID.substring(0, lastDotIndex) : rawInstanceUID
+                return (
+                  <ChartToolTip
+                    position={pos}
+                    instanceName={instances.find((inst) => inst.uid === instanceUID)?.userIdentifier}
+                    containerRef={containerRef}
+                    xName={form.watch('toolTip.x')}
+                    yName={form.watch('toolTip.y')}
+                  />
+                )
+              }}
               theme={isDarkMode ? darkTheme : lightTheme}
             />
           </div>
@@ -342,6 +355,48 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
             }}
           >
             <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="cardTitle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Card Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e)
+                        }}
+                        value={field.value}
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pointSize"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Point Size</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        min={1}
+                        onChange={(e) => {
+                          field.onChange(parseInt(e.target.value))
+                        }}
+                        value={field.value}
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="axisLeft.legend"
@@ -381,48 +436,6 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                     </FormLabel>
                     <FormControl>
                       <Input type="text" {...field} className="w-full" disabled={!field.value} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="cardTitle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Card Title</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(e)
-                        }}
-                        value={field.value}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="pointSize"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Point Size</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        min={1}
-                        onChange={(e) => {
-                          field.onChange(parseInt(e.target.value))
-                        }}
-                        value={field.value}
-                        className="w-full"
-                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

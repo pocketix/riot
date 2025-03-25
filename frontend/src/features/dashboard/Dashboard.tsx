@@ -19,7 +19,8 @@ import { EntityCard } from './components/cards/EntityCard'
 import { AllConfigTypes, GridItem, BuilderResult } from '@/types/GridItem'
 import { DBItemDetails } from '@/types/DBItem'
 import _ from 'lodash'
-import { useUpdateUserConfigMutation, useUserConfigQuery } from '@/generated/graphql'
+import { useSdInstancesWithSnapshotsQuery, useUpdateUserConfigMutation, useUserConfigQuery } from '@/generated/graphql'
+// import StatusTimeline from './components/details/StatusTimeLine'
 
 const Dashboard = () => {
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), [])
@@ -53,6 +54,7 @@ const Dashboard = () => {
   const [details, setDetails] = useState<{ [key: string]: DBItemDetails<AllConfigTypes> }>({})
   const [currentBreakpoint, setCurrentBreakpoint] = useState('lg')
   const loadingToastRef = useRef<string | number | null>(null)
+  const { data: instances } = useSdInstancesWithSnapshotsQuery()
 
   // Handle window resize for mobile view
   // TODO: Phone scroll on drag ??
@@ -359,7 +361,7 @@ const Dashboard = () => {
     handleSaveToDB(newLayouts, newDetails)
   }
 
-  if (!mounted || !layouts || !details) {
+  if (!mounted || !layouts || !details || !instances) {
     return <div>Loading...</div>
   }
 
@@ -488,6 +490,7 @@ const Dashboard = () => {
                       configuration={details[item.i]}
                       beingResized={resizeCardID === item.i}
                       handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
+                      instances={instances.sdInstances}
                     />
                   </Card>
                 )
@@ -518,6 +521,7 @@ const Dashboard = () => {
                       breakpoint={currentBreakpoint}
                       beingResized={resizeCardID === item.i}
                       handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
+                      instances={instances.sdInstances}
                     />
                   </Card>
                 )
@@ -557,6 +561,7 @@ const Dashboard = () => {
         </ResponsiveGridLayout>
       </MainGrid>
       <AddItemModal onAddItem={handleAddItem} />
+      {/* <StatusTimeline /> */}
     </DashboardRoot>
   )
 }
