@@ -9,7 +9,7 @@ import { breakpoints } from '@/styles/Breakpoints'
 const StyledPage = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 2rem;
+  padding: 1.5rem;
   color: hsl(var(--color-grey-900));
   overflow: hidden;
   gap: 1.2rem;
@@ -18,6 +18,10 @@ const StyledPage = styled.div`
   height: 100%;
   align-self: center;
   max-width: 1300px;
+
+  @media (min-width: ${breakpoints.sm}) {
+    padding: 2rem;
+  }
 `
 
 const NavigationDiv = styled.div`

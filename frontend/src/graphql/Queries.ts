@@ -10,6 +10,7 @@ export const GET_INSTANCES = gql`
       type {
         id
         denotation
+        icon
       }
     }
   }

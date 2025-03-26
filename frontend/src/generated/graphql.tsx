@@ -589,10 +589,25 @@ export type UpdateUserConfigMutationVariables = Exact<{
 
 export type UpdateUserConfigMutation = { __typename?: 'Mutation', updateUserConfig: { __typename?: 'UserConfig', userId: number, config: any } };
 
+export type ConfirmSdInstanceMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type ConfirmSdInstanceMutation = { __typename?: 'Mutation', updateSDInstance: { __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: number, denotation: string, type: SdParameterType }> } } };
+
+export type UpdateUserIdentifierOfSdInstanceMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  newUserIdentifier: Scalars['String']['input'];
+}>;
+
+
+export type UpdateUserIdentifierOfSdInstanceMutation = { __typename?: 'Mutation', updateSDInstance: { __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: number, denotation: string, type: SdParameterType }> } } };
+
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string } }> };
+export type SdInstancesQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string, icon?: string | null } }> };
 
 export type SdTypeQueryVariables = Exact<{
   sdTypeId: Scalars['ID']['input'];
@@ -874,6 +889,97 @@ export function useUpdateUserConfigMutation(baseOptions?: Apollo.MutationHookOpt
 export type UpdateUserConfigMutationHookResult = ReturnType<typeof useUpdateUserConfigMutation>;
 export type UpdateUserConfigMutationResult = Apollo.MutationResult<UpdateUserConfigMutation>;
 export type UpdateUserConfigMutationOptions = Apollo.BaseMutationOptions<UpdateUserConfigMutation, UpdateUserConfigMutationVariables>;
+export const ConfirmSdInstanceDocument = gql`
+    mutation confirmSDInstance($id: ID!) {
+  updateSDInstance(id: $id, input: {confirmedByUser: true}) {
+    id
+    uid
+    confirmedByUser
+    userIdentifier
+    type {
+      id
+      denotation
+      parameters {
+        id
+        denotation
+        type
+      }
+    }
+  }
+}
+    `;
+export type ConfirmSdInstanceMutationFn = Apollo.MutationFunction<ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables>;
+
+/**
+ * __useConfirmSdInstanceMutation__
+ *
+ * To run a mutation, you first call `useConfirmSdInstanceMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useConfirmSdInstanceMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [confirmSdInstanceMutation, { data, loading, error }] = useConfirmSdInstanceMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useConfirmSdInstanceMutation(baseOptions?: Apollo.MutationHookOptions<ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables>(ConfirmSdInstanceDocument, options);
+      }
+export type ConfirmSdInstanceMutationHookResult = ReturnType<typeof useConfirmSdInstanceMutation>;
+export type ConfirmSdInstanceMutationResult = Apollo.MutationResult<ConfirmSdInstanceMutation>;
+export type ConfirmSdInstanceMutationOptions = Apollo.BaseMutationOptions<ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables>;
+export const UpdateUserIdentifierOfSdInstanceDocument = gql`
+    mutation UpdateUserIdentifierOfSDInstance($id: ID!, $newUserIdentifier: String!) {
+  updateSDInstance(id: $id, input: {userIdentifier: $newUserIdentifier}) {
+    id
+    uid
+    confirmedByUser
+    userIdentifier
+    type {
+      id
+      denotation
+      parameters {
+        id
+        denotation
+        type
+      }
+    }
+  }
+}
+    `;
+export type UpdateUserIdentifierOfSdInstanceMutationFn = Apollo.MutationFunction<UpdateUserIdentifierOfSdInstanceMutation, UpdateUserIdentifierOfSdInstanceMutationVariables>;
+
+/**
+ * __useUpdateUserIdentifierOfSdInstanceMutation__
+ *
+ * To run a mutation, you first call `useUpdateUserIdentifierOfSdInstanceMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateUserIdentifierOfSdInstanceMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateUserIdentifierOfSdInstanceMutation, { data, loading, error }] = useUpdateUserIdentifierOfSdInstanceMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      newUserIdentifier: // value for 'newUserIdentifier'
+ *   },
+ * });
+ */
+export function useUpdateUserIdentifierOfSdInstanceMutation(baseOptions?: Apollo.MutationHookOptions<UpdateUserIdentifierOfSdInstanceMutation, UpdateUserIdentifierOfSdInstanceMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateUserIdentifierOfSdInstanceMutation, UpdateUserIdentifierOfSdInstanceMutationVariables>(UpdateUserIdentifierOfSdInstanceDocument, options);
+      }
+export type UpdateUserIdentifierOfSdInstanceMutationHookResult = ReturnType<typeof useUpdateUserIdentifierOfSdInstanceMutation>;
+export type UpdateUserIdentifierOfSdInstanceMutationResult = Apollo.MutationResult<UpdateUserIdentifierOfSdInstanceMutation>;
+export type UpdateUserIdentifierOfSdInstanceMutationOptions = Apollo.BaseMutationOptions<UpdateUserIdentifierOfSdInstanceMutation, UpdateUserIdentifierOfSdInstanceMutationVariables>;
 export const SdInstancesDocument = gql`
     query SdInstances {
   sdInstances {
@@ -884,6 +990,7 @@ export const SdInstancesDocument = gql`
     type {
       id
       denotation
+      icon
     }
   }
 }

@@ -9,9 +9,13 @@ const StyledPage = styled.div`
   flex-direction: column;
   flex-grow: 1;
   gap: 1.2rem;
-  padding: 2rem;
+  padding: 1.5rem;
   color: hsl(var(--color-white));
-  overflow: hidden;
+  overflow-y: auto;
+
+  @media (min-width: ${breakpoints.sm}) {
+    padding: 2rem;
+  }
 `
 
 const TabsContainer = styled.div`
@@ -34,7 +38,7 @@ export default function DevicesPage() {
         <TabSwitcher
           activeTab={location.pathname.split('/')[2] || 'devices'}
           tabs={[
-            { name: 'Devices', path: '/devicesPage/devices' },
+            { name: 'Instances', path: '/devicesPage/devices' },
             { name: 'Groups', path: '/devicesPage/groups' }
           ]}
         />

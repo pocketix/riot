@@ -53,3 +53,42 @@ export const UPDATE_USER_CONFIG = gql`
     }
   }
 `
+export const CONFIRM_SD_INSTANCE = gql`
+  mutation confirmSDInstance($id: ID!) {
+    updateSDInstance(id: $id, input: { confirmedByUser: true }) {
+      id
+      uid
+      confirmedByUser
+      userIdentifier
+      type {
+        id
+        denotation
+        parameters {
+          id
+          denotation
+          type
+        }
+      }
+    }
+  }
+`
+
+export const UPDATE_USER_IDENTIFIER_OF_SD_INSTANCE = gql`
+  mutation UpdateUserIdentifierOfSDInstance($id: ID!, $newUserIdentifier: String!) {
+    updateSDInstance(id: $id, input: { userIdentifier: $newUserIdentifier }) {
+      id
+      uid
+      confirmedByUser
+      userIdentifier
+      type {
+        id
+        denotation
+        parameters {
+          id
+          denotation
+          type
+        }
+      }
+    }
+  }
+`
