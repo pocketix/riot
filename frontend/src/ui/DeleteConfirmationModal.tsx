@@ -1,4 +1,11 @@
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { TbTrash, TbX } from 'react-icons/tb'
 
@@ -9,10 +16,15 @@ interface DeleteConfirmationModalProps {
   itemName: string
 }
 
-export default function DeleteConfirmationModal({ isOpen, onClose, onConfirm, itemName }: DeleteConfirmationModalProps) {
+export default function DeleteConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  itemName
+}: DeleteConfirmationModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-[23rem] p-4 sm:max-w-max">
         <DialogHeader>
           <DialogTitle>Confirm Deletion</DialogTitle>
         </DialogHeader>
