@@ -42,7 +42,7 @@ func main() {
 
 	log.Println("Time Series Store Starting")
 
-	influx, influxErrors, _ := internal.NewInflux2Client(environment.InfluxUrl, environment.InfluxToken, environment.InfluxOrg, environment.InfluxBucket)
+	influx := internal.NewInflux2Client(environment.InfluxUrl, environment.InfluxToken, environment.InfluxOrg, environment.InfluxBucket)
 
 	rabbitMQClient := rabbitmq.NewClient()
 	defer rabbitMQClient.Dispose()
@@ -66,12 +66,6 @@ func main() {
 			}
 		},
 	)
-
-	go func() {
-		for err := range influxErrors {
-			log.Println(err)
-		}
-	}()
 }
 
 func consumeInputMessages(rabbitMQClient rabbitmq.Client, influx internal.Influx2Client) error {

@@ -17,11 +17,11 @@ type Influx2Client struct {
 	organization string
 	bucket       string
 	client       influxdb2.Client
-	writeApi     api.WriteAPI
+	writeApi     api.WriteAPIBlocking
 	queryApi     api.QueryAPI
 }
 
-func NewInflux2Client(endpoint string, token string, organization string, bucket string) (Influx2Client, <-chan error, error) {
+func NewInflux2Client(endpoint string, token string, organization string, bucket string) Influx2Client {
 	client := influxdb2.NewClientWithOptions(endpoint, token, influxdb2.DefaultOptions().SetBatchSize(20))
 
 	influx2Client := Influx2Client{
@@ -29,10 +29,10 @@ func NewInflux2Client(endpoint string, token string, organization string, bucket
 		organization: organization,
 		bucket:       bucket,
 		client:       client,
-		writeApi:     client.WriteAPI(organization, bucket),
+		writeApi:     client.WriteAPIBlocking(organization, bucket),
 		queryApi:     client.QueryAPI(organization),
 	}
-	return influx2Client, influx2Client.writeApi.Errors(), nil
+	return influx2Client
 }
 
 func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) sharedUtils.Result[[]sharedModel.OutputData] {
@@ -77,15 +77,34 @@ func (influx2Client Influx2Client) Query(body sharedModel.ReadRequestBody) share
 }
 
 func (influx2Client Influx2Client) Write(data sharedModel.InputData) {
-	log.Printf("Writing %s with ts %s received ts %f", data.SDInstanceUID, time.Unix(int64(data.Timestamp), 0), data.Timestamp)
+	log.Printf("Writing %s with ts %s received ts %f\n", data.SDInstanceUID, time.Unix(int64(data.Timestamp), 0), data.Timestamp)
 	if parameters, ok := data.Parameters.(map[string]interface{}); ok {
+		// Drop nil / null values
+		for key, value := range parameters {
+			if value == nil {
+				log.Printf("Dropping %s because it was nil / null", key)
+				delete(parameters, key)
+			}
+		}
+
 		point := influxdb2.NewPoint(data.SDInstanceUID, map[string]string{"deviceType": data.SDTypeSpecification}, parameters, time.Unix(int64(data.Timestamp), 0))
-		influx2Client.writeApi.WritePoint(point)
+
+		ctx, cancelFunction := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelFunction()
+
+		err := influx2Client.writeApi.WritePoint(ctx, point)
+		if err != nil {
+			log.Printf("Writing %s failed with %s\n", data.SDInstanceUID, err)
+		}
+
+		err = influx2Client.writeApi.Flush(ctx)
+		if err != nil {
+			log.Printf("Writing %s failed with %s\n", data.SDInstanceUID, err)
+		}
+
 	} else {
 		log.Println("parameterAsAny is not a map[string]interface{}")
 	}
-
-	influx2Client.writeApi.Flush()
 }
 
 func (influx2Client Influx2Client) Close() {
