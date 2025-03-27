@@ -4,10 +4,12 @@ import { GET_INSTANCES } from '@/graphql/Queries'
 import { CONFIRM_SD_INSTANCE } from '@/graphql/Mutations'
 import Spinner from '@/ui/Spinner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useMemo, useState } from 'react'
 import DeviceCard from './DeviceCard'
 import { ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables, SdInstancesQuery } from '@/generated/graphql'
 import { breakpoints } from '@/styles/Breakpoints'
+import { useSearchParams } from 'react-router-dom'
 
 const PageContainer = styled.div`
   display: flex;
@@ -54,10 +56,32 @@ export default function Devices() {
   >(CONFIRM_SD_INSTANCE)
 
   const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [searchParams, setSearchParams] = useSearchParams()
+  const search = searchParams.get('search')?.toLowerCase() || ''
+
+  const setSearch = (value: string) => {
+    if (value) {
+      searchParams.set('search', value)
+    } else {
+      searchParams.delete('search')
+    }
+    setSearchParams(searchParams)
+  }
 
   const instances = data?.sdInstances || []
-  const confirmed = useMemo(() => instances.filter((i) => i.confirmedByUser), [instances])
-  const unconfirmed = useMemo(() => instances.filter((i) => !i.confirmedByUser), [instances])
+
+  const filteredInstances = useMemo(() => {
+    if (!search) return instances
+    return instances.filter(
+      (i) =>
+        i.uid.toLowerCase().includes(search) ||
+        i.userIdentifier?.toLowerCase().includes(search) ||
+        i.type.denotation.toLowerCase().includes(search)
+    )
+  }, [instances, search])
+
+  const confirmed = useMemo(() => filteredInstances.filter((i) => i.confirmedByUser), [filteredInstances])
+  const unconfirmed = useMemo(() => filteredInstances.filter((i) => !i.confirmedByUser), [filteredInstances])
 
   const toggleSelection = (id: number, selected: boolean) => {
     setSelectedIds((prev) => (selected ? [...prev, id] : prev.filter((selectedId) => selectedId !== id)))
@@ -78,6 +102,15 @@ export default function Devices() {
 
   return (
     <PageContainer>
+      <Section>
+        <Input
+          placeholder="Search by UID, User Identifier, or Type..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full max-w-lg bg-[--color-grey-200]"
+        />
+      </Section>
+
       <Section>
         <h2 className="w-full text-xl font-bold">Confirmed Instances</h2>
         <CardGrid>

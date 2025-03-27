@@ -12,6 +12,7 @@ import {
 } from '@/generated/graphql'
 import { UPDATE_USER_IDENTIFIER_OF_SD_INSTANCE } from '@/graphql/Mutations'
 import { getIcon } from '@/utils/getIcon'
+import { useNavigate } from 'react-router-dom'
 
 const Card = styled.div`
   background: var(--color-grey-0);
@@ -102,6 +103,7 @@ export default function DeviceCard({
 }: SdInstanceCardProps) {
   const [editMode, setEditMode] = useState(false)
   const [newUserIdentifier, setNewUserIdentifier] = useState(instance.userIdentifier || '')
+  const navigate = useNavigate()
 
   const [updateUserIdentifierOfSdInstanceMutation, { loading: updatingIdentifier }] = useMutation<
     UpdateUserIdentifierOfSdInstanceMutation,
@@ -168,7 +170,7 @@ export default function DeviceCard({
       <div>
         <strong>UID:</strong>{' '}
         {hasSlashes ? (
-          <div className="ml-2 flex flex-col text-sm text-white">
+          <div className="ml-2 flex flex-col text-sm text-[--color-white]">
             {(showUid ? uidParts : uidParts.slice(2, 3)).map((part, index) => (
               <span key={index}>{part}</span>
             ))}
@@ -196,7 +198,7 @@ export default function DeviceCard({
         )}
       </div>
       <BottomRow>
-        <Button onClick={() => console.log('Add navigate')}>View Details</Button>
+        <Button onClick={() => navigate('/')}>View Details</Button>
         {!confirmed && onConfirmClick && (
           <Button onClick={onConfirmClick} variant="green">
             Confirm
