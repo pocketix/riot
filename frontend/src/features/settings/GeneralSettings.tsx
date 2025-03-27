@@ -67,11 +67,11 @@ export default function GeneralSettings() {
           <LanguageSwitcher />
         </SettingsItem>
         <SettingsItem onClick={() => navigate('/settings/apollo-sandbox')}>
-          <span>Developer mode (Apollo Sanxbox)</span>
+          <span>{t('developerMode')} (Apollo Sanxbox)</span>
           <FaArrowRight />
         </SettingsItem>
       </Container>
-      <div className="h-full flex justify-center items-end p-4">
+      <div className="flex h-full items-end justify-center p-4">
         <Button className="w-52" variant={'destructive'} onClick={handleLogout}>
           Logout
         </Button>

@@ -6,6 +6,7 @@ import { TbEdit, TbTrash } from 'react-icons/tb'
 import { KpiDefinitionsQuery } from '@/generated/graphql'
 import DeleteConfirmationModal from '@/ui/DeleteConfirmationModal'
 import { breakpoints } from '@/styles/Breakpoints'
+import { useTranslation } from 'react-i18next'
 
 const Card = styled.div`
   background: var(--color-grey-0);
@@ -57,6 +58,7 @@ type KPIDefinitionCardProps = {
 }
 
 export default function KPIDefinitionCard({ kpiDefinition, onDelete }: KPIDefinitionCardProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { id, sdInstanceMode, sdTypeSpecification, userIdentifier } = kpiDefinition
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -68,19 +70,19 @@ export default function KPIDefinitionCard({ kpiDefinition, onDelete }: KPIDefini
       </Header>
 
       <Detail>
-        <strong>Instance Mode:</strong> {sdInstanceMode}
+        <strong>{t('kpiDefinitionsPage.instanceMode')}:</strong> {sdInstanceMode}
       </Detail>
 
       <Detail>
-        <strong>Defined for SD type:</strong> {sdTypeSpecification}
+        <strong>{t('kpiDefinitionsPage.definedForType')}:</strong> {sdTypeSpecification}
       </Detail>
 
       <ButtonGroup>
         <Button onClick={() => navigate(`/settings/kpi-definitions/${id}/edit`)}>
-          <TbEdit /> Edit
+          <TbEdit /> {t('kpiDefinitionsPage.edit')}
         </Button>
         <Button variant="destructive" onClick={() => setIsModalOpen(true)}>
-          <TbTrash /> Delete
+          <TbTrash /> {t('kpiDefinitionsPage.delete')}
         </Button>
       </ButtonGroup>
 

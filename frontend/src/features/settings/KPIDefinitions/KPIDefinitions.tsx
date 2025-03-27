@@ -15,6 +15,7 @@ import styled from 'styled-components'
 import { toast } from 'sonner'
 import KPIDefinitionCard from './KPIDefinitionCard'
 import { breakpoints } from '@/styles/Breakpoints'
+import { useTranslation } from 'react-i18next'
 
 const Container = styled.div`
   display: flex;
@@ -51,6 +52,7 @@ const Grid = styled.div`
 
 export default function KPIDefinitions() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const { data, loading, refetch } = useQuery<KpiDefinitionsQuery, KpiDefinitionsQueryVariables>(GET_KPI_DEFINITIONS, {
     fetchPolicy: 'cache-first'
@@ -83,18 +85,18 @@ export default function KPIDefinitions() {
   }
 
   if (loading) return <Spinner />
-  if (!data?.kpiDefinitions?.length) return <p>No KPI definitions found.</p>
+  if (!data?.kpiDefinitions?.length) return <p>{t('kpiDefinitionsPage.noKpiFound')}</p>
 
   return (
     <Container>
       <Header>
         <Heading as="h2">
-          Manage your KPI definitions here{' '}
+          {t('kpiDefinitionsPage.manageKpiDefinitions')}{' '}
           <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
-            ({data?.kpiDefinitions?.length} definitions).
+            ({t('kpiDefinitionsPage.definitions', { count: data?.kpiDefinitions?.length || 0 })}).
           </span>
         </Heading>
-        <Button onClick={() => navigate('/settings/kpi-definitions/create')}>+ Add new</Button>
+        <Button onClick={() => navigate('/settings/kpi-definitions/create')}>+ {t('addNew')}</Button>
       </Header>
 
       <Grid>

@@ -6,6 +6,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const Container = styled.div`
   display: flex;
@@ -110,6 +111,7 @@ const mockedUsers = [
 ]
 
 export default function Members() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
 
@@ -120,12 +122,12 @@ export default function Members() {
   return (
     <Container>
       <TopBar>
-        <h2 className="text-2xl font-bold">Members</h2>
+        <h2 className="text-2xl font-bold">{t('membersPage.title')}</h2>
         <div className="relative w-full">
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by username or name..."
+            placeholder={t('membersPage.searchPlaceholder')}
             className="w-full bg-[--color-grey-200] pr-10"
           />
           {search && (
@@ -146,9 +148,12 @@ export default function Members() {
             <Username>{user.username}</Username>
             <Name>{user.name}</Name>
             <LastLogin>
-              Last login {user.lastLoginAt ? formatDistanceToNow(user.lastLoginAt, { addSuffix: true }) : 'N/A'}
+              {t('membersPage.lastLogin', {
+                time: user.lastLoginAt ? formatDistanceToNow(user.lastLoginAt, { addSuffix: true }) : 'N/A'
+              })}
             </LastLogin>
-            <Button onClick={() => navigate(`/members/${user.id}`)}>View Details</Button>
+
+            <Button onClick={() => navigate(`/members/${user.id}`)}>{t('membersPage.viewDetails')}</Button>
           </UserCard>
         ))}
       </CardGrid>

@@ -10,6 +10,7 @@ import { breakpoints } from '@/styles/Breakpoints'
 import { useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const Container = styled.div`
   display: flex;
@@ -45,6 +46,8 @@ const Grid = styled.div`
 `
 
 export default function DeviceTypesSettings() {
+  const { t } = useTranslation()
+
   const { data, loading } = useQuery<SdTypesQuery, SdTypesQueryVariables>(GET_SD_TYPES, {
     fetchPolicy: 'cache-first',
     nextFetchPolicy: 'cache-first'
@@ -64,20 +67,20 @@ export default function DeviceTypesSettings() {
     <Container>
       <Header>
         <Heading as="h2">
-          Manage your device types{' '}
+          {t('manageDeviceTypes')}{' '}
           <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
-            ({filteredDeviceTypes.length} types)
+            ({t('types', { count: filteredDeviceTypes.length })})
           </span>
           .
         </Heading>
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
           <Input
-            placeholder="Search by name or denotation..."
+            placeholder={t('searchDeviceTypesPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[--color-grey-300] sm:w-64"
           />
-          <Button onClick={() => navigate('/settings/device-types/addNewType')}>+ Add new</Button>
+          <Button onClick={() => navigate('/settings/device-types/addNewType')}>+ {t('addNew')}</Button>
         </div>
       </Header>
 
@@ -85,7 +88,7 @@ export default function DeviceTypesSettings() {
         {filteredDeviceTypes.length > 0 ? (
           filteredDeviceTypes.map((deviceType) => <DeviceTypeCard key={deviceType.id} deviceType={deviceType} />)
         ) : (
-          <p className="col-span-full text-center">No device types match your search.</p>
+          <p className="col-span-full text-center">{t('noDeviceTypesMatch')}</p>
         )}
       </Grid>
     </Container>

@@ -17,6 +17,7 @@ import DeleteConfirmationModal from '@/ui/DeleteConfirmationModal'
 import { useState } from 'react'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useMediaQuery } from 'react-responsive'
+import { useTranslation } from 'react-i18next'
 
 const Card = styled.div`
   background: var(--color-grey-0);
@@ -75,6 +76,7 @@ type DeviceTypeCardProps = {
 }
 
 export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
+  const { t } = useTranslation()
   const isMobile = useMediaQuery({ maxWidth: parseInt(breakpoints.sm.replace('px', '')) })
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -114,23 +116,26 @@ export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
         <Title>{label}</Title>
         <Icon>{IconComponent && <IconComponent />}</Icon>
       </Header>
-      <p>Denotation: {denotation}</p>
+      <p>
+        {t('denotation')}: {denotation}
+      </p>
       <Button size={isMobile ? 'sm' : undefined} onClick={() => navigate(`/settings/device-types/${id}`)}>
-        View Details
+        {t('viewDetails')}
       </Button>
       <ButtonGroup>
         <Button size={isMobile ? 'sm' : undefined}>
-          <FaList /> View Instances
+          <FaList /> {t('viewInstances')}
         </Button>
         <>
           <Button size={isMobile ? 'sm' : undefined} onClick={() => setIsModalOpen(true)} variant="destructive">
-            <TbTrash /> Delete Type
+            <TbTrash /> {t('deleteType')}
           </Button>
+
           <DeleteConfirmationModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             onConfirm={handleDelete}
-            itemName="this device type"
+            itemName={t('thisDeviceType')}
           />
         </>
       </ButtonGroup>

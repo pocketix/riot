@@ -62,14 +62,14 @@ export default function Settings() {
           <TabSwitcher
             activeTab={location.pathname.split('/')[2] || 'general'}
             tabs={[
-              { name: 'general', path: '/settings/general' },
-              { name: 'personal info', path: '/settings/personal-info' },
-              { name: 'device types', path: '/settings/device-types' },
-              { name: 'KPI definitions', path: '/settings/kpi-definitions' }
+              { name: t('general'), path: '/settings/general' },
+              { name: t('personalInfo'), path: '/settings/personal-info' },
+              { name: t('deviceTypes'), path: '/settings/device-types' },
+              { name: t('kpiDefinitions'), path: '/settings/kpi-definitions' }
             ]}
           />
           {isMobile && !isDefaultTab && (
-            <Button onClick={() => navigate('/settings/device-types')}>&larr; Go Back</Button>
+            <Button onClick={() => navigate('/settings/device-types')}>&larr; {t('goBack')}</Button>
           )}
         </NavigationDiv>
       )}

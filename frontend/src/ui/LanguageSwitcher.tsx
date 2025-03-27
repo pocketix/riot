@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 
 const languages = [
   { code: 'en', label: 'English' },
-  { code: 'cz', label: 'Čeština' }
+  { code: 'cs', label: 'Čeština' }
 ]
 
 export default function LanguageSwitcher() {
@@ -18,7 +18,9 @@ export default function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="default">{languages.find((lang) => lang.code === i18n.language)?.label || 'Select Language'}</Button>
+        <Button variant="default">
+          {languages.find((lang) => lang.code === i18n.language)?.label || 'Select Language'}
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {languages.map(({ code, label }) => (

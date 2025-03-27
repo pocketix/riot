@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import TabSwitcher from '@/ui/TabSwitcher'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { breakpoints } from '@/styles/Breakpoints'
+import { useTranslation } from 'react-i18next'
 
 const StyledPage = styled.div`
   display: flex;
@@ -26,6 +27,7 @@ const TabsContainer = styled.div`
 
 export default function DevicesPage() {
   const location = useLocation()
+  const { t } = useTranslation()
 
   if (location.pathname === '/devicesPage') {
     return <Navigate to="/devicesPage/groups" replace />
@@ -38,8 +40,8 @@ export default function DevicesPage() {
         <TabSwitcher
           activeTab={location.pathname.split('/')[2] || 'groups'}
           tabs={[
-            { name: 'Groups', path: '/devicesPage/groups' },
-            { name: 'Instances', path: '/devicesPage/devices' }
+            { name: t('devicesPage.groups'), path: '/devicesPage/groups' },
+            { name: t('devicesPage.instances'), path: '/devicesPage/devices' }
           ]}
         />
       </TabsContainer>

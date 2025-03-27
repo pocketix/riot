@@ -12,6 +12,7 @@ import { breakpoints } from '@/styles/Breakpoints'
 import { useSearchParams } from 'react-router-dom'
 import { X } from 'lucide-react'
 import tw from 'tailwind-styled-components'
+import { useTranslation } from 'react-i18next'
 
 const PageContainer = styled.div`
   display: flex;
@@ -61,6 +62,7 @@ const ClearButton = tw.button`
 `
 
 export default function Devices() {
+  const { t } = useTranslation()
   const { data, loading, refetch, error } = useQuery<SdInstancesQuery>(GET_INSTANCES)
   const [confirmSdInstanceMutation, { loading: confirming }] = useMutation<
     ConfirmSdInstanceMutation,
@@ -117,7 +119,7 @@ export default function Devices() {
       <Section>
         <SearchWrapper>
           <Input
-            placeholder="Search by UID, User Identifier, or Type..."
+            placeholder={t('devicesPage.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-[--color-grey-200] pr-10"
@@ -131,7 +133,7 @@ export default function Devices() {
       </Section>
 
       <Section>
-        <h2 className="w-full text-xl font-bold">Confirmed Instances</h2>
+        <h2 className="w-full text-xl font-bold">{t('devicesPage.confirmedInstances')}</h2>
         <CardGrid>
           {confirmed.map((instance) => (
             <DeviceCard key={instance.id} instance={instance} confirmed={true} />
@@ -141,10 +143,10 @@ export default function Devices() {
 
       <Section>
         <div className="flex w-full items-center justify-between">
-          <h2 className="text-xl font-bold">Unconfirmed Instances</h2>
+          <h2 className="text-xl font-bold">{t('devicesPage.unconfirmedInstances')}</h2>
           {selectedIds.length > 0 && (
             <Button onClick={handleBatchConfirm} disabled={confirming}>
-              Confirm Selected ({selectedIds.length})
+              {t('devicesPage.confirmSelected', { count: selectedIds.length })}
             </Button>
           )}
         </div>
