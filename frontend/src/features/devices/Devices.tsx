@@ -19,7 +19,6 @@ const PageContainer = styled.div`
   @media (min-width: ${breakpoints.sm}) {
     padding: 2rem;
     align-items: flex-start;
-    height: 100%;
   }
 `
 
@@ -48,7 +47,7 @@ const CardGrid = styled.div`
 `
 
 export default function Devices() {
-  const { data, loading, refetch } = useQuery<SdInstancesQuery>(GET_INSTANCES)
+  const { data, loading, refetch, error } = useQuery<SdInstancesQuery>(GET_INSTANCES)
   const [confirmSdInstanceMutation, { loading: confirming }] = useMutation<
     ConfirmSdInstanceMutation,
     ConfirmSdInstanceMutationVariables
@@ -75,6 +74,7 @@ export default function Devices() {
   }
 
   if (loading) return <Spinner />
+  if (error) return <p>Error: {error.message}</p>
 
   return (
     <PageContainer>

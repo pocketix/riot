@@ -28,7 +28,7 @@ export default function DevicesPage() {
   const location = useLocation()
 
   if (location.pathname === '/devicesPage') {
-    return <Navigate to="/devicesPage/devices" replace />
+    return <Navigate to="/devicesPage/groups" replace />
   }
 
   return (
@@ -36,10 +36,10 @@ export default function DevicesPage() {
       <Heading>Devices</Heading>
       <TabsContainer>
         <TabSwitcher
-          activeTab={location.pathname.split('/')[2] || 'devices'}
+          activeTab={location.pathname.split('/')[2] || 'groups'}
           tabs={[
-            { name: 'Instances', path: '/devicesPage/devices' },
-            { name: 'Groups', path: '/devicesPage/groups' }
+            { name: 'Groups', path: '/devicesPage/groups' },
+            { name: 'Instances', path: '/devicesPage/devices' }
           ]}
         />
       </TabsContainer>

@@ -38,6 +38,7 @@ const TitleWrapper = styled.div`
   gap: 0.25rem;
   width: 100%;
   justify-content: space-between;
+  min-height: 90px;
 `
 
 const UserIdentifier = styled.h3`
@@ -55,13 +56,6 @@ const Denotation = styled.span`
   font-size: 0.9rem;
   font-weight: 400;
   color: var(--color-grey-500);
-`
-
-const UID = styled.p`
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
 `
 
 const BottomRow = styled.div`
@@ -116,6 +110,10 @@ export default function DeviceCard({
 
   const IconComponent = getIcon(instance.type.icon || 'TbQuestionMark')
 
+  const hasSlashes = instance.uid.includes('/')
+  const uidParts = hasSlashes ? instance.uid.split('/') : []
+  const [showUid, setShowUid] = useState(false)
+
   const handleSave = async () => {
     try {
       await updateUserIdentifierOfSdInstanceMutation({
@@ -167,9 +165,36 @@ export default function DeviceCard({
         )}
       </Header>
 
-      <UID>
-        <strong>UID:</strong> {instance.uid}
-      </UID>
+      <div>
+        <strong>UID:</strong>{' '}
+        {hasSlashes ? (
+          <div className="ml-2 flex flex-col text-sm text-white">
+            {(showUid ? uidParts : uidParts.slice(2, 3)).map((part, index) => (
+              <span key={index}>{part}</span>
+            ))}
+            {uidParts.length > 1 && (
+              <Button variant="link" className="w-fit px-1 text-xs" onClick={() => setShowUid(!showUid)}>
+                {showUid ? 'Hide' : 'Show full UID'}
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="ml-2 flex flex-col text-sm text-white">
+            <span
+              className={`break-words ${showUid ? '' : 'max-w-[200px] cursor-pointer truncate'}`}
+              onClick={() => setShowUid(!showUid)}
+              title={instance.uid}
+            >
+              {showUid ? instance.uid : instance.uid.slice(0, 20) + (instance.uid.length > 20 ? '...' : '')}
+            </span>
+            {instance.uid.length > 20 && (
+              <Button variant="ghost" className="w-fit px-1 text-xs" onClick={() => setShowUid(!showUid)}>
+                {showUid ? 'Hide' : 'Show'}
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
       <BottomRow>
         <Button onClick={() => console.log('Add navigate')}>View Details</Button>
         {!confirmed && onConfirmClick && (
