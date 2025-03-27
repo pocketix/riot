@@ -10,6 +10,8 @@ import DeviceCard from './DeviceCard'
 import { ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables, SdInstancesQuery } from '@/generated/graphql'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useSearchParams } from 'react-router-dom'
+import { X } from 'lucide-react'
+import tw from 'tailwind-styled-components'
 
 const PageContainer = styled.div`
   display: flex;
@@ -46,6 +48,16 @@ const CardGrid = styled.div`
   @media (min-width: ${breakpoints.sm}) {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
+`
+
+const SearchWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: 32rem;
+`
+
+const ClearButton = tw.button`
+  absolute right-2 top-1/2 -translate-y-1/2
 `
 
 export default function Devices() {
@@ -103,12 +115,19 @@ export default function Devices() {
   return (
     <PageContainer>
       <Section>
-        <Input
-          placeholder="Search by UID, User Identifier, or Type..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-lg bg-[--color-grey-200]"
-        />
+        <SearchWrapper>
+          <Input
+            placeholder="Search by UID, User Identifier, or Type..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-[--color-grey-200] pr-10"
+          />
+          {search && (
+            <ClearButton onClick={() => setSearch('')} type="button">
+              <X className="h-5 w-5 text-xl text-[--color-white]" />
+            </ClearButton>
+          )}
+        </SearchWrapper>
       </Section>
 
       <Section>

@@ -19,6 +19,7 @@ import KPIDefinitions from './features/settings/KPIDefinitions/KPIDefinitions'
 import KPIEditor from './features/settings/KPIDefinitions/KPIEditor'
 import NiceModal from '@ebay/nice-modal-react'
 import ProtectedRoute from './utils/ProtectedRoute'
+import MembersDetail from './features/members/MembersDetail'
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
                     <Route index element={<Devices />} />
                   </Route>
                   <Route path="members" element={<Members />} />
+                  <Route path="members/:id" element={<MembersDetail />} />
                   <Route path="automations" element={<Automations />} />
                   <Route path="/settings" element={<Settings />}>
                     <Route path="general" element={<GeneralSettings />} />
