@@ -10,8 +10,8 @@ func ToDBModelEntitySDParameterSnapshot(snapshot dllModel.SDParameterSnapshot, s
 		SDParameterID: sdParameterId,
 		SDInstanceID:  sdInstanceId,
 		UpdatedAt:     snapshot.UpdatedAt,
-		String:        snapshot.String,
-		Boolean:       snapshot.Boolean,
-		Number:        snapshot.Number,
+		String:        snapshot.String.ToPointer(),
+		Boolean:       snapshot.Boolean.ToPointer(),
+		Number:        snapshot.Number.ToPointer(),
 	}
 }

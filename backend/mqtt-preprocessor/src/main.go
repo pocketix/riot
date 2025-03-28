@@ -150,20 +150,21 @@ func processMQTTMessagePayload(mqttMessagePayload []byte, rabbitMQClient rabbitm
 		generateSDInstanceRegistrationRequest(sd.UID, sd.Type, float32(timestamp), rabbitMQClient)
 	case confirmedSDInstance:
 		generateKPIFulfillmentCheckRequest(sd.UID, sd.Type, sd.Parameters, float32(timestamp), rabbitMQClient)
-		generateSDParameterSnapshotsInfoMessage(sd.UID, sd.Parameters.(map[string]any), timestamp, rabbitMQClient)
+		generateSDParameterSnapshotsInfoMessage(sd.UID, sd.Type, sd.Parameters.(map[string]any), timestamp, rabbitMQClient)
 	}
 }
 
-func generateSDParameterSnapshotsInfoMessage(uid string, parameters map[string]any, timestamp float64, rabbitMQClient rabbitmq.Client) {
+func generateSDParameterSnapshotsInfoMessage(uid string, sdType string, parameters map[string]any, timestamp float64, rabbitMQClient rabbitmq.Client) {
 	log.Printf("Sending snapshots %s", uid)
-	var snapshots []sharedModel.SDParameterSnapshot
+	message := sharedModel.SDParameterSnapshotInfoMessage{
+		SDInstanceUID:        uid,
+		SDType:               sdType,
+		UpdatedAt:            timestamp,
+		SDParameterSnapshots: []sharedModel.SDParameterSnapshot{},
+	}
 
 	for parameter, value := range parameters {
-		snapshot := sharedModel.SDParameterSnapshot{
-			SDInstanceUID: uid,
-			SdParameter:   parameter,
-			UpdatedAt:     timestamp,
-		}
+		snapshot := sharedModel.SDParameterSnapshot{SDParameter: parameter}
 
 		switch v := value.(type) {
 		case string:
@@ -177,9 +178,10 @@ func generateSDParameterSnapshotsInfoMessage(uid string, parameters map[string]a
 			snapshot.String = &strValue
 		}
 
-		snapshots = append(snapshots, snapshot)
+		message.SDParameterSnapshots = append(message.SDParameterSnapshots, snapshot)
 	}
-	jsonSerializationResult := sharedUtils.SerializeToJSON(snapshots)
+
+	jsonSerializationResult := sharedUtils.SerializeToJSON(message)
 
 	fmt.Printf("sending snapshot info %s", jsonSerializationResult.GetPayload())
 

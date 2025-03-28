@@ -259,12 +259,12 @@ type SDParameterInput struct {
 }
 
 type SDParameterSnapshot struct {
-	InstanceUID         string   `json:"instanceUid"`
-	ParameterDenotation string   `json:"parameterDenotation"`
-	String              *string  `json:"string,omitempty"`
-	Number              *float64 `json:"number,omitempty"`
-	Boolean             *bool    `json:"boolean,omitempty"`
-	UpdatedAt           string   `json:"updatedAt"`
+	InstanceID  uint32   `json:"instanceId"`
+	ParameterID uint32   `json:"parameterId"`
+	String      *string  `json:"string,omitempty"`
+	Number      *float64 `json:"number,omitempty"`
+	Boolean     *bool    `json:"boolean,omitempty"`
+	UpdatedAt   string   `json:"updatedAt"`
 }
 
 type SDType struct {

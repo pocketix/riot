@@ -78,21 +78,39 @@ func ProcessIncomingSDParameterSnapshotUpdates(parameterSnapshotUpdateSubscripti
 	rabbitMQClient := rabbitmq.NewClient()
 	defer rabbitMQClient.Dispose()
 	consumeParameterSnapshotUpdateJSONMessages(func(parameterSnapshotInfoMessage sharedModel.SDParameterSnapshotInfoMessage) error {
-		for _, snapshot := range parameterSnapshotInfoMessage {
+		SDInstance := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstanceBasedOnUID(parameterSnapshotInfoMessage.SDInstanceUID)
+		SDType := dbClient.GetRelationalDatabaseClientInstance().LoadSDTypeBasedOnDenotation(parameterSnapshotInfoMessage.SDType)
+
+		if SDInstance.IsFailure() || SDType.IsFailure() ||
+			SDInstance.GetPayload().IsEmpty() || SDInstance.GetPayload().GetPayload().ID.IsEmpty() ||
+			SDType.GetPayload().ID.IsEmpty() {
+			log.Printf("Unprocessable entity %s %s\n", parameterSnapshotInfoMessage.SDInstanceUID, parameterSnapshotInfoMessage.SDType)
+		}
+
+		SDInstanceID := SDInstance.GetPayload().GetPayload().ID.GetPayload()
+
+		for _, snapshot := range parameterSnapshotInfoMessage.SDParameterSnapshots {
+			parameter := sharedUtils.FindFirst(SDType.GetPayload().Parameters, func(parameter dllModel.SDParameter) bool {
+				return parameter.Denotation == snapshot.SDParameter
+			})
+
+			if parameter.IsEmpty() {
+				continue
+			}
+
 			dllSnapshot := dllModel.SDParameterSnapshot{
-				SDInstance:  snapshot.SDInstanceUID,
-				SDParameter: snapshot.SdParameter,
-				String:      snapshot.String,
-				Number:      snapshot.Number,
-				Boolean:     snapshot.Boolean,
-				UpdatedAt:   time.Time{},
+				SDInstance:  SDInstanceID,
+				SDParameter: parameter.GetPayload().ID.GetPayload(),
+				String:      sharedUtils.NewOptionalFromPointer(snapshot.String),
+				Number:      sharedUtils.NewOptionalFromPointer(snapshot.Number),
+				Boolean:     sharedUtils.NewOptionalFromPointer(snapshot.Boolean),
+				UpdatedAt:   time.Unix(int64(parameterSnapshotInfoMessage.UpdatedAt), 0),
 			}
 
 			snapshotTuplePersistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDParameterSnapshot(dllSnapshot)
 			if snapshotTuplePersistResult.IsSuccess() {
-				snapshot := dll2gql.ToGraphQLModelSdParameterSnapshot(dllSnapshot)
 				select {
-				case *parameterSnapshotUpdateSubscriptionChannel <- snapshot:
+				case *parameterSnapshotUpdateSubscriptionChannel <- dll2gql.ToGraphQLModelSdParameterSnapshot(dllSnapshot):
 				default:
 				}
 			} else if kpiFulfillmentCheckResultTuplePersistError := snapshotTuplePersistResult.GetError(); !errors.Is(kpiFulfillmentCheckResultTuplePersistError, dbClient.ErrOperationWouldLeadToForeignKeyIntegrityBreach) {

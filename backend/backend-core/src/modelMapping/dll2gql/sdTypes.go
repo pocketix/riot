@@ -26,6 +26,7 @@ func ToGraphQLModelSDType(sdType dllModel.SDType) graphQLModel.SDType {
 					}
 					panic(fmt.Errorf("unpexted model mapping failure – shouldn't happen"))
 				}(sdParameter.Type),
+				ParameterSnapshots: sharedUtils.Map(sdParameter.SDParameterSnapshots, ToGraphQLModelSdParameterSnapshot),
 			}
 		}),
 	}

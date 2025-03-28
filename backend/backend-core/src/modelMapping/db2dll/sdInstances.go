@@ -8,10 +8,11 @@ import (
 
 func ToDLLModelSDInstance(sdInstanceEntity dbModel.SDInstanceEntity) dllModel.SDInstance {
 	return dllModel.SDInstance{
-		ID:              sharedUtils.NewOptionalOf[uint32](sdInstanceEntity.ID),
-		UID:             sdInstanceEntity.UID,
-		ConfirmedByUser: sdInstanceEntity.ConfirmedByUser,
-		UserIdentifier:  sdInstanceEntity.UserIdentifier,
-		SDType:          ToDLLModelSDType(sdInstanceEntity.SDType),
+		ID:                 sharedUtils.NewOptionalOf[uint32](sdInstanceEntity.ID),
+		UID:                sdInstanceEntity.UID,
+		ConfirmedByUser:    sdInstanceEntity.ConfirmedByUser,
+		UserIdentifier:     sdInstanceEntity.UserIdentifier,
+		SDType:             ToDLLModelSDType(sdInstanceEntity.SDType),
+		ParameterSnapshots: sharedUtils.Map(sdInstanceEntity.SDParameterSnapshot, ToDLLModelSDParameterSnapshot),
 	}
 }

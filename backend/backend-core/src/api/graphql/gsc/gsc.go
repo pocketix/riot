@@ -280,8 +280,8 @@ input SDInstanceUpdateInput {
 }
 
 type SDParameterSnapshot {
-  instanceUid: String!
-  parameterDenotation: String!
+  instanceId:  ID!
+  parameterId: ID!
   string:      String
   number:      Float
   boolean:     Boolean
@@ -5579,10 +5579,10 @@ func (ec *executionContext) fieldContext_SDInstance_parameterSnapshots(_ context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "instanceUid":
-				return ec.fieldContext_SDParameterSnapshot_instanceUid(ctx, field)
-			case "parameterDenotation":
-				return ec.fieldContext_SDParameterSnapshot_parameterDenotation(ctx, field)
+			case "instanceId":
+				return ec.fieldContext_SDParameterSnapshot_instanceId(ctx, field)
+			case "parameterId":
+				return ec.fieldContext_SDParameterSnapshot_parameterId(ctx, field)
 			case "string":
 				return ec.fieldContext_SDParameterSnapshot_string(ctx, field)
 			case "number":
@@ -5901,10 +5901,10 @@ func (ec *executionContext) fieldContext_SDParameter_parameterSnapshots(_ contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "instanceUid":
-				return ec.fieldContext_SDParameterSnapshot_instanceUid(ctx, field)
-			case "parameterDenotation":
-				return ec.fieldContext_SDParameterSnapshot_parameterDenotation(ctx, field)
+			case "instanceId":
+				return ec.fieldContext_SDParameterSnapshot_instanceId(ctx, field)
+			case "parameterId":
+				return ec.fieldContext_SDParameterSnapshot_parameterId(ctx, field)
 			case "string":
 				return ec.fieldContext_SDParameterSnapshot_string(ctx, field)
 			case "number":
@@ -5920,8 +5920,8 @@ func (ec *executionContext) fieldContext_SDParameter_parameterSnapshots(_ contex
 	return fc, nil
 }
 
-func (ec *executionContext) _SDParameterSnapshot_instanceUid(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDParameterSnapshot) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SDParameterSnapshot_instanceUid(ctx, field)
+func (ec *executionContext) _SDParameterSnapshot_instanceId(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDParameterSnapshot) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDParameterSnapshot_instanceId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5934,7 +5934,7 @@ func (ec *executionContext) _SDParameterSnapshot_instanceUid(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.InstanceUID, nil
+		return obj.InstanceID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5946,26 +5946,26 @@ func (ec *executionContext) _SDParameterSnapshot_instanceUid(ctx context.Context
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(uint32)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNID2uint32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDParameterSnapshot_instanceUid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDParameterSnapshot_instanceId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDParameterSnapshot",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _SDParameterSnapshot_parameterDenotation(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDParameterSnapshot) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SDParameterSnapshot_parameterDenotation(ctx, field)
+func (ec *executionContext) _SDParameterSnapshot_parameterId(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDParameterSnapshot) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDParameterSnapshot_parameterId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -5978,7 +5978,7 @@ func (ec *executionContext) _SDParameterSnapshot_parameterDenotation(ctx context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ParameterDenotation, nil
+		return obj.ParameterID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5990,19 +5990,19 @@ func (ec *executionContext) _SDParameterSnapshot_parameterDenotation(ctx context
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(uint32)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNID2uint32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDParameterSnapshot_parameterDenotation(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDParameterSnapshot_parameterId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDParameterSnapshot",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6765,10 +6765,10 @@ func (ec *executionContext) fieldContext_Subscription_onSDParameterSnapshotUpdat
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "instanceUid":
-				return ec.fieldContext_SDParameterSnapshot_instanceUid(ctx, field)
-			case "parameterDenotation":
-				return ec.fieldContext_SDParameterSnapshot_parameterDenotation(ctx, field)
+			case "instanceId":
+				return ec.fieldContext_SDParameterSnapshot_instanceId(ctx, field)
+			case "parameterId":
+				return ec.fieldContext_SDParameterSnapshot_parameterId(ctx, field)
 			case "string":
 				return ec.fieldContext_SDParameterSnapshot_string(ctx, field)
 			case "number":
@@ -10676,13 +10676,13 @@ func (ec *executionContext) _SDParameterSnapshot(ctx context.Context, sel ast.Se
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("SDParameterSnapshot")
-		case "instanceUid":
-			out.Values[i] = ec._SDParameterSnapshot_instanceUid(ctx, field, obj)
+		case "instanceId":
+			out.Values[i] = ec._SDParameterSnapshot_instanceId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "parameterDenotation":
-			out.Values[i] = ec._SDParameterSnapshot_parameterDenotation(ctx, field, obj)
+		case "parameterId":
+			out.Values[i] = ec._SDParameterSnapshot_parameterId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

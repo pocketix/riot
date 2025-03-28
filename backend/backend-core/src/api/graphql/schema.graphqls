@@ -44,8 +44,8 @@ input SDInstanceUpdateInput {
 }
 
 type SDParameterSnapshot {
-  instanceUid: String!
-  parameterDenotation: String!
+  instanceId:  ID!
+  parameterId: ID!
   string:      String
   number:      Float
   boolean:     Boolean
