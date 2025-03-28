@@ -676,22 +676,7 @@ func (r *relationalDatabaseClientImpl) PersistSDParameterSnapshot(snapshot dllMo
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	sdInstance := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](r.db, dbUtil.Where("uid = ?", snapshot.SDInstance))
-
-	if sdInstance.IsFailure() {
-		return sharedUtils.NewFailureResult[sharedUtils.Pair[uint32, uint32]](sdInstance.GetError())
-	}
-
-	parameter := dbUtil.LoadEntityFromDB[dbModel.SDParameterEntity](
-		r.db,
-		dbUtil.Where("sd_type_id = ? AND denotation = ?", sdInstance.GetPayload().SDTypeID, snapshot.SDParameter),
-	)
-
-	if parameter.IsFailure() {
-		return sharedUtils.NewFailureResult[sharedUtils.Pair[uint32, uint32]](parameter.GetError())
-	}
-
-	snapshotEntity := dll2db.ToDBModelEntitySDParameterSnapshot(snapshot, sdInstance.GetPayload().ID, parameter.GetPayload().ID)
+	snapshotEntity := dll2db.ToDBModelEntitySDParameterSnapshot(snapshot, snapshot.SDInstance, snapshot.SDParameter)
 
 	if err := dbUtil.PersistEntityIntoDB(r.db, &snapshotEntity); err != nil {
 		return sharedUtils.NewFailureResult[sharedUtils.Pair[uint32, uint32]](err)

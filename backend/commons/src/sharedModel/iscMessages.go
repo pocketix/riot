@@ -40,12 +40,15 @@ type ReadRequestResponseOrError struct {
 }
 
 type SDParameterSnapshot struct {
-	SDInstanceUID string   `json:"sdInstanceUID"`
-	SdParameter   string   `json:"sdParameter"`
-	String        *string  `json:"string,omitempty"`
-	Number        *float64 `json:"number,omitempty"`
-	Boolean       *bool    `json:"boolean,omitempty"`
-	UpdatedAt     float64  `json:"updatedAt"`
+	SDParameter string   `json:"sdParameter"`
+	String      *string  `json:"string,omitempty"`
+	Number      *float64 `json:"number,omitempty"`
+	Boolean     *bool    `json:"boolean,omitempty"`
 }
 
-type SDParameterSnapshotInfoMessage []SDParameterSnapshot
+type SDParameterSnapshotInfoMessage struct {
+	SDInstanceUID        string                `json:"sdInstanceUID"`
+	SDType               string                `json:"sdType"`
+	UpdatedAt            float64               `json:"updatedAt"`
+	SDParameterSnapshots []SDParameterSnapshot `json:"snapshots"`
+}

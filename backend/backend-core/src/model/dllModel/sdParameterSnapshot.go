@@ -1,14 +1,15 @@
 package dllModel
 
 import (
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"time"
 )
 
 type SDParameterSnapshot struct {
-	SDInstance  string
-	SDParameter string
-	String      *string
-	Number      *float64
-	Boolean     *bool
+	SDInstance  uint32
+	SDParameter uint32
+	String      sharedUtils.Optional[string]
+	Number      sharedUtils.Optional[float64]
+	Boolean     sharedUtils.Optional[bool]
 	UpdatedAt   time.Time
 }

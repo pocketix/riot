@@ -8,11 +8,11 @@ import (
 
 func ToGraphQLModelSdParameterSnapshot(parameterSnapshot dllModel.SDParameterSnapshot) graphQLModel.SDParameterSnapshot {
 	return graphQLModel.SDParameterSnapshot{
-		InstanceUID:         parameterSnapshot.SDInstance,
-		ParameterDenotation: parameterSnapshot.SDParameter,
-		String:              parameterSnapshot.String,
-		Number:              parameterSnapshot.Number,
-		Boolean:             parameterSnapshot.Boolean,
-		UpdatedAt:           parameterSnapshot.UpdatedAt.Format(time.RFC3339),
+		InstanceID:  parameterSnapshot.SDInstance,
+		ParameterID: parameterSnapshot.SDParameter,
+		String:      parameterSnapshot.String.ToPointer(),
+		Number:      parameterSnapshot.Number.ToPointer(),
+		Boolean:     parameterSnapshot.Boolean.ToPointer(),
+		UpdatedAt:   parameterSnapshot.UpdatedAt.Format(time.RFC3339),
 	}
 }
