@@ -10,10 +10,13 @@ func ToDBModelEntitySDType(sdType dllModel.SDType) dbModel.SDTypeEntity {
 	return dbModel.SDTypeEntity{
 		ID:         sdType.ID.GetPayloadOrDefault(0),
 		Denotation: sdType.Denotation,
+		Label:      sdType.Label.GetPayloadOrDefault(""),
+		Icon:       sdType.Icon.GetPayloadOrDefault(""),
 		Parameters: sharedUtils.Map(sdType.Parameters, func(sdParameter dllModel.SDParameter) dbModel.SDParameterEntity {
 			return dbModel.SDParameterEntity{
 				ID:         sdParameter.ID.GetPayloadOrDefault(0),
 				Denotation: sdParameter.Denotation,
+				Label:      sdParameter.Label.GetPayloadOrDefault(""),
 				Type:       string(sdParameter.Type),
 			}
 		}),

@@ -9,23 +9,51 @@ enum SDParameterType {
 type SDParameter {
   id: ID!
   denotation: String!
+  label: String
   type: SDParameterType!
 }
 
 type SDType {
   id: ID!
   denotation: String!
+  label: String
+  icon: String
   parameters: [SDParameter!]!
 }
 
 input SDParameterInput {
   denotation: String!
+  label: String
   type: SDParameterType!
 }
 
 input SDTypeInput {
   denotation: String!
+  label: String
+  icon: String
   parameters: [SDParameterInput!]!
+}
+
+type SDCommand {
+  id: ID!
+  name: String!
+  description: String
+  sdTypeId: ID!
+}
+
+input SDCommandInput {
+  name: String!
+  description: String
+  sdTypeId: ID!
+}
+
+type SDCommandInvocation {
+  id: ID!
+  invocationTime: String!
+  payload: String!
+  userId: ID!
+  commandId: ID!
+  sdInstanceId: ID!
 }
 
 type SDInstance {
@@ -34,11 +62,20 @@ type SDInstance {
   confirmedByUser: Boolean!
   userIdentifier: String!
   type: SDType!
+  commandInvocations: [SDCommandInvocation!]!
 }
 
 input SDInstanceUpdateInput {
   userIdentifier: String
   confirmedByUser: Boolean
+}
+
+input SDCommandInvocationInput {
+  invocationTime: String!
+  payload: String!
+  userId: ID!
+  commandId: ID!
+  sdInstanceId: ID!
 }
 
 # ----- KPI definitions and nodes -----
@@ -315,6 +352,10 @@ type Query {
   statisticsQuerySimpleSensors(request: StatisticsInput sensors: SimpleSensors!): [OutputData!]!
   statisticsQuerySensorsWithFields(request: StatisticsInput sensors: SensorsWithFields!): [OutputData!]!
   userConfig(id: ID!): UserConfig!
+  sdCommand(id: ID!): SDCommand! # Returns a specific SDCommand by its ID
+  sdCommands: [SDCommand!]! # Returns all SDCommands
+  sdCommandInvocation(id: ID!): SDCommandInvocation! # Returns a specific SDCommandInvocation
+  sdCommandInvocations: [SDCommandInvocation!]! # Returns all SDCommandInvocations
 }
 
 type Mutation {
@@ -330,9 +371,15 @@ type Mutation {
   statisticsMutate(inputData: InputData!): Boolean!
   updateUserConfig(userId: ID!, input: UserConfigInput!): UserConfig!
   deleteUserConfig(userId: ID!): Boolean!
+  createSDCommand(input: SDCommandInput!): SDCommand! # Creating a command
+  updateSDCommand(id: ID!, name: String, description: String): SDCommand! # Updating a command
+  deleteSDCommand(id: ID!): Boolean! # Deleting a command
+  createSDCommandInvocation(input: SDCommandInvocationInput!): SDCommandInvocation! # Creating an invocation
+  invokeSDCommand(id: ID!): Boolean! # Starting an existing invocation
 }
 
 type Subscription {
   onSDInstanceRegistered: SDInstance!
   onKPIFulfillmentChecked: KPIFulfillmentCheckResultTuple!
+  commandInvocationStateChanged: SDCommandInvocation! # Subscription for command state changes
 }
