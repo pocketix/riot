@@ -482,6 +482,7 @@ func (r *relationalDatabaseClientImpl) LoadSDInstances() sharedUtils.Result[[]dl
 	sdInstanceEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDInstanceEntity](
 		r.db,
 		dbUtil.Preload("SDType"),
+		dbUtil.Preload("SDType.Parameters"),
 		dbUtil.Preload("SDParameterSnapshot"),
 	)
 	if sdInstanceEntitiesLoadResult.IsFailure() {
