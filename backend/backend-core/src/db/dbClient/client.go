@@ -252,7 +252,11 @@ func (r *relationalDatabaseClientImpl) PersistSDType(sdType dllModel.SDType) sha
 }
 
 func loadSDType(g *gorm.DB, whereClause dbUtil.WhereClause) sharedUtils.Result[dllModel.SDType] {
-	sdTypeEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDTypeEntity](g, dbUtil.Preload("Parameters"), whereClause)
+	sdTypeEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDTypeEntity](g,
+		dbUtil.Preload("Parameters"),
+		dbUtil.Preload("Parameters.SDParameterSnapshot"),
+		whereClause,
+	)
 	if sdTypeEntityLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[dllModel.SDType](sdTypeEntityLoadResult.GetError())
 	}
@@ -274,7 +278,10 @@ func (r *relationalDatabaseClientImpl) LoadSDTypeBasedOnDenotation(denotation st
 func (r *relationalDatabaseClientImpl) LoadSDTypes() sharedUtils.Result[[]dllModel.SDType] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	sdTypeEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDTypeEntity](r.db, dbUtil.Preload("Parameters"))
+	sdTypeEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDTypeEntity](r.db,
+		dbUtil.Preload("Parameters"),
+		dbUtil.Preload("Parameters.SDParameterSnapshot"),
+	)
 	if sdTypeEntitiesLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[[]dllModel.SDType](sdTypeEntitiesLoadResult.GetError())
 	}
