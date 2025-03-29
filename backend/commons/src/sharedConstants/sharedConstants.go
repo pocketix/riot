@@ -11,4 +11,5 @@ const (
 	TimeSeriesStoreDataQueueName                          = "time-series-store-data"
 	TimeSeriesReadRequestQueueName                        = "time-series-read-request"
 	TimeSeriesReadRequestBackendCoreResponseQueueName     = "time-series-read-request-backend-core-response"
+	SDCurrentSnapshotsInfoQueueName                       = "device-current-snapshots-info"
 )

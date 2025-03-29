@@ -273,6 +273,10 @@ func (r *subscriptionResolver) OnKPIFulfillmentChecked(ctx context.Context) (<-c
 	return KPIFulfillmentCheckResulTupleGraphQLSubscriptionChannel, nil
 }
 
+func (r *subscriptionResolver) OnSDParameterSnapshotUpdate(ctx context.Context) (<-chan graphQLModel.SDParameterSnapshot, error) {
+	return SDParameterSnapshotUpdateSubscriptionChannel, nil
+}
+
 func (r *subscriptionResolver) CommandInvocationStateChanged(ctx context.Context) (<-chan graphQLModel.SDCommandInvocation, error) {
 	panic(fmt.Errorf("not implemented: CommandInvocationStateChanged - commandInvocationStateChanged"))
 }

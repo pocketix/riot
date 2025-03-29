@@ -22,6 +22,7 @@ func SetupRabbitMQInfrastructureForISC(rabbitMQClient rabbitmq.Client) {
 		sharedConstants.TimeSeriesStoreDataQueueName,
 		sharedConstants.TimeSeriesReadRequestQueueName,
 		sharedConstants.TimeSeriesReadRequestBackendCoreResponseQueueName,
+		sharedConstants.SDCurrentSnapshotsInfoQueueName,
 	)
 	sharedUtils.ForEach(namesOfQueuesToDeclare, func(nameOfQueuesToDeclare string) {
 		sharedUtils.TerminateOnError(rabbitMQClient.DeclareQueue(nameOfQueuesToDeclare), getQueueDeclarationErrorMessage(nameOfQueuesToDeclare))

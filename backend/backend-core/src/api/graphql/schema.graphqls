@@ -11,6 +11,7 @@ type SDParameter {
   denotation: String!
   label: String
   type: SDParameterType!
+  parameterSnapshots: [SDParameterSnapshot!]!
 }
 
 type SDType {
@@ -62,12 +63,22 @@ type SDInstance {
   confirmedByUser: Boolean!
   userIdentifier: String!
   type: SDType!
+  parameterSnapshots: [SDParameterSnapshot!]
   commandInvocations: [SDCommandInvocation!]!
 }
 
 input SDInstanceUpdateInput {
   userIdentifier: String
   confirmedByUser: Boolean
+}
+
+type SDParameterSnapshot {
+  instanceId:  ID!
+  parameterId: ID!
+  string:      String
+  number:      Float
+  boolean:     Boolean
+  updatedAt:   Date!
 }
 
 input SDCommandInvocationInput {
@@ -381,5 +392,6 @@ type Mutation {
 type Subscription {
   onSDInstanceRegistered: SDInstance!
   onKPIFulfillmentChecked: KPIFulfillmentCheckResultTuple!
+  onSDParameterSnapshotUpdate: SDParameterSnapshot!
   commandInvocationStateChanged: SDCommandInvocation! # Subscription for command state changes
 }

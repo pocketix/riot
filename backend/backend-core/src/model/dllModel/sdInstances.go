@@ -8,6 +8,7 @@ type SDInstance struct {
 	ConfirmedByUser    bool
 	UserIdentifier     string
 	SDType             SDType
+	ParameterSnapshots []SDParameterSnapshot
 	CommandInvocations []SDCommandInvocation
 }
 

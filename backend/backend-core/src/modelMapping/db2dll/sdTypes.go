@@ -29,6 +29,7 @@ func ToDLLModelSDType(sdTypeEntity dbModel.SDTypeEntity) dllModel.SDType {
 					}
 					panic(fmt.Errorf("unpexted model mapping failure – shouldn't happen"))
 				}(sdParameterEntity.Type),
+				SDParameterSnapshots: sharedUtils.Map(sdParameterEntity.SDParameterSnapshot, ToDLLModelSDParameterSnapshot),
 			}
 		}),
 	}

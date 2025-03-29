@@ -11,10 +11,11 @@ const (
 )
 
 type SDParameter struct {
-	ID         sharedUtils.Optional[uint32]
-	Denotation string
+	ID                   sharedUtils.Optional[uint32]
+	Denotation           string
 	Label      sharedUtils.Optional[string]
-	Type       SDParameterType
+	Type                 SDParameterType
+	SDParameterSnapshots []SDParameterSnapshot
 }
 
 type SDType struct {
