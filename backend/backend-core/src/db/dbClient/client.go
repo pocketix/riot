@@ -452,8 +452,9 @@ func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) sharedUtils.Res
 	defer r.mu.Unlock()
 	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](
 		r.db,
-		dbUtil.Preload("SDType"), dbUtil.Where("id = ?", id),
-		dbUtil.Preload("SDParameterSnapshot"), dbUtil.Where("sd_instance_id = ?", id),
+		dbUtil.Preload("SDType"),
+		dbUtil.Preload("SDParameterSnapshot"),
+		dbUtil.Where("id = ?", id),
 	)
 	if sdInstanceEntityLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[dllModel.SDInstance](sdInstanceEntityLoadResult.GetError())
