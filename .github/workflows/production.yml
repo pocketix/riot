@@ -26,14 +26,13 @@ jobs:
           echo "GIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
           echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
           echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
-          echo "PLATFORMS_AS_ARRAY=$(echo $PLATFORMS | sed "s/,/ /g");" >> $GITHUB_ENV
 
       - name: Build Backend Microservice - Backend Core
         run: |
           docker buildx build --platform $PLATFORMS --push -t $IMAGE -f ./backend/backend-core/Dockerfile ./backend
           
-          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE:latest $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
-          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE:latest $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
+          for i in $(echo $PLATFORMS | sed "s/,/ /g"); do ~/regctl image copy $IMAGE:latest $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
+          for i in $(echo $PLATFORMS | sed "s/,/ /g"); do ~/regctl image copy $IMAGE:latest $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
           
           echo "Done $IMAGE"
         env:
@@ -43,8 +42,8 @@ jobs:
         run: |
           docker buildx build --platform $PLATFORMS --push -t $IMAGE -f ./backend/mqtt-preprocessor/Dockerfile ./backend
           
-          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE:latest $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
-          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE:latest $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
+          for i in $(echo $PLATFORMS | sed "s/,/ /g"); do ~/regctl image copy $IMAGE:latest $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
+          for i in $(echo $PLATFORMS | sed "s/,/ /g"); do ~/regctl image copy $IMAGE:latest $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
           
           echo "Done $IMAGE"
         env:
@@ -54,8 +53,8 @@ jobs:
         run: |
           docker buildx build --platform $PLATFORMS --push -t $IMAGE -f ./backend/time-series-store/Dockerfile ./backend
           
-          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE:latest $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
-          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE:latest $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
+          for i in $(echo $PLATFORMS | sed "s/,/ /g"); do ~/regctl image copy $IMAGE:latest $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
+          for i in $(echo $PLATFORMS | sed "s/,/ /g"); do ~/regctl image copy $IMAGE:latest $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
           
           echo "Done $IMAGE"
         env:
@@ -65,8 +64,8 @@ jobs:
         run: |
           docker buildx build --platform $PLATFORMS --push -t $IMAGE -f ./backend/message-processing-unit/Dockerfile ./backend
           
-          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE:latest $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
-          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE:latest $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
+          for i in $(echo $PLATFORMS | sed "s/,/ /g"); do ~/regctl image copy $IMAGE:latest $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
+          for i in $(echo $PLATFORMS | sed "s/,/ /g"); do ~/regctl image copy $IMAGE:latest $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
           
           echo "Done $IMAGE"
         env:
