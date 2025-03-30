@@ -28,16 +28,6 @@ jobs:
           echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
           echo "PLATFORMS_AS_ARRAY=$(echo $PLATFORMS_TO_BUILD_FOR | sed "s/,/ /g");" >> $GITHUB_ENV
 
-      - name: Build Frontend
-        run: |
-          export IMAGE=dexter.fit.vutbr.cz/riot/frontend
-          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f ./frontend/Dockerfile ./frontend
-          
-          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$GIT_HASH) $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
-          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$CURRENT_DATE) $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
-          
-          echo "Done $IMAGE"
-
       - name: Build Backend Microservice - Backend Core
         run: |
           export IMAGE=dexter.fit.vutbr.cz/riot/backend
