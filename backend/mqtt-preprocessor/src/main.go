@@ -183,8 +183,6 @@ func generateSDParameterSnapshotsInfoMessage(uid string, sdType string, paramete
 
 	jsonSerializationResult := sharedUtils.SerializeToJSON(message)
 
-	fmt.Printf("sending snapshot info %s", jsonSerializationResult.GetPayload())
-
 	err := rabbitMQClient.PublishJSONMessage(
 		sharedUtils.NewEmptyOptional[string](),
 		sharedUtils.NewOptionalOf(sharedConstants.SDCurrentSnapshotsInfoQueueName),
