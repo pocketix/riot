@@ -1,0 +1,79 @@
+# This is a basic workflow to help you get started with Actions
+
+name: "Build and Deploy Production"
+
+# Controls when the workflow will run
+on:
+  #push:
+  #  branches: [ "main" ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: self-hosted
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      - name: Set GIT_HASH and CURRENT_DATE variables
+        run: |
+          echo "GIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+          echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
+          echo "PLATFORMS_AS_ARRAY=$(echo $PLATFORMS_TO_BUILD_FOR | sed "s/,/ /g");" >> $GITHUB_ENV
+
+      - name: Build Frontend
+        run: |
+          export IMAGE=dexter.fit.vutbr.cz/riot/frontend
+          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f ./frontend/Dockerfile ./frontend
+          
+          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$GIT_HASH) $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
+          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$CURRENT_DATE) $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
+          
+          echo "Done $IMAGE"
+
+      - name: Build Backend Microservice - Backend Core
+        run: |
+          export IMAGE=dexter.fit.vutbr.cz/riot/backend
+          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f .\backend-core\Dockerfile .
+          
+          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$GIT_HASH) $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
+          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$CURRENT_DATE) $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
+          
+          echo "Done $IMAGE"
+
+      - name: Build Backend Microservice - MQTT Preprocessor
+        run: |
+          export IMAGE=dexter.fit.vutbr.cz/riot/preprocessor
+          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f .\mqtt-preprocessor\Dockerfile .
+          
+          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$GIT_HASH) $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
+          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$CURRENT_DATE) $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
+          
+          echo "Done $IMAGE"
+
+      - name: Build Backend Microservice - Time Series Store
+        run: |
+          export IMAGE=dexter.fit.vutbr.cz/riot/time-series-store
+          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f .\time-series-store\Dockerfile .
+          
+          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$GIT_HASH) $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
+          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$CURRENT_DATE) $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
+          
+          echo "Done $IMAGE"
+
+      - name: Build Backend Microservice - Message Processing Unit
+        run: |
+          export IMAGE=dexter.fit.vutbr.cz/riot/mpu
+          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f .\message-processing-unit\Dockerfile .
+          
+          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$GIT_HASH) $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
+          for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$CURRENT_DATE) $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
+          
+          echo "Done $IMAGE"
