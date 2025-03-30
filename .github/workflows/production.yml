@@ -30,7 +30,7 @@ jobs:
 
       - name: Build Backend Microservice - Backend Core
         run: |
-          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f backend-core/Dockerfile .
+          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f ./backend/backend-core/Dockerfile ./backend
           
           for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$GIT_HASH) $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
           for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$CURRENT_DATE) $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
@@ -41,7 +41,7 @@ jobs:
 
       - name: Build Backend Microservice - MQTT Preprocessor
         run: |
-          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f mqtt-preprocessor/Dockerfile .
+          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f ./backend/mqtt-preprocessor/Dockerfile ./backend
           
           for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$GIT_HASH) $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
           for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$CURRENT_DATE) $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build Backend Microservice - Time Series Store
         run: |
-          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f time-series-store/Dockerfile .
+          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f ./backend/time-series-store/Dockerfile ./backend
           
           for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$GIT_HASH) $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
           for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$CURRENT_DATE) $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
@@ -63,7 +63,7 @@ jobs:
 
       - name: Build Backend Microservice - Message Processing Unit
         run: |
-          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f message-processing-unit/Dockerfile .
+          docker buildx build --platform $PLATFORMS --push -t $IMAGE -f ./backend/message-processing-unit/Dockerfile ./backend
           
           for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$GIT_HASH) $IMAGE:$GIT_HASH-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$GIT_HASH" "-" "$i"; done
           for i in $PLATFORMS_AS_ARRAY; do ~/regctl image copy $IMAGE@$(~/regctl image digest --platform "$i" $IMAGE:$CURRENT_DATE) $IMAGE:$CURRENT_DATE-"$(echo "$i" | tr / -)"; echo "Re-tagging image " "$i" " as " "$CURRENT_DATE" "-" "$i"; done
