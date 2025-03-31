@@ -119,7 +119,7 @@ export default function Devices() {
     }
   }
 
-  if (loading) return <Spinner />
+  // if (loading) return <Spinner />
   if (error) return <p>Error: {error.message}</p>
 
   return (
@@ -137,69 +137,75 @@ export default function Devices() {
           />
         </TabsContainer>
       </div>
-      {/* Search */}
-      <Section>
-        <SearchWrapper>
-          <Input
-            placeholder={t('devicesPage.searchPlaceholder')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[--color-grey-200] pr-10"
-          />
-          {search && (
-            <ClearButton onClick={() => setSearch('')} type="button">
-              <X className="h-5 w-5 text-xl text-[--color-white]" />
-            </ClearButton>
-          )}
-        </SearchWrapper>
-      </Section>
-
-      {/* Confirmed */}
-      <Section>
-        <h2 className="w-full text-xl font-bold">{t('devicesPage.confirmedInstances')}</h2>
-        <CardGrid>
-          {confirmed.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[--color-grey-300] p-6 text-center text-[--color-grey-500]">
-              <p className="text-base font-medium">{t('devicesPage.noConfirmed')}</p>
-            </div>
-          ) : (
-            confirmed.map((instance) => <DeviceCard key={instance.id} instance={instance} confirmed />)
-          )}
-        </CardGrid>
-      </Section>
-
-      {/* Unconfirmed */}
-      <Section>
-        <div className="flex w-full items-center justify-between">
-          <h2 className="text-xl font-bold">{t('devicesPage.unconfirmedInstances')}</h2>
-          {selectedIds.length > 0 && (
-            <Button onClick={handleBatchConfirm} disabled={confirming}>
-              {t('devicesPage.confirmSelected', { count: selectedIds.length })}
-            </Button>
-          )}
-        </div>
-        <CardGrid>
-          {unconfirmed.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[--color-grey-300] p-6 text-center text-[--color-grey-500]">
-              <p className="text-base font-medium">{t('devicesPage.noUnconfirmed')}</p>
-            </div>
-          ) : (
-            unconfirmed.map((instance) => (
-              <DeviceCard
-                key={instance.id}
-                instance={instance}
-                confirmed={false}
-                selected={selectedIds.includes(instance.id)}
-                onSelectChange={(selected) => toggleSelection(instance.id, selected)}
-                onConfirmClick={async () => {
-                  await confirmMutation({ variables: { id: instance.id } })
-                  await refetch()
-                }}
+      {loading ? (
+        <Spinner />
+      ) : (
+        <>
+          {/* Search */}
+          <Section>
+            <SearchWrapper>
+              <Input
+                placeholder={t('devicesPage.searchPlaceholder')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-[--color-grey-200] pr-10"
               />
-            ))
-          )}
-        </CardGrid>
-      </Section>
+              {search && (
+                <ClearButton onClick={() => setSearch('')} type="button">
+                  <X className="h-5 w-5 text-xl text-[--color-white]" />
+                </ClearButton>
+              )}
+            </SearchWrapper>
+          </Section>
+
+          {/* Confirmed */}
+          <Section>
+            <h2 className="w-full text-xl font-bold">{t('devicesPage.confirmedInstances')}</h2>
+            <CardGrid>
+              {confirmed.length === 0 ? (
+                <div className="col-span-full flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[--color-grey-300] p-6 text-center text-[--color-grey-500]">
+                  <p className="text-base font-medium">{t('devicesPage.noConfirmed')}</p>
+                </div>
+              ) : (
+                confirmed.map((instance) => <DeviceCard key={instance.id} instance={instance} confirmed />)
+              )}
+            </CardGrid>
+          </Section>
+
+          {/* Unconfirmed */}
+          <Section>
+            <div className="flex w-full items-center justify-between">
+              <h2 className="text-xl font-bold">{t('devicesPage.unconfirmedInstances')}</h2>
+              {selectedIds.length > 0 && (
+                <Button onClick={handleBatchConfirm} disabled={confirming}>
+                  {t('devicesPage.confirmSelected', { count: selectedIds.length })}
+                </Button>
+              )}
+            </div>
+            <CardGrid>
+              {unconfirmed.length === 0 ? (
+                <div className="col-span-full flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[--color-grey-300] p-6 text-center text-[--color-grey-500]">
+                  <p className="text-base font-medium">{t('devicesPage.noUnconfirmed')}</p>
+                </div>
+              ) : (
+                unconfirmed.map((instance) => (
+                  <DeviceCard
+                    key={instance.id}
+                    instance={instance}
+                    confirmed={false}
+                    selected={selectedIds.includes(instance.id)}
+                    onSelectChange={(selected) => toggleSelection(instance.id, selected)}
+                    onConfirmClick={async () => {
+                      await confirmMutation({ variables: { id: instance.id } })
+                      await refetch()
+                    }}
+                  />
+                ))
+              )}
+            </CardGrid>
+          </Section>
+        </>
+      )}
     </PageWrapper>
   )
 }

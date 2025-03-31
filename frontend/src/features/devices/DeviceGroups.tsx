@@ -45,7 +45,7 @@ export default function DeviceGroups() {
       </div>
 
       {/* Content goes here */}
-      <div className="mt-4 text-lg text-[--color-grey-500]">This is the layout for Device Groups</div>
+      <div className="mt-4 text-lg text-[--color-grey-500]">Device Groups</div>
     </StyledPage>
   )
 }
