@@ -10,7 +10,20 @@ export const entityCardSchema = z.object({
         .object({
           name: z.string().min(1, { message: 'Row name is required' }),
           instance: z.object({
-            uid: z.string().min(1, { message: 'Instance is required' })
+            uid: z.string().min(1, { message: 'Instance is required' }),
+            id: z.number().min(0, { message: 'Instance ID is required' }).nullable().superRefine((data, ctx) => {
+              if (data === null) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.invalid_type,
+                  expected: 'number',
+                  received: 'null',
+                  message: 'Instance ID is required'
+                })
+                return z.NEVER
+              }
+              return data
+            }
+            )
           }),
           parameter: z.object({
             id: z
