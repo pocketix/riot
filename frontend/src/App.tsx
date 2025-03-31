@@ -12,7 +12,6 @@ import PersonalInfoSettings from './features/settings/PersonalInfoSettings'
 import DeviceTypesSettings from './features/settings/DeviceTypes/DeviceTypesSettings'
 import DeviceTypeDetail from './features/settings/DeviceTypes/DeviceTypeDetail'
 import Login from './pages/Login'
-import DevicesPage from './pages/DevicesPage'
 import Devices from './features/devices/Devices'
 import DeviceGroups from './features/devices/DeviceGroups'
 import KPIDefinitions from './features/settings/KPIDefinitions/KPIDefinitions'
@@ -31,11 +30,8 @@ export default function App() {
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
                   <Route index element={<Dashboard />} />
-                  <Route path="/devicesPage" element={<DevicesPage />}>
-                    <Route path="devices" element={<Devices />} />
-                    <Route path="groups" element={<DeviceGroups />} />
-                    <Route index element={<Devices />} />
-                  </Route>
+                  <Route path="/devices" element={<Devices />} />
+                  <Route path="/groups" element={<DeviceGroups />} />
                   <Route path="members" element={<Members />} />
                   <Route path="members/:id" element={<MembersDetail />} />
                   <Route path="automations" element={<Automations />} />

@@ -68,7 +68,9 @@
     "searchPlaceholder": "Hledat podle UID, identifikátoru uživatele nebo typu...",
     "confirmedInstances": "Potvrzené instance",
     "unconfirmedInstances": "Nepotvrzené instance",
-    "confirmSelected": "Potvrdit vybrané ({{count}})"
+    "confirmSelected": "Potvrdit vybrané ({{count}})",
+    "noConfirmed": "Žádné potvrzené zařízení.",
+    "noUnconfirmed": "Žádné nepotvrzené zařízení."
   },
   "membersPage": {
     "title": "Uživatelé",
