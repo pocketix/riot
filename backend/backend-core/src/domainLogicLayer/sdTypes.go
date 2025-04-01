@@ -19,6 +19,19 @@ func CreateSDType(sdTypeInput graphQLModel.SDTypeInput) sharedUtils.Result[graph
 	return sharedUtils.NewSuccessResult[graphQLModel.SDType](dll2gql.ToGraphQLModelSDType(persistResult.GetPayload()))
 }
 
+func UpdateSDType(id uint32, sdTypeInput graphQLModel.SDTypeInput) sharedUtils.Result[graphQLModel.SDType] {
+	sdType := gql2dll.ToDLLModelSDType(sdTypeInput)
+
+	sdType.ID = sharedUtils.NewOptionalOf(id)
+
+	persistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDType(sdType)
+	if persistResult.IsFailure() {
+		return sharedUtils.NewFailureResult[graphQLModel.SDType](persistResult.GetError())
+	}
+	isc.EnqueueMessageRepresentingCurrentSDTypeConfiguration(getDLLRabbitMQClient())
+	return sharedUtils.NewSuccessResult[graphQLModel.SDType](dll2gql.ToGraphQLModelSDType(persistResult.GetPayload()))
+}
+
 func DeleteSDType(id uint32) error {
 	if err := dbClient.GetRelationalDatabaseClientInstance().DeleteSDType(id); err != nil {
 		return err

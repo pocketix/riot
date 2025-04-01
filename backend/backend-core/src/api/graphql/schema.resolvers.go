@@ -26,6 +26,14 @@ func (r *mutationResolver) DeleteSDType(ctx context.Context, id uint32) (bool, e
 	return true, nil
 }
 
+func (r *mutationResolver) UpdateSDType(ctx context.Context, id uint32, input graphQLModel.SDTypeInput) (graphQLModel.SDType, error) {
+	updateSDTypeResult := domainLogicLayer.UpdateSDType(id, input)
+	if updateSDTypeResult.IsFailure() {
+		log.Printf("Error occurred (update SD type): %s\n", updateSDTypeResult.GetError().Error())
+	}
+	return updateSDTypeResult.Unwrap()
+}
+
 func (r *mutationResolver) UpdateSDInstance(ctx context.Context, id uint32, input graphQLModel.SDInstanceUpdateInput) (graphQLModel.SDInstance, error) {
 	updateSDInstanceResult := domainLogicLayer.UpdateSDInstance(id, input)
 	if updateSDInstanceResult.IsFailure() {
