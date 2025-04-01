@@ -1,3 +1,3 @@
 export default function Automations() {
-  return <div>Automations</div>
+  return <vpl-editor></vpl-editor>
 }

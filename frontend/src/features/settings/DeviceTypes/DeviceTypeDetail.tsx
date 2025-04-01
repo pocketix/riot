@@ -2,7 +2,15 @@ import { useMemo, useState } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@apollo/client'
 import { GET_PARAMETERS } from '@/graphql/Queries'
-import { CreateSdTypeMutation, CreateSdTypeMutationVariables, DeleteSdTypeMutation, DeleteSdTypeMutationVariables, SdParameterType, SdTypeQuery, SdTypeQueryVariables } from '@/generated/graphql'
+import {
+  CreateSdTypeMutation,
+  CreateSdTypeMutationVariables,
+  DeleteSdTypeMutation,
+  DeleteSdTypeMutationVariables,
+  SdParameterType,
+  SdTypeQuery,
+  SdTypeQueryVariables
+} from '@/generated/graphql'
 import Spinner from '@/ui/Spinner'
 import styled from 'styled-components'
 import { Button } from '@/components/ui/button'
@@ -17,6 +25,7 @@ import { breakpoints } from '@/styles/Breakpoints'
 import { CREATE_DEVICE_TYPE, DELETE_DEVICE_TYPE } from '@/graphql/Mutations'
 import DeleteConfirmationModal from '@/ui/DeleteConfirmationModal'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 
 const PageContainer = styled.form`
   display: flex;
@@ -31,14 +40,21 @@ const PageContainer = styled.form`
 
 const Header = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 1rem;
   background: var(--color-grey-400);
   padding: 1rem;
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
   box-shadow: 0px 2px 6px var(--color-grey-200);
   min-height: 100px;
+
+  @media (min-width: ${breakpoints.sm}) {
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+    gap: 0;
+  }
 `
 
 const TitleWrapper = styled.div`
@@ -48,27 +64,42 @@ const TitleWrapper = styled.div`
 `
 
 const Title = styled.h2`
-  font-size: 1.8rem;
+  font-size: 1.2rem;
   font-weight: 600;
+
+  @media (min-width: ${breakpoints.sm}) {
+    font-size: 1.8rem;
+  }
 `
 
 const IconWrapper = styled.div`
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   aspect-ratio: 1/1;
   background: var(--color-grey-200);
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 2rem;
+  font-size: 1.8rem;
+
+  @media (min-width: ${breakpoints.sm}) {
+    width: 50px;
+    height: 50px;
+    font-size: 2rem;
+  }
 `
 
 const TableItem = styled.div`
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--color-white);
-  padding-left: 2rem;
+  padding-left: 1rem;
+
+  @media (min-width: ${breakpoints.sm}) {
+    font-size: 1.2rem;
+    padding-left: 2rem;
+  }
 `
 
 const ParametersContainer = styled.div`
@@ -121,6 +152,7 @@ const ParamCell = styled.div`
 `
 
 export default function DeviceTypeDetail() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const sdTypeId = id ? Number(id) : null
@@ -149,7 +181,6 @@ export default function DeviceTypeDetail() {
     mode: 'onSubmit'
   })
 
-  // Fetch data and update form state dynamically
   const { loading, error } = useQuery<SdTypeQuery, SdTypeQueryVariables>(GET_PARAMETERS, {
     variables: { sdTypeId: sdTypeId! },
     skip: !sdTypeId || isAddingNew,
@@ -181,8 +212,6 @@ export default function DeviceTypeDetail() {
   const onSubmit = async (data: any) => {
     try {
       if (isAddingNew) {
-        console.log('Creating:', data)
-
         const response = await createSDTypeMutation({
           variables: {
             input: {
@@ -198,30 +227,25 @@ export default function DeviceTypeDetail() {
           }
         })
 
-        // Get the newly created ID
         const newId = response?.data?.createSDType?.id
-
         if (newId) {
-          toast.success('Device type created successfully')
+          toast.success(t('deviceTypeDetail.createdSuccess'))
           navigate(`/settings/device-types/${newId}`)
         }
       } else {
-        console.log('Editing:', data)
         // TODO: add update mutation
       }
 
       setEditMode(false)
     } catch (error) {
       console.error('Submission failed:', error)
-      toast.error('Failed to save device type')
+      toast.error(t('deviceTypeDetail.createdError'))
     }
   }
 
   const handleDelete = async () => {
     if (!id) return
     try {
-      console.log('Attempting to delete device type with ID:', id)
-
       await deleteSDTypeMutation({
         variables: { id: Number(id) },
         update: (cache) => {
@@ -234,13 +258,12 @@ export default function DeviceTypeDetail() {
           })
         }
       })
-      console.log('Successfully deleted:', id)
-      toast.success('Device type deleted successfully')
+      toast.success(t('deviceTypeDetail.deletedSuccess'))
       setIsModalOpen(false)
       navigate('/settings/device-types')
     } catch (error) {
       console.error('Deletion failed:', error)
-      toast.error('Failed to delete device type')
+      toast.error(t('deviceTypeDetail.deletedError'))
     }
   }
 
@@ -253,7 +276,6 @@ export default function DeviceTypeDetail() {
 
   return (
     <PageContainer onSubmit={handleSubmit(onSubmit)}>
-      {/* HEADER */}
       <Header>
         <TitleWrapper>
           {editMode ? (
@@ -267,20 +289,27 @@ export default function DeviceTypeDetail() {
 
           {editMode ? (
             <div>
-              <Label htmlFor="device-name">Device Type Name</Label>
-              <Input {...register('label', { required: 'Device type name is required' })} placeholder="Enter device type name..." />
-              {errors.label && <p className="text-red-500 text-sm">{errors.label.message}</p>}
+              <Label htmlFor="device-name">{t('deviceTypeDetail.enterName')}</Label>
+              <Input
+                {...register('label', { required: t('deviceTypeDetail.deviceTypeNameRequired') })}
+                placeholder={t('deviceTypeDetail.enterName')}
+              />
+              {errors.label && <p className="text-sm text-red-500">{errors.label.message}</p>}
             </div>
           ) : (
             <Title>{watch('label')}</Title>
           )}
         </TitleWrapper>
 
-        {/* Buttons */}
         {editMode ? (
           <ButtonsContainer>
             <Button type="submit" variant="green" disabled={isSubmitting}>
-              <TbCircleCheck /> {isAddingNew ? 'Create' : isSubmitting ? 'Saving...' : 'Save'}
+              <TbCircleCheck />{' '}
+              {isAddingNew
+                ? t('deviceTypeDetail.create')
+                : isSubmitting
+                  ? t('deviceTypeDetail.saving')
+                  : t('deviceTypeDetail.save')}
             </Button>
             <Button
               type="button"
@@ -291,11 +320,10 @@ export default function DeviceTypeDetail() {
                 setEditMode(false)
               }}
             >
-              <TbX /> Cancel
+              <TbX /> {t('deviceTypeDetail.cancel')}
             </Button>
             {!isAddingNew && (
               <>
-                {/* DELETE BUTTON */}
                 <Button
                   onClick={(e) => {
                     e.preventDefault()
@@ -303,11 +331,14 @@ export default function DeviceTypeDetail() {
                   }}
                   variant="destructive"
                 >
-                  <TbTrash /> Delete Type
+                  <TbTrash /> {t('deviceTypeDetail.deleteType')}
                 </Button>
-
-                {/* MODAL */}
-                <DeleteConfirmationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onConfirm={handleDelete} itemName="this device type" />
+                <DeleteConfirmationModal
+                  isOpen={isModalOpen}
+                  onClose={() => setIsModalOpen(false)}
+                  onConfirm={handleDelete}
+                  itemName={t('deviceTypeDetail.deleteType')}
+                />
               </>
             )}
           </ButtonsContainer>
@@ -320,43 +351,43 @@ export default function DeviceTypeDetail() {
             variant="default"
             type="button"
           >
-            <TbEdit /> Edit
+            <TbEdit /> {t('deviceTypeDetail.edit')}
           </Button>
         )}
       </Header>
 
-      {/* Denotation */}
       <TableItem>
         {editMode ? (
           <div className="flex items-center justify-center gap-2 pr-3">
-            <strong>Denotation:</strong>
+            <strong>{t('deviceTypeDetail.denotation')}:</strong>
             <div className="w-full">
-              <Input {...register('denotation', { required: 'Denotation is required' })} placeholder="Enter denotation..." />
-              {errors.denotation && <p className="text-red-500 text-sm">{errors.denotation.message}</p>}
+              <Input
+                {...register('denotation', { required: t('deviceTypeDetail.denotationRequired') })}
+                placeholder={t('deviceTypeDetail.denotation')}
+              />
+              {errors.denotation && <p className="text-sm text-red-500">{errors.denotation.message}</p>}
             </div>
           </div>
         ) : (
           <div>
-            <strong>Denotation:</strong> {watch('denotation') || 'Not set'}
+            <strong>{t('deviceTypeDetail.denotation')}:</strong> {watch('denotation') || t('deviceTypeDetail.notSet')}
           </div>
         )}
       </TableItem>
 
-      {/* PARAMETERS SECTION */}
       <TableItem>
-        <strong>Parameters</strong> ({watch('parameters').length}):
+        <strong>{t('deviceTypeDetail.parameters')}</strong> ({watch('parameters').length}):
       </TableItem>
 
-      {/* ADD PARAMETER BUTTON */}
       {editMode && (
         <Button
           onClick={(e) => {
             e.preventDefault()
             addParameter()
           }}
-          className="ml-4 mr-4 mb-4"
+          className="mb-4 ml-4 mr-4"
         >
-          <TbPlus /> Add Parameter
+          <TbPlus /> {t('deviceTypeDetail.addParameter')}
         </Button>
       )}
 
@@ -364,9 +395,9 @@ export default function DeviceTypeDetail() {
         <ParametersContainer>
           <ParamTable>
             <ParamHeaderRow>
-              <ParamCell>Denotation</ParamCell>
-              <ParamCell>Label</ParamCell>
-              <ParamCell>Type</ParamCell>
+              <ParamCell>{t('deviceTypeDetail.denotation')}</ParamCell>
+              <ParamCell>{t('deviceTypeDetail.label')}</ParamCell>
+              <ParamCell>{t('deviceTypeDetail.type')}</ParamCell>
             </ParamHeaderRow>
             {watch('parameters').map((param, index) =>
               editMode ? (
@@ -375,17 +406,21 @@ export default function DeviceTypeDetail() {
                     <div className="flex flex-col gap-2">
                       <Input
                         {...register(`parameters.${index}.denotation`, {
-                          required: 'Denotation is required'
+                          required: t('deviceTypeDetail.denotationRequired')
                         })}
-                        placeholder="Denotation"
+                        placeholder={t('deviceTypeDetail.denotation')}
                       />
-                      {errors.parameters?.[index]?.denotation && <p className="text-red-500 text-sm">{errors.parameters[index].denotation.message}</p>}
+                      {errors.parameters?.[index]?.denotation && (
+                        <p className="text-sm text-red-500">{errors.parameters[index].denotation.message}</p>
+                      )}
                     </div>
                   </ParamCell>
                   <ParamCell>
-                    <div className="flex flex-col gap-2 min-w-max">
+                    <div className="flex min-w-max flex-col gap-2">
                       <Input {...register(`parameters.${index}.label`)} placeholder="Label" />
-                      {errors.parameters?.[index]?.label && <p className="text-red-500 text-sm">{errors.parameters[index].label.message}</p>}
+                      {errors.parameters?.[index]?.label && (
+                        <p className="text-sm text-red-500">{errors.parameters[index].label.message}</p>
+                      )}
                     </div>
                   </ParamCell>
                   <ParamCell>

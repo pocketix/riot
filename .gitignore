@@ -24,4 +24,3 @@ frontend/dist
 # Ignore backend executables
 backend/bin
 .vscode/settings.json
-frontend/package-lock.json

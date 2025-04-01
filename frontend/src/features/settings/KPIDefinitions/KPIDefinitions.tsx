@@ -1,5 +1,10 @@
 import { Button } from '@/components/ui/button'
-import { KpiDefinitionsQuery, KpiDefinitionsQueryVariables, DeleteKpiDefinitionMutation, DeleteKpiDefinitionMutationVariables } from '@/generated/graphql'
+import {
+  KpiDefinitionsQuery,
+  KpiDefinitionsQueryVariables,
+  DeleteKpiDefinitionMutation,
+  DeleteKpiDefinitionMutationVariables
+} from '@/generated/graphql'
 import { GET_KPI_DEFINITIONS } from '@/graphql/Queries'
 import { DELETE_KPI_DEFINITION } from '@/graphql/Mutations'
 import Heading from '@/ui/Heading'
@@ -9,6 +14,8 @@ import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { toast } from 'sonner'
 import KPIDefinitionCard from './KPIDefinitionCard'
+import { breakpoints } from '@/styles/Breakpoints'
+import { useTranslation } from 'react-i18next'
 
 const Container = styled.div`
   display: flex;
@@ -18,8 +25,14 @@ const Container = styled.div`
 
 const Header = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 1rem;
+  flex-direction: column;
+
+  @media (min-width: ${breakpoints.sm}) {
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+  }
 `
 
 const Grid = styled.div`
@@ -39,12 +52,15 @@ const Grid = styled.div`
 
 export default function KPIDefinitions() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const { data, loading, refetch } = useQuery<KpiDefinitionsQuery, KpiDefinitionsQueryVariables>(GET_KPI_DEFINITIONS, {
     fetchPolicy: 'cache-first'
   })
 
-  const [deleteKpiDefinitionMutation] = useMutation<DeleteKpiDefinitionMutation, DeleteKpiDefinitionMutationVariables>(DELETE_KPI_DEFINITION)
+  const [deleteKpiDefinitionMutation] = useMutation<DeleteKpiDefinitionMutation, DeleteKpiDefinitionMutationVariables>(
+    DELETE_KPI_DEFINITION
+  )
 
   const handleDelete = async (id: number) => {
     try {
@@ -69,15 +85,18 @@ export default function KPIDefinitions() {
   }
 
   if (loading) return <Spinner />
-  if (!data?.kpiDefinitions?.length) return <p>No KPI definitions found.</p>
+  if (!data?.kpiDefinitions?.length) return <p>{t('kpiDefinitionsPage.noKpiFound')}</p>
 
   return (
     <Container>
       <Header>
         <Heading as="h2">
-          Manage your KPI definitions here <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>({data?.kpiDefinitions?.length} definitions).</span>
+          {t('kpiDefinitionsPage.manageKpiDefinitions')}{' '}
+          <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
+            ({t('kpiDefinitionsPage.definitions', { count: data?.kpiDefinitions?.length || 0 })}).
+          </span>
         </Heading>
-        <Button onClick={() => navigate('/settings/kpi-definitions/create')}>+ Add new</Button>
+        <Button onClick={() => navigate('/settings/kpi-definitions/create')}>+ {t('addNew')}</Button>
       </Header>
 
       <Grid>

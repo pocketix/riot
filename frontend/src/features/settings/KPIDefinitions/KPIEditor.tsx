@@ -12,7 +12,12 @@ import {
   UpdateKpiDefinitionMutationVariables
 } from '@/generated/graphql'
 import { produce } from 'immer'
-import { AtomNodeType, EditableTreeNodeDataModel, LogicalOperationNodeType, NodeType } from './components/editable-tree/EditableTree'
+import {
+  AtomNodeType,
+  EditableTreeNodeDataModel,
+  LogicalOperationNodeType,
+  NodeType
+} from './components/editable-tree/EditableTree'
 import SelectNewNodeTypeModal from './components/modals/SelectNewNodeTypeModal'
 import { useModal } from '@ebay/nice-modal-react'
 import SelectLogicalOperationTypeModal from './components/modals/SelectLogicalOperationTypeModal'
@@ -43,7 +48,9 @@ export interface KPIDefinitionModel extends EditableTreeNodeDataModel {
 
 export default function KPIEditor() {
   const { show: showSelectNewNodeTypeModal, remove: removeSelectNewNodeTypeModal } = useModal(SelectNewNodeTypeModal)
-  const { show: showSelectLogicalOperationTypeModal, remove: removeSelectLogicalOperationTypeModal } = useModal(SelectLogicalOperationTypeModal)
+  const { show: showSelectLogicalOperationTypeModal, remove: removeSelectLogicalOperationTypeModal } = useModal(
+    SelectLogicalOperationTypeModal
+  )
   const { show: showAtomNodeModal, remove: removeAtomNodeModal } = useModal(AtomNodeModal)
 
   const changeURL = useChangeURL()
@@ -65,31 +72,38 @@ export default function KPIEditor() {
     data: restOfKPIDefinitionDetailPageData,
     loading: restOfKPIDefinitionDetailPageDataLoading,
     error: restOfKPIDefinitionDetailPageDataError
-  } = useQuery<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>(GET_REST_OF_KPI_DEFINITION_DETAIL_PAGE_DATA)
-
-  const [createKPIDefinitionMutation, { loading: createKPIDefinitionLoading, error: createKPIDefinitionError }] = useMutation<CreateKpiDefinitionMutation, CreateKpiDefinitionMutationVariables>(
-    CREATE_KPI_DEFINITION
+  } = useQuery<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>(
+    GET_REST_OF_KPI_DEFINITION_DETAIL_PAGE_DATA
   )
 
-  const [updateKPIDefinitionMutation, { loading: updateKPIDefinitionLoading, error: updateKPIDefinitionError }] = useMutation<UpdateKpiDefinitionMutation, UpdateKpiDefinitionMutationVariables>(
-    UPDATE_KPI_DEFINITION
-  )
+  const [createKPIDefinitionMutation, { loading: createKPIDefinitionLoading, error: createKPIDefinitionError }] =
+    useMutation<CreateKpiDefinitionMutation, CreateKpiDefinitionMutationVariables>(CREATE_KPI_DEFINITION)
+
+  const [updateKPIDefinitionMutation, { loading: updateKPIDefinitionLoading, error: updateKPIDefinitionError }] =
+    useMutation<UpdateKpiDefinitionMutation, UpdateKpiDefinitionMutationVariables>(UPDATE_KPI_DEFINITION)
 
   const [definitionModel, setDefinitionModel] = useState<KPIDefinitionModel>(initialKPIDefinitionModel)
   const [sdTypeData, setSDTypeData] = useState<SdType | null>(null)
 
   const currentNodeNameRef = useRef('')
 
-  useEffect(() => kpiDefinitionDetailData?.kpiDefinition && setDefinitionModel(kpiDefinitionToKPIDefinitionModel(kpiDefinitionDetailData.kpiDefinition)), [kpiDefinitionDetailData])
+  useEffect(
+    () =>
+      kpiDefinitionDetailData?.kpiDefinition &&
+      setDefinitionModel(kpiDefinitionToKPIDefinitionModel(kpiDefinitionDetailData.kpiDefinition)),
+    [kpiDefinitionDetailData]
+  )
 
   useEffect(() => {
     if (!restOfKPIDefinitionDetailPageData?.sdTypes || !kpiDefinitionDetailData?.kpiDefinition?.sdTypeSpecification) {
       return
     }
 
-    const matchedSDType = restOfKPIDefinitionDetailPageData.sdTypes.find((sdType) => sdType.denotation === kpiDefinitionDetailData.kpiDefinition.sdTypeSpecification)
+    const matchedSDType = restOfKPIDefinitionDetailPageData.sdTypes.find(
+      (sdType) => sdType.denotation === kpiDefinitionDetailData.kpiDefinition.sdTypeSpecification
+    )
 
-    setSDTypeData(matchedSDType ?? null)
+    setSDTypeData((matchedSDType as SdType) ?? null)
   }, [restOfKPIDefinitionDetailPageData, kpiDefinitionDetailData])
 
   const initiateLogicalOperationNodeModification = (nodeName: string) => {
@@ -99,9 +113,16 @@ export default function KPIEditor() {
     })
   }
 
-  const initiateAtomNodeModification = (nodeName: string, sdParameterSpecification: string, atomNodeType: AtomNodeType, referenceValue: string | number | boolean) => {
+  const initiateAtomNodeModification = (
+    nodeName: string,
+    sdParameterSpecification: string,
+    atomNodeType: AtomNodeType,
+    referenceValue: string | number | boolean
+  ) => {
     currentNodeNameRef.current = nodeName
-    const sdParameter = sdTypeData?.parameters.find((sdParameter) => sdParameter.denotation === sdParameterSpecification)
+    const sdParameter = sdTypeData?.parameters.find(
+      (sdParameter) => sdParameter.denotation === sdParameterSpecification
+    )
     const binaryRelation = ((atomNodeType: AtomNodeType): BinaryRelation => {
       switch (atomNodeType) {
         case AtomNodeType.StringEQ:
@@ -144,10 +165,22 @@ export default function KPIEditor() {
       })
     )
   }
-  const reconfigureAtomNode = (type: AtomNodeType, sdParameterID: number, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
+  const reconfigureAtomNode = (
+    type: AtomNodeType,
+    sdParameterID: number,
+    sdParameterSpecification: string,
+    referenceValue: string | boolean | number
+  ) => {
     setDefinitionModel((definitionModel) =>
       produce(definitionModel, (draftDefinitionModel) => {
-        modifyAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterID, sdParameterSpecification, referenceValue)
+        modifyAtomNode(
+          currentNodeNameRef.current,
+          draftDefinitionModel,
+          type,
+          sdParameterID,
+          sdParameterSpecification,
+          referenceValue
+        )
       })
     )
     removeAtomNodeModal()
@@ -183,10 +216,22 @@ export default function KPIEditor() {
     removeSelectLogicalOperationTypeModal()
   }
 
-  const finalizeNewAtomNodeCreation = (type: AtomNodeType, sdParameterID: number, sdParameterSpecification: string, referenceValue: string | boolean | number) => {
+  const finalizeNewAtomNodeCreation = (
+    type: AtomNodeType,
+    sdParameterID: number,
+    sdParameterSpecification: string,
+    referenceValue: string | boolean | number
+  ) => {
     setDefinitionModel((definitionModel) =>
       produce(definitionModel, (draftDefinitionModel) => {
-        crateNewAtomNode(currentNodeNameRef.current, draftDefinitionModel, type, sdParameterID, sdParameterSpecification, referenceValue)
+        crateNewAtomNode(
+          currentNodeNameRef.current,
+          draftDefinitionModel,
+          type,
+          sdParameterID,
+          sdParameterSpecification,
+          referenceValue
+        )
       })
     )
     removeAtomNodeModal()
@@ -206,8 +251,18 @@ export default function KPIEditor() {
       canSubmit={useMemo(() => {
         return !!sdTypeData && definitionModel.attributes?.nodeType !== NodeType.NewNode
       }, [sdTypeData, definitionModel])}
-      anyLoadingOccurs={kpiDefinitionDetailLoading || restOfKPIDefinitionDetailPageDataLoading || createKPIDefinitionLoading || updateKPIDefinitionLoading}
-      anyErrorOccurred={!!kpiDefinitionDetailError || !!restOfKPIDefinitionDetailPageDataError || !!createKPIDefinitionError || !!updateKPIDefinitionError}
+      anyLoadingOccurs={
+        kpiDefinitionDetailLoading ||
+        restOfKPIDefinitionDetailPageDataLoading ||
+        createKPIDefinitionLoading ||
+        updateKPIDefinitionLoading
+      }
+      anyErrorOccurred={
+        !!kpiDefinitionDetailError ||
+        !!restOfKPIDefinitionDetailPageDataError ||
+        !!createKPIDefinitionError ||
+        !!updateKPIDefinitionError
+      }
       initiateLogicalOperationNodeModification={initiateLogicalOperationNodeModification}
       initiateNewNodeCreation={initiateNewNodeCreation}
       initiateNewLogicalOperationNodeCreation={initiateNewLogicalOperationNodeCreation}
@@ -220,7 +275,7 @@ export default function KPIEditor() {
         if (!selectedSDType || (sdTypeData && selectedSDType.id === sdTypeData.id)) {
           return
         }
-        setSDTypeData(selectedSDType)
+        setSDTypeData(selectedSDType as SdType)
         setDefinitionModel((definitionModel) =>
           produce(definitionModel, (draftDefinitionModel) => {
             draftDefinitionModel.name = generateNewUUID()
@@ -241,7 +296,11 @@ export default function KPIEditor() {
       }}
       initiateAtomNodeModification={initiateAtomNodeModification}
       onSubmitHandler={async () => {
-        const kpiDefinitionInput = kpiDefinitionModelToKPIDefinitionInput(definitionModel, sdTypeData!.id, sdTypeData!.denotation)
+        const kpiDefinitionInput = kpiDefinitionModelToKPIDefinitionInput(
+          definitionModel,
+          sdTypeData!.id,
+          sdTypeData!.denotation
+        )
         if (id) {
           await updateKPIDefinitionMutation({
             variables: {

@@ -12,13 +12,13 @@ import PersonalInfoSettings from './features/settings/PersonalInfoSettings'
 import DeviceTypesSettings from './features/settings/DeviceTypes/DeviceTypesSettings'
 import DeviceTypeDetail from './features/settings/DeviceTypes/DeviceTypeDetail'
 import Login from './pages/Login'
-import DevicesPage from './pages/DevicesPage'
 import Devices from './features/devices/Devices'
 import DeviceGroups from './features/devices/DeviceGroups'
 import KPIDefinitions from './features/settings/KPIDefinitions/KPIDefinitions'
 import KPIEditor from './features/settings/KPIDefinitions/KPIEditor'
 import NiceModal from '@ebay/nice-modal-react'
 import ProtectedRoute from './utils/ProtectedRoute'
+import MembersDetail from './features/members/MembersDetail'
 import { DeviceDetailProvider } from './context/DeviceDetailContext'
 import { DeviceDetail } from './features/dashboard/components/details/devices/DeviceDetail'
 
@@ -33,12 +33,10 @@ export default function App() {
                 <Route element={<ProtectedRoute />}>
                   <Route element={<AppLayout />}>
                     <Route index element={<Dashboard />} />
-                    <Route path="/devicesPage" element={<DevicesPage />}>
-                      <Route path="devices" element={<Devices />} />
-                      <Route path="groups" element={<DeviceGroups />} />
-                      <Route index element={<Devices />} />
-                    </Route>
+                    <Route path="/devices" element={<Devices />} />
+                    <Route path="/groups" element={<DeviceGroups />} />
                     <Route path="members" element={<Members />} />
+                    <Route path="members/:id" element={<MembersDetail />} />
                     <Route path="automations" element={<Automations />} />
                     <Route path="/settings" element={<Settings />}>
                       <Route path="general" element={<GeneralSettings />} />

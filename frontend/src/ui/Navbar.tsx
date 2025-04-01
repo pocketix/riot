@@ -3,7 +3,7 @@ import { CiSettings } from 'react-icons/ci'
 import { GoPeople } from 'react-icons/go'
 import { IoHammerOutline } from 'react-icons/io5'
 import { TbDevicesPc } from 'react-icons/tb'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 import Logo from './Logo'
 import { useTranslation } from 'react-i18next'
@@ -103,12 +103,15 @@ const StyledNavbar = styled.div`
 
 export default function Navbar() {
   const { t } = useTranslation()
+  const location = useLocation()
   const isMobile = useMediaQuery({ maxWidth: parseInt(breakpoints.md) - 1 })
+  const isDeviceRoute = location.pathname.startsWith('/devices') || location.pathname.startsWith('/groups')
+
   return (
     <StyledNavbar>
       <Logo hideLogo={isMobile} />
       <NavbarContainer>
-        <NavItem to="/devicesPage">
+        <NavItem to="/groups" className={isDeviceRoute ? 'active' : ''}>
           <TbDevicesPc />
           <span>{t('devices')}</span>
         </NavItem>
