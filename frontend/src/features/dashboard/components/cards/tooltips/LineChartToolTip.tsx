@@ -25,11 +25,10 @@ export const ChartToolTip = ({ position, containerRef, instanceName, xName, yNam
             <span className="font-bold">{instanceName}</span>
           </div>
           <div>
-            <span className="font-bold">{position.point.id.split(' ')[0].toLocaleUpperCase()}</span>
+            <span className="font-bold">{position.point.id.split(' ')[0].toUpperCase()}</span>
           </div>
           <div>
-            {xName ? xName : 'X'}:{' '}
-            <span className="font-bold">{new Date(position.point.data.xFormatted).toLocaleString()}</span>
+            {xName ? xName : 'X'}: <span className="font-bold">{position.point.data.xFormatted}</span>
           </div>
           <div>
             {yName ? yName : 'Y'}: <span className="font-bold">{position.point.data.yFormatted}</span>

@@ -1,6 +1,6 @@
 import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/CardGlobal'
 import { AiOutlineDrag } from 'react-icons/ai'
-import { ResponsiveLine, PointTooltipProps } from '@nivo/line'
+import { ResponsiveLine, PointTooltipProps, CustomLayerProps, Serie } from '@nivo/line'
 import styled from 'styled-components'
 // import { Layout } from '@/types/Layout';
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -17,17 +17,21 @@ import { CardEditDialog } from '../editors/CardEditDialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { BuilderResult } from '@/types/dashboard/GridItem'
 import {
-  SdInstancesWithSnapshotsQuery,
+  SdInstancesWithTypeAndSnapshotQuery,
   StatisticsInput,
   StatisticsOperation,
   useStatisticsQuerySensorsWithFieldsLazyQuery
 } from '@/generated/graphql'
+import { useDeviceDetail } from '@/context/DeviceDetailContext'
+import { getMaxValue, timeTicksLayer } from '../utils/charts/tickUtils'
+import { ScaleSpec } from '@nivo/scales'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   position: relative;
   margin: 0;
   padding: 0;
+  min-width: 0;
   width: 100%;
   height: 100%;
   display: flex;
@@ -55,7 +59,7 @@ interface ChartCardProps {
   breakpoint: string // TODO: unused
   beingResized: boolean
   handleSaveEdit: (config: BuilderResult<ChartCardConfig>) => void
-  instances: SdInstancesWithSnapshotsQuery['sdInstances']
+  instances: SdInstancesWithTypeAndSnapshotQuery['sdInstances']
 }
 
 export const ChartCard = ({
@@ -77,11 +81,15 @@ export const ChartCard = ({
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const { isDarkMode } = useDarkMode()
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<Serie[]>([])
   const [chartConfig, setChartConfig] = useState<ChartCardConfig>()
   const [unavilableData, setUnavailableData] = useState<{ device: string; parameter: string }[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const { setDetailsSelectedDevice } = useDeviceDetail()
 
-  const [getChartData, { data: fetchedChartData }] = useStatisticsQuerySensorsWithFieldsLazyQuery()
+  const [getChartData, { data: fetchedChartData }] = useStatisticsQuerySensorsWithFieldsLazyQuery({
+    pollInterval: chartConfig?.aggregateMinutes ? chartConfig.aggregateMinutes * 60 * 1000 : 0
+  })
 
   const fetchData = () => {
     console.log('Chart config', chartConfig)
@@ -95,7 +103,7 @@ export const ChartCard = ({
       }))
 
       const request: StatisticsInput = {
-        from: new Date(Date.now() - Number(chartConfig.timeFrame) * 60 * 1000).toISOString(),
+        from: new Date(Date.now() - Number(chartConfig.timeFrame) * 60 * 60 * 1000).toISOString(),
         aggregateMinutes: chartConfig.aggregateMinutes,
         operation: StatisticsOperation.Last
       }
@@ -112,11 +120,14 @@ export const ChartCard = ({
   useEffect(() => {
     if (configuration) {
       const parsedConfig = lineChartBuilderSchema.safeParse(configuration.visualizationConfig)
+      console.log('Parsed config', parsedConfig)
       console.log(configuration)
       if (parsedConfig.success) {
         console.log('Parsed config', parsedConfig.data)
         setChartConfig(parsedConfig.data)
       } else {
+        setError('Failed to parse configuration')
+        console.error('Failed to parse configuration', parsedConfig.error)
         toast.error('Failed to parse configuration')
       }
     }
@@ -137,7 +148,7 @@ export const ChartCard = ({
 
     instances.forEach((instance: { uid: string; parameters: { denotation: string }[] }) => {
       const sensorDataArray = fetchedChartData.statisticsQuerySensorsWithFields.filter(
-        (item: any) => item.deviceId === instance.uid
+        (item) => item.deviceId === instance.uid
       )
 
       instance.parameters.forEach((param) => {
@@ -163,6 +174,7 @@ export const ChartCard = ({
       })
     })
 
+    console.log('Line chart result', result)
     setData(result)
   }, [fetchedChartData])
 
@@ -201,7 +213,22 @@ export const ChartCard = ({
   }, [cardID, highlight])
 
   // TODO: Alert
-  if (!chartConfig || !data || beingResized) return <Skeleton className="h-full w-full" />
+  if (!chartConfig || !data || beingResized || error)
+    return (
+      <>
+        <Skeleton className="h-full w-full" />
+        {error && (
+          <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center rounded-lg bg-red-500 text-white">
+            <span className="text-sm font-semibold">{error}</span>
+          </div>
+        )}
+        {editModeEnabled && (
+          <DeleteEditContainer>
+            <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+          </DeleteEditContainer>
+        )}
+      </>
+    )
 
   return (
     <Container key={cardID} className={`${cardID}`}>
@@ -237,7 +264,6 @@ export const ChartCard = ({
                           </span>
                         </div>
                       ))}
-                      {/* <span className="text-xs">Parameter: {row.parameter.denotation}</span> */}
                     </div>
                   </TooltipContent>
                 </TooltipTrigger>
@@ -250,32 +276,67 @@ export const ChartCard = ({
         <ResponsiveLine
           data={data}
           margin={chartConfig.margin}
-          xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
-          xFormat="time:%Y-%m-%dT%H:%M:%SZ"
-          yScale={chartConfig.yScale as any}
+          xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ', useUTC: true }}
+          xFormat="time:%Y-%m-%d %H:%M:%S"
+          yScale={
+            {
+              ...chartConfig.yScale,
+              max: chartConfig.yScale.max === 'auto' ? getMaxValue(data) * 1.01 : (chartConfig.yScale.max as number),
+              nice: true
+            } as ScaleSpec
+          }
           animate={true}
           yFormat={chartConfig.toolTip.yFormat}
-          axisBottom={chartConfig.axisBottom}
-          axisLeft={{ ...chartConfig.axisLeft, format: '~s' }}
-          // axisLeft={{ ...form.watch('axisLeft'), format: '~s' }}
+          axisBottom={{
+            ...chartConfig.axisBottom,
+            tickValues: 0 // we are generating the axis ticks manually using the timeTicksLayer
+          }}
+          layers={[
+            'grid',
+            'axes',
+            'crosshair',
+            'lines',
+            'points',
+            'mesh',
+            (props: CustomLayerProps) =>
+              timeTicksLayer({
+                xScale: props.xScale,
+                data: data[0] ? data[0].data : [],
+                isDarkMode,
+                width: props.innerWidth,
+                height: props.innerHeight,
+                enableGridX: chartConfig.enableGridX || false
+              })
+          ]}
+          axisLeft={{ ...chartConfig.axisLeft, format: '~s', tickValues: Math.ceil(item?.h! * 2.5) }}
           pointSize={chartConfig.pointSize}
           pointColor={isDarkMode ? '#ffffff' : '#000000'}
           pointBorderWidth={0}
           colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
           pointBorderColor={{ from: 'serieColor' }}
           pointLabelYOffset={-12}
+          useMesh={data.length > 0}
+          enableGridX={false}
+          enableGridY={chartConfig.enableGridY}
           isInteractive={true}
           enableTouchCrosshair={true}
-          useMesh={data.length > 0}
-          enableGridX={chartConfig.enableGridX}
-          enableGridY={chartConfig.enableGridY}
-          tooltip={(pos: PointTooltipProps) => {
+          enableCrosshair={true}
+          onClick={(point) => {
             // The pointToolTipProps object contains the point id,
             // which is a combination of the parameter name and the instance UID + point index
-            const pointIdParts = pos.point.id.split(' ')
+            const pointIdParts = point.id.split(' ')
             const rawInstanceUID = pointIdParts.length > 1 ? pointIdParts[1].trim() : ''
 
             // Find the last occurrence of "." and remove everything after it, that is the point index
+            const lastDotIndex = rawInstanceUID.lastIndexOf('.')
+            const instanceUID = lastDotIndex !== -1 ? rawInstanceUID.substring(0, lastDotIndex) : rawInstanceUID
+
+            setDetailsSelectedDevice({ uid: instanceUID, parameter: pointIdParts[0] })
+          }}
+          tooltip={(pos: PointTooltipProps) => {
+            const pointIdParts = pos.point.id.split(' ')
+            const rawInstanceUID = pointIdParts.length > 1 ? pointIdParts[1].trim() : ''
+
             const lastDotIndex = rawInstanceUID.lastIndexOf('.')
             const instanceUID = lastDotIndex !== -1 ? rawInstanceUID.substring(0, lastDotIndex) : rawInstanceUID
             return (
