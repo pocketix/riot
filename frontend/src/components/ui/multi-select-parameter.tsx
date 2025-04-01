@@ -1,7 +1,7 @@
 // Original Source: https://github.com/sersavan/shadcn-multi-select-component
 
 import { cva, type VariantProps } from 'class-variance-authority'
-import { CheckIcon, XCircle, ChevronDown, XIcon, WandSparkles } from 'lucide-react'
+import { CheckIcon, XCircle, ChevronDown, XIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
@@ -20,135 +20,73 @@ import {
 import { ButtonHTMLAttributes, ComponentType, forwardRef, KeyboardEvent, useEffect, useState } from 'react'
 import { ScrollArea } from './scroll-area'
 
-/**
- * Variants for the multi-select component to handle different styles.
- * Uses class-variance-authority (cva) to define different styles based on "variant" prop.
- */
-const ParameterMultiSelectVariants = cva(
-  'm-1 transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300',
-  {
-    variants: {
-      variant: {
-        default: 'border-foreground/10 text-foreground bg-card hover:bg-card/80',
-        secondary: 'border-foreground/10 bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        destructive: 'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
-        inverted: 'inverted'
-      }
-    },
-    defaultVariants: {
-      variant: 'default'
+const ParameterMultiSelectVariants = cva('m-1', {
+  variants: {
+    variant: {
+      default: 'border-foreground/10 text-foreground bg-card hover:bg-card/80',
+      secondary: 'border-foreground/10 bg-secondary text-secondary-foreground hover:bg-secondary/80',
+      destructive: 'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
+      inverted: 'inverted'
     }
+  },
+  defaultVariants: {
+    variant: 'default'
   }
-)
+})
 
 type SelectedParameters = {
   id: number
-
-  // label corresponds to the denotation of the parameter
   denotation: string
 }
 
-/**
- * Props for ParameterMultiSelect component
- */
 interface ParameterMultiSelectProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'defaultValue'>, // Exclude defaultValue
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'defaultValue' | 'value'>,
     VariantProps<typeof ParameterMultiSelectVariants> {
-  /**
-   * An array of option objects to be displayed in the multi-select component.
-   * Each option object has a label, value, and an optional icon.
-   */
   options: {
-    /** The text to display for the option. */
     label: string
-    /** The unique value associated with the option. */
     value: number
-    /** Optional icon component to display alongside the option. */
     icon?: ComponentType<{ className?: string }>
   }[]
-
-  /**
-   * Callback function triggered when the selected values change.
-   * Receives an array of the new selected values.
-   */
+  value: SelectedParameters[]
   onValueChange: (value: SelectedParameters[]) => void
-
-  /** The default selected values when the component mounts. */
   defaultValue?: number[]
-
-  /**
-   * Placeholder text to be displayed when no values are selected.
-   * Optional, defaults to "Select options".
-   */
   placeholder?: string
-
-  /**
-   * Animation duration in seconds for the visual effects (e.g., bouncing badges).
-   * Optional, defaults to 0 (no animation).
-   */
-  animation?: number
-
-  /**
-   * Maximum number of items to display. Extra selected items will be summarized.
-   * Optional, defaults to 3.
-   */
   maxCount?: number
-
-  /**
-   * The modality of the popover. When set to true, interaction with outside elements
-   * will be disabled and only popover content will be visible to screen readers.
-   * Optional, defaults to false.
-   */
   modalPopover?: boolean
-
-  /**
-   * If true, renders the multi-select component as a child of another component.
-   * Optional, defaults to false.
-   */
   asChild?: boolean
-
-  /**
-   * Additional class names to apply custom styles to the multi-select component.
-   * Optional, can be used to add custom styles.
-   */
   className?: string
-
-  /**
-   * The reset prop is used to reset the selected values to an empty array.
-   */
   reset?: any
-
-  /**
-   * Callback function triggered when the popover is closed.
-   */
   onClose?: () => void
+  disabled?: boolean
 }
 
 export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMultiSelectProps>(
   (
     {
       options,
+      value,
       onValueChange,
       variant,
       defaultValue = [],
       placeholder = 'Select options',
-      animation = 0,
       maxCount = 3,
       modalPopover = false,
       asChild = false,
       className,
       reset,
       onClose,
+      disabled = false,
       ...props
     },
     ref
   ) => {
-    const [selectedValues, setSelectedValues] = useState<number[]>(defaultValue)
     const [isPopoverOpen, setIsPopoverOpen] = useState(false)
-    const [isAnimating, setIsAnimating] = useState(false)
+    const [tempValue, setTempValue] = useState<SelectedParameters[]>([])
 
-    // Function gets the labels as well, so that we do not have to find the denotations again
-    // in the form
+    useEffect(() => {
+      setTempValue(value)
+    }, [value])
+
     const getWholeOptions = (selectedIDs: number[]): SelectedParameters[] => {
       const selectedParameters: SelectedParameters[] = []
       selectedIDs.forEach((id) => {
@@ -164,50 +102,45 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
       if (event.key === 'Enter') {
         setIsPopoverOpen(true)
       } else if (event.key === 'Backspace' && !event.currentTarget.value) {
-        const newSelectedValues = [...selectedValues]
-        newSelectedValues.pop()
-        setSelectedValues(newSelectedValues)
-        onValueChange(getWholeOptions(newSelectedValues))
+        const newValue = [...tempValue]
+        newValue.pop()
+        setTempValue(newValue)
       }
     }
 
     useEffect(() => {
       if (reset) {
-        setSelectedValues([])
+        setTempValue([])
         onValueChange([])
       }
     }, [reset])
 
-    const toggleOption = (option: number) => {
-      const newSelectedValues = selectedValues.includes(option)
-        ? selectedValues.filter((value) => value !== option)
-        : [...selectedValues, option]
-      setSelectedValues(newSelectedValues)
-      onValueChange(getWholeOptions(newSelectedValues))
+    const selectedIds = tempValue.map((item) => item.id)
+
+    const toggleOption = (optionId: number) => {
+      const option = options.find((opt) => opt.value === optionId)
+      if (!option) return
+
+      if (selectedIds.includes(optionId)) {
+        setTempValue(tempValue.filter((item) => item.id !== optionId))
+      } else {
+        setTempValue([...tempValue, { id: option.value, denotation: option.label }])
+      }
     }
 
     const handleClear = () => {
-      setSelectedValues([])
-      onValueChange([])
+      setTempValue([])
     }
 
     const handleTogglePopover = () => {
       setIsPopoverOpen((prev) => !prev)
     }
 
-    const clearExtraOptions = () => {
-      const newSelectedValues = selectedValues.slice(0, maxCount)
-      setSelectedValues(newSelectedValues)
-      onValueChange(getWholeOptions(newSelectedValues))
-    }
-
     const toggleAll = () => {
-      if (selectedValues.length === options.length) {
+      if (tempValue.length === options.length) {
         handleClear()
       } else {
-        const allValues = options.map((option) => option.value)
-        setSelectedValues(allValues)
-        onValueChange(getWholeOptions(allValues))
+        setTempValue(getWholeOptions(options.map((opt) => opt.value)))
       }
     }
 
@@ -216,8 +149,13 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
         open={isPopoverOpen}
         onOpenChange={(open) => {
           setIsPopoverOpen(open)
-          if (!open && onClose) {
-            onClose()
+          if (!open) {
+            // call onValueChange when the popover closes,
+            // so that we do not return value one by one
+            onValueChange(tempValue)
+            if (onClose) {
+              onClose()
+            }
           }
         }}
         modal={modalPopover}
@@ -231,46 +169,45 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
               'flex h-auto min-h-10 w-full items-center justify-between rounded-md border bg-inherit p-1 hover:bg-inherit [&_svg]:pointer-events-auto',
               className
             )}
+            disabled={disabled}
           >
-            {selectedValues.length > 0 ? (
+            {tempValue.length > 0 ? (
               <div className="flex w-full items-center justify-between">
                 <div className="flex flex-wrap items-center">
-                  {selectedValues.slice(0, maxCount).map((value) => {
-                    const option = options.find((o) => o.value === value)
+                  {tempValue.slice(0, maxCount).map((item) => {
+                    const option = options.find((o) => o.value === item.id)
                     const IconComponent = option?.icon
                     return (
-                      <Badge
-                        key={value}
-                        className={cn(isAnimating ? 'animate-bounce' : '', ParameterMultiSelectVariants({ variant }))}
-                        style={{ animationDuration: `${animation}s` }}
-                      >
+                      <Badge key={item.id} className={cn(ParameterMultiSelectVariants({ variant }))}>
                         {IconComponent && <IconComponent className="mr-2 h-4 w-4" />}
                         {option?.label}
                         <XCircle
                           className="ml-2 h-4 w-4 cursor-pointer"
                           onClick={(event) => {
                             event.stopPropagation()
-                            toggleOption(value)
+                            setTempValue(tempValue.filter((i) => i.id !== item.id))
+                            onValueChange(tempValue.filter((i) => i.id !== item.id))
                           }}
                         />
                       </Badge>
                     )
                   })}
-                  {selectedValues.length > maxCount && (
+                  {tempValue.length > maxCount && (
                     <Badge
                       className={cn(
                         'border-foreground/1 bg-transparent text-foreground hover:bg-transparent',
-                        isAnimating ? 'animate-bounce' : '',
                         ParameterMultiSelectVariants({ variant })
                       )}
-                      style={{ animationDuration: `${animation}s` }}
                     >
-                      {`+ ${selectedValues.length - maxCount} more`}
+                      {`+ ${tempValue.length - maxCount} more`}
                       <XCircle
                         className="ml-2 h-4 w-4 cursor-pointer"
                         onClick={(event) => {
+                          // clear the extra items
                           event.stopPropagation()
-                          clearExtraOptions()
+                          const newValue = tempValue.slice(0, maxCount)
+                          setTempValue(newValue)
+                          onValueChange(newValue)
                         }}
                       />
                     </Badge>
@@ -280,8 +217,10 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
                   <XIcon
                     className="mx-2 h-4 cursor-pointer text-muted-foreground"
                     onClick={(event) => {
+                      // clear all items
                       event.stopPropagation()
-                      handleClear()
+                      setTempValue([])
+                      onValueChange([])
                     }}
                   />
                   <Separator orientation="vertical" className="flex h-full min-h-6" />
@@ -311,7 +250,7 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
                     <div
                       className={cn(
                         'mr-2 flex h-4 w-4 items-center justify-center rounded-sm',
-                        selectedValues.length === options.length
+                        tempValue.length === options.length
                           ? 'bg-primary text-primary-foreground'
                           : 'opacity-50 [&_svg]:invisible'
                       )}
@@ -321,7 +260,7 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
                     <span>(Select All)</span>
                   </CommandItem>
                   {options.map((option) => {
-                    const isSelected = selectedValues.includes(option.value)
+                    const isSelected = selectedIds.includes(option.value)
                     return (
                       <CommandItem
                         key={option.value}
@@ -345,7 +284,7 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
                 <CommandSeparator />
                 <CommandGroup>
                   <div className="flex items-center justify-between">
-                    {selectedValues.length > 0 && (
+                    {tempValue.length > 0 && (
                       <>
                         <CommandItem onSelect={handleClear} className="flex-1 cursor-pointer justify-center">
                           Clear
@@ -358,15 +297,6 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
             </CommandList>
           </Command>
         </PopoverContent>
-        {animation > 0 && selectedValues.length > 0 && (
-          <WandSparkles
-            className={cn(
-              'my-2 h-3 w-3 cursor-pointer bg-background text-foreground',
-              isAnimating ? '' : 'text-muted-foreground'
-            )}
-            onClick={() => setIsAnimating(!isAnimating)}
-          />
-        )}
       </Popover>
     )
   }
