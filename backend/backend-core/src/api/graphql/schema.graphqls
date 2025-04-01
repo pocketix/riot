@@ -372,6 +372,7 @@ type Query {
 type Mutation {
   createSDType(input: SDTypeInput!): SDType!
   deleteSDType(id: ID!): Boolean!
+  updateSDType(id: ID!, input: SDTypeInput!): SDType!
   updateSDInstance(id: ID!, input: SDInstanceUpdateInput!): SDInstance!
   createKPIDefinition(input: KPIDefinitionInput!): KPIDefinition!
   updateKPIDefinition(id: ID!, input: KPIDefinitionInput!): KPIDefinition!

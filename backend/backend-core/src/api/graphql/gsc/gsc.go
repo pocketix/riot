@@ -53,6 +53,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreateSDType(ctx context.Context, input graphQLModel.SDTypeInput) (graphQLModel.SDType, error)
 	DeleteSDType(ctx context.Context, id uint32) (bool, error)
+	UpdateSDType(ctx context.Context, id uint32, input graphQLModel.SDTypeInput) (graphQLModel.SDType, error)
 	UpdateSDInstance(ctx context.Context, id uint32, input graphQLModel.SDInstanceUpdateInput) (graphQLModel.SDInstance, error)
 	CreateKPIDefinition(ctx context.Context, input graphQLModel.KPIDefinitionInput) (graphQLModel.KPIDefinition, error)
 	UpdateKPIDefinition(ctx context.Context, id uint32, input graphQLModel.KPIDefinitionInput) (graphQLModel.KPIDefinition, error)
@@ -620,6 +621,7 @@ type Query {
 type Mutation {
   createSDType(input: SDTypeInput!): SDType!
   deleteSDType(id: ID!): Boolean!
+  updateSDType(id: ID!, input: SDTypeInput!): SDType!
   updateSDInstance(id: ID!, input: SDInstanceUpdateInput!): SDInstance!
   createKPIDefinition(input: KPIDefinitionInput!): KPIDefinition!
   updateKPIDefinition(id: ID!, input: KPIDefinitionInput!): KPIDefinition!
@@ -1211,6 +1213,57 @@ func (ec *executionContext) field_Mutation_updateSDInstance_argsInput(
 	}
 
 	var zeroVal graphQLModel.SDInstanceUpdateInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSDType_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_updateSDType_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := ec.field_Mutation_updateSDType_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_updateSDType_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (uint32, error) {
+	if _, ok := rawArgs["id"]; !ok {
+		var zeroVal uint32
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2uint32(ctx, tmp)
+	}
+
+	var zeroVal uint32
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSDType_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (graphQLModel.SDTypeInput, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal graphQLModel.SDTypeInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNSDTypeInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDTypeInput(ctx, tmp)
+	}
+
+	var zeroVal graphQLModel.SDTypeInput
 	return zeroVal, nil
 }
 
@@ -2725,6 +2778,73 @@ func (ec *executionContext) fieldContext_Mutation_deleteSDType(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteSDType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateSDType(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateSDType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateSDType(rctx, fc.Args["id"].(uint32), fc.Args["input"].(graphQLModel.SDTypeInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(graphQLModel.SDType)
+	fc.Result = res
+	return ec.marshalNSDType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateSDType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SDType_id(ctx, field)
+			case "denotation":
+				return ec.fieldContext_SDType_denotation(ctx, field)
+			case "label":
+				return ec.fieldContext_SDType_label(ctx, field)
+			case "icon":
+				return ec.fieldContext_SDType_icon(ctx, field)
+			case "parameters":
+				return ec.fieldContext_SDType_parameters(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateSDType_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -11443,6 +11563,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "deleteSDType":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteSDType(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateSDType":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateSDType(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
