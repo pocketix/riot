@@ -67,7 +67,9 @@
     "searchPlaceholder": "Search by UID, User Identifier, or Type...",
     "confirmedInstances": "Confirmed Instances",
     "unconfirmedInstances": "Unconfirmed Instances",
-    "confirmSelected": "Confirm Selected ({{count}})"
+    "confirmSelected": "Confirm Selected ({{count}})",
+    "noConfirmed": "No confirmed devices available.",
+    "noUnconfirmed": "No unconfirmed devices..."
   },
   "membersPage": {
     "title": "Members",

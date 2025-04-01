@@ -10,18 +10,24 @@ export const GET_USER_CONFIG = gql`
 `
 
 export const GET_INSTANCES_WITH_SNAPSHOTS = gql`
-  query SdInstancesWithSnapshots {
+  query SdInstancesWithTypeAndSnapshot {
     sdInstances {
-      confirmedByUser
       id
       uid
+      confirmedByUser
       userIdentifier
+      type {
+        id
+        denotation
+        label
+        icon
+      }
       parameterSnapshots {
-        parameterDenotation
-        boolean
-        instanceUid
-        number
+        instanceId
+        parameterId
         string
+        number
+        boolean
         updatedAt
       }
     }

@@ -25,6 +25,7 @@ const Card = styled.div`
   flex-direction: column;
   gap: 1rem;
   box-shadow: 0px 2px 6px var(--color-grey-200);
+  height: 100%;
 `
 
 const Header = styled.div`
@@ -63,6 +64,7 @@ const BottomRow = styled.div`
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
+  margin-top: auto;
 `
 
 const Icon = styled.div`
@@ -172,7 +174,9 @@ export default function DeviceCard({
         {hasSlashes ? (
           <div className="ml-2 flex flex-col text-sm text-[--color-white]">
             {(showUid ? uidParts : uidParts.slice(2, 3)).map((part, index) => (
-              <span key={index}>{part}</span>
+              <span className="break-words" key={index}>
+                {part}
+              </span>
             ))}
             {uidParts.length > 1 && (
               <Button variant="link" className="w-fit px-1 text-xs" onClick={() => setShowUid(!showUid)}>

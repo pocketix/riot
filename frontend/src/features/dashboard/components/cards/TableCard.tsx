@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { BuilderResult } from '@/types/dashboard/GridItem'
 import { toast } from 'sonner'
 import { SensorField, StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
+import { useDeviceDetail } from '@/context/DeviceDetailContext'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -69,7 +70,9 @@ export const TableCard = ({
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const [tableConfig, setTableConfig] = useState<TableCardConfig>()
   const [tableData, setTableData] = useState<any[]>([])
+  const [error, setError] = useState<string | null>(null)
   const [fetchTableData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
+  const { setDetailsSelectedDevice } = useDeviceDetail()
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -122,8 +125,9 @@ export const TableCard = ({
       if (parsedConfig.success) {
         setTableConfig(parsedConfig.data)
       } else {
+        setError('Failed to parse configuration')
+        console.error('Failed to parse configuration:', parsedConfig.error)
         toast.error('Failed to parse configuration')
-        console.error('Failed to parse configuration')
       }
     }
   }, [configuration])
@@ -155,7 +159,7 @@ export const TableCard = ({
 
       const combinedSensors = combineSensors(sensors)
 
-      console.log('SENSORS', combinedSensors)
+      // console.log('SENSORS', combinedSensors)
 
       if (!combinedSensors.length) return
 
@@ -168,14 +172,14 @@ export const TableCard = ({
           tableConfig.columns.map((column) =>
             fetchData(
               combinedSensors,
-              new Date(Date.now() - Number(tableConfig.timeFrame) * 60 * 1000).toISOString(),
-              Number(tableConfig.timeFrame) * 1000,
+              new Date(Date.now() - Number(tableConfig.timeFrame) * 60 * 60 * 1000).toISOString(),
+              Number(tableConfig.timeFrame) * 60 * 1000,
               column.function
             )
           )
         )
 
-        console.log('RESULTS', results)
+        // console.log('RESULTS', results) // TODO: Remove debug comments
         const parsedData = results.map((result) => {
           if (result.status === 'fulfilled' && result.value.data?.statisticsQuerySensorsWithFields.length! > 0) {
             return result.value.data?.statisticsQuerySensorsWithFields
@@ -188,12 +192,12 @@ export const TableCard = ({
         const updatedRows = tableConfig.rows.map((row) => {
           let columnIndex = 0
           const rowValues: any = []
-          console.log('Parsed data', parsedData)
+          // console.log('Parsed data', parsedData)
           parsedData.forEach((column) => {
             // Make use of the fact that the results are in the same order as the queries
             const functionName = tableConfig.columns[columnIndex++]?.function!
-            console.log('Function name', functionName, 'Column index', columnIndex)
-            console.log('Column index', columnIndex)
+            // console.log('Function name', functionName, 'Column index', columnIndex)
+            // console.log('Column index', columnIndex)
             // find each device in the column data for a specific function
             // TODO: Finding by deviceId may not be sufficient ! There can be multiple rows for the same device
             const instanceData = column?.find((data: any) => data.deviceId === row.instance.uid)
@@ -214,10 +218,10 @@ export const TableCard = ({
           return { ...row, values: rowValues }
         })
 
-        console.log('Table data', updatedRows)
+        // console.log('Table data', updatedRows)
 
         setTableData(updatedRows)
-        console.log('CONFIG', tableConfig)
+        // console.log('CONFIG', tableConfig)
       } catch (error) {
         console.error('Fetch error:', error)
       }
@@ -227,7 +231,21 @@ export const TableCard = ({
   }, [tableConfig])
 
   if (!tableConfig || !tableConfig.columns || !tableData || beingResized) {
-    return <Skeleton className="h-full w-full" />
+    return (
+      <>
+        <Skeleton className="h-full w-full" />
+        {error && (
+          <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center rounded-lg bg-red-500 text-white">
+            <span className="text-sm font-semibold">{error}</span>
+          </div>
+        )}
+        {editModeEnabled && (
+          <DeleteEditContainer>
+            <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+          </DeleteEditContainer>
+        )}
+      </>
+    )
   }
 
   return (
@@ -258,7 +276,10 @@ export const TableCard = ({
           </thead>
           <tbody>
             {tableData?.map((row, rowIndex) => (
-              <tr key={rowIndex}>
+              <tr
+                key={rowIndex}
+                onClick={() => setDetailsSelectedDevice({ uid: row.instance.uid, parameter: row.parameter.denotation })}
+              >
                 <td className="text-sm">{row.name}</td>
                 {row.values?.map((data: { function: string; value?: number }, valueIndex: number) => {
                   if (!data.value || isNaN(data.value))

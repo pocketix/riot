@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ResponsiveLine, PointTooltipProps } from '@nivo/line'
+import { ResponsiveLine, PointTooltipProps, CustomLayerProps, Serie } from '@nivo/line'
 import { Card } from '@/components/ui/card'
 import { AxisLegendPosition } from '@nivo/axes'
 import { Input } from '@/components/ui/input'
@@ -13,14 +13,13 @@ import { ChartCardConfig, lineChartBuilderSchema } from '@/schemas/dashboard/Lin
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import {
   SdInstancesWithParamsQuery,
+  useStatisticsQuerySensorsWithFieldsLazyQuery,
+  useSdTypeQuery,
   SdParameterType,
-  SdTypeParametersQuery,
-  StatisticsOperation,
-  useSdTypeParametersQuery,
-  useStatisticsQuerySensorsWithFieldsLazyQuery
+  SdTypeQuery,
+  StatisticsOperation
 } from '@/generated/graphql'
 import { ParameterMultiSelect } from '@/components/ui/multi-select-parameter'
 import { TbTrash } from 'react-icons/tb'
@@ -33,6 +32,10 @@ import { useDebounce } from 'use-debounce'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BuilderResult } from '@/types/dashboard/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
+import { TimeFrameSelector } from './components/time-frame-selector'
+import { timeTicksLayer } from '../utils/charts/tickUtils'
+import _ from 'lodash'
+import { format, scaleLinear } from 'd3'
 
 type LineBuilderResult = BuilderResult<ChartCardConfig>
 
@@ -45,6 +48,9 @@ export interface LineChartBuilderProps {
 export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartBuilderProps) {
   const containerRef = useRef(null)
   const { isDarkMode } = useDarkMode()
+  const [usedParamsByInstance, setUsedParamsByInstance] = useState<{
+    [instanceUID: string]: Array<{ parameter: { id: number; denotation: string; row: number } }>
+  }>({})
 
   const form = useForm<z.infer<typeof lineChartBuilderSchema>>({
     resolver: zodResolver(lineChartBuilderSchema),
@@ -57,8 +63,8 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
       },
       pointSize: 3,
       instances: [{ uid: '', parameters: [] }],
-      timeFrame: '60',
-      aggregateMinutes: 2,
+      timeFrame: '24',
+      aggregateMinutes: 45,
       decimalPlaces: 1,
       axisLeft: {
         legend: 'Value',
@@ -69,10 +75,10 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
         format: '%H:%M',
         tickValues: 6,
         legend: 'Date',
-        legendOffset: 36,
+        legendOffset: 25,
         legendPosition: 'middle' as AxisLegendPosition
       },
-      margin: { top: 10, right: 20, bottom: 50, left: 50 },
+      margin: { top: 10, right: 20, bottom: 40, left: 50 },
       yScale: {
         format: ' >-.1~f',
         type: 'linear',
@@ -85,36 +91,229 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
     }
   })
 
-  const [selectedInstance, setSelectedInstance] = useState<SdInstancesWithParamsQuery['sdInstances'][number] | null>(null)
+  const [selectedInstance, setSelectedInstance] = useState<SdInstancesWithParamsQuery['sdInstances'][number] | null>(
+    null
+  )
   const [availableParameters, setAvailableParameters] = useState<{
-    [typeID: number]: SdTypeParametersQuery['sdType']['parameters']
+    [typeID: number]: SdTypeQuery['sdType']['parameters']
   }>({})
-  const [getChartData, { data: chartData }] = useStatisticsQuerySensorsWithFieldsLazyQuery()
-  const [data, setData] = useState<any[]>([])
+  const [getChartData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
+  const [data, setData] = useState<Serie[]>([])
   const [dataMaxValue, setDataMaxValue] = useState<number | null>(null)
+  // TODO: data min value's width can be larger than max?
+  const [_dataMinValue, setDataMinValue] = useState<number | null>(null)
   const leftAxisMarginMockRef = useRef<HTMLHeadingElement | null>(null)
 
   const [debouncedAggregateMinutes] = useDebounce(form.watch('aggregateMinutes'), 1000)
 
-  const fetchData = () => {
+  const fetchData = async () => {
     const instances = form.getValues('instances')
     if (instances.length === 0) return
-    const sensors = instances.map((instance: { uid: string; parameters: { denotation: string }[] }) => ({
+
+    // Filter out instances without UIDs or parameters
+    const validInstances = instances.filter(
+      (instance) => instance.uid && instance.parameters && instance.parameters.length > 0
+    )
+
+    if (validInstances.length === 0) {
+      setData([])
+      return
+    }
+
+    const sensors = validInstances.map((instance: { uid: string; parameters: { denotation: string }[] }) => ({
       key: instance.uid,
-      values: instance.parameters ? instance.parameters.map((param) => param.denotation) : []
+      values: instance.parameters.map((param) => param.denotation)
     }))
+
     const request = {
-      from: new Date(Date.now() - Number(form.getValues('timeFrame')) * 60 * 1000).toISOString(),
+      from: new Date(Date.now() - Number(form.getValues('timeFrame')) * 60 * 60 * 1000).toISOString(),
       aggregateMinutes: form.getValues('aggregateMinutes'),
       operation: StatisticsOperation.Last
     }
 
-    getChartData({
-      variables: {
-        sensors: { sensors },
-        request
+    try {
+      const result = await getChartData({
+        variables: {
+          sensors: { sensors },
+          request
+        }
+      })
+
+      if (!result.data) {
+        console.error('No data returned from API')
+        return
       }
+
+      const newData: Serie[] = []
+
+      validInstances.forEach((instance) => {
+        const sensorDataArray = result.data?.statisticsQuerySensorsWithFields.filter(
+          (item: any) => item.deviceId === instance.uid
+        )
+
+        if (sensorDataArray?.length === 0) return
+
+        // process each param
+        instance.parameters.forEach((param: any) => {
+          if (!sensorDataArray) return
+
+          const dataPoints =
+            sensorDataArray.length > 0
+              ? sensorDataArray
+                  .map((sensorData: any) => {
+                    const parsedData = sensorData.data ? JSON.parse(sensorData.data) : null
+                    if (!parsedData || parsedData[param.denotation] === undefined) return null
+                    return {
+                      x: sensorData.time,
+                      y: parsedData[param.denotation]
+                    }
+                  })
+                  .filter((point): point is { x: any; y: any } => point !== null) // Type guard to ensure all items are non-null
+              : []
+
+          const paramData: Serie = {
+            id: param.denotation + ' ' + instance.uid,
+            data: dataPoints
+          }
+
+          if (paramData.data.length > 0) {
+            newData.push(paramData)
+          } else {
+            console.warn(`No data for parameter ${param.denotation} in instance ${instance.uid}`)
+          }
+        })
+      })
+      setData(newData)
+    } catch (error) {
+      console.error('Error fetching chart data:', error)
+      toast.error('Failed to fetch chart data')
+    }
+  }
+
+  const fetchRowData = async (rowIndex: number) => {
+    const instance = form.getValues(`instances.${rowIndex}`)
+    if (!instance?.uid || !instance?.parameters?.length) {
+      fetchData()
+      return
+    }
+
+    const request = {
+      from: new Date(Date.now() - Number(form.getValues('timeFrame')) * 60 * 60 * 1000).toISOString(),
+      aggregateMinutes: form.getValues('aggregateMinutes'),
+      operation: StatisticsOperation.Last
+    }
+
+    try {
+      const result = await getChartData({
+        variables: {
+          sensors: {
+            sensors: [
+              {
+                key: instance.uid,
+                values: instance.parameters.map((param: any) => param.denotation)
+              }
+            ]
+          },
+          request
+        }
+      })
+
+      // process the row data and update state the whole data
+      if (result.data) {
+        const sensorDataArray = result.data.statisticsQuerySensorsWithFields.filter(
+          (item: any) => item.deviceId === instance.uid
+        )
+
+        let newRowData: Serie[] = []
+
+        instance.parameters.forEach((param: any) => {
+          const paramData: Serie = {
+            id: param.denotation + ' ' + instance.uid,
+            data:
+              sensorDataArray.length > 0
+                ? sensorDataArray
+                    .map((sensorData: any) => {
+                      const parsedData = sensorData.data ? JSON.parse(sensorData.data) : null
+                      if (!parsedData || parsedData[param.denotation] === undefined) return null
+                      return {
+                        x: sensorData.time,
+                        y: parsedData[param.denotation]
+                      }
+                    })
+                    .filter((point): point is { x: any; y: any } => point !== null) // Add type guard filter
+                : []
+          }
+
+          if (paramData.data.length === 0) {
+            toast.error(`No data available for ${param.denotation} in the selected time frame.`)
+            return
+          }
+
+          newRowData.push(paramData)
+        })
+
+        setData((prevData) => {
+          // remove any existing data for this row's parameters
+          const filteredData = prevData.filter((item) => {
+            const [_, itemInstanceUID] = String(item.id).split(' ')
+            return itemInstanceUID !== instance.uid
+          })
+          console.log('Filtered data:', filteredData)
+
+          // append the new row data
+          return [...filteredData, ...newRowData]
+        })
+      }
+    } catch (error) {
+      toast.error(`Failed to fetch data for instance ${instance.uid}`)
+      console.error('Fetch error:', error)
+    }
+  }
+
+  const checkAndFetchRow = (rowIndex: number) => {
+    const instance = form.getValues(`instances.${rowIndex}`)
+
+    if (!instance?.uid) {
+      // we cannot derive anything from this row..
+      // this does not happen
+      return
+    }
+
+    const allInstances = form.getValues('instances')
+    const allParamsForThisInstance = allInstances
+      .filter((inst: any) => inst.uid === instance.uid && inst.parameters?.length > 0)
+      .flatMap((inst: any) => inst.parameters.map((p: any) => p.denotation))
+
+    if (instance.parameters?.length === 0) {
+      setUsedParamsByInstance((prev) => {
+        const newState = { ...prev }
+        if (newState[instance.uid]) {
+          // remove parameters for this row
+          newState[instance.uid] = newState[instance.uid].filter((item) => item.parameter.row !== rowIndex)
+        }
+        return newState
+      })
+    }
+
+    // clean up chart data, wihtout refetching
+    setData((prevData) => {
+      return prevData.filter((item) => {
+        // Get parameter name and instance UID from the item ID
+        const [paramName, itemInstanceUID] = String(item.id).split(' ')
+
+        // not the removed instance, keep it
+        if (itemInstanceUID !== instance.uid) return true
+
+        // only keep parameters that are used in ANY row
+        return allParamsForThisInstance.includes(paramName)
+      })
     })
+
+    // only fetch new data if this row has valid parameters
+    const hasValidParameters = instance.parameters?.length > 0
+    if (hasValidParameters) {
+      fetchRowData(rowIndex)
+    }
   }
 
   const [debouncedDecimalPlaces] = useDebounce(form.watch('decimalPlaces'), 1000)
@@ -139,52 +338,6 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
   }, [debouncedDecimalPlaces])
 
   useEffect(() => {
-    if (!chartData) return
-    const instances = form.getValues('instances')
-
-    let maxValue: number = 0
-    let result: any[] = []
-
-    instances.forEach((instance: { uid: string; parameters: { denotation: string }[] }) => {
-      const sensorDataArray = chartData.statisticsQuerySensorsWithFields.filter(
-        (item: any) => item.deviceId === instance.uid
-      )
-      console.log('Sensor data array', sensorDataArray)
-      instance.parameters.forEach((param) => {
-        const paramData = {
-          id: param.denotation + ' ' + instance.uid,
-          data:
-            sensorDataArray.length > 0
-              ? sensorDataArray.map((sensorData: any) => {
-                  const parsedData = sensorData.data ? JSON.parse(sensorData.data) : null
-                  if (!parsedData) return
-                  if (parsedData[param.denotation] > maxValue) maxValue = parsedData[param.denotation]
-                  return {
-                    x: sensorData.time,
-                    y: parsedData[param.denotation]
-                  }
-                })
-              : []
-        }
-        if (paramData.data.length === 0) {
-          toast.error('One or more of the selected parameters have no data available for the selected time frame.')
-          return
-        }
-        result.push(paramData)
-      })
-    })
-
-    maxValue += 0.1
-    if (maxValue > Number(leftAxisMarginMockRef.current?.innerText) && leftAxisMarginMockRef.current) {
-      const decimalPlaces = form.watch('decimalPlaces')
-      const mockValue = parseFloat(maxValue.toFixed(decimalPlaces))
-      setDataMaxValue(mockValue)
-      leftAxisMarginMockRef.current.innerText = mockValue.toString()
-    }
-    setData(result)
-  }, [chartData])
-
-  useEffect(() => {
     fetchData()
   }, [form.watch('timeFrame'), debouncedAggregateMinutes])
 
@@ -193,18 +346,71 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
       const yAxisTextWidth = leftAxisMarginMockRef.current.offsetWidth + 5
       console.log('Mock Width', yAxisTextWidth)
       const isLegendPresent = form.getValues('axisLeft.legend') === '' ? false : true
-      let yAxisWidth = yAxisTextWidth + 10 * 2 + 20
+      let yAxisWidth = yAxisTextWidth + 10 * 2 + 5
 
-      if (!isLegendPresent) yAxisWidth -= 20
+      if (!isLegendPresent) yAxisWidth -= 15
 
       form.setValue('margin.left', Math.ceil(yAxisWidth))
-      form.setValue('axisLeft.legendOffset', -yAxisTextWidth - 20)
+      form.setValue('axisLeft.legendOffset', -yAxisTextWidth - 15)
     }
   }
 
-  const calculateBottomAxisMargin = () => {
-    const isLegendPresent = form.getValues('axisBottom.legend') === '' ? false : true
-    form.setValue('margin.bottom', isLegendPresent ? 50 : 30)
+  const recalculateMaxValue = (currentData: any[]) => {
+    if (currentData.length === 0) {
+      setDataMaxValue(null)
+      setDataMinValue(null)
+      if (leftAxisMarginMockRef.current) {
+        leftAxisMarginMockRef.current.innerText = ''
+      }
+      return
+    }
+
+    let maxValue = Number.NEGATIVE_INFINITY
+    let minValue = Number.POSITIVE_INFINITY
+
+    currentData.forEach((series) => {
+      series.data.forEach((point: { y: number }) => {
+        if (point && typeof point.y === 'number') {
+          if (point.y > maxValue) maxValue = point.y
+          if (point.y < minValue) minValue = point.y
+        }
+      })
+    })
+
+    // building the whole scale to get the precise values that will also be displayed
+    const yScaleMock = scaleLinear().domain([minValue, maxValue]).nice()
+
+    // get the actual domain after applying the nice function
+    const [domainMin, domainMax] = yScaleMock.domain()
+
+    // console.log('yScaleMock domain:', yScaleMock.domain())
+
+    setDataMinValue(domainMin)
+    setDataMaxValue(domainMax)
+
+    const tickValues = yScaleMock.ticks(5)
+
+    // using the same formatting as in the actual chart
+    const formattedTicks = tickValues.map((v) => format('~s')(v))
+
+    // find the widest formatted tick value for margin calculations
+    let widestValue = ''
+    let maxLength = -1
+
+    formattedTicks.forEach((tick) => {
+      if (tick.length > maxLength || tick.length === maxLength) {
+        maxLength = tick.length
+        widestValue = tick
+      }
+    })
+
+    if (leftAxisMarginMockRef.current) {
+      leftAxisMarginMockRef.current.innerText = widestValue
+    }
+
+    // this function gets called by the useEffect below
+    // this is just for clarity
+    // calculateLeftAxisMargin()
   }
 
   useEffect(() => {
@@ -214,7 +420,18 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
     }
   }, [leftAxisMarginMockRef.current?.innerText, dataMaxValue])
 
-  const { data: parametersData, refetch: refetchParameters } = useSdTypeParametersQuery({
+  useEffect(() => {
+    if (data.length > 0) {
+      recalculateMaxValue(data)
+    }
+  }, [data])
+
+  const calculateBottomAxisMargin = () => {
+    const isLegendPresent = form.getValues('axisBottom.legend') === '' ? false : true
+    form.setValue('margin.bottom', isLegendPresent ? 50 : 25)
+  }
+
+  const { data: parametersData, refetch: refetchParameters } = useSdTypeQuery({
     variables: { sdTypeId: selectedInstance?.type?.id! },
     skip: !selectedInstance
   })
@@ -303,13 +520,13 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
             <ResponsiveLine
               data={data}
               margin={form.watch('margin')}
-              xFormat="time:%Y-%m-%dT%H:%M:%SZ"
-              xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
-              yScale={form.watch('yScale') as any}
+              xFormat="time:%Y-%m-%d %H:%M:%S"
+              xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ', useUTC: true }}
+              yScale={{ ...(form.watch('yScale') as any), nice: true }}
               animate={true}
               yFormat={form.watch('toolTip.yFormat')}
-              axisBottom={form.watch('axisBottom')}
-              axisLeft={{ ...form.watch('axisLeft'), format: '~s' }}
+              axisBottom={{ ...form.watch('axisBottom'), tickValues: 0 }}
+              axisLeft={{ ...form.watch('axisLeft'), format: '~s', tickValues: 5 }}
               pointSize={form.watch('pointSize')}
               pointColor={isDarkMode ? '#ffffff' : '#000000'}
               pointBorderWidth={0}
@@ -318,7 +535,24 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
               pointLabelYOffset={-12}
               enableTouchCrosshair={true}
               useMesh={data.length > 0}
-              enableGridX={form.watch('enableGridX')}
+              layers={[
+                'grid',
+                'axes',
+                'crosshair',
+                'lines',
+                'points',
+                'mesh',
+                (props: CustomLayerProps) =>
+                  timeTicksLayer({
+                    xScale: props.xScale,
+                    data: data[0] ? data[0].data : [],
+                    isDarkMode,
+                    width: props.innerWidth,
+                    height: props.innerHeight,
+                    enableGridX: form.watch('enableGridX') || false
+                  })
+              ]}
+              enableGridX={false}
               enableGridY={form.watch('enableGridY')}
               tooltip={(pos: PointTooltipProps) => {
                 // The pointToolTipProps object contains the point id,
@@ -448,26 +682,13 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                   <FormItem>
                     <FormLabel>Time Frame</FormLabel>
                     <FormControl>
-                      <Select
-                        value={field.value}
+                      <TimeFrameSelector
                         onValueChange={(value) => {
                           field.onChange(value)
-                          form.setValue('aggregateMinutes', Math.ceil(Number(value) / 32))
+                          form.setValue('aggregateMinutes', Math.ceil((Number(value) * 60) / 32))
                         }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a time frame" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="60">Last hour</SelectItem>
-                          <SelectItem value="360">Last 6 hours</SelectItem>
-                          <SelectItem value="480">Last 12 hours</SelectItem>
-                          <SelectItem value="1440">Last day</SelectItem>
-                          <SelectItem value="4320">Last 3 days</SelectItem>
-                          <SelectItem value="10080">Last week</SelectItem>
-                          <SelectItem value="43200">Last month</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        value={field.value}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -520,14 +741,19 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                 <Button
                   variant="destructive"
                   size="icon"
-                  onClick={() => remove(index)}
+                  onClick={() => {
+                    // this is needed for the checkAndFetchRow function
+                    form.setValue(`instances.${index}.parameters`, [])
+                    checkAndFetchRow(index)
+                    remove(index)
+                  }}
                   className="absolute right-2 top-2"
                 >
                   <TbTrash />
                 </Button>
                 <FormField
                   control={form.control}
-                  name={`instances.${index}.uid`}
+                  name={`instances.${index}`}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Instance</FormLabel>
@@ -536,10 +762,11 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                           instances={instances}
                           onValueChange={(value) => {
                             setSelectedInstance(value)
-                            field.onChange(value.uid)
-                            form.setValue(`instances.${index}.parameters`, [])
+                            field.onChange(value)
+                            form.setValue(`instances.${index}`, { uid: value.uid, id: value.id, parameters: [] })
+                            fetchRowData(index)
                           }}
-                          value={field.value}
+                          value={field.value.uid}
                         />
                       </FormControl>
                       <FormMessage />
@@ -554,9 +781,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                       <FormLabel>Parameters</FormLabel>
                       <FormControl>
                         <ParameterMultiSelect
-                          onClose={() => {
-                            fetchData()
-                          }}
+                          value={field.value}
                           options={
                             form.getValues(`instances.${index}.uid`)
                               ? getParameterOptions(form.getValues(`instances.${index}.uid`))
@@ -569,12 +794,58 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                           }
                           modalPopover={true}
                           onValueChange={(value) => {
-                            field.onChange(value)
+                            const instanceUID = form.getValues(`instances.${index}.uid`)
+                            if (!instanceUID) return
+
+                            const paramsOtherRows = Object.values(usedParamsByInstance[instanceUID] || []).filter(
+                              (item) => item.parameter.row !== index
+                            )
+
+                            const duplicateParams = value.filter((param) =>
+                              paramsOtherRows.some((usedParam) => usedParam.parameter.id === param.id)
+                            )
+
+                            const filteredParams = value.filter(
+                              (param) => !duplicateParams.some((dupParam) => dupParam.id === param.id)
+                            )
+
+                            if (duplicateParams.length > 0) {
+                              toast.error(
+                                `${duplicateParams.map((param) => param.denotation).join(', ')} ${duplicateParams.length > 1 ? 'are' : 'is'} already used with this instance. Duplicate parameters were removed.`
+                              )
+                            }
+
+                            setUsedParamsByInstance((prev) => {
+                              const newState = { ...prev }
+                              if (!newState[instanceUID]) {
+                                newState[instanceUID] = []
+                              }
+
+                              // remove any existing parameters for this row
+                              newState[instanceUID] = newState[instanceUID].filter(
+                                (item) => item.parameter.row !== index
+                              )
+
+                              filteredParams.forEach((param) => {
+                                newState[instanceUID].push({
+                                  parameter: {
+                                    id: param.id,
+                                    denotation: param.denotation,
+                                    row: index
+                                  }
+                                })
+                              })
+
+                              return newState
+                            })
+
+                            field.onChange(filteredParams)
+                            checkAndFetchRow(index)
                           }}
                           defaultValue={field.value.map((param: { id: number }) => param.id)}
                           placeholder="Select parameters"
                           maxCount={2}
-                          disabled={!form.getValues(`instances.${index}.uid`)}
+                          disabled={!form.watch(`instances.${index}.uid`)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -594,7 +865,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
               variant="green"
               className="m-auto mt-4 flex w-1/2 items-center justify-center"
               onClick={() => {
-                append({ uid: '', parameters: [] })
+                append({ uid: '', id: null, parameters: [] })
               }}
             >
               <IoAdd />
@@ -738,7 +1009,6 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                       </FormItem>
                     )}
                   />
-                  {/* Field for min and max values */}
                   <FormField
                     control={form.control}
                     name="yScale.min"
@@ -760,7 +1030,9 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                           <Input
                             type="number"
                             placeholder="Enter min value"
-                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            onChange={(e) => {
+                              field.onChange(Number(e.target.value))
+                            }}
                             disabled={field.value === 'auto'}
                             value={field.value === 'auto' ? '' : field.value}
                           />
@@ -782,7 +1054,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                               onCheckedChange={(checked) => {
                                 // If value is set to auto, use the max value from the data
                                 if (checked && leftAxisMarginMockRef.current) {
-                                  leftAxisMarginMockRef.current.innerText = dataMaxValue?.toString() || ''
+                                  leftAxisMarginMockRef.current.innerText = format('~s')(dataMaxValue || 0)
                                 }
                                 field.onChange(checked ? 'auto' : '')
                               }}
@@ -796,7 +1068,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                             placeholder="Enter max value"
                             onChange={(e) => {
                               if (Number(e.target.value) > dataMaxValue! && leftAxisMarginMockRef.current) {
-                                leftAxisMarginMockRef.current.innerText = e.target.value
+                                leftAxisMarginMockRef.current.innerText = format('~s')(Number(e.target.value))
                               }
                               field.onChange(Number(e.target.value))
                             }}
@@ -805,6 +1077,40 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                           />
                         </FormControl>
                         <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="enableGridX"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          Enable X Grid
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={(e) => {
+                              field.onChange(e)
+                            }}
+                          />
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="enableGridY"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          Enable Y Grid
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={(e) => {
+                              field.onChange(e)
+                            }}
+                          />
+                        </FormLabel>
                       </FormItem>
                     )}
                   />

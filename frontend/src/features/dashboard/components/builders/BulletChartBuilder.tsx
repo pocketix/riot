@@ -29,6 +29,7 @@ import { BuilderResult } from '@/types/dashboard/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
 import { BulletChartToolTip } from '../cards/tooltips/BulletChartToolTIp'
+import { TimeFrameSelector } from './components/time-frame-selector'
 
 type BulletChartBuilderResult = BuilderResult<BulletCardConfig>
 
@@ -81,72 +82,97 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
     name: 'rows'
   })
 
-  const fetchData = async () => {
-    if (form.getValues('rows')?.length === 0) return
+  const fetchRowData = async (rowIndex: number) => {
+    const row = form.getValues(`rows.${rowIndex}`)
 
-    const rows = form.getValues('rows').map((row) => ({
-      key: row.instance.uid,
-      value: row.parameter.denotation,
-      timeFrame: row.config.timeFrame,
-      function: row.config.function,
-      name: row.config.name
-    }))
+    try {
+      // 'last' function uses snapshot data
+      if (row.config.function === 'last') {
+        const instance = instances.find((inst) => inst.uid === row.instance.uid)
+        if (!instance) return
 
-    const results = await Promise.allSettled(
-      rows.map((row) => {
-        return getChartData({
-          variables: {
-            sensors: {
-              sensors: [
-                {
-                  key: row.key,
-                  values: [row.value]
-                }
-              ]
-            },
-            request: {
-              from: new Date(Date.now() - Number(row.timeFrame) * 60 * 1000).toISOString(),
-              aggregateMinutes: Number(row.timeFrame) * 1000,
-              operation: row.function as StatisticsOperation
+        const parameters = availableParameters[instance.type.id]
+        if (!parameters) return
+
+        const parameter = parameters.find((p) => p.denotation === row.parameter.denotation)
+        if (!parameter) return
+
+        const snapshot = parameter.parameterSnapshots?.find(
+          (snap) => snap.instanceId === instance.id && snap.parameterId === parameter.id
+        )
+
+        if (snapshot?.number !== undefined) {
+          setData((prev) => {
+            const newData = [...prev]
+            newData[rowIndex] = {
+              id: row.config.name || row.parameter.denotation,
+              ranges: [...(row.config.ranges || []), 0, 0],
+              measures: [snapshot.number],
+              markers: row.config.markers || []
             }
-          }
-        })
-      })
-    )
-
-    const parsedData = results.map((result) => {
-      if (result.status === 'fulfilled' && result.value.data?.statisticsQuerySensorsWithFields.length! > 0) {
-        return result.value.data?.statisticsQuerySensorsWithFields
-      } else {
-        const sensor = result.status === 'fulfilled' ? result.value.variables?.sensors?.sensors[0]! : null
-        const instance = instances.find((inst) => inst.uid === sensor?.key)
-        if (instance) {
-          toast.error(`Failed to fetch data for '${instance.userIdentifier} - ${sensor?.values}'`)
+            return newData
+          })
+        } else {
+          toast.error(`No snapshot data available for ${instance.userIdentifier} - ${row.parameter.denotation}`)
         }
-        console.error('Fetch error:', result.status === 'rejected' ? result.reason : 'Empty data')
-        return null
-      }
-    })
-
-    const newData = parsedData.map((parsed, index) => {
-      if (!parsed) return null
-      const row = form.getValues(`rows.${index}`)
-      const parsedValue = parsed[0]?.data ? JSON.parse(parsed[0].data) : null
-      const value = parsedValue ? parsedValue[row.parameter.denotation] : undefined
-      if (value === undefined) {
-        return null
+        return
       }
 
-      const newDataItem = {
-        id: row.config.name,
-        ranges: [...(row.config.ranges || []), 0, 0],
-        measures: [value],
-        markers: row.config.markers || []
-      }
-      return newDataItem
-    })
+      // other functions using statistics API
+      const result = await getChartData({
+        variables: {
+          sensors: {
+            sensors: [{ key: row.instance.uid, values: [row.parameter.denotation] }]
+          },
+          request: {
+            from: new Date(Date.now() - Number(row.config.timeFrame) * 60 * 1000).toISOString(),
+            aggregateMinutes: Number(row.config.timeFrame),
+            operation: row.config.function as StatisticsOperation
+          }
+        }
+      })
 
-    setData(newData)
+      if (result.data?.statisticsQuerySensorsWithFields.length! > 0) {
+        const parsedValue = result.data?.statisticsQuerySensorsWithFields[0]?.data
+          ? JSON.parse(result.data?.statisticsQuerySensorsWithFields[0].data)
+          : null
+
+        const value = parsedValue ? parsedValue[row.parameter.denotation] : undefined
+
+        if (value !== undefined) {
+          setData((prev) => {
+            const newData = [...prev]
+            newData[rowIndex] = {
+              id: row.config.name || row.parameter.denotation,
+              ranges: [...(row.config.ranges || []), 0, 0],
+              measures: [value],
+              markers: row.config.markers || []
+            }
+            return newData
+          })
+        }
+      }
+    } catch (error) {
+      const instance = instances.find((inst) => inst.uid === row.instance.uid)
+      toast.error(
+        `Failed to fetch data for '${instance?.userIdentifier || row.instance.uid} - ${row.parameter.denotation}'`
+      )
+      console.error('Fetch error:', error)
+    }
+  }
+
+  const checkRowAndFetch = (rowIndex: any) => {
+    // Check if row at index is valid and fetch data
+    const row = form.getValues(`rows.${rowIndex}`)
+    const valid =
+      row?.instance?.uid &&
+      row?.parameter?.denotation &&
+      row?.config?.function &&
+      (row.config.function !== 'last' ? row.config.timeFrame : true)
+
+    if (valid) {
+      fetchRowData(rowIndex)
+    }
   }
 
   const { data: parametersData, refetch: refetchParameters } = useSdTypeParametersWithSnapshotsQuery({
@@ -192,7 +218,8 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
     if (!newData[index]) return
     if (ranges) newData[index].ranges = ranges
     if (markers) newData[index].markers = markers
-    if (id) newData[index].id = id
+    if (id) newData[index].id = id.trim()
+    else newData[index].id = ''
     setData(newData)
   }
 
@@ -228,7 +255,6 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
         {form.watch('cardTitle') ? <h3 className="ml-2 text-lg font-semibold">{form.watch('cardTitle')}</h3> : null}
         {fields.map((_, index) => {
           const row = form.watch(`rows.${index}`)
-          console.log('Data at index', data[index])
           if (!data[index]) return null
           return (
             <div className="h-[75px] w-full scale-[0.9] sm:scale-100" key={index}>
@@ -296,7 +322,10 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                       <Button
                         variant="destructive"
                         size="icon"
-                        onClick={() => remove(index)}
+                        onClick={() => {
+                          setData((prev) => prev.filter((_, i) => i !== index))
+                          remove(index)
+                        }}
                         className="absolute right-0 top-0"
                       >
                         <TbTrash />
@@ -304,7 +333,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <FormField
                           control={form.control}
-                          name={`rows.${index}.instance.uid`}
+                          name={`rows.${index}.instance`}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Instance</FormLabel>
@@ -313,10 +342,11 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                   instances={instances}
                                   onValueChange={(instance) => {
                                     setSelectedInstance(instance)
-                                    field.onChange(instance.uid)
+                                    field.onChange(instance)
                                     form.setValue(`rows.${index}.parameter`, { denotation: '', id: null })
+                                    checkRowAndFetch(index)
                                   }}
-                                  value={field.value}
+                                  value={field.value.uid}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -334,7 +364,13 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                   value={
                                     field.value ? { id: field.value.id!, denotation: field.value.denotation } : null
                                   }
-                                  onValueChange={field.onChange}
+                                  onValueChange={(value) => {
+                                    form.setValue(`rows.${index}.config.name`, value?.denotation!)
+                                    automaticOffset(index, value?.denotation!)
+                                    handleDataChange(index, undefined, undefined, value?.denotation)
+                                    field.onChange(value)
+                                    checkRowAndFetch(index)
+                                  }}
                                   options={
                                     form.watch(`rows.${index}.instance.uid`)
                                       ? getParameterOptions(form.watch(`rows.${index}.instance.uid`))
@@ -379,9 +415,9 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                   onValueChange={(value) => {
                                     field.onChange(value)
                                     if (value === 'last') {
-                                      form.setValue(`rows.${index}.config.timeFrame`, '1440')
-                                      fetchData()
+                                      form.setValue(`rows.${index}.config.timeFrame`, '24')
                                     }
+                                    checkRowAndFetch(index)
                                   }}
                                   value={field.value}
                                 >
@@ -410,26 +446,13 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                 <FormItem>
                                   <FormLabel>Time Frame</FormLabel>
                                   <FormControl>
-                                    <Select
+                                    <TimeFrameSelector
                                       value={field.value}
                                       onValueChange={(value) => {
-                                        fetchData()
                                         field.onChange(value)
+                                        checkRowAndFetch(index)
                                       }}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select a time frame" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="60">Last hour</SelectItem>
-                                        <SelectItem value="360">Last 6 hours</SelectItem>
-                                        <SelectItem value="480">Last 12 hours</SelectItem>
-                                        <SelectItem value="1440">Last day</SelectItem>
-                                        <SelectItem value="4320">Last 3 days</SelectItem>
-                                        <SelectItem value="10080">Last week</SelectItem>
-                                        <SelectItem value="43200">Last month</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                    />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -759,7 +782,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                     className="m-auto mt-4 flex w-1/2 items-center justify-center"
                     onClick={() => {
                       append({
-                        instance: { uid: '' },
+                        instance: { uid: '', id: null },
                         parameter: { denotation: '', id: null },
                         config: {
                           name: '',
@@ -767,7 +790,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                           function: '',
                           minValue: 'auto',
                           maxValue: 'auto',
-                          timeFrame: '1440',
+                          timeFrame: '24',
                           measureSize: 0.2,
                           markers: []
                         }
@@ -782,12 +805,6 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
             </Accordion>
             <Button type="submit" className="mx-auto mt-4 flex w-3/4 justify-center">
               Submit
-            </Button>
-            <Button type="button" onClick={() => console.log('Form state', form.getValues())}>
-              Log Form State
-            </Button>
-            <Button type="button" onClick={() => console.log('Form errors', form.formState.errors)}>
-              Log Form Errors
             </Button>
           </form>
         </Form>

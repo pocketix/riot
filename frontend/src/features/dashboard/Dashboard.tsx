@@ -19,9 +19,14 @@ import { EntityCard } from './components/cards/EntityCard'
 import { AllConfigTypes, GridItem, BuilderResult } from '@/types/dashboard/GridItem'
 import { DBItemDetails } from '@/types/dashboard/DBItem'
 import _ from 'lodash'
-import { useSdInstancesWithSnapshotsQuery, useUpdateUserConfigMutation, useUserConfigQuery } from '@/generated/graphql'
+import {
+  useSdInstancesWithTypeAndSnapshotQuery,
+  useUpdateUserConfigMutation,
+  useUserConfigQuery
+} from '@/generated/graphql'
 import { RiotDashboardConfig } from '@/types/dashboard/dashboard'
-// import StatusTimeline from './components/details/StatusTimeLine'
+import { GroupsController } from './components/groups/GroupsController'
+import { Skeleton } from '@mui/material'
 
 const Dashboard = () => {
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), [])
@@ -55,7 +60,7 @@ const Dashboard = () => {
   const [details, setDetails] = useState<{ [key: string]: DBItemDetails<AllConfigTypes> }>({})
   const [currentBreakpoint, setCurrentBreakpoint] = useState('lg')
   const loadingToastRef = useRef<string | number | null>(null)
-  const { data: instances } = useSdInstancesWithSnapshotsQuery()
+  const { data: instances } = useSdInstancesWithTypeAndSnapshotQuery()
 
   // Handle window resize for mobile view
   // TODO: Phone scroll on drag ??
@@ -284,7 +289,6 @@ const Dashboard = () => {
       }
 
       if (fetchedConfigData) {
-        toast.success('Fetched from database')
         const config = fetchedConfigData.userConfig.config
         const parsedConfig: RiotDashboardConfig = JSON.parse(config)
 
@@ -376,7 +380,18 @@ const Dashboard = () => {
   }
 
   if (!mounted || !layouts || !details || !instances) {
-    return <div>Loading...</div>
+    return (
+      <div className="grid grid-cols-2 gap-4 overflow-hidden p-4">
+        <Skeleton variant="rounded" width={'100%'} height={200} />
+        <Skeleton variant="rounded" width={'100%'} height={200} />
+        <Skeleton variant="rounded" width={'100%'} height={200} className="col-span-2" />
+        <Skeleton variant="rounded" width={'100%'} height={200} />
+        <Skeleton variant="rounded" width={'100%'} height={200} />
+        <Skeleton variant="rounded" width={'100%'} height={200} className="col-span-2" />
+        <Skeleton variant="rounded" width={'100%'} height={200} />
+        <Skeleton variant="rounded" width={'100%'} height={200} />
+      </div>
+    )
   }
 
   return (
@@ -396,6 +411,7 @@ const Dashboard = () => {
         </div>
       </Navbar>
       <MainGrid>
+        <GroupsController instances={instances.sdInstances} />
         <ResponsiveGridLayout
           className="layout"
           layouts={layouts}

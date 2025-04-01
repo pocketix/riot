@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label'
 import { BuilderResult } from '@/types/dashboard/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
+import { TimeFrameSelector } from './components/time-frame-selector'
 
 type TableCardBuilderResult = BuilderResult<TableCardConfig>
 
@@ -35,7 +36,9 @@ export interface TableCardBuilderProps {
 }
 
 export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardBuilderProps) {
-  const [selectedInstance, setSelectedInstance] = useState<SdInstancesWithParamsQuery['sdInstances'][number] | null>(null)
+  const [selectedInstance, setSelectedInstance] = useState<SdInstancesWithParamsQuery['sdInstances'][number] | null>(
+    null
+  )
   const [availableParameters, setAvailableParameters] = useState<{
     [key: string]: SdTypeParametersWithSnapshotsQuery['sdType']['parameters']
   }>({})
@@ -77,7 +80,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
     defaultValues: config || {
       title: 'Area',
       tableTitle: 'Sensors',
-      timeFrame: '1440',
+      timeFrame: '24',
       decimalPlaces: 1,
       columns: [],
       rows: []
@@ -232,20 +235,12 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                   <FormItem>
                     <FormLabel>Time Frame</FormLabel>
                     <FormControl>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a time frame" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="60">Last hour</SelectItem>
-                          <SelectItem value="360">Last 6 hours</SelectItem>
-                          <SelectItem value="480">Last 12 hours</SelectItem>
-                          <SelectItem value="1440">Last day</SelectItem>
-                          <SelectItem value="4320">Last 3 days</SelectItem>
-                          <SelectItem value="10080">Last week</SelectItem>
-                          <SelectItem value="43200">Last month</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <TimeFrameSelector
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value)
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -366,7 +361,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                       />
                       <FormField
                         control={form.control}
-                        name={`rows.${rowIndex}.instance.uid`}
+                        name={`rows.${rowIndex}.instance`}
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
@@ -374,11 +369,11 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                                 Instance
                                 <SingleInstanceCombobox
                                   onValueChange={(value) => {
-                                    field.onChange(value.uid)
+                                    field.onChange(value)
                                     setSelectedInstance(value)
                                     form.setValue(`rows.${rowIndex}.parameter`, { id: null, denotation: '' })
                                   }}
-                                  value={field.value}
+                                  value={field.value.uid}
                                   instances={instances}
                                 />
                               </Label>
@@ -418,7 +413,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                   <Button
                     type="button"
                     onClick={() =>
-                      appendRow({ name: '', instance: { uid: '' }, parameter: { id: null, denotation: '' } })
+                      appendRow({ name: '', instance: { uid: '', id: null }, parameter: { id: null, denotation: '' } })
                     }
                     variant={'green'}
                     size={'icon'}

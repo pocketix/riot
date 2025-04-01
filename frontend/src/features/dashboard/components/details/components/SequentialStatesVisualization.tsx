@@ -7,14 +7,10 @@ import { select, Selection } from 'd3-selection'
 import { schemeCategory10 } from 'd3'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../../cards/components/ChartThemes'
-
-export interface SingleStatePoint {
-  time: string
-  value: string
-}
+import { Datum } from '@nivo/line'
 
 interface SequentialStatesProps {
-  data: SingleStatePoint[]
+  data: readonly Datum[]
 }
 
 interface StateDataSegment {
@@ -111,46 +107,77 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
     setHelpingLines(gridLinesGroup, helpingLines, innerHeight)
   }, [data, width])
 
-  const processData = (data: SingleStatePoint[], currentTime: Date): StateDataSegment[] => {
+  const processData = (data: readonly Datum[], currentTime: Date): StateDataSegment[] => {
     const valueColorMap: Record<string, string> = {}
     // Set discards duplicates
-    const uniqueValues = Array.from(new Set(data.map((d) => d.value)))
-
-    // Sort by time, it already should be sorted, but just in case
-    const sortedData = [...data].sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+    const uniqueValues = Array.from(new Set(data.map((d) => d.y)))
 
     // Color the values
     if (uniqueValues.length > 10) {
-      // This will be handled by black and white colors
       console.warn('More than 10 unique values, some colors will be repeated')
     }
     uniqueValues.forEach((value, i) => {
-      valueColorMap[value] = schemeCategory10[i % schemeCategory10.length]
+      valueColorMap[String(value)] = schemeCategory10[i % schemeCategory10.length]
     })
 
-    console.log('Sorted data', sortedData)
+    // Sort by time, it already should be sorted, but just in case
+    const sortedData = [...data].sort((a, b) => new Date(a.x!).getTime() - new Date(b.x!).getTime())
 
-    // Calculate time spans
-    return sortedData.map((point, i) => {
-      const startTime = new Date(point.time)
+    // Combine consecutive states with the same value
+    const combinedSegments: StateDataSegment[] = []
 
-      let endTime: Date
-      if (i < sortedData.length - 1) {
-        const nextPointTime = new Date(sortedData[i + 1].time)
-        endTime = nextPointTime <= currentTime ? nextPointTime : currentTime
+    if (sortedData.length === 0) return []
+
+    // First segment
+    let currentSegment: {
+      startTime: Date
+      value: string
+      points: Datum[]
+    }
+
+    currentSegment = {
+      startTime: new Date(sortedData[0].x!),
+      value: String(sortedData[0].y),
+      points: [sortedData[0]]
+    }
+
+    for (let i = 1; i < sortedData.length; i++) {
+      const point = sortedData[i]
+      const pointValue = point.y
+
+      if (pointValue === currentSegment.value) {
+        // Same state continues, just add this point to the current segment
+        currentSegment.points.push(point)
       } else {
-        endTime = currentTime
-      }
+        // State changed, get the time
+        const endTime = new Date(point.x!)
+        combinedSegments.push({
+          startTime: currentSegment.startTime,
+          endTime: endTime,
+          value: currentSegment.value,
+          duration: endTime.getTime() - currentSegment.startTime.getTime(),
+          color: valueColorMap[currentSegment.value]
+        })
 
-      return {
-        startTime,
-        endTime,
-        value: point.value,
-        duration: endTime.getTime() - startTime.getTime(),
-        color: valueColorMap[point.value],
-        originalPoint: point
+        // Create a new segment for the new state
+        currentSegment = {
+          startTime: new Date(point.x!),
+          value: String(pointValue),
+          points: [point]
+        }
       }
+    }
+
+    // The last segment doesnt get added in the loop
+    combinedSegments.push({
+      startTime: currentSegment.startTime,
+      endTime: currentTime,
+      value: currentSegment.value,
+      duration: currentTime.getTime() - currentSegment.startTime.getTime(),
+      color: valueColorMap[currentSegment.value]
     })
+
+    return combinedSegments
   }
 
   const createSegments = (
@@ -230,13 +257,14 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
       .append('text')
       .attr('class', 'segment-label')
       .attr('x', (d) => xScale(d.startTime) + (xScale(d.endTime) - xScale(d.startTime)) / 2)
-      .attr('y', height / 2)
+      .attr('y', (height + 2.5) / 2)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'middle')
       .attr('fill', strokeColor)
       .style('font-size', '12px')
       .style('pointer-events', 'none')
       .style('user-select', 'none')
+      .style('font-weight', 'bold')
       .text((d) => {
         const cellWidth = xScale(d.endTime) - xScale(d.startTime)
         const textWidth = d.value.length * 6
@@ -262,17 +290,11 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
         const date = new Date(d as Date)
 
         if (date.getHours() === 0 && date.getMinutes() === 0) {
-          if (date.getDate() === 1) {
-            return timeFormat('%b %d')(date)
-          } else if (date.getDay() === 0) {
-            return timeFormat('%a %d')(date)
-          } else {
-            return timeFormat('%a %d')(date)
-          }
+          return timeFormat('%a %d')(date)
         }
         return timeFormat('%H:%M')(date)
       })
-      .ticks(width > 1000 ? 15 : width > 700 ? 10 : width > 500 ? 7 : width > 300 ? 5 : 3)
+      .ticks(width / 75)
 
     const xAxisGroup = g
       .append('g')
@@ -290,7 +312,7 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
       )
 
     xAxisGroup
-      .selectAll('.tick line')
+      .selectAll('.tick-line')
       .style('stroke', isDarkMode ? darkTheme.axis.ticks.line.stroke : lightTheme.axis.ticks.line.stroke)
       .style(
         'stroke-width',

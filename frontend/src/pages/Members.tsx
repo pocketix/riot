@@ -7,12 +7,21 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import Heading from '@/ui/Heading'
+import { breakpoints } from '@/styles/Breakpoints'
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
   gap: 2rem;
-  padding: 2rem;
+  padding: 1.5rem;
+  color: hsl(var(--color-white));
+  overflow-y: auto;
+
+  @media (min-width: ${breakpoints.sm}) {
+    padding: 2rem;
+  }
 `
 
 const CardGrid = styled.div`
@@ -33,12 +42,17 @@ const UserCard = styled.div`
   gap: 1rem;
 `
 
-const ProfileImage = styled.img`
+const ProfileImage = styled.div`
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  object-fit: cover;
   background: var(--color-grey-200);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.6rem;
+  color: var(--color-white);
+  user-select: none;
 `
 
 const Username = styled.h3`
@@ -77,35 +91,35 @@ const mockedUsers = [
     id: 1,
     username: 'john_doe',
     name: 'John Doe',
-    profileImageURL: 'https://i.pravatar.cc/150?img=3',
+
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2) // 2 days ago
   },
   {
     id: 2,
     username: 'jane_smith',
     name: 'Jane Smith',
-    profileImageURL: 'https://i.pravatar.cc/150?img=5',
+
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 60 * 6) // 6 hours ago
   },
   {
     id: 3,
     username: 'tech_wizard',
     name: 'Lucas Sky',
-    profileImageURL: 'https://i.pravatar.cc/150?img=10',
+
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 30) // 30 min ago
   },
   {
     id: 4,
     username: 'data_queen',
     name: 'Elena Codes',
-    profileImageURL: 'https://i.pravatar.cc/150?img=12',
+
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 60 * 48) // 2 days ago
   },
   {
     id: 5,
     username: 'debug_master',
     name: 'Tom Logic',
-    profileImageURL: 'https://i.pravatar.cc/150?img=8',
+
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 5) // 5 min ago
   }
 ]
@@ -122,7 +136,7 @@ export default function Members() {
   return (
     <Container>
       <TopBar>
-        <h2 className="text-2xl font-bold">{t('membersPage.title')}</h2>
+        <Heading className="">{t('membersPage.title')}</Heading>
         <div className="relative w-full">
           <Input
             value={search}
@@ -141,10 +155,16 @@ export default function Members() {
       <CardGrid>
         {filteredUsers.map((user) => (
           <UserCard key={user.id}>
-            <ProfileImage
-              src={user.profileImageURL || 'https://via.placeholder.com/70?text=User'}
-              alt={user.username}
-            />
+            <ProfileImage>
+              {user.name
+                ? user.name
+                    .split(' ')
+                    .map((n) => n[0])
+                    .join('')
+                    .slice(0, 2)
+                    .toUpperCase()
+                : '👤'}
+            </ProfileImage>
             <Username>{user.username}</Username>
             <Name>{user.name}</Name>
             <LastLogin>

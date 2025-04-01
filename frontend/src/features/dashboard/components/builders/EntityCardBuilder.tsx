@@ -24,6 +24,7 @@ import { TbTrash } from 'react-icons/tb'
 import { BuilderResult } from '@/types/dashboard/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
+import { TimeFrameSelector } from './components/time-frame-selector'
 
 type EntityCardBuilderResult = BuilderResult<EntityCardConfig>
 
@@ -243,7 +244,7 @@ export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCar
                     />
                     <FormField
                       control={form.control}
-                      name={`rows.${rowIndex}.instance.uid`}
+                      name={`rows.${rowIndex}.instance`}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Instance</FormLabel>
@@ -251,11 +252,11 @@ export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCar
                             <SingleInstanceCombobox
                               instances={instances}
                               onValueChange={(value) => {
-                                field.onChange(value.uid)
+                                field.onChange(value)
                                 setSelectedInstance(value)
                                 form.setValue(`rows.${rowIndex}.parameter`, { id: null, denotation: '' })
                               }}
-                              value={field.value}
+                              value={field.value.uid}
                             />
                           </FormControl>
                           <FormMessage />
@@ -319,25 +320,12 @@ export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCar
                           <FormItem>
                             <FormLabel>Time Frame</FormLabel>
                             <FormControl>
-                              <Select
-                                value={field.value}
+                              <TimeFrameSelector
                                 onValueChange={(value) => {
                                   field.onChange(value)
                                 }}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a time frame" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="60">Last hour</SelectItem>
-                                  <SelectItem value="360">Last 6 hours</SelectItem>
-                                  <SelectItem value="480">Last 12 hours</SelectItem>
-                                  <SelectItem value="1440">Last day</SelectItem>
-                                  <SelectItem value="4320">Last 3 days</SelectItem>
-                                  <SelectItem value="10080">Last week</SelectItem>
-                                  <SelectItem value="43200">Last month</SelectItem>
-                                </SelectContent>
-                              </Select>
+                                value={field.value}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -354,7 +342,7 @@ export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCar
               onClick={() => {
                 append({
                   name: '',
-                  instance: { uid: '' },
+                  instance: { uid: '', id: null },
                   parameter: { id: null, denotation: '' },
                   visualization: null,
                   timeFrame: ''

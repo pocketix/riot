@@ -1,34 +1,43 @@
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useState } from 'react'
-import { SdParameter } from '@/generated/graphql'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
-export interface ParameterOption {
-  id: number
-  denotation: string
+export interface TimeFrameOption {
+  value: string
+  label: string
 }
 
-interface SingleParameterComboboxProps {
-  options: SdParameter[]
-  onValueChange: (value: ParameterOption | null) => void
-  value?: ParameterOption | null
+interface TimeFrameSelectorProps {
+  onValueChange: (value: string | null) => void
+  value?: string | null
   placeholder?: string
   disabled?: boolean
   className?: string
 }
 
-export function SingleParameterCombobox({
+const options: TimeFrameOption[] = [
+  { value: '1', label: '1 hour' },
+  { value: '3', label: '3 hours' },
+  { value: '6', label: '6 hours' },
+  { value: '12', label: '12 hours' },
+  { value: '24', label: '24 hours' },
+  { value: '72', label: '3 days' },
+  { value: '168', label: '7 days' },
+  { value: '336', label: '14 days' },
+  { value: '720', label: '30 days' }
+]
+
+export function TimeFrameSelector({
   onValueChange,
-  options,
   value,
   disabled = false,
-  placeholder = 'Select parameter...',
+  placeholder = 'Select timeframe...',
   className
-}: SingleParameterComboboxProps) {
+}: TimeFrameSelectorProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -42,33 +51,31 @@ export function SingleParameterCombobox({
           disabled={disabled}
           className={cn('w-full justify-between truncate px-2', className)}
         >
-          {value?.id ? value.denotation : placeholder}
+          {value ? options.find((option) => option.value === value)?.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
         <Command>
-          <CommandInput placeholder="Search parameter..." />
           <CommandList>
             <ScrollArea>
               <div className="h-fit max-h-[150px]">
-                <CommandEmpty>No parameter found.</CommandEmpty>
                 <CommandGroup>
                   {options.map((option) => (
                     <CommandItem
-                      key={option.id}
-                      value={option.denotation}
+                      key={option.value}
+                      value={option.label}
                       onSelect={() => {
-                        if (value?.id === option.id) {
+                        if (value === option.value) {
                           setOpen(false)
                         }
 
-                        onValueChange(option)
+                        onValueChange(option.value)
                         setOpen(false)
                       }}
                     >
-                      <Check className={cn(value?.id === option.id ? 'opacity-100' : 'opacity-0')} />
-                      {option.denotation}
+                      <Check className={cn(value === option.value ? 'opacity-100' : 'opacity-0')} />
+                      {option.label}
                     </CommandItem>
                   ))}
                 </CommandGroup>
