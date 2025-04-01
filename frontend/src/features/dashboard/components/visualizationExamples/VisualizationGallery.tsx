@@ -162,7 +162,8 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
       {
         name: 'Sensor2',
         instance: {
-          uid: 'sensor2'
+          uid: 'sensor2',
+          id: -1
         },
         parameter: {
           id: 1,
@@ -173,7 +174,8 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
       {
         name: 'Bathroom',
         instance: {
-          uid: 'sensor2'
+          uid: 'sensor2',
+          id: -1
         },
         parameter: {
           id: 1,
@@ -184,7 +186,8 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
       {
         name: 'Sensor1',
         instance: {
-          uid: 'sensor2'
+          uid: 'sensor2',
+          id: -1
         },
         parameter: {
           id: 1,

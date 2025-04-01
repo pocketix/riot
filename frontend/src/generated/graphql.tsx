@@ -645,10 +645,10 @@ export type RestOfKpiDefinitionDetailPageDataQueryVariables = Exact<{ [key: stri
 
 export type RestOfKpiDefinitionDetailPageDataQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: number, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: number, denotation: string, type: SdParameterType }> }>, sdInstances: Array<{ __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number } }> };
 
-export type SdInstancesWithSnapshotsQueryVariables = Exact<{ [key: string]: never; }>;
+export type SdInstancesWithTypeAndSnapshotQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SdInstancesWithSnapshotsQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', confirmedByUser: boolean, id: number, uid: string, userIdentifier: string, parameterSnapshots?: Array<{ __typename?: 'SDParameterSnapshot', parameterDenotation: string, boolean?: boolean | null, instanceUid: string, number?: number | null, string?: string | null, updatedAt: any }> | null }> };
+export type SdInstancesWithTypeAndSnapshotQuery = { __typename?: 'Query', sdInstances: Array<{ __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null }, parameterSnapshots?: Array<{ __typename?: 'SDParameterSnapshot', instanceId: number, parameterId: number, string?: string | null, number?: number | null, boolean?: boolean | null, updatedAt: any }> | null }> };
 
 export type SdInstancesWithParamsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -680,7 +680,17 @@ export type StatisticsQuerySensorsWithFieldsQuery = { __typename?: 'Query', stat
 export type OnSdParameterSnapshotUpdateSubscriptionVariables = Exact<{ [key: string]: never; }>;
 
 
-export type OnSdParameterSnapshotUpdateSubscription = { __typename?: 'Subscription', onSDParameterSnapshotUpdate: { __typename?: 'SDParameterSnapshot', instanceUid: string, parameterDenotation: string, string?: string | null, number?: number | null, boolean?: boolean | null, updatedAt: any } };
+export type OnSdParameterSnapshotUpdateSubscription = { __typename?: 'Subscription', onSDParameterSnapshotUpdate: { __typename?: 'SDParameterSnapshot', instanceId: number, parameterId: number, string?: string | null, number?: number | null, boolean?: boolean | null, updatedAt: any } };
+
+export type SdInstanceGroupsWithKpiDataQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SdInstanceGroupsWithKpiDataQuery = { __typename?: 'Query', sdInstanceGroups: Array<{ __typename?: 'SDInstanceGroup', id: number, userIdentifier: string, sdInstanceIDs: Array<number> }>, kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: number, sdTypeSpecification: string, userIdentifier: string, sdInstanceMode: SdInstanceMode, selectedSDInstanceUIDs: Array<string>, sdTypeID: number }>, kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: number, sdInstanceID: number, fulfilled: boolean }> };
+
+export type KpiFulfillmentSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type KpiFulfillmentSubscription = { __typename?: 'Subscription', onKPIFulfillmentChecked: { __typename?: 'KPIFulfillmentCheckResultTuple', kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: number, sdInstanceID: number, fulfilled: boolean }> } };
 
 
 export const DeleteSdTypeDocument = gql`
@@ -1372,51 +1382,6 @@ export type RestOfKpiDefinitionDetailPageDataQueryHookResult = ReturnType<typeof
 export type RestOfKpiDefinitionDetailPageDataLazyQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataLazyQuery>;
 export type RestOfKpiDefinitionDetailPageDataSuspenseQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataSuspenseQuery>;
 export type RestOfKpiDefinitionDetailPageDataQueryResult = Apollo.QueryResult<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>;
-export const SdInstancesWithSnapshotsDocument = gql`
-    query SdInstancesWithSnapshots {
-  sdInstances {
-    id
-    uid
-    confirmedByUser
-    userIdentifier
-    type {
-      id
-    }
-  }
-}
-    `;
-
-/**
- * __useRestOfKpiDefinitionDetailPageDataQuery__
- *
- * To run a query within a React component, call `useRestOfKpiDefinitionDetailPageDataQuery` and pass it any options that fit your needs.
- * When your component renders, `useRestOfKpiDefinitionDetailPageDataQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useRestOfKpiDefinitionDetailPageDataQuery({
- *   variables: {
- *   },
- * });
- */
-export function useRestOfKpiDefinitionDetailPageDataQuery(baseOptions?: Apollo.QueryHookOptions<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>(RestOfKpiDefinitionDetailPageDataDocument, options);
-      }
-export function useRestOfKpiDefinitionDetailPageDataLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>(RestOfKpiDefinitionDetailPageDataDocument, options);
-        }
-export function useRestOfKpiDefinitionDetailPageDataSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>(RestOfKpiDefinitionDetailPageDataDocument, options);
-        }
-export type RestOfKpiDefinitionDetailPageDataQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataQuery>;
-export type RestOfKpiDefinitionDetailPageDataLazyQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataLazyQuery>;
-export type RestOfKpiDefinitionDetailPageDataSuspenseQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataSuspenseQuery>;
-export type RestOfKpiDefinitionDetailPageDataQueryResult = Apollo.QueryResult<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>;
 export const SdInstancesWithTypeAndSnapshotDocument = gql`
     query SdInstancesWithTypeAndSnapshot {
   sdInstances {
@@ -1669,8 +1634,8 @@ export type StatisticsQuerySensorsWithFieldsQueryResult = Apollo.QueryResult<Sta
 export const OnSdParameterSnapshotUpdateDocument = gql`
     subscription OnSDParameterSnapshotUpdate {
   onSDParameterSnapshotUpdate {
-    instanceUid
-    parameterDenotation
+    instanceId
+    parameterId
     string
     number
     boolean
@@ -1700,3 +1665,90 @@ export function useOnSdParameterSnapshotUpdateSubscription(baseOptions?: Apollo.
       }
 export type OnSdParameterSnapshotUpdateSubscriptionHookResult = ReturnType<typeof useOnSdParameterSnapshotUpdateSubscription>;
 export type OnSdParameterSnapshotUpdateSubscriptionResult = Apollo.SubscriptionResult<OnSdParameterSnapshotUpdateSubscription>;
+export const SdInstanceGroupsWithKpiDataDocument = gql`
+    query SdInstanceGroupsWithKPIData {
+  sdInstanceGroups {
+    id
+    userIdentifier
+    sdInstanceIDs
+  }
+  kpiDefinitions {
+    id
+    sdTypeSpecification
+    userIdentifier
+    sdInstanceMode
+    selectedSDInstanceUIDs
+    sdTypeID
+  }
+  kpiFulfillmentCheckResults {
+    kpiDefinitionID
+    sdInstanceID
+    fulfilled
+  }
+}
+    `;
+
+/**
+ * __useSdInstanceGroupsWithKpiDataQuery__
+ *
+ * To run a query within a React component, call `useSdInstanceGroupsWithKpiDataQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSdInstanceGroupsWithKpiDataQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSdInstanceGroupsWithKpiDataQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useSdInstanceGroupsWithKpiDataQuery(baseOptions?: Apollo.QueryHookOptions<SdInstanceGroupsWithKpiDataQuery, SdInstanceGroupsWithKpiDataQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<SdInstanceGroupsWithKpiDataQuery, SdInstanceGroupsWithKpiDataQueryVariables>(SdInstanceGroupsWithKpiDataDocument, options);
+      }
+export function useSdInstanceGroupsWithKpiDataLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SdInstanceGroupsWithKpiDataQuery, SdInstanceGroupsWithKpiDataQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<SdInstanceGroupsWithKpiDataQuery, SdInstanceGroupsWithKpiDataQueryVariables>(SdInstanceGroupsWithKpiDataDocument, options);
+        }
+export function useSdInstanceGroupsWithKpiDataSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<SdInstanceGroupsWithKpiDataQuery, SdInstanceGroupsWithKpiDataQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<SdInstanceGroupsWithKpiDataQuery, SdInstanceGroupsWithKpiDataQueryVariables>(SdInstanceGroupsWithKpiDataDocument, options);
+        }
+export type SdInstanceGroupsWithKpiDataQueryHookResult = ReturnType<typeof useSdInstanceGroupsWithKpiDataQuery>;
+export type SdInstanceGroupsWithKpiDataLazyQueryHookResult = ReturnType<typeof useSdInstanceGroupsWithKpiDataLazyQuery>;
+export type SdInstanceGroupsWithKpiDataSuspenseQueryHookResult = ReturnType<typeof useSdInstanceGroupsWithKpiDataSuspenseQuery>;
+export type SdInstanceGroupsWithKpiDataQueryResult = Apollo.QueryResult<SdInstanceGroupsWithKpiDataQuery, SdInstanceGroupsWithKpiDataQueryVariables>;
+export const KpiFulfillmentDocument = gql`
+    subscription KPIFulfillment {
+  onKPIFulfillmentChecked {
+    kpiFulfillmentCheckResults {
+      kpiDefinitionID
+      sdInstanceID
+      fulfilled
+    }
+  }
+}
+    `;
+
+/**
+ * __useKpiFulfillmentSubscription__
+ *
+ * To run a query within a React component, call `useKpiFulfillmentSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useKpiFulfillmentSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useKpiFulfillmentSubscription({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useKpiFulfillmentSubscription(baseOptions?: Apollo.SubscriptionHookOptions<KpiFulfillmentSubscription, KpiFulfillmentSubscriptionVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useSubscription<KpiFulfillmentSubscription, KpiFulfillmentSubscriptionVariables>(KpiFulfillmentDocument, options);
+      }
+export type KpiFulfillmentSubscriptionHookResult = ReturnType<typeof useKpiFulfillmentSubscription>;
+export type KpiFulfillmentSubscriptionResult = Apollo.SubscriptionResult<KpiFulfillmentSubscription>;
