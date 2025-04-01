@@ -16,6 +16,7 @@ import { CardEditDialog } from '../editors/CardEditDialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { BuilderResult } from '@/types/dashboard/GridItem'
 import { StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
+import { useDeviceDetail } from '@/context/DeviceDetailContext'
 
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   position: relative;
@@ -76,7 +77,9 @@ export const EntityCard = ({
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const [data, setData] = useState<RowData[]>([])
   const [chartConfig, setChartConfig] = useState<EntityCardConfig>()
+  const [error, setError] = useState<string | null>(null)
   const [fetchData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
+  const { setDetailsSelectedDevice } = useDeviceDetail()
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -113,8 +116,9 @@ export const EntityCard = ({
       const rowsToFetch = rows.map((row) => ({
         key: row.instance.uid,
         values: row.parameter.denotation,
-        timeFrame: row.visualization === 'sparkline' ? Number(row.timeFrame) : 1440,
-        aggregatedMinutes: row.visualization === 'sparkline' ? Number(row.timeFrame) / 32 : Number(row.timeFrame)
+        timeFrame: row.visualization === 'sparkline' ? Number(row.timeFrame) : 24,
+        aggregatedMinutes:
+          row.visualization === 'sparkline' ? (Number(row.timeFrame) * 60) / 32 : Number(row.timeFrame) * 60
       }))
 
       console.log('Rows to fetch', rowsToFetch)
@@ -132,7 +136,7 @@ export const EntityCard = ({
                 ]
               },
               request: {
-                from: new Date(Date.now() - row.timeFrame * 60 * 1000).toISOString(),
+                from: new Date(Date.now() - row.timeFrame * 60 * 60 * 1000).toISOString(),
                 aggregateMinutes: Math.ceil(row.aggregatedMinutes),
                 operation: StatisticsOperation.Last
               }
@@ -156,7 +160,6 @@ export const EntityCard = ({
       const rowValues: RowData[] = []
       chartConfig.rows.forEach((row, index) => {
         const data = parsedData[index]
-        console.log('Data', data)
         if (row.visualization === 'sparkline' && data) {
           const sparklineData = data.map((item: any) => {
             const value = JSON.parse(item.data)
@@ -185,6 +188,8 @@ export const EntityCard = ({
         console.log('Parsed config', parsedConfig.data)
         setChartConfig(parsedConfig.data)
       } else {
+        setError('Failed to parse configuration')
+        console.error('Failed to parse configuration', parsedConfig.error)
         toast.error('Failed to parse configuration')
       }
     }
@@ -201,7 +206,21 @@ export const EntityCard = ({
   }, [cardID, highlight])
 
   if (!chartConfig || !chartConfig.rows) {
-    return <Skeleton className="h-full w-full" />
+    return (
+      <>
+        <Skeleton className="h-full w-full" />
+        {error && (
+          <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center rounded-lg bg-red-500 text-white">
+            <span className="text-sm font-semibold">{error}</span>
+          </div>
+        )}
+        {editModeEnabled && (
+          <DeleteEditContainer>
+            <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+          </DeleteEditContainer>
+        )}
+      </>
+    )
   }
 
   return (
@@ -230,10 +249,15 @@ export const EntityCard = ({
               if (
                 !data[rowIndex] ||
                 (row.visualization === 'sparkline' && !data[rowIndex].sparklineData) ||
-                (row.visualization !== 'sparkline' && !data[rowIndex].value)
+                (row.visualization !== 'sparkline' && data[rowIndex].value === undefined)
               )
                 return (
-                  <tr key={rowIndex}>
+                  <tr
+                    key={rowIndex}
+                    onClick={() =>
+                      setDetailsSelectedDevice({ uid: row.instance.uid, parameter: row.parameter.denotation })
+                    }
+                  >
                     <td className="text-sm">{row.name}</td>
                     <td className="h-[24px] w-[75px] text-center text-sm">
                       <Skeleton className="h-full w-full" disableAnimation>
@@ -256,10 +280,15 @@ export const EntityCard = ({
                   </tr>
                 )
               return (
-                <tr key={rowIndex}>
+                <tr
+                  key={rowIndex}
+                  onClick={() =>
+                    setDetailsSelectedDevice({ uid: row.instance.uid, parameter: row.parameter.denotation })
+                  }
+                >
                   <td className="text-sm">{row.name}</td>
                   {row.visualization === 'sparkline' && (
-                    <td className="h-[24px] w-[75px] text-center text-sm">
+                    <td className="h-[24px] w-[75px] min-w-0 text-center text-sm">
                       <ResponsiveLine
                         data={[
                           {
@@ -267,16 +296,16 @@ export const EntityCard = ({
                             data: data[rowIndex].sparklineData!.data
                           }
                         ]}
-                        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                        margin={{ top: 2, right: 2, bottom: 3, left: 2 }}
                         xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
-                        xFormat="time:%Y-%m-%dT%H:%M:%SZ"
+                        xFormat="time:%Y-%m-%d %H:%M:%S"
                         yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: true, reverse: false }}
                         animate={false}
                         pointSize={0}
                         axisBottom={null}
                         axisLeft={null}
                         curve="cardinal"
-                        lineWidth={4}
+                        lineWidth={3}
                         enableGridX={false}
                         enableGridY={false}
                         useMesh={false}

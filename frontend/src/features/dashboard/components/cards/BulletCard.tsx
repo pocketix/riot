@@ -15,11 +15,12 @@ import { CardEditDialog } from '../editors/CardEditDialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { BuilderResult } from '@/types/dashboard/GridItem'
 import {
-  SdInstancesWithSnapshotsQuery,
+  SdInstancesWithTypeAndSnapshotQuery,
   StatisticsOperation,
   useStatisticsQuerySensorsWithFieldsLazyQuery
 } from '@/generated/graphql'
 import { BulletChartToolTip } from './tooltips/BulletChartToolTIp'
+import { useDeviceDetail } from '@/context/DeviceDetailContext'
 
 // Styled components
 export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -51,7 +52,7 @@ interface BulletCardProps {
 
   configuration: any
   handleSaveEdit: (config: BuilderResult<BulletCardConfig>) => void
-  instances: SdInstancesWithSnapshotsQuery['sdInstances']
+  instances: SdInstancesWithTypeAndSnapshotQuery['sdInstances']
 }
 
 export const BulletCard = ({
@@ -75,6 +76,8 @@ export const BulletCard = ({
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const [data, setData] = useState<any[]>([])
   const [getChartData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
+  const [error, setError] = useState<string | null>(null)
+  const { setDetailsSelectedDevice } = useDeviceDetail()
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -111,9 +114,6 @@ export const BulletCard = ({
       const rows = chartConfig.rows
       if (!rows) return
 
-      console.log('Fetching data')
-      console.log('CONFIGS', rows)
-
       const results = await Promise.allSettled(
         rows.map(async (row) => {
           return getChartData({
@@ -127,8 +127,8 @@ export const BulletCard = ({
                 ]
               },
               request: {
-                from: new Date(Date.now() - Number(row.config.timeFrame) * 60 * 1000).toISOString(),
-                aggregateMinutes: Number(row.config.timeFrame) * 1000,
+                from: new Date(Date.now() - Number(row.config.timeFrame) * 60 * 60 * 1000).toISOString(),
+                aggregateMinutes: Number(row.config.timeFrame) * 60 * 1000,
                 operation: row.config.function as StatisticsOperation
               }
             }
@@ -155,7 +155,6 @@ export const BulletCard = ({
         if (value === undefined) {
           return null
         }
-        console.log('value at index', index, value)
         return {
           id: row.config.name,
           measures: [value],
@@ -168,14 +167,7 @@ export const BulletCard = ({
   }
 
   useEffect(() => {
-    if (data) {
-      console.log('Data', data)
-    }
-  }, [data])
-
-  useEffect(() => {
     if (chartConfig) {
-      console.log('Chart config', chartConfig)
       fetchData()
     }
   }, [chartConfig])
@@ -191,12 +183,33 @@ export const BulletCard = ({
         console.log('Parsed config', parsedConfig.data)
         setChartConfig(parsedConfig.data)
       } else {
+        setError('Failed to parse configuration')
+        console.error('Failed to parse configuration', parsedConfig.error)
         toast.error('Failed to parse configuration')
       }
     }
   }, [configuration])
 
-  if (!chartConfig || !data || beingResized) return <Skeleton className="h-full w-full" />
+  function handleOnClick(instanceUID: string, parameter: string) {
+    setDetailsSelectedDevice({ uid: instanceUID, parameter: parameter })
+  }
+
+  if (!chartConfig || !data || beingResized || error)
+    return (
+      <>
+        <Skeleton className="h-full w-full" />
+        {error && (
+          <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center rounded-lg bg-destructive text-primary">
+            <span className="text-sm font-semibold">{error}</span>
+          </div>
+        )}
+        {editModeEnabled && (
+          <DeleteEditContainer>
+            <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+          </DeleteEditContainer>
+        )}
+      </>
+    )
 
   return (
     <Container key={cardID} className={`${cardID}`}>
@@ -211,14 +224,17 @@ export const BulletCard = ({
           <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
         </DeleteEditContainer>
       )}
-      {chartConfig.cardTitle ? <div className="pl-4 pt-2 font-semibold">{chartConfig.cardTitle}</div> : null}
+      {chartConfig.cardTitle ? <span className="pl-2 pt-2 font-semibold">{chartConfig.cardTitle}</span> : null}
       {chartConfig.rows?.map((row, index) => {
         const instanceName = instances.find((instance) => instance.uid === row.instance.uid)?.userIdentifier
-        console.log('ROW', row)
         if (!data[index])
           return (
             // Return a skeleton if data is not available
-            <BulletContainer key={index} $editModeEnabled={editModeEnabled}>
+            <BulletContainer
+              key={index}
+              $editModeEnabled={editModeEnabled}
+              onClick={() => handleOnClick(row.instance.uid, row.parameter.denotation)}
+            >
               <Skeleton className="h-full w-full p-2" disableAnimation>
                 <TooltipProvider>
                   <Tooltip>
@@ -258,11 +274,22 @@ export const BulletCard = ({
               maxValue={row.config.maxValue || 'auto'}
               rangeColors={
                 row.config.colorScheme === 'greys'
-                  ? ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3']
+                  ? // The nivo's grey color scheme is not suitable as the colors are in reversed order
+                    ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3']
                   : 'seq:cool'
               }
               measureColors={row.config.colorScheme === 'greys' ? ['pink'] : 'seq:red_purple'}
               theme={isDarkMode ? darkTheme : lightTheme}
+              // TODO: Mobile devices problem
+              onMarkerClick={() => {
+                handleOnClick(row.instance.uid, row.parameter.denotation)
+              }}
+              onMeasureClick={() => {
+                handleOnClick(row.instance.uid, row.parameter.denotation)
+              }}
+              onRangeClick={() => {
+                handleOnClick(row.instance.uid, row.parameter.denotation)
+              }}
               tooltip={() => {
                 const instanceName = instances.find((instance) => instance.uid === row.instance.uid)?.userIdentifier
                 return (

@@ -12,16 +12,17 @@ export const GET_INSTANCES_WITH_PARAMETERS = gql`
         denotation
         label
         icon
-        parameters {
-          id
-          denotation
-          label
-          type
-        }
       }
     }
   }
 `
+// Not working yet
+// parameters {
+//   id
+//   denotation
+//   label
+//   type
+// }
 
 export const GET_SDTYPE_PARAMETERS = gql`
   query SdTypeParameters($sdTypeId: ID!) {
@@ -48,8 +49,8 @@ export const GET_SDTYPE_PARAMETERS_WITH_SNAPSHOTS = gql`
         type
         label
         parameterSnapshots {
-          instanceUid
-          parameterDenotation
+          instanceId
+          parameterId
           string
           number
           boolean
