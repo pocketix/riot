@@ -42,17 +42,12 @@ const UserCard = styled.div`
   gap: 1rem;
 `
 
-const ProfileImage = styled.div`
+const ProfileImage = styled.img`
   width: 70px;
   height: 70px;
   border-radius: 50%;
   background: var(--color-grey-200);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.6rem;
-  color: var(--color-white);
-  user-select: none;
+  object-fit: cover;
 `
 
 const Username = styled.h3`
@@ -91,35 +86,35 @@ const mockedUsers = [
     id: 1,
     username: 'john_doe',
     name: 'John Doe',
-
+    profileImageUrl: '/placeholders/avatar1.webp',
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2) // 2 days ago
   },
   {
     id: 2,
     username: 'jane_smith',
     name: 'Jane Smith',
-
+    profileImageUrl: '/placeholders/avatar2.webp',
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 60 * 6) // 6 hours ago
   },
   {
     id: 3,
     username: 'tech_wizard',
     name: 'Lucas Sky',
-
+    profileImageUrl: '/placeholders/avatar3.webp',
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 30) // 30 min ago
   },
   {
     id: 4,
     username: 'data_queen',
     name: 'Elena Codes',
-
+    profileImageUrl: '/placeholders/avatar4.webp',
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 60 * 48) // 2 days ago
   },
   {
     id: 5,
     username: 'debug_master',
     name: 'Tom Logic',
-
+    profileImageUrl: '/placeholders/avatar5.webp',
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 5) // 5 min ago
   }
 ]
@@ -155,16 +150,7 @@ export default function Members() {
       <CardGrid>
         {filteredUsers.map((user) => (
           <UserCard key={user.id}>
-            <ProfileImage>
-              {user.name
-                ? user.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')
-                    .slice(0, 2)
-                    .toUpperCase()
-                : '👤'}
-            </ProfileImage>
+            <ProfileImage src={user.profileImageUrl} alt={user.name} />
             <Username>{user.username}</Username>
             <Name>{user.name}</Name>
             <LastLogin>
