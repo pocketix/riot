@@ -137,6 +137,7 @@ export type Mutation = {
   updateSDCommand: SdCommand;
   updateSDInstance: SdInstance;
   updateSDInstanceGroup: SdInstanceGroup;
+  updateSDType: SdType;
   updateUserConfig: UserConfig;
 };
 
@@ -226,6 +227,12 @@ export type MutationUpdateSdInstanceGroupArgs = {
 };
 
 
+export type MutationUpdateSdTypeArgs = {
+  id: Scalars['ID']['input'];
+  input: SdTypeInput;
+};
+
+
 export type MutationUpdateUserConfigArgs = {
   input: UserConfigInput;
   userId: Scalars['ID']['input'];
@@ -294,6 +301,7 @@ export type Query = {
   kpiDefinition: KpiDefinition;
   kpiDefinitions: Array<KpiDefinition>;
   kpiFulfillmentCheckResults: Array<KpiFulfillmentCheckResult>;
+  myUserConfig: UserConfig;
   sdCommand: SdCommand;
   sdCommandInvocation: SdCommandInvocation;
   sdCommandInvocations: Array<SdCommandInvocation>;
@@ -603,6 +611,14 @@ export type UpdateUserIdentifierOfSdInstanceMutationVariables = Exact<{
 
 
 export type UpdateUserIdentifierOfSdInstanceMutation = { __typename?: 'Mutation', updateSDInstance: { __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: number, denotation: string, type: SdParameterType }> } } };
+
+export type UpdateSdTypeMutationVariables = Exact<{
+  updateSdTypeId: Scalars['ID']['input'];
+  input: SdTypeInput;
+}>;
+
+
+export type UpdateSdTypeMutation = { __typename?: 'Mutation', updateSDType: { __typename?: 'SDType', denotation: string, icon?: string | null, id: number, label?: string | null, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, label?: string | null, type: SdParameterType }> } };
 
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -990,6 +1006,49 @@ export function useUpdateUserIdentifierOfSdInstanceMutation(baseOptions?: Apollo
 export type UpdateUserIdentifierOfSdInstanceMutationHookResult = ReturnType<typeof useUpdateUserIdentifierOfSdInstanceMutation>;
 export type UpdateUserIdentifierOfSdInstanceMutationResult = Apollo.MutationResult<UpdateUserIdentifierOfSdInstanceMutation>;
 export type UpdateUserIdentifierOfSdInstanceMutationOptions = Apollo.BaseMutationOptions<UpdateUserIdentifierOfSdInstanceMutation, UpdateUserIdentifierOfSdInstanceMutationVariables>;
+export const UpdateSdTypeDocument = gql`
+    mutation UpdateSDType($updateSdTypeId: ID!, $input: SDTypeInput!) {
+  updateSDType(id: $updateSdTypeId, input: $input) {
+    denotation
+    icon
+    id
+    label
+    parameters {
+      denotation
+      id
+      label
+      type
+    }
+  }
+}
+    `;
+export type UpdateSdTypeMutationFn = Apollo.MutationFunction<UpdateSdTypeMutation, UpdateSdTypeMutationVariables>;
+
+/**
+ * __useUpdateSdTypeMutation__
+ *
+ * To run a mutation, you first call `useUpdateSdTypeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateSdTypeMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateSdTypeMutation, { data, loading, error }] = useUpdateSdTypeMutation({
+ *   variables: {
+ *      updateSdTypeId: // value for 'updateSdTypeId'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateSdTypeMutation(baseOptions?: Apollo.MutationHookOptions<UpdateSdTypeMutation, UpdateSdTypeMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateSdTypeMutation, UpdateSdTypeMutationVariables>(UpdateSdTypeDocument, options);
+      }
+export type UpdateSdTypeMutationHookResult = ReturnType<typeof useUpdateSdTypeMutation>;
+export type UpdateSdTypeMutationResult = Apollo.MutationResult<UpdateSdTypeMutation>;
+export type UpdateSdTypeMutationOptions = Apollo.BaseMutationOptions<UpdateSdTypeMutation, UpdateSdTypeMutationVariables>;
 export const SdInstancesDocument = gql`
     query SdInstances {
   sdInstances {

@@ -9,7 +9,9 @@ import {
   DeleteSdTypeMutationVariables,
   SdParameterType,
   SdTypeQuery,
-  SdTypeQueryVariables
+  SdTypeQueryVariables,
+  UpdateSdTypeMutation,
+  UpdateSdTypeMutationVariables
 } from '@/generated/graphql'
 import Spinner from '@/ui/Spinner'
 import styled from 'styled-components'
@@ -22,7 +24,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import IconPicker from '@/ui/IconPicker'
 import { useForm } from 'react-hook-form'
 import { breakpoints } from '@/styles/Breakpoints'
-import { CREATE_DEVICE_TYPE, DELETE_DEVICE_TYPE } from '@/graphql/Mutations'
+import { CREATE_DEVICE_TYPE, DELETE_DEVICE_TYPE, UPDATE_DEVICE_TYPE } from '@/graphql/Mutations'
 import DeleteConfirmationModal from '@/ui/DeleteConfirmationModal'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
@@ -206,6 +208,7 @@ export default function DeviceTypeDetail() {
 
   const [deleteSDTypeMutation] = useMutation<DeleteSdTypeMutation, DeleteSdTypeMutationVariables>(DELETE_DEVICE_TYPE)
   const [createSDTypeMutation] = useMutation<CreateSdTypeMutation, CreateSdTypeMutationVariables>(CREATE_DEVICE_TYPE)
+  const [updateSDTypeMutation] = useMutation<UpdateSdTypeMutation, UpdateSdTypeMutationVariables>(UPDATE_DEVICE_TYPE)
 
   const IconComponent = useMemo(() => getIcon(watch('icon') || 'TbQuestionMark'), [watch('icon')])
 
@@ -233,7 +236,24 @@ export default function DeviceTypeDetail() {
           navigate(`/settings/device-types/${newId}`)
         }
       } else {
-        // TODO: add update mutation
+        console.log('Updating device type:', data)
+        await updateSDTypeMutation({
+          variables: {
+            updateSdTypeId: Number(id),
+            input: {
+              denotation: data.denotation,
+              icon: data.icon,
+              label: data.label,
+              parameters: data.parameters.map((p: any) => ({
+                denotation: p.denotation,
+                type: p.type as SdParameterType,
+                label: p.label
+              }))
+            }
+          }
+        })
+        toast.success('Device type updated successfully')
+        navigate(`/settings/device-types/${id}`)
       }
 
       setEditMode(false)
