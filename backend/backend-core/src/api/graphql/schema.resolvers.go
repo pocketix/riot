@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql/gsc"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/domainLogicLayer"
@@ -236,6 +237,19 @@ func (r *queryResolver) UserConfig(ctx context.Context, id uint32) (graphQLModel
 		log.Printf("Error occurred (get user config results): %s\n", getUserConfigResult.GetError().Error())
 	}
 	return getUserConfigResult.Unwrap()
+}
+
+func (r *queryResolver) MyUserConfig(ctx context.Context) (graphQLModel.UserConfig, error) {
+	userIdString, ok := ctx.Value("userId").(string)
+	if !ok {
+		return graphQLModel.UserConfig{}, fmt.Errorf("user config id not set")
+	}
+	userId, err := strconv.ParseUint(userIdString, 10, 32)
+	if err != nil {
+		return graphQLModel.UserConfig{}, err
+	}
+
+	return domainLogicLayer.GetUserConfig(uint32(userId)).Unwrap()
 }
 
 func (r *queryResolver) SdCommand(ctx context.Context, id uint32) (graphQLModel.SDCommand, error) {

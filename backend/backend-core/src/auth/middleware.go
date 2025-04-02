@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
@@ -8,6 +9,10 @@ import (
 	"golang.org/x/sync/singleflight"
 	"net/http"
 	"time"
+)
+
+const (
+	UserIdContextIdentifier = "userId"
 )
 
 var (
@@ -18,7 +23,8 @@ var (
 func JWTAuthenticationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !jwtAuthenticationMiddlewareEnabled {
-			next.ServeHTTP(w, r)
+			ctx := context.WithValue(r.Context(), UserIdContextIdentifier, "1")
+			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 
@@ -30,7 +36,14 @@ func JWTAuthenticationMiddleware(next http.Handler) http.Handler {
 			}
 
 			if isJWTValid(sessionJWT) {
-				next.ServeHTTP(w, r)
+				subject := extractSubjectFromJWT(getSessionJWTCookieValue(r).GetPayload())
+				if subject.IsFailure() {
+					http.Error(w, "failed to parse session JWT", http.StatusUnauthorized)
+					return
+				}
+
+				ctx := context.WithValue(r.Context(), UserIdContextIdentifier, subject.GetPayload())
+				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
 
@@ -70,8 +83,27 @@ func JWTAuthenticationMiddleware(next http.Handler) http.Handler {
 
 		setupRefreshTokenCookie(w, sessionRefreshResultObject.newRefreshToken, time.Until(sessionRefreshResultObject.refreshTokenExpiresAt))
 
-		next.ServeHTTP(w, r)
+		subject := extractSubjectFromJWT(sessionRefreshResultObject.newSessionJWT)
+		if subject.IsFailure() {
+			http.Error(w, "failed to parse session JWT", http.StatusUnauthorized)
+			return
+		}
+		ctx := context.WithValue(r.Context(), UserIdContextIdentifier, subject.GetPayload())
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func extractSubjectFromJWT(jwt string) sharedUtils.Result[string] {
+	sessionJWT, err := parseJWT(jwt)
+	if err != nil {
+		return sharedUtils.NewFailureResult[string](err)
+	}
+
+	subject, err := sessionJWT.Claims.GetSubject()
+	if err != nil {
+		return sharedUtils.NewFailureResult[string](err)
+	}
+	return sharedUtils.NewSuccessResult(subject)
 }
 
 type sessionRefreshResult struct {
