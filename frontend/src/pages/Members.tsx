@@ -10,23 +10,31 @@ import { useTranslation } from 'react-i18next'
 import Heading from '@/ui/Heading'
 import { breakpoints } from '@/styles/Breakpoints'
 
+const PageWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+`
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   gap: 2rem;
-  padding: 1.5rem;
   color: hsl(var(--color-white));
   overflow-y: auto;
+  width: 100%;
 
   @media (min-width: ${breakpoints.sm}) {
-    padding: 2rem;
+    max-width: 1300px;
   }
 `
 
 const CardGrid = styled.div`
   display: grid;
   gap: 1.5rem;
+  width: 100%;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 `
 
@@ -129,40 +137,42 @@ export default function Members() {
   )
 
   return (
-    <Container>
-      <TopBar>
-        <Heading className="">{t('membersPage.title')}</Heading>
-        <div className="relative w-full">
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('membersPage.searchPlaceholder')}
-            className="w-full bg-[--color-grey-200] pr-10"
-          />
-          {search && (
-            <ClearButton onClick={() => setSearch('')} type="button">
-              <X className="h-5 w-5 text-xl text-[--color-white]" />
-            </ClearButton>
-          )}
-        </div>
-      </TopBar>
+    <PageWrapper>
+      <Container>
+        <TopBar>
+          <Heading className="">{t('membersPage.title')}</Heading>
+          <div className="relative w-full">
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('membersPage.searchPlaceholder')}
+              className="w-full bg-[--color-grey-200] pr-10"
+            />
+            {search && (
+              <ClearButton onClick={() => setSearch('')} type="button">
+                <X className="h-5 w-5 text-xl text-[--color-white]" />
+              </ClearButton>
+            )}
+          </div>
+        </TopBar>
 
-      <CardGrid>
-        {filteredUsers.map((user) => (
-          <UserCard key={user.id}>
-            <ProfileImage src={user.profileImageUrl} alt={user.name} />
-            <Username>{user.username}</Username>
-            <Name>{user.name}</Name>
-            <LastLogin>
-              {t('membersPage.lastLogin', {
-                time: user.lastLoginAt ? formatDistanceToNow(user.lastLoginAt, { addSuffix: true }) : 'N/A'
-              })}
-            </LastLogin>
+        <CardGrid>
+          {filteredUsers.map((user) => (
+            <UserCard key={user.id}>
+              <ProfileImage src={user.profileImageUrl || ''} alt={user.name} />
+              <Username>{user.username}</Username>
+              <Name>{user.name}</Name>
+              <LastLogin>
+                {t('membersPage.lastLogin', {
+                  time: user.lastLoginAt ? formatDistanceToNow(user.lastLoginAt, { addSuffix: true }) : 'N/A'
+                })}
+              </LastLogin>
 
-            <Button onClick={() => navigate(`/members/${user.id}`)}>{t('membersPage.viewDetails')}</Button>
-          </UserCard>
-        ))}
-      </CardGrid>
-    </Container>
+              <Button onClick={() => navigate(`/members/${user.id}`)}>{t('membersPage.viewDetails')}</Button>
+            </UserCard>
+          ))}
+        </CardGrid>
+      </Container>
+    </PageWrapper>
   )
 }

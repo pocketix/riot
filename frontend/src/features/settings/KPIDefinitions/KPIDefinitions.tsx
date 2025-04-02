@@ -16,6 +16,10 @@ import { toast } from 'sonner'
 import KPIDefinitionCard from './KPIDefinitionCard'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useTranslation } from 'react-i18next'
+import { useState } from 'react'
+import tw from 'tailwind-styled-components'
+import { X } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 
 const Container = styled.div`
   display: flex;
@@ -50,7 +54,12 @@ const Grid = styled.div`
   }
 `
 
+const ClearButton = tw.button`
+  absolute right-2 top-1/2 -translate-y-1/2
+`
+
 export default function KPIDefinitions() {
+  const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
   const { t } = useTranslation()
 
@@ -86,6 +95,9 @@ export default function KPIDefinitions() {
 
   if (loading) return <Spinner />
   if (!data?.kpiDefinitions?.length) return <p>{t('kpiDefinitionsPage.noKpiFound')}</p>
+  const filteredKpiDefinitions = data?.kpiDefinitions?.filter((kpiDefinition) =>
+    `${kpiDefinition.userIdentifier ?? ''}`.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <Container>
@@ -96,13 +108,32 @@ export default function KPIDefinitions() {
             ({t('kpiDefinitionsPage.definitions', { count: data?.kpiDefinitions?.length || 0 })}).
           </span>
         </Heading>
-        <Button onClick={() => navigate('/settings/kpi-definitions/create')}>+ {t('addNew')}</Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+          <div className="relative w-full">
+            <Input
+              placeholder={t('searchDeviceTypesPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[--color-grey-300] sm:w-64"
+            />
+            {searchQuery && (
+              <ClearButton onClick={() => setSearchQuery('')} type="button">
+                <X className="h-5 w-5 text-xl text-[--color-white]" />
+              </ClearButton>
+            )}
+          </div>
+          <Button onClick={() => navigate('/settings/device-types/addNewType')}>+ {t('addNew')}</Button>
+        </div>
       </Header>
 
       <Grid>
-        {data.kpiDefinitions.map((kpiDefinition) => (
-          <KPIDefinitionCard key={kpiDefinition.id} kpiDefinition={kpiDefinition} onDelete={handleDelete} />
-        ))}
+        {filteredKpiDefinitions.length > 0 ? (
+          filteredKpiDefinitions.map((kpiDefinition) => (
+            <KPIDefinitionCard key={kpiDefinition.id} kpiDefinition={kpiDefinition} onDelete={handleDelete} />
+          ))
+        ) : (
+          <p>{t('kpiDefinitionsPage.noKpiFound')}</p>
+        )}
       </Grid>
     </Container>
   )

@@ -6,10 +6,16 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { breakpoints } from '@/styles/Breakpoints'
 
+const PageWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+`
+
 const StyledPage = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
   color: hsl(var(--color-grey-900));
   overflow: hidden;
   gap: 1.2rem;
@@ -17,10 +23,9 @@ const StyledPage = styled.div`
   width: 100%;
   height: 100%;
   align-self: center;
-  max-width: 1300px;
 
   @media (min-width: ${breakpoints.sm}) {
-    padding: 2rem;
+    max-width: 1300px;
   }
 `
 
@@ -54,26 +59,28 @@ export default function Settings() {
   const isMobile = window.innerWidth < Number(breakpoints.sm.replace('px', ''))
 
   return (
-    <StyledPage>
-      <Heading>{t('settings')}</Heading>
+    <PageWrapper>
+      <StyledPage>
+        <Heading>{t('settings')}</Heading>
 
-      {(!isMobile || (isMobile && isDefaultTab)) && (
-        <NavigationDiv>
-          <TabSwitcher
-            activeTab={location.pathname.split('/')[2] || 'general'}
-            tabs={[
-              { name: t('general'), path: '/settings/general' },
-              { name: t('personalInfo'), path: '/settings/personal-info' },
-              { name: t('deviceTypes'), path: '/settings/device-types' },
-              { name: t('kpiDefinitions'), path: '/settings/kpi-definitions' }
-            ]}
-          />
-          {isMobile && !isDefaultTab && (
-            <Button onClick={() => navigate('/settings/device-types')}>&larr; {t('goBack')}</Button>
-          )}
-        </NavigationDiv>
-      )}
-      <Outlet />
-    </StyledPage>
+        {(!isMobile || (isMobile && isDefaultTab)) && (
+          <NavigationDiv>
+            <TabSwitcher
+              activeTab={location.pathname.split('/')[2] || 'general'}
+              tabs={[
+                { name: t('general'), path: '/settings/general' },
+                { name: t('personalInfo'), path: '/settings/personal-info' },
+                { name: t('deviceTypes'), path: '/settings/device-types' },
+                { name: t('kpiDefinitions'), path: '/settings/kpi-definitions' }
+              ]}
+            />
+            {isMobile && !isDefaultTab && (
+              <Button onClick={() => navigate('/settings/device-types')}>&larr; {t('goBack')}</Button>
+            )}
+          </NavigationDiv>
+        )}
+        <Outlet />
+      </StyledPage>
+    </PageWrapper>
   )
 }

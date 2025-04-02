@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
+import { X } from 'lucide-react'
+import tw from 'tailwind-styled-components'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -45,6 +47,10 @@ const Grid = styled.div`
   }
 `
 
+const ClearButton = tw.button`
+  absolute right-2 top-1/2 -translate-y-1/2
+`
+
 export default function DeviceTypesSettings() {
   const { t } = useTranslation()
 
@@ -74,12 +80,19 @@ export default function DeviceTypesSettings() {
           .
         </Heading>
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
-          <Input
-            placeholder={t('searchDeviceTypesPlaceholder')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[--color-grey-300] sm:w-64"
-          />
+          <div className="relative w-full">
+            <Input
+              placeholder={t('searchDeviceTypesPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[--color-grey-300] sm:w-64"
+            />
+            {searchQuery && (
+              <ClearButton onClick={() => setSearchQuery('')} type="button">
+                <X className="h-5 w-5 text-xl text-[--color-white]" />
+              </ClearButton>
+            )}
+          </div>
           <Button onClick={() => navigate('/settings/device-types/addNewType')}>+ {t('addNew')}</Button>
         </div>
       </Header>

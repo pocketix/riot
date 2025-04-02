@@ -19,15 +19,20 @@ import TabSwitcher from '@/ui/TabSwitcher'
 const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
   flex-grow: 1;
-  gap: 2rem;
+  gap: 1rem;
   padding: 1.5rem;
   color: hsl(var(--color-white));
   overflow-y: auto;
+`
 
-  @media (min-width: ${breakpoints.sm}) {
-    padding: 2rem;
-  }
+const TopBar = styled.div`
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  max-width: 1300px;
 `
 
 const TabsContainer = styled.div`
@@ -36,17 +41,12 @@ const TabsContainer = styled.div`
   }
 `
 
-const Section = styled.div`
+const Section = styled.section`
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
-  max-width: 1200px;
-  align-items: center;
-
-  @media (min-width: ${breakpoints.sm}) {
-    align-items: flex-start;
-  }
+  max-width: 1300px;
 `
 
 const CardGrid = styled.div`
@@ -64,6 +64,20 @@ const SearchWrapper = styled.div`
   position: relative;
   width: 100%;
   max-width: 32rem;
+`
+
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 1.5rem;
+  border: 2px dashed var(--color-grey-300);
+  border-radius: 0.5rem;
+  color: var(--color-grey-500);
+  font-size: 1rem;
 `
 
 const ClearButton = tw.button`
@@ -119,13 +133,11 @@ export default function Devices() {
     }
   }
 
-  // if (loading) return <Spinner />
   if (error) return <p>Error: {error.message}</p>
 
   return (
     <PageWrapper>
-      {/* Heading + Tabs */}
-      <div className="flex w-full justify-between">
+      <TopBar>
         <Heading>{t('devices')}</Heading>
         <TabsContainer>
           <TabSwitcher
@@ -136,12 +148,12 @@ export default function Devices() {
             ]}
           />
         </TabsContainer>
-      </div>
+      </TopBar>
+
       {loading ? (
         <Spinner />
       ) : (
         <>
-          {/* Search */}
           <Section>
             <SearchWrapper>
               <Input
@@ -158,24 +170,30 @@ export default function Devices() {
             </SearchWrapper>
           </Section>
 
-          {/* Confirmed */}
           <Section>
-            <h2 className="w-full text-xl font-bold">{t('devicesPage.confirmedInstances')}</h2>
+            <h2 className="text-xl font-bold">
+              {t('devicesPage.confirmedInstances')}{' '}
+              <span style={{ fontWeight: '300', fontStyle: 'italic', textWrap: 'nowrap' }}>({confirmed.length})</span>
+            </h2>
             <CardGrid>
               {confirmed.length === 0 ? (
-                <div className="col-span-full flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[--color-grey-300] p-6 text-center text-[--color-grey-500]">
-                  <p className="text-base font-medium">{t('devicesPage.noConfirmed')}</p>
-                </div>
+                <EmptyState>{t('devicesPage.noConfirmed')}</EmptyState>
               ) : (
                 confirmed.map((instance) => <DeviceCard key={instance.id} instance={instance} confirmed />)
               )}
             </CardGrid>
           </Section>
 
-          {/* Unconfirmed */}
           <Section>
             <div className="flex w-full items-center justify-between">
-              <h2 className="text-xl font-bold">{t('devicesPage.unconfirmedInstances')}</h2>
+              <h2 className="text-xl font-bold">
+                {t('devicesPage.unconfirmedInstances')}{' '}
+                {unconfirmed.length !== 0 && (
+                  <span style={{ fontWeight: '300', fontStyle: 'italic', textWrap: 'nowrap' }}>
+                    ({unconfirmed.length})
+                  </span>
+                )}
+              </h2>
               {selectedIds.length > 0 && (
                 <Button onClick={handleBatchConfirm} disabled={confirming}>
                   {t('devicesPage.confirmSelected', { count: selectedIds.length })}
@@ -184,9 +202,7 @@ export default function Devices() {
             </div>
             <CardGrid>
               {unconfirmed.length === 0 ? (
-                <div className="col-span-full flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[--color-grey-300] p-6 text-center text-[--color-grey-500]">
-                  <p className="text-base font-medium">{t('devicesPage.noUnconfirmed')}</p>
-                </div>
+                <EmptyState>{t('devicesPage.noUnconfirmed')}</EmptyState>
               ) : (
                 unconfirmed.map((instance) => (
                   <DeviceCard
