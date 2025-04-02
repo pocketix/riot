@@ -15,5 +15,7 @@ RUN npm run build
 FROM nginx:stable-alpine
 # Copy the results from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
-# Start Nginx and keep it running in the foreground
+
+RUN sed -i '/location \/ {/a \\ttry_files $uri $uri/ /index.html;' /etc/nginx/conf.d/default.conf
+
 CMD ["nginx", "-g", "daemon off;"]
