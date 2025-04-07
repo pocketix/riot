@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import { useParams, useLocation, useNavigate, data } from 'react-router-dom'
 import { useMutation, useQuery } from '@apollo/client'
 import { GET_PARAMETERS } from '@/graphql/Queries'
 import {
@@ -187,6 +187,7 @@ export default function DeviceTypeDetail() {
     variables: { sdTypeId: sdTypeId! },
     skip: !sdTypeId || isAddingNew,
     onCompleted: (fetchedData) => {
+      console.log(fetchedData)
       if (fetchedData?.sdType) {
         const fetchedValues = {
           label: fetchedData.sdType.label || '',
