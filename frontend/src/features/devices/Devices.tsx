@@ -15,6 +15,8 @@ import tw from 'tailwind-styled-components'
 import { useTranslation } from 'react-i18next'
 import Heading from '@/ui/Heading'
 import TabSwitcher from '@/ui/TabSwitcher'
+import { useSubscription } from '@apollo/client'
+import { ON_SD_INSTANCE_REGISTERED } from '@/graphql/Subscriptions'
 
 const PageWrapper = styled.div`
   display: flex;
@@ -90,6 +92,14 @@ export default function Devices() {
   const location = useLocation()
 
   const { data, loading, refetch, error } = useQuery<SdInstancesQuery>(GET_INSTANCES)
+
+  useSubscription(ON_SD_INSTANCE_REGISTERED, {
+    onData: ({ data }) => {
+      console.log(data)
+      refetch()
+    }
+  })
+
   const [confirmMutation, { loading: confirming }] = useMutation<
     ConfirmSdInstanceMutation,
     ConfirmSdInstanceMutationVariables

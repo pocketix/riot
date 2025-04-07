@@ -661,6 +661,11 @@ export type RestOfKpiDefinitionDetailPageDataQueryVariables = Exact<{ [key: stri
 
 export type RestOfKpiDefinitionDetailPageDataQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: number, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: number, denotation: string, type: SdParameterType }> }>, sdInstances: Array<{ __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number } }> };
 
+export type OnSdInstanceRegisteredSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type OnSdInstanceRegisteredSubscription = { __typename?: 'Subscription', onSDInstanceRegistered: { __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string, icon?: string | null } } };
+
 export type SdInstancesWithTypeAndSnapshotQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1441,6 +1446,43 @@ export type RestOfKpiDefinitionDetailPageDataQueryHookResult = ReturnType<typeof
 export type RestOfKpiDefinitionDetailPageDataLazyQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataLazyQuery>;
 export type RestOfKpiDefinitionDetailPageDataSuspenseQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataSuspenseQuery>;
 export type RestOfKpiDefinitionDetailPageDataQueryResult = Apollo.QueryResult<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>;
+export const OnSdInstanceRegisteredDocument = gql`
+    subscription OnSDInstanceRegistered {
+  onSDInstanceRegistered {
+    id
+    uid
+    confirmedByUser
+    userIdentifier
+    type {
+      id
+      denotation
+      icon
+    }
+  }
+}
+    `;
+
+/**
+ * __useOnSdInstanceRegisteredSubscription__
+ *
+ * To run a query within a React component, call `useOnSdInstanceRegisteredSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useOnSdInstanceRegisteredSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOnSdInstanceRegisteredSubscription({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useOnSdInstanceRegisteredSubscription(baseOptions?: Apollo.SubscriptionHookOptions<OnSdInstanceRegisteredSubscription, OnSdInstanceRegisteredSubscriptionVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useSubscription<OnSdInstanceRegisteredSubscription, OnSdInstanceRegisteredSubscriptionVariables>(OnSdInstanceRegisteredDocument, options);
+      }
+export type OnSdInstanceRegisteredSubscriptionHookResult = ReturnType<typeof useOnSdInstanceRegisteredSubscription>;
+export type OnSdInstanceRegisteredSubscriptionResult = Apollo.SubscriptionResult<OnSdInstanceRegisteredSubscription>;
 export const SdInstancesWithTypeAndSnapshotDocument = gql`
     query SdInstancesWithTypeAndSnapshot {
   sdInstances {
