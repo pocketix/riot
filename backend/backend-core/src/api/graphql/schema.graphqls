@@ -349,6 +349,22 @@ input UserConfigInput {
   config: JSON!
 }
 
+# ----- VPL Programs -----
+
+type VPLProgram {
+    id: ID!
+    name: String!
+    data: JSON!
+    referencedValues: [VPLReferencedValue!]!
+}
+
+type VPLReferencedValue {
+    id: ID!
+    programID: ID!
+    deviceId: String!
+    parameter: String!
+}
+
 # ----- Queries, mutations and subscriptions -----
 
 type Query {
@@ -368,6 +384,7 @@ type Query {
   sdCommands: [SDCommand!]! # Returns all SDCommands
   sdCommandInvocation(id: ID!): SDCommandInvocation! # Returns a specific SDCommandInvocation
   sdCommandInvocations: [SDCommandInvocation!]! # Returns all SDCommandInvocations
+  vplProgram(id: ID!): VPLProgram! # Returns a specific VPLProgram by its ID
 }
 
 type Mutation {
@@ -389,6 +406,10 @@ type Mutation {
   deleteSDCommand(id: ID!): Boolean! # Deleting a command
   createSDCommandInvocation(input: SDCommandInvocationInput!): SDCommandInvocation! # Creating an invocation
   invokeSDCommand(id: ID!): Boolean! # Starting an existing invocation
+  createVPLProgram(name: String!, data: JSON!): VPLProgram!
+  updateVPLProgram(id: ID!, name: String!, data: JSON!): VPLProgram!
+  deleteVPLProgram(id: ID!): Boolean!
+  executeVPLProgram(id: ID!): Boolean!
 }
 
 type Subscription {

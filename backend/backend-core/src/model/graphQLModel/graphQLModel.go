@@ -379,6 +379,20 @@ type UserConfigInput struct {
 	Config string `json:"config"`
 }
 
+type VPLProgram struct {
+	ID               uint32               `json:"id"`
+	Name             string               `json:"name"`
+	Data             string               `json:"data"`
+	ReferencedValues []VPLReferencedValue `json:"referencedValues"`
+}
+
+type VPLReferencedValue struct {
+	ID        uint32 `json:"id"`
+	ProgramID uint32 `json:"programID"`
+	DeviceID  string `json:"deviceId"`
+	Parameter string `json:"parameter"`
+}
+
 type KPINodeType string
 
 const (

@@ -66,6 +66,9 @@ type RelationalDatabaseClient interface {
 	DeleteSDCommand(id uint32) error
 	LoadSDCommands() sharedUtils.Result[[]dllModel.SDCommand]
 	PersistSDParameterSnapshot(snapshot dllModel.SDParameterSnapshot) sharedUtils.Result[sharedUtils.Pair[uint32, uint32]]
+	PersistVPLProgram(vplProgram dllModel.VPLProgram) sharedUtils.Result[dllModel.VPLProgram]
+	LoadVPLProgram(id uint32) sharedUtils.Result[dllModel.VPLProgram]
+	DeleteVPLProgram(id uint32) error
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -692,4 +695,37 @@ func (r *relationalDatabaseClientImpl) PersistSDParameterSnapshot(snapshot dllMo
 	}
 
 	return sharedUtils.NewSuccessResult[sharedUtils.Pair[uint32, uint32]](sharedUtils.NewPairOf(snapshotEntity.SDParameterID, snapshotEntity.SDInstanceID))
+}
+
+func (r *relationalDatabaseClientImpl) PersistVPLProgram(vplProgram dllModel.VPLProgram) sharedUtils.Result[dllModel.VPLProgram] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	vplProgramEntity := dll2db.ToDBModelEntityVPLProgram(vplProgram)
+
+	if err := dbUtil.PersistEntityIntoDB(r.db, &vplProgramEntity); err != nil {
+		return sharedUtils.NewFailureResult[dllModel.VPLProgram](err)
+	}
+
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProgram(vplProgramEntity))
+}
+
+func (r *relationalDatabaseClientImpl) LoadVPLProgram(id uint32) sharedUtils.Result[dllModel.VPLProgram] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	vplProgramEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.VPLProgramsEntity](r.db, dbUtil.Where("id = ?", id))
+
+	if vplProgramEntityLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[dllModel.VPLProgram](vplProgramEntityLoadResult.GetError())
+	}
+
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProgram(vplProgramEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) DeleteVPLProgram(id uint32) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.VPLProgramsEntity](r.db, id)
 }
