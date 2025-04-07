@@ -195,7 +195,7 @@ export default function DeviceCard({
             </span>
             {instance.uid.length > 20 && (
               <Button variant="ghost" className="w-fit px-1 text-xs" onClick={() => setShowUid(!showUid)}>
-                {showUid ? 'Hide' : 'Show'}
+                {showUid ? 'Hide' : 'Show full UID'}
               </Button>
             )}
           </div>

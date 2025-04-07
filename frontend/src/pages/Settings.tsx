@@ -63,7 +63,7 @@ export default function Settings() {
       <StyledPage>
         <Heading>{t('settings')}</Heading>
 
-        {(!isMobile || (isMobile && isDefaultTab)) && (
+        {(isDefaultTab || !isMobile) && (
           <NavigationDiv>
             <TabSwitcher
               activeTab={location.pathname.split('/')[2] || 'general'}
@@ -74,7 +74,7 @@ export default function Settings() {
                 { name: t('kpiDefinitions'), path: '/settings/kpi-definitions' }
               ]}
             />
-            {isMobile && !isDefaultTab && (
+            {!isMobile && !isDefaultTab && (
               <Button onClick={() => navigate('/settings/device-types')}>&larr; {t('goBack')}</Button>
             )}
           </NavigationDiv>

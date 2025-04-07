@@ -78,6 +78,7 @@ const EmptyState = styled.div`
   border-radius: 0.5rem;
   color: var(--color-grey-500);
   font-size: 1rem;
+  grid-column: span 4;
 `
 
 const ClearButton = tw.button`

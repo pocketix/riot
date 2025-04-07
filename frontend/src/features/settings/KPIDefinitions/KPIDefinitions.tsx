@@ -109,7 +109,7 @@ export default function KPIDefinitions() {
           </span>
         </Heading>
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
-          <div className="relative w-full">
+          <div className="relative w-full p-1 sm:p-0">
             <Input
               placeholder={t('searchDeviceTypesPlaceholder')}
               value={searchQuery}
