@@ -1,30 +1,19 @@
 import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/CardGlobal'
 import { AiOutlineDrag } from 'react-icons/ai'
-import { ResponsiveLine, PointTooltipProps, CustomLayerProps, Serie } from '@nivo/line'
+import { Serie } from '@nivo/line'
 import styled from 'styled-components'
-// import { Layout } from '@/types/Layout';
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ItemDeleteAlertDialog } from './components/ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './components/AccessibilityContainer'
-import { useDarkMode } from '@/context/DarkModeContext'
-import { darkTheme, lightTheme } from './components/ChartThemes'
-import { ChartToolTip } from './tooltips/LineChartToolTip'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
 import { CardEditDialog } from '../editors/CardEditDialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { BuilderResult } from '@/types/dashboard/GridItem'
-import {
-  SdInstancesWithTypeAndSnapshotQuery,
-  StatisticsInput,
-  StatisticsOperation,
-  useStatisticsQuerySensorsWithFieldsLazyQuery
-} from '@/generated/graphql'
-import { useDeviceDetail } from '@/context/DeviceDetailContext'
-import { getMaxValue, timeTicksLayer } from '../utils/charts/tickUtils'
-import { ScaleSpec } from '@nivo/scales'
+import { StatisticsInput, StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
+import { ResponsiveLineChart } from '../visualizations/ResponsiveLineChart'
 
 // Styled components
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -36,11 +25,12 @@ export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   height: 100%;
   display: flex;
   flex-grow: 1;
-  overflow-y: hidden;
-  overflow-x: hidden;
+  overflow: hidden;
   opacity: ${(props) => (props.$editModeEnabled ? 0.25 : 1)};
   transition: opacity 0.3s;
   border-radius: 12px;
+  user-select: none;
+  touch-action: none;
 `
 
 interface ChartCardProps {
@@ -59,7 +49,6 @@ interface ChartCardProps {
   breakpoint: string // TODO: unused
   beingResized: boolean
   handleSaveEdit: (config: BuilderResult<ChartCardConfig>) => void
-  instances: SdInstancesWithTypeAndSnapshotQuery['sdInstances']
 }
 
 export const ChartCard = ({
@@ -75,18 +64,14 @@ export const ChartCard = ({
   setHighlightedCardID,
   configuration,
   beingResized,
-  handleSaveEdit,
-  instances
+  handleSaveEdit
 }: ChartCardProps) => {
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const { isDarkMode } = useDarkMode()
   const [data, setData] = useState<Serie[]>([])
   const [chartConfig, setChartConfig] = useState<ChartCardConfig>()
   const [unavilableData, setUnavailableData] = useState<{ device: string; parameter: string }[]>([])
   const [error, setError] = useState<string | null>(null)
-  const { setDetailsSelectedDevice } = useDeviceDetail()
-
   const [getChartData, { data: fetchedChartData }] = useStatisticsQuerySensorsWithFieldsLazyQuery({
     pollInterval: chartConfig?.aggregateMinutes ? chartConfig.aggregateMinutes * 60 * 1000 : 0
   })
@@ -146,14 +131,14 @@ export const ChartCard = ({
 
     let result: any[] = []
 
-    instances.forEach((instance: { uid: string; parameters: { denotation: string }[] }) => {
+    instances.forEach((instance) => {
       const sensorDataArray = fetchedChartData.statisticsQuerySensorsWithFields.filter(
         (item) => item.deviceId === instance.uid
       )
 
       instance.parameters.forEach((param) => {
         const paramData = {
-          id: param.denotation + ' ' + instance.uid,
+          id: param.id + ' ' + instance.id,
           data:
             sensorDataArray.length > 0
               ? sensorDataArray.map((sensorData: any) => {
@@ -272,85 +257,8 @@ export const ChartCard = ({
           </Skeleton>
         )}
       </div>
-      <ChartContainer ref={containerRef} $editModeEnabled={editModeEnabled}>
-        <ResponsiveLine
-          data={data}
-          margin={chartConfig.margin}
-          xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ', useUTC: true }}
-          xFormat="time:%Y-%m-%d %H:%M:%S"
-          yScale={
-            {
-              ...chartConfig.yScale,
-              max: chartConfig.yScale.max === 'auto' ? getMaxValue(data) * 1.01 : (chartConfig.yScale.max as number),
-              nice: true
-            } as ScaleSpec
-          }
-          animate={true}
-          yFormat={chartConfig.toolTip.yFormat}
-          axisBottom={{
-            ...chartConfig.axisBottom,
-            tickValues: 0 // we are generating the axis ticks manually using the timeTicksLayer
-          }}
-          layers={[
-            'grid',
-            'axes',
-            'crosshair',
-            'lines',
-            'points',
-            'mesh',
-            (props: CustomLayerProps) =>
-              timeTicksLayer({
-                xScale: props.xScale,
-                data: data[0] ? data[0].data : [],
-                isDarkMode,
-                width: props.innerWidth,
-                height: props.innerHeight,
-                enableGridX: chartConfig.enableGridX || false
-              })
-          ]}
-          axisLeft={{ ...chartConfig.axisLeft, format: '~s', tickValues: Math.ceil(item?.h! * 2.5) }}
-          pointSize={chartConfig.pointSize}
-          pointColor={isDarkMode ? '#ffffff' : '#000000'}
-          pointBorderWidth={0}
-          colors={isDarkMode ? { scheme: 'category10' } : { scheme: 'pastel1' }}
-          pointBorderColor={{ from: 'serieColor' }}
-          pointLabelYOffset={-12}
-          useMesh={data.length > 0}
-          enableGridX={false}
-          enableGridY={chartConfig.enableGridY}
-          isInteractive={true}
-          enableTouchCrosshair={true}
-          enableCrosshair={true}
-          onClick={(point) => {
-            // The pointToolTipProps object contains the point id,
-            // which is a combination of the parameter name and the instance UID + point index
-            const pointIdParts = point.id.split(' ')
-            const rawInstanceUID = pointIdParts.length > 1 ? pointIdParts[1].trim() : ''
-
-            // Find the last occurrence of "." and remove everything after it, that is the point index
-            const lastDotIndex = rawInstanceUID.lastIndexOf('.')
-            const instanceUID = lastDotIndex !== -1 ? rawInstanceUID.substring(0, lastDotIndex) : rawInstanceUID
-
-            setDetailsSelectedDevice({ uid: instanceUID, parameter: pointIdParts[0] })
-          }}
-          tooltip={(pos: PointTooltipProps) => {
-            const pointIdParts = pos.point.id.split(' ')
-            const rawInstanceUID = pointIdParts.length > 1 ? pointIdParts[1].trim() : ''
-
-            const lastDotIndex = rawInstanceUID.lastIndexOf('.')
-            const instanceUID = lastDotIndex !== -1 ? rawInstanceUID.substring(0, lastDotIndex) : rawInstanceUID
-            return (
-              <ChartToolTip
-                position={pos}
-                containerRef={containerRef}
-                instanceName={instances.find((instance) => instance.uid === instanceUID)?.userIdentifier}
-                xName={chartConfig.toolTip.x}
-                yName={chartConfig.toolTip.y}
-              />
-            )
-          }}
-          theme={isDarkMode ? darkTheme : lightTheme}
-        />
+      <ChartContainer $editModeEnabled={editModeEnabled}>
+        <ResponsiveLineChart data={data} config={chartConfig} ref={containerRef} />{' '}
       </ChartContainer>
       {editModeEnabled && (
         <AccessibilityContainer
