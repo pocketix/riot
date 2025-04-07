@@ -4,6 +4,7 @@ import TabSwitcher from '@/ui/TabSwitcher'
 import { useLocation } from 'react-router-dom'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useTranslation } from 'react-i18next'
+import { GroupPageController } from '@/controllers/GroupPageController'
 
 const StyledPage = styled.div`
   display: flex;
@@ -45,7 +46,9 @@ export default function DeviceGroups() {
       </div>
 
       {/* Content goes here */}
-      <div className="mt-4 text-lg text-[--color-grey-500]">Device Groups</div>
+      <div className="mt-4 text-lg text-[--color-grey-500]">
+        <GroupPageController />
+      </div>
     </StyledPage>
   )
 }

@@ -94,7 +94,9 @@ export const lightTheme = {
     }
   },
   tooltip: {
-    wrapper: {},
+    wrapper: {
+      zIndex: 100
+    },
     container: {
       background: '#ffffff',
       color: '#000000',
@@ -212,7 +214,9 @@ export const darkTheme = {
     }
   },
   tooltip: {
-    wrapper: {},
+    wrapper: {
+      zIndex: 100
+    },
     container: {
       background: '#000000',
       color: '#ffffff',

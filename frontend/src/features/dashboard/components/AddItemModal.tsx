@@ -26,7 +26,6 @@ export function AddItemModal({ onAddItem }: AddItemModalProps) {
           <FaPlus />
         </Button>
       </DialogTrigger>
-      {/* <DialogContent className="w-full max-h-screen pt-6 sm:pt-1 overflow-y-auto overflow-x-hidden"> */}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add new item to dashboard</DialogTitle>

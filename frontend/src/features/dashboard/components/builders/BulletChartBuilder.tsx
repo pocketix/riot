@@ -28,7 +28,6 @@ import { toast } from 'sonner'
 import { BuilderResult } from '@/types/dashboard/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
-import { BulletChartToolTip } from '../cards/tooltips/BulletChartToolTIp'
 import { TimeFrameSelector } from './components/time-frame-selector'
 
 type BulletChartBuilderResult = BuilderResult<BulletCardConfig>
@@ -272,17 +271,17 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                 }
                 measureColors={row.config.colorScheme === 'greys' ? ['pink'] : 'seq:red_purple'}
                 theme={isDarkMode ? darkTheme : lightTheme}
-                tooltip={() => {
-                  const instanceName = instances.find((inst) => inst.uid === row.instance.uid)?.userIdentifier
-                  return (
-                    <BulletChartToolTip
-                      instanceName={instanceName}
-                      parameterName={row.parameter.denotation}
-                      currentValue={data[index].measures[0]}
-                      targetValues={data[index].markers}
-                    />
-                  )
-                }}
+                // tooltip={() => {
+                //   const instanceName = instances.find((inst) => inst.uid === row.instance.uid)?.userIdentifier
+                //   // return (
+                //   //   <BulletChartToolTip
+                //   //     instanceName={instanceName}
+                //   //     parameterName={row.parameter.denotation}
+                //   //     currentValue={data[index].measures[0]}
+                //   //     targetValues={data[index].markers}
+                //   //   />
+                //   )
+                // }}
               />
             </div>
           )
