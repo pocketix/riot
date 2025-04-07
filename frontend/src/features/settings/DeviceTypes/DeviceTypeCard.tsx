@@ -18,6 +18,7 @@ import { useState } from 'react'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useMediaQuery } from 'react-responsive'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 const Card = styled.div`
   background: var(--color-grey-0);
@@ -104,9 +105,11 @@ export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
         }
       })
       setIsModalOpen(false)
+      toast.success(t('deviceTypeDetail.deletedSuccess'))
       await refetch()
     } catch (error) {
       console.error('Deletion failed:', error)
+      toast.error(t('deviceTypeDetail.deletedError'))
     }
   }
 

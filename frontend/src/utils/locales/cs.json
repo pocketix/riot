@@ -31,9 +31,11 @@
   "confirmDelete": "Potvrdit smazání",
   "deviceTypeDetail": {
     "createdSuccess": "Typ zařízení byl úspěšně vytvořen",
+
     "createdError": "Nepodařilo se uložit typ zařízení",
     "deletedSuccess": "Typ zařízení byl úspěšně smazán",
     "deletedError": "Nepodařilo se smazat typ zařízení",
+    "duplicateParameterError": "Duplicovaný parametr se stejným označením a typem.",
     "enterName": "Zadejte název typu zařízení...",
     "deviceTypeNameRequired": "Název typu zařízení je povinný",
     "create": "Vytvořit",

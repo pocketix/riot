@@ -177,6 +177,8 @@ export default function DeviceTypeDetail() {
     getValues,
     watch,
     reset,
+    setError,
+    clearErrors,
     formState: { errors, isSubmitting }
   } = useForm({
     defaultValues: initialValues,
@@ -187,7 +189,6 @@ export default function DeviceTypeDetail() {
     variables: { sdTypeId: sdTypeId! },
     skip: !sdTypeId || isAddingNew,
     onCompleted: (fetchedData) => {
-      console.log(fetchedData)
       if (fetchedData?.sdType) {
         const fetchedValues = {
           label: fetchedData.sdType.label || '',
@@ -214,6 +215,27 @@ export default function DeviceTypeDetail() {
   const IconComponent = useMemo(() => getIcon(watch('icon') || 'TbQuestionMark'), [watch('icon')])
 
   const onSubmit = async (data: any) => {
+    // Check for duplicate parameters
+    const seen = new Set()
+    let hasDuplicate = false
+
+    data.parameters.forEach((param: any, index: number) => {
+      const key = `${param.denotation?.trim().toLowerCase()}__${param.type}`
+
+      if (seen.has(key)) {
+        hasDuplicate = true
+        setError(`parameters.${index}.denotation`, {
+          type: 'duplicate',
+          message: t('deviceTypeDetail.duplicateParameterError')
+        })
+      } else {
+        seen.add(key)
+        clearErrors(`parameters.${index}.denotation`)
+      }
+    })
+
+    if (hasDuplicate) return
+
     try {
       if (isAddingNew) {
         const response = await createSDTypeMutation({
