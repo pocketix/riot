@@ -34,8 +34,6 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
     // tick every 75 pixels
     const widthTickCount = Math.max(2, Math.floor(availableWidth / 75))
 
-    console.log('Width tick count:', widthTickCount)
-
     // .nice makes sure that the ticks are rounded to nice values,
     // the highlighting of midnight rellies on this
     const scale = scaleTime().domain([startDate, endDate]).nice(widthTickCount)

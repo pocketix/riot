@@ -25,8 +25,8 @@ import {
   useUserConfigQuery
 } from '@/generated/graphql'
 import { RiotDashboardConfig } from '@/types/dashboard/dashboard'
-import { GroupsController } from './components/groups/GroupsController'
 import { Skeleton } from '@mui/material'
+import { DashboardGroupCardsController } from './components/groups/DashboardGroupCardsController'
 
 const Dashboard = () => {
   const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), [])
@@ -260,7 +260,7 @@ const Dashboard = () => {
 
     item.layoutID = newIndex
 
-    // Construct a new item
+    // Construct a new DB item
     const dbItemDetails: DBItemDetails<AllConfigTypes> = {
       layoutID: newIndex,
       visualization: item.visualization,
@@ -411,7 +411,7 @@ const Dashboard = () => {
         </div>
       </Navbar>
       <MainGrid>
-        <GroupsController instances={instances.sdInstances} />
+        <DashboardGroupCardsController />
         <ResponsiveGridLayout
           className="layout"
           layouts={layouts}
@@ -551,7 +551,6 @@ const Dashboard = () => {
                       breakpoint={currentBreakpoint}
                       beingResized={resizeCardID === item.i}
                       handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
-                      instances={instances.sdInstances}
                     />
                   </Card>
                 )
