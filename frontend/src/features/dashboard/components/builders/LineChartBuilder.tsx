@@ -759,14 +759,13 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
                       <FormLabel>Instance</FormLabel>
                       <FormControl>
                         <SingleInstanceCombobox
-                          instances={instances}
                           onValueChange={(value) => {
                             setSelectedInstance(value)
                             field.onChange(value)
                             form.setValue(`instances.${index}`, { uid: value.uid, id: value.id, parameters: [] })
                             fetchRowData(index)
                           }}
-                          value={field.value.uid}
+                          value={field.value.id}
                         />
                       </FormControl>
                       <FormMessage />

@@ -59,7 +59,6 @@ export function CardEditDialog<ConfigType extends AllConfigTypes>({
           <BulletChartBuilder
             config={config as BulletCardConfig}
             onDataSubmit={(data: BuilderResult<BulletCardConfig>) => handleSave(data as BuilderResult<ConfigType>)}
-            instances={data?.sdInstances || []}
           />
         )
       case 'entitycard':

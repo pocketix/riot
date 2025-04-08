@@ -33,9 +33,7 @@ export function VisualizationBuilder({
   return (
     <VisualizationBuilderContainer>
       {selectedVisualization === 'line' && <LineChartBuilder onDataSubmit={handleDataChange} instances={instances} />}
-      {selectedVisualization === 'bullet' && (
-        <BulletChartBuilder onDataSubmit={handleDataChange} instances={instances} />
-      )}
+      {selectedVisualization === 'bullet' && <BulletChartBuilder onDataSubmit={handleDataChange} />}
       {selectedVisualization === 'table' && <TableCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
       {selectedVisualization === 'entitycard' && (
         <EntityCardBuilder onDataSubmit={handleDataChange} instances={instances} />

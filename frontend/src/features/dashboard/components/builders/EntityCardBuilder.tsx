@@ -250,13 +250,12 @@ export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCar
                           <FormLabel>Instance</FormLabel>
                           <FormControl>
                             <SingleInstanceCombobox
-                              instances={instances}
                               onValueChange={(value) => {
                                 field.onChange(value)
                                 setSelectedInstance(value)
                                 form.setValue(`rows.${rowIndex}.parameter`, { id: null, denotation: '' })
                               }}
-                              value={field.value.uid}
+                              value={field.value.id}
                             />
                           </FormControl>
                           <FormMessage />

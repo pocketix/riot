@@ -373,8 +373,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                                     setSelectedInstance(value)
                                     form.setValue(`rows.${rowIndex}.parameter`, { id: null, denotation: '' })
                                   }}
-                                  value={field.value.uid}
-                                  instances={instances}
+                                  value={field.value.id}
                                 />
                               </Label>
                             </FormControl>
