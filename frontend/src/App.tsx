@@ -36,11 +36,11 @@ export default function App() {
                     <Route path="members" element={<Members />} />
                     <Route path="members/:id" element={<MembersDetail />} />
                     <Route path="automations" element={<Automations />} />
-                    <Route path="/settings" element={<Settings />}></Route>
+                    <Route path="/settings" element={<Settings />} />
                     <Route path="/settings/deivce-types/addNewType" element={<DeviceTypeDetail />} />
+                    <Route path="/settings/device-types" element={<DeviceTypesSettings />} />
                     <Route path="/settings/device-types/:id" element={<DeviceTypeDetail />} />
                     <Route path="/settings/kpi-definitions" element={<KPIDefinitions />} />
-                    <Route path="/settings/device-types" element={<DeviceTypesSettings />} />
                     <Route path="/settings/kpi-definitions/create" element={<KPIEditor />} />
                     <Route path="/settings/kpi-definitions/:id/edit" element={<KPIEditor />} />
                     <Route path="settings/apollo-sandbox" element={<ApolloSandboxPage />} />
