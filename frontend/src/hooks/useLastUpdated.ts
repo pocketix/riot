@@ -1,14 +1,10 @@
-import { ParameterUpdatesContext } from '@/context/ParameterUpdatesContext'
-import { instanceUpdatesStore } from '@/context/utils/lastUpdatedStore'
-import { useContext, useEffect, useState, useSyncExternalStore } from 'react'
+import { useParameterSnapshotContext } from '@/context/ParameterUpdatesContext'
+import { instanceUpdatesStore } from '@/context/stores/lastUpdatedStore'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 
-function useParameterUpdates() {
-  return useContext(ParameterUpdatesContext)
-}
-
 function useInstanceLastUpdated(instanceId: number): string | null {
-  const { initializeInstance } = useParameterUpdates()
+  const { initializeInstance } = useParameterSnapshotContext()
 
   useEffect(() => {
     initializeInstance(instanceId)

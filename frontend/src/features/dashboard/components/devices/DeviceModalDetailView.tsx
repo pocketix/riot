@@ -25,13 +25,14 @@ import { Badge } from '@/components/ui/badge'
 import { FC } from 'react'
 import { SdParameterType, SdTypeParametersQuery } from '@/generated/graphql'
 import { ResponsiveLineChart } from '../visualizations/ResponsiveLineChart'
-import { InstanceWithKPIs } from '@/context/utils/kpiStore'
 import { Label } from '@/components/ui/label'
 import { GoLinkExternal } from 'react-icons/go'
 import { Group } from '@/context/InstancesContext'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { ParameterSnapshotHookResult } from '@/hooks/useParameterSnapshot'
+import { InstanceWithKPIs } from '@/context/stores/kpiStore'
 
 export interface DeviceModalDetailViewProps {
   selectedDevice: any
@@ -49,6 +50,7 @@ export interface DeviceModalDetailViewProps {
   processedData: Serie[]
   handleViewAllDetails: () => void
   instanceGroups?: Group[]
+  parameterLastValue: ParameterSnapshotHookResult['value']
 }
 
 export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
@@ -67,33 +69,42 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
     IconComponent,
     processedData,
     handleViewAllDetails,
-    instanceGroups
+    instanceGroups,
+    parameterLastValue
   } = props
 
   const navigate = useNavigate()
 
   const ParameterDetail = () => (
     <>
-      <Card className="flex flex-wrap items-center justify-center gap-2 pt-2">
-        <Label className="flex flex-col items-start">
-          Parameter
-          <SingleParameterCombobox
-            options={(parameters || []).map((param) => ({
-              ...param,
-              parameterSnapshots: []
-            }))}
-            onValueChange={(value) => setSelectedParameter(value?.denotation || null)}
-            value={
-              wholeParameter
-                ? parameters?.find((param) => param.denotation === wholeParameter.denotation) || null
-                : null
-            }
-            className="w-32"
-          />
-        </Label>
-        <Label className="flex flex-col items-start">
-          Time Frame
-          <TimeFrameSelector onValueChange={(value) => setTimeFrame(value!)} value={timeFrame} className="w-32" />
+      <Card className="flex flex-col items-center justify-center">
+        <div className="flex flex-wrap items-center justify-center gap-1 pt-2">
+          <Label className="flex flex-col items-start">
+            Parameter
+            <SingleParameterCombobox
+              options={(parameters || []).map((param) => ({
+                ...param,
+                parameterSnapshots: []
+              }))}
+              onValueChange={(value) => setSelectedParameter(value?.denotation || null)}
+              value={
+                wholeParameter
+                  ? parameters?.find((param) => param.denotation === wholeParameter.denotation) || null
+                  : null
+              }
+              className="w-32"
+            />
+          </Label>
+          <Label className="flex flex-col items-start">
+            Time Frame
+            <TimeFrameSelector onValueChange={(value) => setTimeFrame(value!)} value={timeFrame} className="w-32" />
+          </Label>
+        </div>
+        <Label className="flex items-center justify-center gap-2 pt-1">
+          Last Value
+          <Badge variant="outline" className="font-mono text-xs">
+            {parameterLastValue?.toString() || 'N/A'}
+          </Badge>
         </Label>
         {renderVisualization()}
       </Card>
@@ -115,8 +126,10 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
 
     if (wholeParameter?.type === SdParameterType.Number) {
       return (
-        <div className="h-[200px] w-full min-w-0 overflow-hidden">
-          <ResponsiveLineChart data={processedData} />
+        <div className="relative h-[200px] w-full min-w-0 overflow-hidden">
+          <div className="absolute inset-0 h-full w-full">
+            <ResponsiveLineChart data={processedData} />
+          </div>
         </div>
       )
     } else {

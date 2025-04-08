@@ -1,4 +1,4 @@
-import { InstanceWithKPIs } from '@/context/utils/kpiStore'
+import { InstanceWithKPIs } from '@/context/stores/kpiStore'
 import { GroupDetailWithKPIs } from '@/controllers/details/GroupDetailPageController'
 import { SdInstanceGroupsWithKpiDataQuery } from '@/generated/graphql'
 

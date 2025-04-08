@@ -1,23 +1,33 @@
-import { createContext, useState, useCallback, ReactNode } from 'react'
-import { useOnSdParameterSnapshotUpdateSubscription } from '@/generated/graphql'
+import { createContext, useState, useCallback, ReactNode, useContext } from 'react'
+import {
+  OnSdParameterSnapshotUpdateSubscription,
+  useOnSdParameterSnapshotUpdateSubscription
+} from '@/generated/graphql'
 import { useInstances } from '@/context/InstancesContext'
-import { instanceUpdatesStore } from './utils/lastUpdatedStore'
+import { parameterSnapshotStore } from './stores/parameterSnapshotStore'
+import { instanceUpdatesStore } from './stores/lastUpdatedStore'
 
-interface ParameterUpdatesContextType {
+type ParameterSnapshot = OnSdParameterSnapshotUpdateSubscription['onSDParameterSnapshotUpdate']
+
+interface ParameterSnapshotContextType {
   initializeInstance: (instanceId: number) => void
+  getParameterSnapshot: (instanceId: number, parameterId: number) => ParameterSnapshot | null
+  getInstanceSnapshots: (instanceId: number) => Record<number, ParameterSnapshot>
   getLastUpdateForInstance: (instanceId: number) => string | null
 }
 
-export const ParameterUpdatesContext = createContext<ParameterUpdatesContextType>({
+export const ParameterSnapshotContext = createContext<ParameterSnapshotContextType>({
   initializeInstance: () => {},
+  getParameterSnapshot: () => null,
+  getInstanceSnapshots: () => ({}),
   getLastUpdateForInstance: () => null
 })
 
-interface ParameterUpdatesProviderProps {
+interface ParameterSnapshotProviderProps {
   children: ReactNode
 }
 
-export function ParameterUpdatesProvider({ children }: ParameterUpdatesProviderProps) {
+export function ParameterSnapshotProvider({ children }: ParameterSnapshotProviderProps) {
   const [initialized, setInitialized] = useState<Record<number, boolean>>({})
   const { instances, getInstanceById } = useInstances()
 
@@ -29,6 +39,7 @@ export function ParameterUpdatesProvider({ children }: ParameterUpdatesProviderP
       const instance = getInstanceById(instanceId)
       if (!instance?.parameterSnapshots?.length) return
 
+      parameterSnapshotStore.setSnapshots(instanceId, instance.parameterSnapshots)
       const mostRecentSnapshot = [...instance.parameterSnapshots].sort(
         (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       )[0]
@@ -36,11 +47,18 @@ export function ParameterUpdatesProvider({ children }: ParameterUpdatesProviderP
       if (mostRecentSnapshot?.updatedAt) {
         instanceUpdatesStore.setTimestamp(instanceId, mostRecentSnapshot.updatedAt as string)
       }
-
       setInitialized((prev) => ({ ...prev, [instanceId]: true }))
     },
     [instances, initialized]
   )
+
+  const getParameterSnapshot = useCallback((instanceId: number, parameterId: number): ParameterSnapshot | null => {
+    return parameterSnapshotStore.getSnapshot(instanceId, parameterId)
+  }, [])
+
+  const getInstanceSnapshots = useCallback((instanceId: number): Record<number, ParameterSnapshot> => {
+    return parameterSnapshotStore.getInstanceSnapshots(instanceId)
+  }, [])
 
   const getLastUpdateForInstance = useCallback((instanceId: number): string | null => {
     return instanceUpdatesStore.getTimestamp(instanceId)
@@ -52,18 +70,26 @@ export function ParameterUpdatesProvider({ children }: ParameterUpdatesProviderP
       if (!data?.data?.onSDParameterSnapshotUpdate) return
 
       const update = data.data.onSDParameterSnapshotUpdate
-
-      if (!update.instanceId || !update.updatedAt) return
-
-      // update the store for the specific instance
+      console.log('Received parameter snapshot update:', update)
+      parameterSnapshotStore.setSnapshot(update)
       instanceUpdatesStore.setTimestamp(update.instanceId, update.updatedAt)
     }
   })
 
   const contextValue = {
     initializeInstance,
+    getParameterSnapshot,
+    getInstanceSnapshots,
     getLastUpdateForInstance
   }
 
-  return <ParameterUpdatesContext.Provider value={contextValue}>{children}</ParameterUpdatesContext.Provider>
+  return <ParameterSnapshotContext.Provider value={contextValue}>{children}</ParameterSnapshotContext.Provider>
+}
+
+export function useParameterSnapshotContext() {
+  const context = useContext(ParameterSnapshotContext)
+  if (!context) {
+    throw new Error('useParameterSnapshotContext must be used within a ParameterSnapshotProvider')
+  }
+  return context
 }

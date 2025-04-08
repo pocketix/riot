@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
-import { InstanceWithKPIs } from '@/context/utils/kpiStore'
+import { InstanceWithKPIs } from '@/context/stores/kpiStore'
 
 interface GroupDeviceCardProps {
   instance: InstanceWithKPIs

@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { useNavigate } from 'react-router-dom'
 import { GoLinkExternal } from 'react-icons/go'
 import { ResponsiveLineChart } from '@/features/dashboard/components/visualizations/ResponsiveLineChart'
-import { InstanceWithKPIs } from '@/context/utils/kpiStore'
+import { InstanceWithKPIs } from '@/context/stores/kpiStore'
 import { Label } from '@/components/ui/label'
 import { Serie } from '@nivo/line'
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSdInstanceGroupsWithKpiDataQuery } from '@/generated/graphql'
 import { GroupPageView } from '@/views/GroupPageView'
-import { InstanceWithKPIs } from '@/context/utils/kpiStore'
+import { InstanceWithKPIs } from '@/context/stores/kpiStore'
 import { useKpiContext } from '@/context/KPIContext'
 
 export interface WholeKPIGroupDetails {
@@ -139,7 +139,7 @@ export const GroupPageController = () => {
   }, [groupsWithStats, searchQuery, sortBy, sortDirection])
 
   const isLoading = instancesLoading || groupsLoading
-  
+
   return (
     <GroupPageView
       groups={processedGroups}

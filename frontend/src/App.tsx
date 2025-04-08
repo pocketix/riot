@@ -23,7 +23,7 @@ import { DeviceDetailProvider } from './context/DeviceDetailContext'
 import { DeviceDetailPage } from './pages/DeviceDetailPage'
 import { KpiProvider } from './context/KPIContext'
 import { GroupDetailPage } from './pages/GroupDetailPage'
-import { ParameterUpdatesProvider } from './context/ParameterUpdatesContext'
+import { ParameterSnapshotProvider } from './context/ParameterUpdatesContext'
 import { InstancesProvider } from './context/InstancesContext'
 import { DeviceModalDetailController } from './features/dashboard/components/devices/DeviceModalDetailController'
 
@@ -33,7 +33,7 @@ export default function App() {
       <DarkModeProvider>
         <InstancesProvider>
           <DeviceDetailProvider>
-            <ParameterUpdatesProvider>
+            <ParameterSnapshotProvider>
               <KpiProvider>
                 <NiceModal.Provider>
                   <BrowserRouter>
@@ -69,7 +69,7 @@ export default function App() {
                   </BrowserRouter>
                 </NiceModal.Provider>
               </KpiProvider>
-            </ParameterUpdatesProvider>
+            </ParameterSnapshotProvider>
           </DeviceDetailProvider>
         </InstancesProvider>
       </DarkModeProvider>

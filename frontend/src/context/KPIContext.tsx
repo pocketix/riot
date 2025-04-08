@@ -6,7 +6,7 @@ import {
   useKpiFulfillmentSubscription
 } from '@/generated/graphql'
 import { useInstances } from '@/context/InstancesContext'
-import { InstanceWithKPIs, KPIdata, KPIStats, kpiStore } from './utils/kpiStore'
+import { InstanceWithKPIs, KPIdata, KPIStats, kpiStore } from './stores/kpiStore'
 
 interface KpiContextState {
   kpiFulfillment: Record<number, KPIdata[]>
@@ -116,7 +116,11 @@ export function KpiProvider({ children }: { children: ReactNode }) {
     }
   })
 
-  const processInstanceUpdates = (existingKpis: KPIdata[], updates: KPIResult[], definitions: KpiDefinitionsAndResultsQuery['kpiDefinitions']) => {
+  const processInstanceUpdates = (
+    existingKpis: KPIdata[],
+    updates: KPIResult[],
+    definitions: KpiDefinitionsAndResultsQuery['kpiDefinitions']
+  ) => {
     let changed = false
     const kpis = [...existingKpis]
 

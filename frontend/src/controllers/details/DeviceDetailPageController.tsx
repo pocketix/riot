@@ -107,7 +107,7 @@ export const DeviceDetailPageController = () => {
     setSelectedParameter(null)
   }, [Number(id)])
 
-  const lastUpdatedTimestamp = useFormattedLastUpdated(instance?.id ?? -1)
+  const lastUpdatedTimestamp = useFormattedLastUpdated(Number(id))
 
   const viewProps: DeviceDetailPageProps = {
     instance,

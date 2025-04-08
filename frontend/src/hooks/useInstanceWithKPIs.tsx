@@ -1,7 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import { useKpiContext } from '../context/KPIContext'
 import { useInstances } from '../context/InstancesContext'
-import { kpiStore } from '../context/utils/kpiStore'
+import { kpiStore } from '../context/stores/kpiStore'
 
 export function useInstanceWithKPIs(instanceUID?: string, instanceID?: number) {
   const { getInstanceWithKPIs, kpiLoading, kpiError } = useKpiContext()

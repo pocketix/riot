@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { GroupDetailWithKPIs } from '@/controllers/details/GroupDetailPageController'
-import { InstanceWithKPIs } from '@/context/utils/kpiStore'
+import { InstanceWithKPIs } from '@/context/stores/kpiStore'
 
 interface GroupDetailProps {
   group: GroupDetailWithKPIs

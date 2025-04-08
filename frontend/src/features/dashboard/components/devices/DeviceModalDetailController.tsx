@@ -14,6 +14,7 @@ import { DeviceModalDetailView, DeviceModalDetailViewProps } from './DeviceModal
 import { useInstanceWithKPIs } from '@/hooks/useInstanceWithKPIs'
 import { useFormattedLastUpdated } from '@/hooks/useLastUpdated'
 import { useInstances } from '@/context/InstancesContext'
+import { useParameterSnapshot } from '@/hooks/useParameterSnapshot'
 
 export const DeviceModalDetailController = () => {
   const { selectedDevice, isOpen, setIsOpen } = useDeviceDetail()
@@ -57,6 +58,8 @@ export const DeviceModalDetailController = () => {
     () => parameters?.find((param) => param.denotation === currentParameter),
     [parameters, currentParameter]
   )
+
+  const parameterLastValue = useParameterSnapshot(instance?.id!, wholeParameter?.id!)
 
   const queryVariables = useMemo(() => {
     if (!instance?.uid || !currentParameter || !wholeParameter) {
@@ -141,7 +144,8 @@ export const DeviceModalDetailController = () => {
     IconComponent,
     processedData,
     handleViewAllDetails,
-    instanceGroups
+    instanceGroups,
+    parameterLastValue : parameterLastValue.value,
   }
 
   return <DeviceModalDetailView {...viewProps} />
