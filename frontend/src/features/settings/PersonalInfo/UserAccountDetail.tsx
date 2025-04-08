@@ -1,5 +1,4 @@
 import styled from 'styled-components'
-import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { breakpoints } from '@/styles/Breakpoints'
 
@@ -7,21 +6,20 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  padding: 1rem;
   align-items: center;
-
-  @media (min-width: ${breakpoints.sm}) {
-    padding: 2rem;
-  }
 `
 
 const Card = styled.div`
   background: var(--color-grey-0);
-  padding: 2rem;
+  padding: 1rem;
   border-radius: 12px;
-  max-width: 800px;
   width: 100%;
   box-shadow: 0px 2px 8px var(--color-grey-200);
+
+  @media (min-width: ${breakpoints.sm}) {
+    padding: 2rem;
+    max-width: 1300px;
+  }
 `
 
 const Header = styled.div`
@@ -51,7 +49,10 @@ const ProfileImage = styled.img`
 const InfoSection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+
+  @media (min-width: ${breakpoints.sm}) {
+    gap: 0.25rem;
+  }
 `
 
 const InfoRow = styled.div`
@@ -95,13 +96,13 @@ export default function UserAccountDetail() {
           </InfoSection>
         </Header>
 
-        <div className="sm: mb-4 mt-4 text-justify text-[--color-grey-500] sm:text-left">
+        <div className="mb-4 mt-4 text-justify text-sm text-[--color-grey-500] sm:text-left sm:text-base">
           Your account is managed via Google. To update your personal information, please use your Google Account
           settings.
         </div>
 
         <Button
-          className="ml-auto block"
+          className="ml-auto block w-full sm:w-max"
           variant="default"
           onClick={() => window.open('https://myaccount.google.com/personal-info', '_blank')}
         >
