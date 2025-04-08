@@ -14,7 +14,6 @@ export interface TimeFrameOption {
 interface TimeFrameSelectorProps {
   onValueChange: (value: string | null) => void
   value?: string | null
-  placeholder?: string
   disabled?: boolean
   className?: string
 }
@@ -35,7 +34,6 @@ export function TimeFrameSelector({
   onValueChange,
   value,
   disabled = false,
-  placeholder = 'Select timeframe...',
   className
 }: TimeFrameSelectorProps) {
   const [open, setOpen] = useState(false)
@@ -51,7 +49,7 @@ export function TimeFrameSelector({
           disabled={disabled}
           className={cn('w-full justify-between truncate px-2', className)}
         >
-          {value ? options.find((option) => option.value === value)?.label : placeholder}
+          {value ? options.find((option) => option.value === value)?.label : 'Select timeframe...'}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

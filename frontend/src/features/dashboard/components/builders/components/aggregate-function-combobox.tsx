@@ -1,33 +1,36 @@
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useState } from 'react'
-import { SdParameter } from '@/generated/graphql'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { StatisticsOperation } from '@/generated/graphql'
 
-export interface ParameterOption {
-  id: number | null
-  denotation: string
-}
-
-interface SingleParameterComboboxProps {
-  options: SdParameter[]
-  onValueChange: (value: ParameterOption | null) => void
-  value?: ParameterOption | null
+interface AggregateFunctionComboboxProps {
+  onValueChange: (value: StatisticsOperation | null) => void
+  value?: string
   disabled?: boolean
   className?: string
 }
 
-export function SingleParameterCombobox({
+export function AggregateFunctionCombobox({
   onValueChange,
-  options,
   value,
   disabled = false,
   className
-}: SingleParameterComboboxProps) {
+}: AggregateFunctionComboboxProps) {
   const [open, setOpen] = useState(false)
+  const options = [
+    { value: StatisticsOperation.Sum, label: 'Total' },
+    { value: StatisticsOperation.Mean, label: 'Average' },
+    { value: StatisticsOperation.Max, label: 'Maximum' },
+    { value: StatisticsOperation.Min, label: 'Minimum' },
+    { value: StatisticsOperation.Count, label: 'Count' },
+    { value: StatisticsOperation.Last, label: 'Last Value' },
+    { value: StatisticsOperation.First, label: 'First Value' }
+  ]
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -39,37 +42,38 @@ export function SingleParameterCombobox({
           disabled={disabled}
           className={cn(
             'flex w-full items-center px-2 text-left font-semibold',
-            !value?.id && 'font-normal text-muted-foreground',
+            !value && 'font-normal text-muted-foreground',
             className
           )}
         >
-          <span className="flex-1 truncate">{value?.id ? value.denotation : 'Select parameter...'}</span>
+          <span className="flex-1 truncate">
+            {value ? options.find((opt) => opt.value === value)?.label : 'Select aggregate function...'}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
         <Command>
-          <CommandInput placeholder="Search parameter..." />
+          <CommandInput placeholder="Search functions..." />
           <CommandList>
             <ScrollArea>
               <div className="h-fit max-h-[150px]">
-                <CommandEmpty>No parameter found.</CommandEmpty>
                 <CommandGroup>
                   {options.map((option) => (
                     <CommandItem
-                      key={option.id}
-                      value={option.denotation}
+                      key={option.label}
+                      value={option.value}
                       onSelect={() => {
-                        if (value?.id === option.id) {
+                        if (value === option.value) {
                           setOpen(false)
                         }
 
-                        onValueChange(option)
+                        onValueChange(option.value)
                         setOpen(false)
                       }}
                     >
-                      <Check className={cn(value?.id === option.id ? 'opacity-100' : 'opacity-0')} />
-                      {option.denotation}
+                      <Check className={cn(value === option.value ? 'opacity-100' : 'opacity-0')} />
+                      {option.label}
                     </CommandItem>
                   ))}
                 </CommandGroup>

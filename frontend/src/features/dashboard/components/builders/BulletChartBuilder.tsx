@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { ResponsiveBullet } from '@nivo/bullet'
+import { Datum } from '@nivo/bullet'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { useDarkMode } from '@/context/DarkModeContext'
-import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
 import {
   SdParameterType,
   StatisticsOperation,
@@ -29,18 +27,22 @@ import { BuilderResult } from '@/types/dashboard/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
 import { TimeFrameSelector } from './components/time-frame-selector'
+import { useInstances } from '@/context/InstancesContext'
+import { useParameterSnapshotContext } from '@/context/ParameterUpdatesContext'
+import { AggregateFunctionCombobox } from './components/aggregate-function-combobox'
+import { ResponsiveBulletChart } from '../visualizations/ResponsiveBulletChart'
 
 type BulletChartBuilderResult = BuilderResult<BulletCardConfig>
 
 export interface BulletChartBuilderProps {
   onDataSubmit: (data: any) => void
-  instances: SdInstancesWithParamsQuery['sdInstances']
   config?: BulletCardConfig
 }
 
-export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletChartBuilderProps) {
+export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderProps) {
   const parameterNameMock = useRef<HTMLSpanElement | null>(null)
-  const { isDarkMode } = useDarkMode()
+  const { getInstanceByUid } = useInstances()
+  const { getParameterSnapshot } = useParameterSnapshotContext()
 
   const [selectedInstance, setSelectedInstance] = useState<SdInstancesWithParamsQuery['sdInstances'][number] | null>(
     null
@@ -49,7 +51,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
     [key: string]: SdTypeParametersWithSnapshotsQuery['sdType']['parameters']
   }>({})
   const [getChartData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<Datum[]>([])
   const [rangeInput, setRangeInput] = useState<string>('')
   const [markerInput, setMarkerInput] = useState<string>('')
 
@@ -64,7 +66,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
           config: {
             name: '',
             function: '',
-            timeFrame: '1440',
+            timeFrame: '24',
             measureSize: 0.2,
             markers: [],
             margin: { top: 10, right: 10, bottom: 30, left: 30 },
@@ -81,32 +83,37 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
     name: 'rows'
   })
 
+  useEffect(() => {
+    if (config) {
+      config.rows.forEach((_, index) => {
+        checkRowAndFetch(index)
+      })
+    }
+  }, [config])
+
   const fetchRowData = async (rowIndex: number) => {
     const row = form.getValues(`rows.${rowIndex}`)
 
     try {
       // 'last' function uses snapshot data
       if (row.config.function === 'last') {
-        const instance = instances.find((inst) => inst.uid === row.instance.uid)
+        const instance = getInstanceByUid(row.instance.uid)
         if (!instance) return
 
-        const parameters = availableParameters[instance.type.id]
-        if (!parameters) return
-
-        const parameter = parameters.find((p) => p.denotation === row.parameter.denotation)
-        if (!parameter) return
-
-        const snapshot = parameter.parameterSnapshots?.find(
-          (snap) => snap.instanceId === instance.id && snap.parameterId === parameter.id
-        )
+        const snapshot = getParameterSnapshot(instance.id!, row.parameter.id!)
 
         if (snapshot?.number !== undefined) {
+          console.log('Found snapshot data:', snapshot)
           setData((prev) => {
             const newData = [...prev]
             newData[rowIndex] = {
               id: row.config.name || row.parameter.denotation,
-              ranges: [...(row.config.ranges || []), 0, 0],
-              measures: [snapshot.number],
+              ranges: [
+                ...(row.config.ranges || []).flatMap((range: { min: number; max: number }) => [range.min, range.max]),
+                0,
+                0
+              ],
+              measures: [snapshot.number!],
               markers: row.config.markers || []
             }
             return newData
@@ -124,8 +131,8 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
             sensors: [{ key: row.instance.uid, values: [row.parameter.denotation] }]
           },
           request: {
-            from: new Date(Date.now() - Number(row.config.timeFrame) * 60 * 1000).toISOString(),
-            aggregateMinutes: Number(row.config.timeFrame),
+            from: new Date(Date.now() - Number(row.config.timeFrame) * 60 * 60 * 1000).toISOString(),
+            aggregateMinutes: Number(row.config.timeFrame) * 60 * 1000,
             operation: row.config.function as StatisticsOperation
           }
         }
@@ -143,7 +150,11 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
             const newData = [...prev]
             newData[rowIndex] = {
               id: row.config.name || row.parameter.denotation,
-              ranges: [...(row.config.ranges || []), 0, 0],
+              ranges: [
+                ...(row.config.ranges || []).flatMap((range: { min: number; max: number }) => [range.min, range.max]),
+                0,
+                0
+              ],
               measures: [value],
               markers: row.config.markers || []
             }
@@ -152,7 +163,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
         }
       }
     } catch (error) {
-      const instance = instances.find((inst) => inst.uid === row.instance.uid)
+      const instance = getInstanceByUid(row.instance.uid)
       toast.error(
         `Failed to fetch data for '${instance?.userIdentifier || row.instance.uid} - ${row.parameter.denotation}'`
       )
@@ -191,7 +202,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
   useEffect(() => {
     if (config) {
       config.rows.forEach((row) => {
-        const instance = instances.find((inst) => inst.uid === row.instance.uid)
+        const instance = getInstanceByUid(row.instance.uid)
         if (instance) {
           refetchParameters({ sdTypeId: instance.type.id }).then((result) => {
             setAvailableParameters((prev) => ({
@@ -201,11 +212,14 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
           })
         }
       })
+      config.rows.forEach((_, index) => {
+        fetchRowData(index)
+      })
     }
-  }, [config, instances, refetchParameters])
+  }, [config, refetchParameters])
 
   const getParameterOptions = (instanceUID: string) => {
-    const instance = instances.find((inst) => inst.uid === instanceUID)
+    const instance = getInstanceByUid(instanceUID)
     if (!instance) return []
     const parameters = availableParameters[instance.type?.id!]
     if (!parameters) return []
@@ -256,33 +270,10 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
           const row = form.watch(`rows.${index}`)
           if (!data[index]) return null
           return (
-            <div className="h-[75px] w-full scale-[0.9] sm:scale-100" key={index}>
-              <ResponsiveBullet
-                data={[data[index]]}
-                margin={row.config.margin}
-                titleOffsetX={row.config.titleOffsetX}
-                measureSize={row.config.measureSize}
-                minValue={row.config.minValue || 'auto'}
-                maxValue={row.config.maxValue || 'auto'}
-                rangeColors={
-                  row.config.colorScheme === 'greys'
-                    ? ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3']
-                    : 'seq:cool'
-                }
-                measureColors={row.config.colorScheme === 'greys' ? ['pink'] : 'seq:red_purple'}
-                theme={isDarkMode ? darkTheme : lightTheme}
-                // tooltip={() => {
-                //   const instanceName = instances.find((inst) => inst.uid === row.instance.uid)?.userIdentifier
-                //   // return (
-                //   //   <BulletChartToolTip
-                //   //     instanceName={instanceName}
-                //   //     parameterName={row.parameter.denotation}
-                //   //     currentValue={data[index].measures[0]}
-                //   //     targetValues={data[index].markers}
-                //   //   />
-                //   )
-                // }}
-              />
+            <div className="relative h-[75px] w-full" key={index}>
+              <div className="absolute inset-0">
+                <ResponsiveBulletChart data={data[index]} rowConfig={row} />
+              </div>
             </div>
           )
         })}
@@ -338,14 +329,13 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                               <FormLabel>Instance</FormLabel>
                               <FormControl>
                                 <SingleInstanceCombobox
-                                  instances={instances}
                                   onValueChange={(instance) => {
                                     setSelectedInstance(instance)
                                     field.onChange(instance)
                                     form.setValue(`rows.${index}.parameter`, { denotation: '', id: null })
                                     checkRowAndFetch(index)
                                   }}
-                                  value={field.value.uid}
+                                  value={field.value.id}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -360,9 +350,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                               <FormLabel>Parameter</FormLabel>
                               <FormControl>
                                 <SingleParameterCombobox
-                                  value={
-                                    field.value ? { id: field.value.id!, denotation: field.value.denotation } : null
-                                  }
+                                  value={field.value}
                                   onValueChange={(value) => {
                                     form.setValue(`rows.${index}.config.name`, value?.denotation!)
                                     automaticOffset(index, value?.denotation!)
@@ -392,6 +380,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                 <Input
                                   placeholder="Display name"
                                   {...field}
+                                  className="h-9"
                                   onChange={(e) => {
                                     field.onChange(e.target.value)
                                     automaticOffset(index, e.target.value)
@@ -410,7 +399,8 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                             <FormItem>
                               <FormLabel>Function</FormLabel>
                               <FormControl>
-                                <Select
+                                <AggregateFunctionCombobox
+                                  value={field.value}
                                   onValueChange={(value) => {
                                     field.onChange(value)
                                     if (value === 'last') {
@@ -418,19 +408,7 @@ export function BulletChartBuilder({ onDataSubmit, instances, config }: BulletCh
                                     }
                                     checkRowAndFetch(index)
                                   }}
-                                  value={field.value}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select a function" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {Object.values(StatisticsOperation).map((operation) => (
-                                      <SelectItem key={operation} value={operation}>
-                                        {operation}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

@@ -6,12 +6,11 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { SdInstancesWithParamsQuery } from '@/generated/graphql'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { useInstances } from '@/context/InstancesContext'
 
 interface SingleInstanceComboboxProps {
-  instances: SdInstancesWithParamsQuery['sdInstances']
   onValueChange: (value: SdInstancesWithParamsQuery['sdInstances'][number]) => void
-  value?: string | null
-  placeholder?: string
+  value: number | null
   disabled?: boolean
   className?: string
 }
@@ -24,15 +23,14 @@ type InstanceGroup = {
 }
 
 export function SingleInstanceCombobox({
-  instances,
   onValueChange,
   value,
-  placeholder = 'Select instance...',
   disabled = false,
   className
 }: SingleInstanceComboboxProps) {
   const [open, setOpen] = useState(false)
   const [instanceGroups, setInstanceGroups] = useState<InstanceGroup[]>([])
+  const { getInstanceById, instances } = useInstances()
 
   useEffect(() => {
     if (!instances || instances.length === 0) {
@@ -40,7 +38,7 @@ export function SingleInstanceCombobox({
       return
     }
 
-    const groups: { [key: string]: InstanceGroup } = {}
+    const groups: { [key: number]: InstanceGroup } = {}
 
     // Sort the instances
     const sortedInstances = [...instances].sort((a, b) => a.userIdentifier.localeCompare(b.userIdentifier))
@@ -69,7 +67,7 @@ export function SingleInstanceCombobox({
     setInstanceGroups(sortedGroups)
   }, [instances])
 
-  const selectedInstance = value ? instances.find((instance) => instance.uid === value) : null
+  const selectedInstance = value ? getInstanceById(value) : null
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -80,9 +78,15 @@ export function SingleInstanceCombobox({
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
-          className={cn('w-full justify-between', className)}
+          className={cn(
+            'flex w-full items-center px-2 text-left font-semibold',
+            !value && 'font-normal text-muted-foreground',
+            className
+          )}
         >
-          {selectedInstance ? selectedInstance.userIdentifier : placeholder}
+          <span className="flex-1 truncate">
+            {selectedInstance ? selectedInstance.userIdentifier : 'Select instance...'}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -97,17 +101,17 @@ export function SingleInstanceCombobox({
                   <CommandGroup key={group.typeID} heading={group.typeLabel}>
                     {group.instances.map((instance) => (
                       <CommandItem
-                        key={instance.uid}
+                        key={instance.id}
                         value={instance.userIdentifier}
                         onSelect={() => {
-                          if (value === instance.uid) {
+                          if (value === instance.id) {
                             setOpen(false)
                           }
                           onValueChange(instance)
                           setOpen(false)
                         }}
                       >
-                        <Check className={cn(value === instance.uid ? 'opacity-100' : 'opacity-0')} />
+                        <Check className={cn(value === instance.id ? 'opacity-100' : 'opacity-0')} />
                         {instance.userIdentifier}
                       </CommandItem>
                     ))}
