@@ -9,6 +9,7 @@ const StyledAppLayout = styled.div`
   color: var(--color-grey-900);
   display: grid;
   grid-template-rows: 1fr auto;
+  padding-bottom: 3.6rem;
   grid-template-areas:
     'main'
     'navbar';
@@ -21,14 +22,18 @@ const StyledAppLayout = styled.div`
     width: 100%;
     height: 100%;
     background-image: linear-gradient(to bottom, var(--primary-background), var(--secondary-background));
-    opacity: 0.5; /* Adjust transparency */
+    opacity: 0.5;
     z-index: -1;
+  }
+  @media (min-width: ${breakpoints.sm}) {
+    padding-bottom: 4.2rem;
   }
 
   @media (min-width: ${breakpoints.md}) {
     grid-template-rows: none;
     grid-template-columns: auto 1fr;
     grid-template-areas: 'navbar main';
+    padding-bottom: 0;
   }
 `
 
