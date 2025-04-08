@@ -162,7 +162,7 @@ export default function Devices() {
     <PageWrapper>
       <Container>
         <TopBar>
-          <Heading>{t('devices')}</Heading>
+          <Heading>Device Instances</Heading>
           <TabsContainer>
             <TabSwitcher
               activeTab={location.pathname.split('/')[2] || 'groups'}

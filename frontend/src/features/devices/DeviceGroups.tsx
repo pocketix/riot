@@ -40,7 +40,7 @@ export default function DeviceGroups() {
     <PageWrapper>
       <Container>
         <div className="flex w-full justify-between">
-          <Heading>{t('devices')}</Heading>
+          <Heading>Device Groups</Heading>
           <TabsContainer>
             <TabSwitcher
               activeTab={location.pathname.includes('/devices') ? 'devices' : 'groups'}

@@ -101,20 +101,21 @@ export default function Settings() {
             <span>{t('language')}</span>
             <LanguageSwitcher />
           </SettingsItem>
-          <SettingsItem className="cursor-pointer" onClick={() => navigate('/settings/apollo-sandbox')}>
-            <span>{t('developerMode')} (Apollo Sanxbox)</span>
-            <FaArrowRight />
-          </SettingsItem>
-        </SettingsSection>
 
-        <SettingsSection>
-          <SettingsSectionHeader>Developer settings</SettingsSectionHeader>
           <SettingsItem className="cursor-pointer" onClick={() => navigate('/settings/device-types')}>
             <span>Manage your Device Types</span>
             <FaArrowRight />
           </SettingsItem>
           <SettingsItem className="cursor-pointer" onClick={() => navigate('/settings/kpi-definitions')}>
             <span>Manage your KPI Definitions</span>
+            <FaArrowRight />
+          </SettingsItem>
+        </SettingsSection>
+
+        <SettingsSection>
+          <SettingsSectionHeader>Developer settings</SettingsSectionHeader>
+          <SettingsItem className="cursor-pointer" onClick={() => navigate('/settings/apollo-sandbox')}>
+            <span>{t('developerMode')} (Apollo Sanxbox)</span>
             <FaArrowRight />
           </SettingsItem>
         </SettingsSection>
