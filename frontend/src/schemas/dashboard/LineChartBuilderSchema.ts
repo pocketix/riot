@@ -20,7 +20,7 @@ export const lineChartBuilderSchema = z.object({
   }),
   yScale: z.object({
     type: z
-      .enum(['linear', 'log'])
+      .enum(['linear', 'time'])
       .nullable()
       .superRefine((data, ctx) => {
         if (data === null) {

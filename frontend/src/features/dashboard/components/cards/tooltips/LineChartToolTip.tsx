@@ -6,11 +6,12 @@ export interface ToolTipProps {
   position: PointTooltipProps
   containerRef: React.RefObject<HTMLDivElement>
   instanceName?: string
+  parameterName?: string
   xName?: string
   yName?: string
 }
 
-export const ChartToolTip = ({ position, containerRef, instanceName, xName, yName }: ToolTipProps) => {
+export const ChartToolTip = ({ position, containerRef, instanceName, parameterName, xName, yName }: ToolTipProps) => {
   const { isDarkMode } = useDarkMode()
 
   return (
@@ -25,7 +26,7 @@ export const ChartToolTip = ({ position, containerRef, instanceName, xName, yNam
             <span className="font-bold">{instanceName}</span>
           </div>
           <div>
-            <span className="font-bold">{position.point.id.split(' ')[0].toUpperCase()}</span>
+            <span className="font-bold">{parameterName}</span>
           </div>
           <div>
             {xName ? xName : 'X'}: <span className="font-bold">{position.point.data.xFormatted}</span>

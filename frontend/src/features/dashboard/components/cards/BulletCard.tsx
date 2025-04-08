@@ -1,13 +1,10 @@
 import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/CardGlobal'
 import { AiOutlineDrag } from 'react-icons/ai'
-import { ResponsiveBullet } from '@nivo/bullet'
 import styled from 'styled-components'
 import { useEffect, useMemo, useState } from 'react'
 import { ItemDeleteAlertDialog } from './components/ItemDeleteAlertDialog'
 import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './components/AccessibilityContainer'
-import { useDarkMode } from '@/context/DarkModeContext'
-import { lightTheme, darkTheme } from './components/ChartThemes'
 import { Skeleton } from '@/components/ui/skeleton'
 import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { toast } from 'sonner'
@@ -19,8 +16,7 @@ import {
   StatisticsOperation,
   useStatisticsQuerySensorsWithFieldsLazyQuery
 } from '@/generated/graphql'
-import { BulletChartToolTip } from './tooltips/BulletChartToolTIp'
-import { useDeviceDetail } from '@/context/DeviceDetailContext'
+import { ResponsiveBulletChart } from '../visualizations/ResponsiveBulletChart'
 
 // Styled components
 export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
@@ -71,13 +67,11 @@ export const BulletCard = ({
   handleSaveEdit,
   instances
 }: BulletCardProps) => {
-  const { isDarkMode } = useDarkMode()
   const [chartConfig, setChartConfig] = useState<BulletCardConfig>()
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const [data, setData] = useState<any[]>([])
   const [getChartData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
   const [error, setError] = useState<string | null>(null)
-  const { setDetailsSelectedDevice } = useDeviceDetail()
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -190,10 +184,6 @@ export const BulletCard = ({
     }
   }, [configuration])
 
-  function handleOnClick(instanceUID: string, parameter: string) {
-    setDetailsSelectedDevice({ uid: instanceUID, parameter: parameter })
-  }
-
   if (!chartConfig || !data || beingResized || error)
     return (
       <>
@@ -229,12 +219,7 @@ export const BulletCard = ({
         const instanceName = instances.find((instance) => instance.uid === row.instance.uid)?.userIdentifier
         if (!data[index])
           return (
-            // Return a skeleton if data is not available
-            <BulletContainer
-              key={index}
-              $editModeEnabled={editModeEnabled}
-              onClick={() => handleOnClick(row.instance.uid, row.parameter.denotation)}
-            >
+            <BulletContainer key={index} $editModeEnabled={editModeEnabled}>
               <Skeleton className="h-full w-full p-2" disableAnimation>
                 <TooltipProvider>
                   <Tooltip>
@@ -265,43 +250,7 @@ export const BulletCard = ({
           )
         return (
           <BulletContainer key={index} $editModeEnabled={editModeEnabled}>
-            <ResponsiveBullet
-              data={[data[index]]}
-              margin={row.config.margin}
-              titleOffsetX={row.config.titleOffsetX}
-              measureSize={row.config.measureSize}
-              minValue={row.config.minValue || 'auto'}
-              maxValue={row.config.maxValue || 'auto'}
-              rangeColors={
-                row.config.colorScheme === 'greys'
-                  ? // The nivo's grey color scheme is not suitable as the colors are in reversed order
-                    ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3']
-                  : 'seq:cool'
-              }
-              measureColors={row.config.colorScheme === 'greys' ? ['pink'] : 'seq:red_purple'}
-              theme={isDarkMode ? darkTheme : lightTheme}
-              // TODO: Mobile devices problem
-              onMarkerClick={() => {
-                handleOnClick(row.instance.uid, row.parameter.denotation)
-              }}
-              onMeasureClick={() => {
-                handleOnClick(row.instance.uid, row.parameter.denotation)
-              }}
-              onRangeClick={() => {
-                handleOnClick(row.instance.uid, row.parameter.denotation)
-              }}
-              tooltip={() => {
-                const instanceName = instances.find((instance) => instance.uid === row.instance.uid)?.userIdentifier
-                return (
-                  <BulletChartToolTip
-                    instanceName={instanceName}
-                    parameterName={row.parameter.denotation}
-                    currentValue={data[index].measures[0]}
-                    targetValues={row.config.markers}
-                  />
-                )
-              }}
-            />
+            <ResponsiveBulletChart data={data[index]} rowConfig={row} />
           </BulletContainer>
         )
       })}

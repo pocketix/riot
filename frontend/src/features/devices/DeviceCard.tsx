@@ -202,7 +202,7 @@ export default function DeviceCard({
         )}
       </div>
       <BottomRow>
-        <Button onClick={() => navigate('/')}>View Details</Button>
+        <Button onClick={() => navigate(`/device/${instance.id}`)}>View Details</Button>
         {!confirmed && onConfirmClick && (
           <Button onClick={onConfirmClick} variant="green">
             Confirm

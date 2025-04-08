@@ -1,20 +1,12 @@
-import { ResponsiveBullet } from '@nivo/bullet'
 import { ResponsiveLine } from '@nivo/line'
-import styled from 'styled-components'
 import { Card } from '@/components/ui/card'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
 import { SdParameterType } from '@/generated/graphql'
 import { Switch } from '@/components/ui/switch'
 import { EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
-
-export const VisualizationGalleryContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  width: 100%;
-  height: fit-content;
-`
+import { ResponsiveLineChart } from '../visualizations/ResponsiveLineChart'
+import { ResponsiveBulletChart } from '../visualizations/ResponsiveBulletChart'
 
 export interface VisualizationGalleryProps {
   setSelectedVisualization: (Visualization: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard') => void
@@ -24,44 +16,33 @@ export interface VisualizationGalleryProps {
 export function VisualizationGallery({ setSelectedVisualization, selectedVisualization }: VisualizationGalleryProps) {
   const { isDarkMode } = useDarkMode()
 
+  const sparkLineData = [
+    {
+      x: new Date(new Date(new Date().getTime() - 1000 * 60 * 60).toISOString().split('.')[0] + 'Z'),
+      y: 15.1
+    },
+    {
+      x: new Date(new Date(new Date().getTime() - 1000 * 60 * 60 * 2).toISOString().split('.')[0] + 'Z'),
+      y: 23.1
+    },
+    {
+      x: new Date(new Date(new Date().getTime() - 1000 * 60 * 60 * 3).toISOString().split('.')[0] + 'Z'),
+      y: 20.8
+    },
+    {
+      x: new Date(new Date(new Date().getTime() - 1000 * 60 * 60 * 4).toISOString().split('.')[0] + 'Z'),
+      y: 26.5
+    },
+    {
+      x: new Date(new Date(new Date().getTime() - 1000 * 60 * 60 * 5).toISOString().split('.')[0] + 'Z'),
+      y: 30.3
+    }
+  ]
+
   const dataLine = [
     {
-      id: 'temperature',
-      color: 'hsl(118, 70%, 50%)',
-      data: [
-        {
-          x: 10,
-          y: 213
-        },
-        {
-          x: 20,
-          y: 209
-        },
-        {
-          x: 34,
-          y: 126
-        },
-        {
-          x: 40,
-          y: 207
-        },
-        {
-          x: -4,
-          y: 83
-        },
-        {
-          x: 12,
-          y: 101
-        },
-        {
-          x: 4,
-          y: 63
-        },
-        {
-          x: 8,
-          y: 67
-        }
-      ]
+      id: 'linkquality zighbee2mqtt/CC2530.ROUTER/0x00124b00096dfca7',
+      data: sparkLineData
     }
   ]
 
@@ -147,14 +128,12 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
     ]
   }
 
-  const dataBullet = [
-    {
-      id: '',
-      ranges: [20, 54, 94, 0, 120],
-      measures: [106],
-      markers: [110]
-    }
-  ]
+  const dataBullet = {
+    id: '',
+    ranges: [20, 54, 94, 0, 120],
+    measures: [106],
+    markers: [110]
+  }
 
   const entityCardConfig: EntityCardConfig = {
     title: 'Entity Card',
@@ -198,73 +177,37 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
     ]
   }
 
-  const sparkLineData = [
-    {
-      x: '2025-01-01T00:00:00.000Z',
-      y: 15.1
-    },
-    {
-      x: '2025-01-02T00:00:00.000Z',
-      y: 23.1
-    },
-    {
-      x: '2025-01-03T02:00:00.000Z',
-      y: 20.8
-    },
-    {
-      x: '2025-01-04T00:00:00.000Z',
-      y: 26.5
-    },
-    {
-      x: '2025-01-05T00:00:00.000Z',
-      y: 30.3
-    }
-  ]
-
   return (
-    <VisualizationGalleryContainer>
-      <Card className={`${selectedVisualization === 'line' ? 'border-2 border-blue-500' : 'border-2'} h-[150px] box-border`} onClick={() => setSelectedVisualization('line')}>
-        <ResponsiveLine
-          data={dataLine}
-          margin={{ top: 10, right: 20, bottom: 30, left: 35 }}
-          xScale={{ type: 'point' }}
-          yScale={{
-            type: 'linear',
-            min: 'auto',
-            max: 'auto',
-            stacked: true,
-            reverse: false
-          }}
-          animate={false}
-          yFormat=" >-.2f"
-          pointSize={5}
-          pointColor={{ theme: 'background' }}
-          pointBorderWidth={2}
-          pointBorderColor={{ from: 'serieColor' }}
-          pointLabel="data.yFormatted"
-          pointLabelYOffset={-12}
-          enableTouchCrosshair={true}
-          useMesh={false}
-          theme={isDarkMode ? darkTheme : lightTheme}
-        />
+    <div className="flex w-full min-w-0 flex-col gap-2">
+      <Card
+        className={`${selectedVisualization === 'line' ? 'border-2 border-blue-500' : 'border-2'} h-[150px] w-full cursor-pointer`}
+        onClick={() => setSelectedVisualization('line')}
+      >
+        <div className="relative h-[150px] w-full overflow-hidden">
+          <div className="absolute inset-0 pb-2">
+            <ResponsiveLineChart data={dataLine} />
+            <div className="absolute inset-0 z-10" />
+          </div>
+        </div>
       </Card>
-      <Card className={`${selectedVisualization === 'bullet' ? 'border-2 border-blue-500' : 'border-2'} h-[70px] box-border`} onClick={() => setSelectedVisualization('bullet')}>
-        <ResponsiveBullet
-          data={dataBullet}
-          margin={{ top: 10, right: 10, bottom: 30, left: 10 }}
-          spacing={46}
-          titleAlign="start"
-          titleOffsetX={-30}
-          measureSize={0.2}
-          theme={isDarkMode ? darkTheme : lightTheme}
-          tooltip={() => null}
-        />
+      <Card
+        className={`${selectedVisualization === 'bullet' ? 'border-2 border-blue-500' : 'border-2'} box-border h-[70px] min-w-0 cursor-pointer`}
+        onClick={() => setSelectedVisualization('bullet')}
+      >
+        <div className="relative h-[80px] w-full overflow-hidden">
+          <div className="absolute inset-0 p-2 px-2">
+            <ResponsiveBulletChart data={dataBullet} />
+          </div>
+        </div>
       </Card>
-      <Card className={`${selectedVisualization === 'table' ? 'border-2 border-blue-500' : 'border-2'} h-fit p-1 box-border`} onClick={() => setSelectedVisualization('table')}>
-        <table className="w-full h-fit">
+      <Card
+        className={`${selectedVisualization === 'table' ? 'border-2 border-blue-500' : 'border-2'} box-border h-fit cursor-pointer p-1`}
+        onClick={() => setSelectedVisualization('table')}
+      >
+        <table className="m-1 h-fit w-full">
           <thead className="border-b-[2px]">
             <tr>
-              <th className="text-left text-md">{dataTable.title}</th>
+              <th className="text-md text-left">{dataTable.title}</th>
               {dataTable.columns.map((column: any, index: any) => (
                 <th key={index} className="text-center text-xs">
                   {column.header}
@@ -277,7 +220,7 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
               <tr key={rowIndex}>
                 <td className="text-sm">{row.name}</td>
                 {row.values.map((value: any, valueIndex: any) => (
-                  <td key={valueIndex} className="text-sm text-center">
+                  <td key={valueIndex} className="text-center text-sm">
                     {value.value}
                   </td>
                 ))}
@@ -286,12 +229,15 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
           </tbody>
         </table>
       </Card>
-      <Card className={`${selectedVisualization === 'entitycard' ? 'border-2 border-blue-500' : 'border-2'} h-fit p-1 box-border`} onClick={() => setSelectedVisualization('entitycard')}>
-        <table className="w-full h-fit">
+      <Card
+        className={`${selectedVisualization === 'entitycard' ? 'border-2 border-blue-500' : 'border-2'} box-border h-fit cursor-pointer p-1`}
+        onClick={() => setSelectedVisualization('entitycard')}
+      >
+        <table className="m-1 h-fit w-full">
           <thead className="border-b-[2px]">
             <tr>
-              <th className="text-left text-md">Area</th>
-              <th className="text-center text-md"></th>
+              <th className="text-md text-left">Area</th>
+              <th className="text-md text-center"></th>
             </tr>
           </thead>
           <tbody>
@@ -299,7 +245,7 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
               <tr key={rowIndex} className="mt-2 h-[24px]">
                 <td className="text-sm">{row.name}</td>
                 {row.visualization === 'sparkline' && (
-                  <td className="text-sm text-center w-[75px] h-[24px]">
+                  <td className="h-[24px] w-[75px] text-center text-sm">
                     <ResponsiveLine
                       data={[
                         {
@@ -323,18 +269,20 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
                     />
                   </td>
                 )}
-                {row.visualization === 'immediate' && <td className="text-sm text-center">23</td>}
+                {row.visualization === 'immediate' && <td className="text-center text-sm">23</td>}
                 {row.visualization === 'switch' && (
-                  <td className="text-sm text-center">
+                  <td className="text-center text-sm">
                     <Switch checked={true} />
                   </td>
                 )}
-                {row.visualization !== 'sparkline' && row.visualization !== 'immediate' && row.visualization !== 'switch' && <td className="text-sm text-center">{row.visualization}</td>}
+                {row.visualization !== 'sparkline' &&
+                  row.visualization !== 'immediate' &&
+                  row.visualization !== 'switch' && <td className="text-center text-sm">{row.visualization}</td>}
               </tr>
             ))}
           </tbody>
         </table>
       </Card>
-    </VisualizationGalleryContainer>
+    </div>
   )
 }

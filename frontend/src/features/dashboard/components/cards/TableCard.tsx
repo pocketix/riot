@@ -278,7 +278,7 @@ export const TableCard = ({
             {tableData?.map((row, rowIndex) => (
               <tr
                 key={rowIndex}
-                onClick={() => setDetailsSelectedDevice({ uid: row.instance.uid, parameter: row.parameter.denotation })}
+                onClick={() => setDetailsSelectedDevice(row.instance?.id!, row.parameter.id)}
               >
                 <td className="text-sm">{row.name}</td>
                 {row.values?.map((data: { function: string; value?: number }, valueIndex: number) => {

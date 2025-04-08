@@ -703,6 +703,21 @@ export type OnSdParameterSnapshotUpdateSubscriptionVariables = Exact<{ [key: str
 
 export type OnSdParameterSnapshotUpdateSubscription = { __typename?: 'Subscription', onSDParameterSnapshotUpdate: { __typename?: 'SDParameterSnapshot', instanceId: number, parameterId: number, string?: string | null, number?: number | null, boolean?: boolean | null, updatedAt: any } };
 
+export type KpiDefinitionsAndResultsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type KpiDefinitionsAndResultsQuery = { __typename?: 'Query', kpiDefinitions: Array<{ __typename?: 'KPIDefinition', id: number, sdTypeSpecification: string, userIdentifier: string, sdInstanceMode: SdInstanceMode, selectedSDInstanceUIDs: Array<string>, sdTypeID: number }>, kpiFulfillmentCheckResults: Array<{ __typename?: 'KPIFulfillmentCheckResult', kpiDefinitionID: number, sdInstanceID: number, fulfilled: boolean }> };
+
+export type GroupsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GroupsQuery = { __typename?: 'Query', sdInstanceGroups: Array<{ __typename?: 'SDInstanceGroup', id: number, userIdentifier: string, sdInstanceIDs: Array<number> }> };
+
+export type GetAllSdTypesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAllSdTypesQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: number, parameters: Array<{ __typename?: 'SDParameter', id: number, denotation: string, label?: string | null, type: SdParameterType }> }> };
+
 export type SdInstanceGroupsWithKpiDataQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1766,6 +1781,141 @@ export function useOnSdParameterSnapshotUpdateSubscription(baseOptions?: Apollo.
       }
 export type OnSdParameterSnapshotUpdateSubscriptionHookResult = ReturnType<typeof useOnSdParameterSnapshotUpdateSubscription>;
 export type OnSdParameterSnapshotUpdateSubscriptionResult = Apollo.SubscriptionResult<OnSdParameterSnapshotUpdateSubscription>;
+export const KpiDefinitionsAndResultsDocument = gql`
+    query KPIDefinitionsAndResults {
+  kpiDefinitions {
+    id
+    sdTypeSpecification
+    userIdentifier
+    sdInstanceMode
+    selectedSDInstanceUIDs
+    sdTypeID
+  }
+  kpiFulfillmentCheckResults {
+    kpiDefinitionID
+    sdInstanceID
+    fulfilled
+  }
+}
+    `;
+
+/**
+ * __useKpiDefinitionsAndResultsQuery__
+ *
+ * To run a query within a React component, call `useKpiDefinitionsAndResultsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useKpiDefinitionsAndResultsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useKpiDefinitionsAndResultsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useKpiDefinitionsAndResultsQuery(baseOptions?: Apollo.QueryHookOptions<KpiDefinitionsAndResultsQuery, KpiDefinitionsAndResultsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<KpiDefinitionsAndResultsQuery, KpiDefinitionsAndResultsQueryVariables>(KpiDefinitionsAndResultsDocument, options);
+      }
+export function useKpiDefinitionsAndResultsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<KpiDefinitionsAndResultsQuery, KpiDefinitionsAndResultsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<KpiDefinitionsAndResultsQuery, KpiDefinitionsAndResultsQueryVariables>(KpiDefinitionsAndResultsDocument, options);
+        }
+export function useKpiDefinitionsAndResultsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<KpiDefinitionsAndResultsQuery, KpiDefinitionsAndResultsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<KpiDefinitionsAndResultsQuery, KpiDefinitionsAndResultsQueryVariables>(KpiDefinitionsAndResultsDocument, options);
+        }
+export type KpiDefinitionsAndResultsQueryHookResult = ReturnType<typeof useKpiDefinitionsAndResultsQuery>;
+export type KpiDefinitionsAndResultsLazyQueryHookResult = ReturnType<typeof useKpiDefinitionsAndResultsLazyQuery>;
+export type KpiDefinitionsAndResultsSuspenseQueryHookResult = ReturnType<typeof useKpiDefinitionsAndResultsSuspenseQuery>;
+export type KpiDefinitionsAndResultsQueryResult = Apollo.QueryResult<KpiDefinitionsAndResultsQuery, KpiDefinitionsAndResultsQueryVariables>;
+export const GroupsDocument = gql`
+    query Groups {
+  sdInstanceGroups {
+    id
+    userIdentifier
+    sdInstanceIDs
+  }
+}
+    `;
+
+/**
+ * __useGroupsQuery__
+ *
+ * To run a query within a React component, call `useGroupsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGroupsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGroupsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGroupsQuery(baseOptions?: Apollo.QueryHookOptions<GroupsQuery, GroupsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GroupsQuery, GroupsQueryVariables>(GroupsDocument, options);
+      }
+export function useGroupsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GroupsQuery, GroupsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GroupsQuery, GroupsQueryVariables>(GroupsDocument, options);
+        }
+export function useGroupsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GroupsQuery, GroupsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GroupsQuery, GroupsQueryVariables>(GroupsDocument, options);
+        }
+export type GroupsQueryHookResult = ReturnType<typeof useGroupsQuery>;
+export type GroupsLazyQueryHookResult = ReturnType<typeof useGroupsLazyQuery>;
+export type GroupsSuspenseQueryHookResult = ReturnType<typeof useGroupsSuspenseQuery>;
+export type GroupsQueryResult = Apollo.QueryResult<GroupsQuery, GroupsQueryVariables>;
+export const GetAllSdTypesDocument = gql`
+    query getAllSdTypes {
+  sdTypes {
+    id
+    parameters {
+      id
+      denotation
+      label
+      type
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetAllSdTypesQuery__
+ *
+ * To run a query within a React component, call `useGetAllSdTypesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAllSdTypesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAllSdTypesQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetAllSdTypesQuery(baseOptions?: Apollo.QueryHookOptions<GetAllSdTypesQuery, GetAllSdTypesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAllSdTypesQuery, GetAllSdTypesQueryVariables>(GetAllSdTypesDocument, options);
+      }
+export function useGetAllSdTypesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAllSdTypesQuery, GetAllSdTypesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAllSdTypesQuery, GetAllSdTypesQueryVariables>(GetAllSdTypesDocument, options);
+        }
+export function useGetAllSdTypesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAllSdTypesQuery, GetAllSdTypesQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAllSdTypesQuery, GetAllSdTypesQueryVariables>(GetAllSdTypesDocument, options);
+        }
+export type GetAllSdTypesQueryHookResult = ReturnType<typeof useGetAllSdTypesQuery>;
+export type GetAllSdTypesLazyQueryHookResult = ReturnType<typeof useGetAllSdTypesLazyQuery>;
+export type GetAllSdTypesSuspenseQueryHookResult = ReturnType<typeof useGetAllSdTypesSuspenseQuery>;
+export type GetAllSdTypesQueryResult = Apollo.QueryResult<GetAllSdTypesQuery, GetAllSdTypesQueryVariables>;
 export const SdInstanceGroupsWithKpiDataDocument = gql`
     query SdInstanceGroupsWithKPIData {
   sdInstanceGroups {

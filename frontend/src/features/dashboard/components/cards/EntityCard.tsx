@@ -255,7 +255,7 @@ export const EntityCard = ({
                   <tr
                     key={rowIndex}
                     onClick={() =>
-                      setDetailsSelectedDevice({ uid: row.instance.uid, parameter: row.parameter.denotation })
+                      setDetailsSelectedDevice(row.instance.id!, row.parameter.id)
                     }
                   >
                     <td className="text-sm">{row.name}</td>
@@ -283,7 +283,7 @@ export const EntityCard = ({
                 <tr
                   key={rowIndex}
                   onClick={() =>
-                    setDetailsSelectedDevice({ uid: row.instance.uid, parameter: row.parameter.denotation })
+                    setDetailsSelectedDevice(row.instance.id!, row.parameter.id)
                   }
                 >
                   <td className="text-sm">{row.name}</td>

@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 
 interface DeviceDetailContextType {
-  selectedDevice: { uid: string; parameter: string } | null
-  setDetailsSelectedDevice: (device: { uid: string; parameter: string } | null) => void
+  selectedDevice: { instanceID: number; parameterID: number | null } | null
+  setDetailsSelectedDevice: (deviceId: number, parameterId: number | null) => void
   isOpen: boolean
   setIsOpen: (open: boolean) => void
 }
@@ -14,12 +14,15 @@ interface DeviceDetailProviderProps {
 }
 
 export const DeviceDetailProvider = ({ children }: DeviceDetailProviderProps) => {
-  const [selectedDevice, setDetailsSelectedDevice] = useState<{ uid: string; parameter: string } | null>(null)
+  const [selectedDevice, setDetailsSelectedDevice] = useState<{
+    instanceID: number
+    parameterID: number | null
+  } | null>(null)
   const [isOpen, setIsOpen] = useState(false)
 
-  const handleSetDevice = (device: { uid: string; parameter: string } | null) => {
-    setDetailsSelectedDevice(device)
-    setIsOpen(!!device)
+  const handleSetDevice = (deviceId: number, parameterId: number | null) => {
+    setDetailsSelectedDevice({ instanceID: deviceId, parameterID: parameterId })
+    setIsOpen(true)
   }
 
   const handleSetOpen = (open: boolean) => {
