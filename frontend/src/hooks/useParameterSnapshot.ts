@@ -4,7 +4,7 @@ import { useParameterSnapshotContext } from '@/context/ParameterUpdatesContext'
 
 export interface ParameterSnapshotHookResult {
   value: string | number | boolean | null
-  lastUpdated: string | null
+  lastUpdated: Date | null
   valueType: 'string' | 'number' | 'boolean' | 'unknown'
 }
 
@@ -41,6 +41,6 @@ export function useParameterSnapshot(instanceId: number, parameterId: number): P
   return {
     value,
     valueType,
-    lastUpdated: snapshot?.updatedAt || null
+    lastUpdated: new Date(snapshot?.updatedAt) || null
   }
 }
