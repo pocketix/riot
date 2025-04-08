@@ -27,6 +27,7 @@ const PageWrapper = styled.div`
   align-items: center;
   height: 100%;
   width: 100%;
+  padding: 1.5rem;
 `
 
 const Container = styled.div`
@@ -35,7 +36,7 @@ const Container = styled.div`
   height: 100%;
   width: 100%;
   gap: 1.5rem;
-  padding: 1.5rem;
+
   overflow-y: auto;
 
   @media (min-width: ${breakpoints.sm}) {

@@ -36,6 +36,7 @@ const PageWrapper = styled.div`
   align-items: center;
   height: 100%;
   width: 100%;
+  padding: 1.5rem;
 `
 
 const PageContainer = styled.form`
@@ -328,7 +329,7 @@ export default function DeviceTypeDetail() {
 
   return (
     <PageWrapper>
-      <div className="flex w-full max-w-[1300px] flex-col items-center justify-center p-[1.5rem]">
+      <div className="flex w-full max-w-[1300px] flex-col items-center justify-center">
         <div className="mb-4 flex w-full items-center justify-between">
           <Heading>{t('settings')}</Heading>
           <Button variant={'goBack'} onClick={() => navigate(-1)}>

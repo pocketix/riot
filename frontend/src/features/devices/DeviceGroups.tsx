@@ -6,17 +6,26 @@ import { breakpoints } from '@/styles/Breakpoints'
 import { useTranslation } from 'react-i18next'
 import { GroupPageController } from '@/controllers/GroupPageController'
 
-const StyledPage = styled.div`
+const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
-  gap: 2rem;
+  align-items: center;
+  height: 100%;
+  width: 100%;
   padding: 1.5rem;
-  color: hsl(var(--color-white));
+`
+
+const Container = styled.div`
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
+  gap: 1.5rem;
+
   overflow-y: auto;
 
   @media (min-width: ${breakpoints.sm}) {
-    padding: 2rem;
+    max-width: 1300px;
   }
 `
 
@@ -31,24 +40,26 @@ export default function DeviceGroups() {
   const { t } = useTranslation()
 
   return (
-    <StyledPage>
-      <div className="flex w-full justify-between">
-        <Heading>{t('devices')}</Heading>
-        <TabsContainer>
-          <TabSwitcher
-            activeTab={location.pathname.includes('/devices') ? 'devices' : 'groups'}
-            tabs={[
-              { name: t('devicesPage.groups'), path: '/groups' },
-              { name: t('devicesPage.instances'), path: '/devices' }
-            ]}
-          />
-        </TabsContainer>
-      </div>
+    <PageWrapper>
+      <Container>
+        <div className="flex w-full justify-between">
+          <Heading>{t('devices')}</Heading>
+          <TabsContainer>
+            <TabSwitcher
+              activeTab={location.pathname.includes('/devices') ? 'devices' : 'groups'}
+              tabs={[
+                { name: t('devicesPage.groups'), path: '/groups' },
+                { name: t('devicesPage.instances'), path: '/devices' }
+              ]}
+            />
+          </TabsContainer>
+        </div>
 
-      {/* Content goes here */}
-      <div className="mt-4 text-lg text-[--color-grey-500]">
-        <GroupPageController />
-      </div>
-    </StyledPage>
+        {/* Content goes here */}
+        <div className="mt-4 text-lg text-[--color-grey-500]">
+          <GroupPageController />
+        </div>
+      </Container>
+    </PageWrapper>
   )
 }

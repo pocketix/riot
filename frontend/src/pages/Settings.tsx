@@ -15,6 +15,7 @@ const PageWrapper = styled.div`
   align-items: center;
   height: 100%;
   width: 100%;
+  padding: 1.5rem;
 `
 
 const StyledPage = styled.div`
@@ -27,7 +28,6 @@ const StyledPage = styled.div`
   width: 100%;
   height: 100%;
   align-self: center;
-  padding: 1.5rem;
 
   @media (min-width: ${breakpoints.sm}) {
     max-width: 1300px;
