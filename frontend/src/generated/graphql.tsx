@@ -612,6 +612,14 @@ export type UpdateUserIdentifierOfSdInstanceMutationVariables = Exact<{
 
 export type UpdateUserIdentifierOfSdInstanceMutation = { __typename?: 'Mutation', updateSDInstance: { __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: number, denotation: string, type: SdParameterType }> } } };
 
+export type UpdateSdTypeMutationVariables = Exact<{
+  updateSdTypeId: Scalars['ID']['input'];
+  input: SdTypeInput;
+}>;
+
+
+export type UpdateSdTypeMutation = { __typename?: 'Mutation', updateSDType: { __typename?: 'SDType', denotation: string, icon?: string | null, id: number, label?: string | null, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, label?: string | null, type: SdParameterType }> } };
+
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -652,6 +660,11 @@ export type RestOfKpiDefinitionDetailPageDataQueryVariables = Exact<{ [key: stri
 
 
 export type RestOfKpiDefinitionDetailPageDataQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: number, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: number, denotation: string, type: SdParameterType }> }>, sdInstances: Array<{ __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number } }> };
+
+export type OnSdInstanceRegisteredSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type OnSdInstanceRegisteredSubscription = { __typename?: 'Subscription', onSDInstanceRegistered: { __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number, denotation: string, icon?: string | null } } };
 
 export type SdInstancesWithTypeAndSnapshotQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1013,6 +1026,49 @@ export function useUpdateUserIdentifierOfSdInstanceMutation(baseOptions?: Apollo
 export type UpdateUserIdentifierOfSdInstanceMutationHookResult = ReturnType<typeof useUpdateUserIdentifierOfSdInstanceMutation>;
 export type UpdateUserIdentifierOfSdInstanceMutationResult = Apollo.MutationResult<UpdateUserIdentifierOfSdInstanceMutation>;
 export type UpdateUserIdentifierOfSdInstanceMutationOptions = Apollo.BaseMutationOptions<UpdateUserIdentifierOfSdInstanceMutation, UpdateUserIdentifierOfSdInstanceMutationVariables>;
+export const UpdateSdTypeDocument = gql`
+    mutation UpdateSDType($updateSdTypeId: ID!, $input: SDTypeInput!) {
+  updateSDType(id: $updateSdTypeId, input: $input) {
+    denotation
+    icon
+    id
+    label
+    parameters {
+      denotation
+      id
+      label
+      type
+    }
+  }
+}
+    `;
+export type UpdateSdTypeMutationFn = Apollo.MutationFunction<UpdateSdTypeMutation, UpdateSdTypeMutationVariables>;
+
+/**
+ * __useUpdateSdTypeMutation__
+ *
+ * To run a mutation, you first call `useUpdateSdTypeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateSdTypeMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateSdTypeMutation, { data, loading, error }] = useUpdateSdTypeMutation({
+ *   variables: {
+ *      updateSdTypeId: // value for 'updateSdTypeId'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateSdTypeMutation(baseOptions?: Apollo.MutationHookOptions<UpdateSdTypeMutation, UpdateSdTypeMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateSdTypeMutation, UpdateSdTypeMutationVariables>(UpdateSdTypeDocument, options);
+      }
+export type UpdateSdTypeMutationHookResult = ReturnType<typeof useUpdateSdTypeMutation>;
+export type UpdateSdTypeMutationResult = Apollo.MutationResult<UpdateSdTypeMutation>;
+export type UpdateSdTypeMutationOptions = Apollo.BaseMutationOptions<UpdateSdTypeMutation, UpdateSdTypeMutationVariables>;
 export const SdInstancesDocument = gql`
     query SdInstances {
   sdInstances {
@@ -1405,6 +1461,43 @@ export type RestOfKpiDefinitionDetailPageDataQueryHookResult = ReturnType<typeof
 export type RestOfKpiDefinitionDetailPageDataLazyQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataLazyQuery>;
 export type RestOfKpiDefinitionDetailPageDataSuspenseQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataSuspenseQuery>;
 export type RestOfKpiDefinitionDetailPageDataQueryResult = Apollo.QueryResult<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>;
+export const OnSdInstanceRegisteredDocument = gql`
+    subscription OnSDInstanceRegistered {
+  onSDInstanceRegistered {
+    id
+    uid
+    confirmedByUser
+    userIdentifier
+    type {
+      id
+      denotation
+      icon
+    }
+  }
+}
+    `;
+
+/**
+ * __useOnSdInstanceRegisteredSubscription__
+ *
+ * To run a query within a React component, call `useOnSdInstanceRegisteredSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useOnSdInstanceRegisteredSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOnSdInstanceRegisteredSubscription({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useOnSdInstanceRegisteredSubscription(baseOptions?: Apollo.SubscriptionHookOptions<OnSdInstanceRegisteredSubscription, OnSdInstanceRegisteredSubscriptionVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useSubscription<OnSdInstanceRegisteredSubscription, OnSdInstanceRegisteredSubscriptionVariables>(OnSdInstanceRegisteredDocument, options);
+      }
+export type OnSdInstanceRegisteredSubscriptionHookResult = ReturnType<typeof useOnSdInstanceRegisteredSubscription>;
+export type OnSdInstanceRegisteredSubscriptionResult = Apollo.SubscriptionResult<OnSdInstanceRegisteredSubscription>;
 export const SdInstancesWithTypeAndSnapshotDocument = gql`
     query SdInstancesWithTypeAndSnapshot {
   sdInstances {

@@ -6,11 +6,21 @@ import App from './App.tsx'
 import './utils/i18next.ts'
 import './index.css'
 import client from './lib/ApolloClient.ts'
+import { breakpoints } from './styles/Breakpoints.ts'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ApolloProvider client={client!}>
-      <Toaster />
+      <Toaster
+        toastOptions={{
+          style:
+            window.innerWidth < Number(breakpoints.sm.replace('px', ''))
+              ? {
+                  margin: '0 0 4rem 0'
+                }
+              : {}
+        }}
+      />
       <App />
     </ApolloProvider>
   </StrictMode>

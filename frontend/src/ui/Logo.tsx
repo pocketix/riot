@@ -1,27 +1,28 @@
-import { useDarkMode } from '@/context/DarkModeContext'
-import { breakpoints } from '@/styles/Breakpoints'
 import styled from 'styled-components'
+import RiotLight from './Logos/RiotLight'
+import RiotDark from './Logos/RiotDark'
+import { useDarkMode } from '@/context/DarkModeContext'
 
-const StyledLogo = styled.div`
-  display: block;
+const LogoWrapper = styled.div`
+  width: 12rem;
   margin: 0 auto;
-`
+  height: auto;
 
-const Img = styled.img`
-  height: 4.8rem;
-  width: auto;
-
-  @media (min-width: ${breakpoints.sm}) {
-    height: 5.2rem;
+  svg {
+    width: 100%;
+    height: auto;
   }
 `
 
-function Logo({ hideLogo = false }) {
+export default function Logo({ hideLogo = false }) {
   const { isDarkMode } = useDarkMode()
+  const LogoSvg = isDarkMode ? RiotLight : RiotDark
 
-  const logoColor = isDarkMode ? '/riot-light.svg' : '/riot-dark.svg'
-
-  return <StyledLogo>{!hideLogo && <Img src={logoColor} alt="Logo" />}</StyledLogo>
+  return (
+    !hideLogo && (
+      <LogoWrapper>
+        <LogoSvg />
+      </LogoWrapper>
+    )
+  )
 }
-
-export default Logo

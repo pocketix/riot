@@ -1,79 +1,129 @@
-import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import Heading from '../ui/Heading'
-import TabSwitcher from '../ui/TabSwitcher'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { breakpoints } from '@/styles/Breakpoints'
+import DarkModeToggle from '@/ui/DarkModeToggle'
+import LanguageSwitcher from '@/ui/LanguageSwitcher'
+import { FaArrowRight } from 'react-icons/fa'
+import UserAccountDetail from '@/features/settings/PersonalInfo/UserAccountDetail'
+
+const PageWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
 
 const StyledPage = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
   color: hsl(var(--color-grey-900));
   overflow: hidden;
-  gap: 1.2rem;
+  gap: 1.5rem;
   overflow-y: auto;
   width: 100%;
   height: 100%;
   align-self: center;
-  max-width: 1300px;
+  padding: 1.5rem;
 
   @media (min-width: ${breakpoints.sm}) {
-    padding: 2rem;
+    max-width: 1300px;
+  }
+`
+const SettingsSectionHeader = styled.div`
+  font-weight: 600;
+  font-size: 1.2rem;
+  border-bottom: 1px solid var(--color-grey-300);
+
+  @media (min-width: ${breakpoints.md}) {
+    font-size: 1.4rem;
   }
 `
 
-const NavigationDiv = styled.div`
+const SettingsItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  /* border-bottom: 1px solid var(--color-grey-300); */
+  height: 3.2rem;
+  padding: 0.6rem;
 
-  @media (min-width: ${breakpoints.sm}) {
-    display: flex;
+  span {
+    font-size: 1rem;
+    color: var(--color-grey-900);
   }
+
+  @media (min-width: ${breakpoints.md}) {
+    span {
+      font-size: 1.2rem;
+    }
+  }
+`
+const SettingsSection = styled.div`
+  height: max-content;
 `
 
 export default function Settings() {
+  const backendCoreURL = process.env.BACKEND_CORE_URL || 'https://tyrion.fit.vutbr.cz/riot/api'
+
   const { t } = useTranslation()
-  const location = useLocation()
   const navigate = useNavigate()
 
-  // If user is on /settings, redirect to /settings/general
-  if (location.pathname === '/settings') {
-    return <Navigate to="/settings/general" replace />
+  const handleLogout = async () => {
+    try {
+      await fetch(`${backendCoreURL}/auth/logout`, {
+        method: 'GET',
+        credentials: 'include'
+      })
+
+      // Redirect to login page after successful logout
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
   }
 
-  const isDefaultTab =
-    location.pathname === '/settings/general' ||
-    location.pathname === '/settings/personal-info' ||
-    location.pathname === '/settings/device-types' ||
-    location.pathname === '/settings/kpi-definitions'
-
-  const isMobile = window.innerWidth < Number(breakpoints.sm.replace('px', ''))
-
   return (
-    <StyledPage>
-      <Heading>{t('settings')}</Heading>
+    <PageWrapper>
+      <StyledPage>
+        <Heading>{t('settings')}</Heading>
+        <SettingsSection>
+          <UserAccountDetail />
+        </SettingsSection>
+        <SettingsSection>
+          <SettingsSectionHeader>General</SettingsSectionHeader>
+          <SettingsItem>
+            <span>{t('darkMode')}</span>
+            <DarkModeToggle />
+          </SettingsItem>
+          <SettingsItem>
+            <span>{t('language')}</span>
+            <LanguageSwitcher />
+          </SettingsItem>
+          <SettingsItem className="cursor-pointer" onClick={() => navigate('/settings/apollo-sandbox')}>
+            <span>{t('developerMode')} (Apollo Sanxbox)</span>
+            <FaArrowRight />
+          </SettingsItem>
+        </SettingsSection>
 
-      {(!isMobile || (isMobile && isDefaultTab)) && (
-        <NavigationDiv>
-          <TabSwitcher
-            activeTab={location.pathname.split('/')[2] || 'general'}
-            tabs={[
-              { name: t('general'), path: '/settings/general' },
-              { name: t('personalInfo'), path: '/settings/personal-info' },
-              { name: t('deviceTypes'), path: '/settings/device-types' },
-              { name: t('kpiDefinitions'), path: '/settings/kpi-definitions' }
-            ]}
-          />
-          {isMobile && !isDefaultTab && (
-            <Button onClick={() => navigate('/settings/device-types')}>&larr; {t('goBack')}</Button>
-          )}
-        </NavigationDiv>
-      )}
-      <Outlet />
-    </StyledPage>
+        <SettingsSection>
+          <SettingsSectionHeader>Developer settings</SettingsSectionHeader>
+          <SettingsItem className="cursor-pointer" onClick={() => navigate('/settings/device-types')}>
+            <span>Manage your Device Types</span>
+            <FaArrowRight />
+          </SettingsItem>
+          <SettingsItem className="cursor-pointer" onClick={() => navigate('/settings/kpi-definitions')}>
+            <span>Manage your KPI Definitions</span>
+            <FaArrowRight />
+          </SettingsItem>
+        </SettingsSection>
+        <div className="flex h-max items-end justify-center p-4">
+          <Button className="w-52" variant={'destructive'} onClick={handleLogout}>
+            Logout
+          </Button>
+        </div>
+      </StyledPage>
+    </PageWrapper>
   )
 }

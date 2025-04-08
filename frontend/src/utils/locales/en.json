@@ -32,6 +32,7 @@
     "createdSuccess": "Device type created successfully",
     "createdError": "Failed to save device type",
     "deletedSuccess": "Device type deleted successfully",
+    "duplicateParameterError": "Duplicate parameter with same denotation and type.",
     "deletedError": "Failed to delete device type",
     "enterName": "Enter device type name...",
     "deviceTypeNameRequired": "Device type name is required",

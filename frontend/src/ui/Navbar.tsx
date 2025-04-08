@@ -16,7 +16,7 @@ const NavbarContainer = styled.div`
   align-items: center;
   padding: 0.6rem 0.3rem;
   border-top: 2px solid rgba(0, 129, 241, 0.3);
-  position: relative;
+  position: fixed;
   bottom: 0;
   width: 100%;
 

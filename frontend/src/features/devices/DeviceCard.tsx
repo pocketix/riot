@@ -185,7 +185,7 @@ export default function DeviceCard({
             )}
           </div>
         ) : (
-          <div className="ml-2 flex flex-col text-sm text-white">
+          <div className="ml-2 flex flex-col text-sm text-[--color-white]">
             <span
               className={`break-words ${showUid ? '' : 'max-w-[200px] cursor-pointer truncate'}`}
               onClick={() => setShowUid(!showUid)}
@@ -195,7 +195,7 @@ export default function DeviceCard({
             </span>
             {instance.uid.length > 20 && (
               <Button variant="ghost" className="w-fit px-1 text-xs" onClick={() => setShowUid(!showUid)}>
-                {showUid ? 'Hide' : 'Show'}
+                {showUid ? 'Hide' : 'Show full UID'}
               </Button>
             )}
           </div>

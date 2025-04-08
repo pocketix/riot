@@ -10,23 +10,31 @@ import { useTranslation } from 'react-i18next'
 import Heading from '@/ui/Heading'
 import { breakpoints } from '@/styles/Breakpoints'
 
+const PageWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   gap: 2rem;
-  padding: 1.5rem;
   color: hsl(var(--color-white));
   overflow-y: auto;
+  width: 100%;
+  padding: 1.5rem;
 
   @media (min-width: ${breakpoints.sm}) {
-    padding: 2rem;
+    max-width: 1300px;
   }
 `
 
 const CardGrid = styled.div`
   display: grid;
   gap: 1.5rem;
+  width: 100%;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 `
 
@@ -42,17 +50,12 @@ const UserCard = styled.div`
   gap: 1rem;
 `
 
-const ProfileImage = styled.div`
+const ProfileImage = styled.img`
   width: 70px;
   height: 70px;
   border-radius: 50%;
   background: var(--color-grey-200);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.6rem;
-  color: var(--color-white);
-  user-select: none;
+  object-fit: cover;
 `
 
 const Username = styled.h3`
@@ -91,35 +94,35 @@ const mockedUsers = [
     id: 1,
     username: 'john_doe',
     name: 'John Doe',
-
+    profileImageUrl: '/placeholders/avatar1.webp',
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2) // 2 days ago
   },
   {
     id: 2,
     username: 'jane_smith',
     name: 'Jane Smith',
-
+    profileImageUrl: '/placeholders/avatar2.webp',
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 60 * 6) // 6 hours ago
   },
   {
     id: 3,
     username: 'tech_wizard',
     name: 'Lucas Sky',
-
+    profileImageUrl: '/placeholders/avatar3.webp',
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 30) // 30 min ago
   },
   {
     id: 4,
     username: 'data_queen',
     name: 'Elena Codes',
-
+    profileImageUrl: '/placeholders/avatar4.webp',
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 60 * 48) // 2 days ago
   },
   {
     id: 5,
     username: 'debug_master',
     name: 'Tom Logic',
-
+    profileImageUrl: '/placeholders/avatar5.webp',
     lastLoginAt: new Date(Date.now() - 1000 * 60 * 5) // 5 min ago
   }
 ]
@@ -134,49 +137,42 @@ export default function Members() {
   )
 
   return (
-    <Container>
-      <TopBar>
-        <Heading className="">{t('membersPage.title')}</Heading>
-        <div className="relative w-full">
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('membersPage.searchPlaceholder')}
-            className="w-full bg-[--color-grey-200] pr-10"
-          />
-          {search && (
-            <ClearButton onClick={() => setSearch('')} type="button">
-              <X className="h-5 w-5 text-xl text-[--color-white]" />
-            </ClearButton>
-          )}
-        </div>
-      </TopBar>
+    <PageWrapper>
+      <Container>
+        <TopBar>
+          <Heading className="">{t('membersPage.title')}</Heading>
+          <div className="relative w-full">
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('membersPage.searchPlaceholder')}
+              className="w-full bg-[--color-grey-200] pr-10"
+            />
+            {search && (
+              <ClearButton onClick={() => setSearch('')} type="button">
+                <X className="h-5 w-5 text-xl text-[--color-white]" />
+              </ClearButton>
+            )}
+          </div>
+        </TopBar>
 
-      <CardGrid>
-        {filteredUsers.map((user) => (
-          <UserCard key={user.id}>
-            <ProfileImage>
-              {user.name
-                ? user.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')
-                    .slice(0, 2)
-                    .toUpperCase()
-                : '👤'}
-            </ProfileImage>
-            <Username>{user.username}</Username>
-            <Name>{user.name}</Name>
-            <LastLogin>
-              {t('membersPage.lastLogin', {
-                time: user.lastLoginAt ? formatDistanceToNow(user.lastLoginAt, { addSuffix: true }) : 'N/A'
-              })}
-            </LastLogin>
+        <CardGrid>
+          {filteredUsers.map((user) => (
+            <UserCard key={user.id}>
+              <ProfileImage src={user.profileImageUrl || ''} alt={user.name} />
+              <Username>{user.username}</Username>
+              <Name>{user.name}</Name>
+              <LastLogin>
+                {t('membersPage.lastLogin', {
+                  time: user.lastLoginAt ? formatDistanceToNow(user.lastLoginAt, { addSuffix: true }) : 'N/A'
+                })}
+              </LastLogin>
 
-            <Button onClick={() => navigate(`/members/${user.id}`)}>{t('membersPage.viewDetails')}</Button>
-          </UserCard>
-        ))}
-      </CardGrid>
-    </Container>
+              <Button onClick={() => navigate(`/members/${user.id}`)}>{t('membersPage.viewDetails')}</Button>
+            </UserCard>
+          ))}
+        </CardGrid>
+      </Container>
+    </PageWrapper>
   )
 }

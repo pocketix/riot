@@ -92,3 +92,19 @@ export const UPDATE_USER_IDENTIFIER_OF_SD_INSTANCE = gql`
     }
   }
 `
+export const UPDATE_DEVICE_TYPE = gql`
+  mutation UpdateSDType($updateSdTypeId: ID!, $input: SDTypeInput!) {
+    updateSDType(id: $updateSdTypeId, input: $input) {
+      denotation
+      icon
+      id
+      label
+      parameters {
+        denotation
+        id
+        label
+        type
+      }
+    }
+  }
+`

@@ -9,13 +9,29 @@ import { Button } from '@/components/ui/button'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
+import { X } from 'lucide-react'
+import tw from 'tailwind-styled-components'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-const Container = styled.div`
+const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
   gap: 1.5rem;
+  padding: 1.5rem;
+  overflow-y: auto;
+
+  @media (min-width: ${breakpoints.sm}) {
+    max-width: 1300px;
+  }
 `
 
 const Header = styled.div`
@@ -45,6 +61,10 @@ const Grid = styled.div`
   }
 `
 
+const ClearButton = tw.button`
+  absolute right-2 top-1/2 -translate-y-1/2
+`
+
 export default function DeviceTypesSettings() {
   const { t } = useTranslation()
 
@@ -64,33 +84,48 @@ export default function DeviceTypesSettings() {
   )
 
   return (
-    <Container>
-      <Header>
-        <Heading as="h2">
-          {t('manageDeviceTypes')}{' '}
-          <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
-            ({t('types', { count: filteredDeviceTypes.length })})
-          </span>
-          .
-        </Heading>
-        <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
-          <Input
-            placeholder={t('searchDeviceTypesPlaceholder')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[--color-grey-300] sm:w-64"
-          />
-          <Button onClick={() => navigate('/settings/device-types/addNewType')}>+ {t('addNew')}</Button>
+    <PageWrapper>
+      <Container>
+        <div className="flex items-center justify-between">
+          <Heading>{t('settings')}</Heading>
+          <Button variant={'goBack'} onClick={() => navigate('/settings')}>
+            &larr; Back to Settings
+          </Button>
         </div>
-      </Header>
+        <Header>
+          <Heading as="h2">
+            {t('manageDeviceTypes')}{' '}
+            <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
+              ({t('types', { count: filteredDeviceTypes.length })})
+            </span>
+            .
+          </Heading>
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+            <div className="relative w-full p-1 sm:p-0">
+              <Input
+                placeholder={t('searchDeviceTypesPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[--color-grey-300] sm:w-64"
+              />
+              {searchQuery && (
+                <ClearButton onClick={() => setSearchQuery('')} type="button">
+                  <X className="h-5 w-5 text-xl text-[--color-white]" />
+                </ClearButton>
+              )}
+            </div>
+            <Button onClick={() => navigate('/settings/device-types/addNewType')}>+ {t('addNew')}</Button>
+          </div>
+        </Header>
 
-      <Grid>
-        {filteredDeviceTypes.length > 0 ? (
-          filteredDeviceTypes.map((deviceType) => <DeviceTypeCard key={deviceType.id} deviceType={deviceType} />)
-        ) : (
-          <p className="col-span-full text-center">{t('noDeviceTypesMatch')}</p>
-        )}
-      </Grid>
-    </Container>
+        <Grid>
+          {filteredDeviceTypes.length > 0 ? (
+            filteredDeviceTypes.map((deviceType) => <DeviceTypeCard key={deviceType.id} deviceType={deviceType} />)
+          ) : (
+            <p className="col-span-full text-center">{t('noDeviceTypesMatch')}</p>
+          )}
+        </Grid>
+      </Container>
+    </PageWrapper>
   )
 }

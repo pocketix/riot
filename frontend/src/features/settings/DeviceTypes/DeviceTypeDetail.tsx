@@ -9,7 +9,9 @@ import {
   DeleteSdTypeMutationVariables,
   SdParameterType,
   SdTypeQuery,
-  SdTypeQueryVariables
+  SdTypeQueryVariables,
+  UpdateSdTypeMutation,
+  UpdateSdTypeMutationVariables
 } from '@/generated/graphql'
 import Spinner from '@/ui/Spinner'
 import styled from 'styled-components'
@@ -22,10 +24,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import IconPicker from '@/ui/IconPicker'
 import { useForm } from 'react-hook-form'
 import { breakpoints } from '@/styles/Breakpoints'
-import { CREATE_DEVICE_TYPE, DELETE_DEVICE_TYPE } from '@/graphql/Mutations'
+import { CREATE_DEVICE_TYPE, DELETE_DEVICE_TYPE, UPDATE_DEVICE_TYPE } from '@/graphql/Mutations'
 import DeleteConfirmationModal from '@/ui/DeleteConfirmationModal'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
+import Heading from '@/ui/Heading'
+
+const PageWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+`
 
 const PageContainer = styled.form`
   display: flex;
@@ -33,9 +44,9 @@ const PageContainer = styled.form`
   gap: 1rem;
   width: 100%;
   height: max-content;
-  margin: 0 auto;
   border-radius: 8px;
   background-color: var(--color-grey-200);
+  overflow-y: auto;
 `
 
 const Header = styled.div`
@@ -175,6 +186,8 @@ export default function DeviceTypeDetail() {
     getValues,
     watch,
     reset,
+    setError,
+    clearErrors,
     formState: { errors, isSubmitting }
   } = useForm({
     defaultValues: initialValues,
@@ -206,10 +219,32 @@ export default function DeviceTypeDetail() {
 
   const [deleteSDTypeMutation] = useMutation<DeleteSdTypeMutation, DeleteSdTypeMutationVariables>(DELETE_DEVICE_TYPE)
   const [createSDTypeMutation] = useMutation<CreateSdTypeMutation, CreateSdTypeMutationVariables>(CREATE_DEVICE_TYPE)
+  const [updateSDTypeMutation] = useMutation<UpdateSdTypeMutation, UpdateSdTypeMutationVariables>(UPDATE_DEVICE_TYPE)
 
   const IconComponent = useMemo(() => getIcon(watch('icon') || 'TbQuestionMark'), [watch('icon')])
 
   const onSubmit = async (data: any) => {
+    // Check for duplicate parameters
+    const seen = new Set()
+    let hasDuplicate = false
+
+    data.parameters.forEach((param: any, index: number) => {
+      const key = `${param.denotation?.trim().toLowerCase()}__${param.type}`
+
+      if (seen.has(key)) {
+        hasDuplicate = true
+        setError(`parameters.${index}.denotation`, {
+          type: 'duplicate',
+          message: t('deviceTypeDetail.duplicateParameterError')
+        })
+      } else {
+        seen.add(key)
+        clearErrors(`parameters.${index}.denotation`)
+      }
+    })
+
+    if (hasDuplicate) return
+
     try {
       if (isAddingNew) {
         const response = await createSDTypeMutation({
@@ -233,7 +268,24 @@ export default function DeviceTypeDetail() {
           navigate(`/settings/device-types/${newId}`)
         }
       } else {
-        // TODO: add update mutation
+        console.log('Updating device type:', data)
+        await updateSDTypeMutation({
+          variables: {
+            updateSdTypeId: Number(id),
+            input: {
+              denotation: data.denotation,
+              icon: data.icon,
+              label: data.label,
+              parameters: data.parameters.map((p: any) => ({
+                denotation: p.denotation,
+                type: p.type as SdParameterType,
+                label: p.label
+              }))
+            }
+          }
+        })
+        toast.success('Device type updated successfully')
+        navigate(`/settings/device-types/${id}`)
       }
 
       setEditMode(false)
@@ -275,195 +327,247 @@ export default function DeviceTypeDetail() {
   if (error) return <p>Error: {error.message}</p>
 
   return (
-    <PageContainer onSubmit={handleSubmit(onSubmit)}>
-      <Header>
-        <TitleWrapper>
-          {editMode ? (
-            <div>
-              <Label htmlFor="icon">Icon</Label>
-              <IconPicker icon={watch('icon')} setIcon={(icon) => setValue('icon', icon, { shouldDirty: true })} />
-            </div>
-          ) : (
-            <IconWrapper>{IconComponent && <IconComponent />}</IconWrapper>
-          )}
-
-          {editMode ? (
-            <div>
-              <Label htmlFor="device-name">{t('deviceTypeDetail.enterName')}</Label>
-              <Input
-                {...register('label', { required: t('deviceTypeDetail.deviceTypeNameRequired') })}
-                placeholder={t('deviceTypeDetail.enterName')}
-              />
-              {errors.label && <p className="text-sm text-red-500">{errors.label.message}</p>}
-            </div>
-          ) : (
-            <Title>{watch('label')}</Title>
-          )}
-        </TitleWrapper>
-
-        {editMode ? (
-          <ButtonsContainer>
-            <Button type="submit" variant="green" disabled={isSubmitting}>
-              <TbCircleCheck />{' '}
-              {isAddingNew
-                ? t('deviceTypeDetail.create')
-                : isSubmitting
-                  ? t('deviceTypeDetail.saving')
-                  : t('deviceTypeDetail.save')}
-            </Button>
-            <Button
-              type="button"
-              variant="default"
-              disabled={isSubmitting}
-              onClick={() => {
-                isAddingNew ? navigate(-1) : reset(initialValues)
-                setEditMode(false)
-              }}
-            >
-              <TbX /> {t('deviceTypeDetail.cancel')}
-            </Button>
-            {!isAddingNew && (
-              <>
-                <Button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setIsModalOpen(true)
-                  }}
-                  variant="destructive"
-                >
-                  <TbTrash /> {t('deviceTypeDetail.deleteType')}
-                </Button>
-                <DeleteConfirmationModal
-                  isOpen={isModalOpen}
-                  onClose={() => setIsModalOpen(false)}
-                  onConfirm={handleDelete}
-                  itemName={t('deviceTypeDetail.deleteType')}
-                />
-              </>
-            )}
-          </ButtonsContainer>
-        ) : (
-          <Button
-            onClick={(e) => {
-              e.preventDefault()
-              setEditMode(true)
-            }}
-            variant="default"
-            type="button"
-          >
-            <TbEdit /> {t('deviceTypeDetail.edit')}
+    <PageWrapper>
+      <div className="flex w-full max-w-[1300px] flex-col items-center justify-center p-[1.5rem]">
+        <div className="mb-4 flex w-full items-center justify-between">
+          <Heading>{t('settings')}</Heading>
+          <Button variant={'goBack'} onClick={() => navigate(-1)}>
+            &larr; Go Back
           </Button>
-        )}
-      </Header>
-
-      <TableItem>
-        {editMode ? (
-          <div className="flex items-center justify-center gap-2 pr-3">
-            <strong>{t('deviceTypeDetail.denotation')}:</strong>
-            <div className="w-full">
-              <Input
-                {...register('denotation', { required: t('deviceTypeDetail.denotationRequired') })}
-                placeholder={t('deviceTypeDetail.denotation')}
-              />
-              {errors.denotation && <p className="text-sm text-red-500">{errors.denotation.message}</p>}
-            </div>
-          </div>
-        ) : (
-          <div>
-            <strong>{t('deviceTypeDetail.denotation')}:</strong> {watch('denotation') || t('deviceTypeDetail.notSet')}
-          </div>
-        )}
-      </TableItem>
-
-      <TableItem>
-        <strong>{t('deviceTypeDetail.parameters')}</strong> ({watch('parameters').length}):
-      </TableItem>
-
-      {editMode && (
-        <Button
-          onClick={(e) => {
-            e.preventDefault()
-            addParameter()
-          }}
-          className="mb-4 ml-4 mr-4"
-        >
-          <TbPlus /> {t('deviceTypeDetail.addParameter')}
-        </Button>
-      )}
-
-      {watch('parameters').length > 0 && (
-        <ParametersContainer>
-          <ParamTable>
-            <ParamHeaderRow>
-              <ParamCell>{t('deviceTypeDetail.denotation')}</ParamCell>
-              <ParamCell>{t('deviceTypeDetail.label')}</ParamCell>
-              <ParamCell>{t('deviceTypeDetail.type')}</ParamCell>
-            </ParamHeaderRow>
-            {watch('parameters').map((param, index) =>
-              editMode ? (
-                <ParamRow key={index}>
-                  <ParamCell>
-                    <div className="flex flex-col gap-2">
-                      <Input
-                        {...register(`parameters.${index}.denotation`, {
-                          required: t('deviceTypeDetail.denotationRequired')
-                        })}
-                        placeholder={t('deviceTypeDetail.denotation')}
-                      />
-                      {errors.parameters?.[index]?.denotation && (
-                        <p className="text-sm text-red-500">{errors.parameters[index].denotation.message}</p>
-                      )}
-                    </div>
-                  </ParamCell>
-                  <ParamCell>
-                    <div className="flex min-w-max flex-col gap-2">
-                      <Input {...register(`parameters.${index}.label`)} placeholder="Label" />
-                      {errors.parameters?.[index]?.label && (
-                        <p className="text-sm text-red-500">{errors.parameters[index].label.message}</p>
-                      )}
-                    </div>
-                  </ParamCell>
-                  <ParamCell>
-                    <div className="flex items-center gap-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline">{param.type}</Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          {['NUMBER', 'STRING', 'BOOLEAN'].map((option) => (
-                            <DropdownMenuItem key={option} onClick={() => setValue(`parameters.${index}.type`, option)}>
-                              {option}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                      <Button
-                        variant="destructive"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          setValue(
-                            'parameters',
-                            watch('parameters').filter((_, i) => i !== index)
-                          )
-                        }}
-                      >
-                        <TbTrash />
-                      </Button>
-                    </div>
-                  </ParamCell>
-                </ParamRow>
+        </div>
+        <PageContainer onSubmit={handleSubmit(onSubmit)}>
+          <Header>
+            <TitleWrapper>
+              {editMode ? (
+                <div>
+                  <Label htmlFor="icon">Icon</Label>
+                  <IconPicker icon={watch('icon')} setIcon={(icon) => setValue('icon', icon, { shouldDirty: true })} />
+                </div>
               ) : (
-                <ParamRow key={index}>
-                  <ParamCell>{param.denotation}</ParamCell>
-                  <ParamCell>{param.label || '-'}</ParamCell>
-                  <ParamCell>{param.type}</ParamCell>
-                </ParamRow>
-              )
+                <IconWrapper>{IconComponent && <IconComponent />}</IconWrapper>
+              )}
+
+              {editMode ? (
+                <div>
+                  <Label htmlFor="device-name">{t('deviceTypeDetail.enterName')}</Label>
+                  <Input
+                    {...register('label', { required: t('deviceTypeDetail.deviceTypeNameRequired') })}
+                    placeholder={t('deviceTypeDetail.enterName')}
+                  />
+                  {errors.label && <p className="text-sm text-red-500">{errors.label.message}</p>}
+                </div>
+              ) : (
+                <Title>{watch('label')}</Title>
+              )}
+            </TitleWrapper>
+
+            {editMode ? (
+              <ButtonsContainer>
+                <Button type="submit" variant="green" disabled={isSubmitting}>
+                  <TbCircleCheck />{' '}
+                  {isAddingNew
+                    ? t('deviceTypeDetail.create')
+                    : isSubmitting
+                      ? t('deviceTypeDetail.saving')
+                      : t('deviceTypeDetail.save')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="default"
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    isAddingNew ? navigate(-1) : reset(initialValues)
+                    setEditMode(false)
+                  }}
+                >
+                  <TbX /> {t('deviceTypeDetail.cancel')}
+                </Button>
+                {!isAddingNew && (
+                  <>
+                    <Button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setIsModalOpen(true)
+                      }}
+                      variant="destructive"
+                    >
+                      <TbTrash /> {t('deviceTypeDetail.deleteType')}
+                    </Button>
+                    <DeleteConfirmationModal
+                      isOpen={isModalOpen}
+                      onClose={() => setIsModalOpen(false)}
+                      onConfirm={handleDelete}
+                      itemName={t('deviceTypeDetail.deleteType')}
+                    />
+                  </>
+                )}
+              </ButtonsContainer>
+            ) : (
+              <Button
+                onClick={(e) => {
+                  e.preventDefault()
+                  setEditMode(true)
+                }}
+                variant="default"
+                type="button"
+              >
+                <TbEdit /> {t('deviceTypeDetail.edit')}
+              </Button>
             )}
-          </ParamTable>
-        </ParametersContainer>
-      )}
-    </PageContainer>
+          </Header>
+
+          <TableItem>
+            {editMode ? (
+              <div className="flex items-center justify-center gap-2 pr-3">
+                <strong>{t('deviceTypeDetail.denotation')}:</strong>
+                <div className="w-full">
+                  <Input
+                    {...register('denotation', { required: t('deviceTypeDetail.denotationRequired') })}
+                    placeholder={t('deviceTypeDetail.denotation')}
+                  />
+                  {errors.denotation && <p className="text-sm text-red-500">{errors.denotation.message}</p>}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <strong>{t('deviceTypeDetail.denotation')}:</strong>{' '}
+                {watch('denotation') || t('deviceTypeDetail.notSet')}
+              </div>
+            )}
+          </TableItem>
+
+          <TableItem>
+            <strong>{t('deviceTypeDetail.parameters')}</strong> ({watch('parameters').length}):
+          </TableItem>
+
+          {editMode && (
+            <Button
+              onClick={(e) => {
+                e.preventDefault()
+                addParameter()
+              }}
+              className="mb-4 ml-4 mr-4"
+            >
+              <TbPlus /> {t('deviceTypeDetail.addParameter')}
+            </Button>
+          )}
+
+          {watch('parameters').length > 0 && (
+            <ParametersContainer>
+              <ParamTable>
+                <ParamHeaderRow>
+                  <ParamCell>{t('deviceTypeDetail.denotation')}</ParamCell>
+                  <ParamCell>{t('deviceTypeDetail.label')}</ParamCell>
+                  <ParamCell>{t('deviceTypeDetail.type')}</ParamCell>
+                </ParamHeaderRow>
+                {watch('parameters').map((param, index) =>
+                  editMode ? (
+                    <ParamRow key={index}>
+                      <ParamCell>
+                        <div className="flex flex-col gap-2">
+                          <Input
+                            {...register(`parameters.${index}.denotation`, {
+                              required: t('deviceTypeDetail.denotationRequired')
+                            })}
+                            placeholder={t('deviceTypeDetail.denotation')}
+                          />
+                          {errors.parameters?.[index]?.denotation && (
+                            <p className="text-sm text-red-500">{errors.parameters[index].denotation.message}</p>
+                          )}
+                        </div>
+                      </ParamCell>
+                      <ParamCell>
+                        <div className="flex min-w-max flex-col gap-2">
+                          <Input {...register(`parameters.${index}.label`)} placeholder="Label" />
+                          {errors.parameters?.[index]?.label && (
+                            <p className="text-sm text-red-500">{errors.parameters[index].label.message}</p>
+                          )}
+                        </div>
+                      </ParamCell>
+                      <ParamCell>
+                        <div className="flex items-center gap-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline">{param.type}</Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              {['NUMBER', 'STRING', 'BOOLEAN'].map((option) => (
+                                <DropdownMenuItem
+                                  key={option}
+                                  onClick={() => setValue(`parameters.${index}.type`, option)}
+                                >
+                                  {option}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+
+                          <Button
+                            variant="destructive"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setValue(
+                                'parameters',
+                                watch('parameters').filter((_, i) => i !== index)
+                              )
+                            }}
+                          >
+                            <TbTrash />
+                          </Button>
+                        </div>
+                      </ParamCell>
+                    </ParamRow>
+                  ) : (
+                    <ParamRow key={index}>
+                      <ParamCell>{param.denotation}</ParamCell>
+                      <ParamCell>{param.label || '-'}</ParamCell>
+                      <ParamCell>{param.type}</ParamCell>
+                    </ParamRow>
+                  )
+                )}
+              </ParamTable>
+            </ParametersContainer>
+          )}
+
+          {/* Command Configuration (TODO: Wait for backend support and connect) */}
+          <TableItem>
+            <strong>Commands </strong>(0):
+          </TableItem>
+
+          <Button className="mb-4 ml-4 mr-4" disabled>
+            <TbPlus /> Add command
+          </Button>
+
+          <ParametersContainer>
+            <ParamTable>
+              <ParamHeaderRow>
+                <ParamCell>Name</ParamCell>
+                <ParamCell>Type</ParamCell>
+                <ParamCell className="whitespace-nowrap">Possible values</ParamCell>
+              </ParamHeaderRow>
+
+              <ParamRow>
+                <ParamCell>
+                  <Input placeholder="state" disabled />
+                </ParamCell>
+                <ParamCell>
+                  <Input className="w-max" placeholder="string" disabled />
+                </ParamCell>
+                <div>
+                  <ParamCell>
+                    <Input className="w-max" placeholder='["ON", "OFF"]' disabled />
+                  </ParamCell>
+                  <ParamCell>
+                    <Button variant="destructive" disabled>
+                      <TbTrash />
+                    </Button>
+                  </ParamCell>
+                </div>
+              </ParamRow>
+            </ParamTable>
+          </ParametersContainer>
+        </PageContainer>
+      </div>
+    </PageWrapper>
   )
 }

@@ -15,19 +15,38 @@ import tw from 'tailwind-styled-components'
 import { useTranslation } from 'react-i18next'
 import Heading from '@/ui/Heading'
 import TabSwitcher from '@/ui/TabSwitcher'
+import { useSubscription } from '@apollo/client'
+import { ON_SD_INSTANCE_REGISTERED } from '@/graphql/Subscriptions'
 
 const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
+`
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   flex-grow: 1;
-  gap: 2rem;
+  gap: 1rem;
   padding: 1.5rem;
   color: hsl(var(--color-white));
   overflow-y: auto;
+  width: 100%;
+  height: 100%;
 
   @media (min-width: ${breakpoints.sm}) {
-    padding: 2rem;
+    max-width: 1300px;
   }
+`
+
+const TopBar = styled.div`
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  max-width: 1300px;
 `
 
 const TabsContainer = styled.div`
@@ -36,17 +55,12 @@ const TabsContainer = styled.div`
   }
 `
 
-const Section = styled.div`
+const Section = styled.section`
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
-  max-width: 1200px;
-  align-items: center;
-
-  @media (min-width: ${breakpoints.sm}) {
-    align-items: flex-start;
-  }
+  max-width: 1300px;
 `
 
 const CardGrid = styled.div`
@@ -66,6 +80,21 @@ const SearchWrapper = styled.div`
   max-width: 32rem;
 `
 
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 1.5rem;
+  border: 2px dashed var(--color-grey-300);
+  border-radius: 0.5rem;
+  color: var(--color-grey-500);
+  font-size: 1rem;
+  grid-column: span 4;
+`
+
 const ClearButton = tw.button`
   absolute right-2 top-1/2 -translate-y-1/2
 `
@@ -75,6 +104,14 @@ export default function Devices() {
   const location = useLocation()
 
   const { data, loading, refetch, error } = useQuery<SdInstancesQuery>(GET_INSTANCES)
+
+  useSubscription(ON_SD_INSTANCE_REGISTERED, {
+    onData: ({ data }) => {
+      console.log(data)
+      refetch()
+    }
+  })
+
   const [confirmMutation, { loading: confirming }] = useMutation<
     ConfirmSdInstanceMutation,
     ConfirmSdInstanceMutationVariables
@@ -119,93 +156,97 @@ export default function Devices() {
     }
   }
 
-  // if (loading) return <Spinner />
   if (error) return <p>Error: {error.message}</p>
 
   return (
     <PageWrapper>
-      {/* Heading + Tabs */}
-      <div className="flex w-full justify-between">
-        <Heading>{t('devices')}</Heading>
-        <TabsContainer>
-          <TabSwitcher
-            activeTab={location.pathname.split('/')[2] || 'groups'}
-            tabs={[
-              { name: t('devicesPage.groups'), path: '/groups' },
-              { name: t('devicesPage.instances'), path: '/devices' }
-            ]}
-          />
-        </TabsContainer>
-      </div>
-      {loading ? (
-        <Spinner />
-      ) : (
-        <>
-          {/* Search */}
-          <Section>
-            <SearchWrapper>
-              <Input
-                placeholder={t('devicesPage.searchPlaceholder')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-[--color-grey-200] pr-10"
-              />
-              {search && (
-                <ClearButton onClick={() => setSearch('')} type="button">
-                  <X className="h-5 w-5 text-xl text-[--color-white]" />
-                </ClearButton>
-              )}
-            </SearchWrapper>
-          </Section>
+      <Container>
+        <TopBar>
+          <Heading>{t('devices')}</Heading>
+          <TabsContainer>
+            <TabSwitcher
+              activeTab={location.pathname.split('/')[2] || 'groups'}
+              tabs={[
+                { name: t('devicesPage.groups'), path: '/groups' },
+                { name: t('devicesPage.instances'), path: '/devices' }
+              ]}
+            />
+          </TabsContainer>
+        </TopBar>
 
-          {/* Confirmed */}
-          <Section>
-            <h2 className="w-full text-xl font-bold">{t('devicesPage.confirmedInstances')}</h2>
-            <CardGrid>
-              {confirmed.length === 0 ? (
-                <div className="col-span-full flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[--color-grey-300] p-6 text-center text-[--color-grey-500]">
-                  <p className="text-base font-medium">{t('devicesPage.noConfirmed')}</p>
-                </div>
-              ) : (
-                confirmed.map((instance) => <DeviceCard key={instance.id} instance={instance} confirmed />)
-              )}
-            </CardGrid>
-          </Section>
+        {loading ? (
+          <Spinner />
+        ) : (
+          <>
+            <Section>
+              <SearchWrapper>
+                <Input
+                  placeholder={t('devicesPage.searchPlaceholder')}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-[--color-grey-200] pr-10"
+                />
+                {search && (
+                  <ClearButton onClick={() => setSearch('')} type="button">
+                    <X className="h-5 w-5 text-xl text-[--color-white]" />
+                  </ClearButton>
+                )}
+              </SearchWrapper>
+            </Section>
 
-          {/* Unconfirmed */}
-          <Section>
-            <div className="flex w-full items-center justify-between">
-              <h2 className="text-xl font-bold">{t('devicesPage.unconfirmedInstances')}</h2>
-              {selectedIds.length > 0 && (
-                <Button onClick={handleBatchConfirm} disabled={confirming}>
-                  {t('devicesPage.confirmSelected', { count: selectedIds.length })}
-                </Button>
-              )}
-            </div>
-            <CardGrid>
-              {unconfirmed.length === 0 ? (
-                <div className="col-span-full flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[--color-grey-300] p-6 text-center text-[--color-grey-500]">
-                  <p className="text-base font-medium">{t('devicesPage.noUnconfirmed')}</p>
-                </div>
-              ) : (
-                unconfirmed.map((instance) => (
-                  <DeviceCard
-                    key={instance.id}
-                    instance={instance}
-                    confirmed={false}
-                    selected={selectedIds.includes(instance.id)}
-                    onSelectChange={(selected) => toggleSelection(instance.id, selected)}
-                    onConfirmClick={async () => {
-                      await confirmMutation({ variables: { id: instance.id } })
-                      await refetch()
-                    }}
-                  />
-                ))
-              )}
-            </CardGrid>
-          </Section>
-        </>
-      )}
+            <Section>
+              <h2 className="text-xl font-bold">
+                {t('devicesPage.confirmedInstances')}{' '}
+                <span style={{ fontWeight: '300', fontStyle: 'italic', textWrap: 'nowrap' }}>({confirmed.length})</span>
+              </h2>
+              <CardGrid>
+                {confirmed.length === 0 ? (
+                  <EmptyState>{t('devicesPage.noConfirmed')}</EmptyState>
+                ) : (
+                  confirmed.map((instance) => <DeviceCard key={instance.id} instance={instance} confirmed />)
+                )}
+              </CardGrid>
+            </Section>
+
+            <Section>
+              <div className="flex w-full items-center justify-between">
+                <h2 className="text-xl font-bold">
+                  {t('devicesPage.unconfirmedInstances')}{' '}
+                  {unconfirmed.length !== 0 && (
+                    <span style={{ fontWeight: '300', fontStyle: 'italic', textWrap: 'nowrap' }}>
+                      ({unconfirmed.length})
+                    </span>
+                  )}
+                </h2>
+                {selectedIds.length > 0 && (
+                  <Button onClick={handleBatchConfirm} disabled={confirming}>
+                    {t('devicesPage.confirmSelected', { count: selectedIds.length })}
+                  </Button>
+                )}
+              </div>
+              <CardGrid>
+                {unconfirmed.length === 0 ? (
+                  <EmptyState>{t('devicesPage.noUnconfirmed')}</EmptyState>
+                ) : (
+                  unconfirmed.map((instance) => (
+                    <DeviceCard
+                      key={instance.id}
+                      instance={instance}
+                      confirmed={false}
+                      selected={selectedIds.includes(instance.id)}
+                      onSelectChange={(selected) => toggleSelection(instance.id, selected)}
+                      onConfirmClick={async () => {
+                        await confirmMutation({ variables: { id: instance.id } })
+                        await refetch()
+                      }}
+                    />
+                  ))
+                )}
+              </CardGrid>
+            </Section>
+          </>
+        )}
+      </Container>
     </PageWrapper>
   )
 }
