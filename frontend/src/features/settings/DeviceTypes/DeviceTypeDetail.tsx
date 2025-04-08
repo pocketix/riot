@@ -28,6 +28,7 @@ import { CREATE_DEVICE_TYPE, DELETE_DEVICE_TYPE, UPDATE_DEVICE_TYPE } from '@/gr
 import DeleteConfirmationModal from '@/ui/DeleteConfirmationModal'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
+import Logo from '@/ui/Logo'
 
 const PageContainer = styled.form`
   display: flex;
@@ -507,6 +508,44 @@ export default function DeviceTypeDetail() {
           </ParamTable>
         </ParametersContainer>
       )}
+
+      {/* Command Configuration (TODO: Wait for backend support and connect) */}
+      <TableItem>
+        <strong>Commands </strong>(0):
+      </TableItem>
+
+      <Button className="mb-4 ml-4 mr-4" disabled>
+        <TbPlus /> Add command
+      </Button>
+
+      <ParametersContainer>
+        <ParamTable>
+          <ParamHeaderRow>
+            <ParamCell>Name</ParamCell>
+            <ParamCell>Type</ParamCell>
+            <ParamCell className="whitespace-nowrap">Possible values</ParamCell>
+          </ParamHeaderRow>
+
+          <ParamRow>
+            <ParamCell>
+              <Input placeholder="state" disabled />
+            </ParamCell>
+            <ParamCell>
+              <Input className="w-max" placeholder="string" disabled />
+            </ParamCell>
+            <div>
+              <ParamCell>
+                <Input className="w-max" placeholder='["ON", "OFF"]' disabled />
+              </ParamCell>
+              <ParamCell>
+                <Button variant="destructive" disabled>
+                  <TbTrash />
+                </Button>
+              </ParamCell>
+            </div>
+          </ParamRow>
+        </ParamTable>
+      </ParametersContainer>
     </PageContainer>
   )
 }
