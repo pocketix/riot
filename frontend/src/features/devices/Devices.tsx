@@ -22,11 +22,23 @@ const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+`
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   flex-grow: 1;
   gap: 1rem;
   padding: 1.5rem;
   color: hsl(var(--color-white));
   overflow-y: auto;
+  width: 100%;
+  height: 100%;
+
+  @media (min-width: ${breakpoints.sm}) {
+    max-width: 1300px;
+  }
 `
 
 const TopBar = styled.div`
@@ -148,91 +160,93 @@ export default function Devices() {
 
   return (
     <PageWrapper>
-      <TopBar>
-        <Heading>{t('devices')}</Heading>
-        <TabsContainer>
-          <TabSwitcher
-            activeTab={location.pathname.split('/')[2] || 'groups'}
-            tabs={[
-              { name: t('devicesPage.groups'), path: '/groups' },
-              { name: t('devicesPage.instances'), path: '/devices' }
-            ]}
-          />
-        </TabsContainer>
-      </TopBar>
+      <Container>
+        <TopBar>
+          <Heading>{t('devices')}</Heading>
+          <TabsContainer>
+            <TabSwitcher
+              activeTab={location.pathname.split('/')[2] || 'groups'}
+              tabs={[
+                { name: t('devicesPage.groups'), path: '/groups' },
+                { name: t('devicesPage.instances'), path: '/devices' }
+              ]}
+            />
+          </TabsContainer>
+        </TopBar>
 
-      {loading ? (
-        <Spinner />
-      ) : (
-        <>
-          <Section>
-            <SearchWrapper>
-              <Input
-                placeholder={t('devicesPage.searchPlaceholder')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-[--color-grey-200] pr-10"
-              />
-              {search && (
-                <ClearButton onClick={() => setSearch('')} type="button">
-                  <X className="h-5 w-5 text-xl text-[--color-white]" />
-                </ClearButton>
-              )}
-            </SearchWrapper>
-          </Section>
-
-          <Section>
-            <h2 className="text-xl font-bold">
-              {t('devicesPage.confirmedInstances')}{' '}
-              <span style={{ fontWeight: '300', fontStyle: 'italic', textWrap: 'nowrap' }}>({confirmed.length})</span>
-            </h2>
-            <CardGrid>
-              {confirmed.length === 0 ? (
-                <EmptyState>{t('devicesPage.noConfirmed')}</EmptyState>
-              ) : (
-                confirmed.map((instance) => <DeviceCard key={instance.id} instance={instance} confirmed />)
-              )}
-            </CardGrid>
-          </Section>
-
-          <Section>
-            <div className="flex w-full items-center justify-between">
-              <h2 className="text-xl font-bold">
-                {t('devicesPage.unconfirmedInstances')}{' '}
-                {unconfirmed.length !== 0 && (
-                  <span style={{ fontWeight: '300', fontStyle: 'italic', textWrap: 'nowrap' }}>
-                    ({unconfirmed.length})
-                  </span>
+        {loading ? (
+          <Spinner />
+        ) : (
+          <>
+            <Section>
+              <SearchWrapper>
+                <Input
+                  placeholder={t('devicesPage.searchPlaceholder')}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-[--color-grey-200] pr-10"
+                />
+                {search && (
+                  <ClearButton onClick={() => setSearch('')} type="button">
+                    <X className="h-5 w-5 text-xl text-[--color-white]" />
+                  </ClearButton>
                 )}
+              </SearchWrapper>
+            </Section>
+
+            <Section>
+              <h2 className="text-xl font-bold">
+                {t('devicesPage.confirmedInstances')}{' '}
+                <span style={{ fontWeight: '300', fontStyle: 'italic', textWrap: 'nowrap' }}>({confirmed.length})</span>
               </h2>
-              {selectedIds.length > 0 && (
-                <Button onClick={handleBatchConfirm} disabled={confirming}>
-                  {t('devicesPage.confirmSelected', { count: selectedIds.length })}
-                </Button>
-              )}
-            </div>
-            <CardGrid>
-              {unconfirmed.length === 0 ? (
-                <EmptyState>{t('devicesPage.noUnconfirmed')}</EmptyState>
-              ) : (
-                unconfirmed.map((instance) => (
-                  <DeviceCard
-                    key={instance.id}
-                    instance={instance}
-                    confirmed={false}
-                    selected={selectedIds.includes(instance.id)}
-                    onSelectChange={(selected) => toggleSelection(instance.id, selected)}
-                    onConfirmClick={async () => {
-                      await confirmMutation({ variables: { id: instance.id } })
-                      await refetch()
-                    }}
-                  />
-                ))
-              )}
-            </CardGrid>
-          </Section>
-        </>
-      )}
+              <CardGrid>
+                {confirmed.length === 0 ? (
+                  <EmptyState>{t('devicesPage.noConfirmed')}</EmptyState>
+                ) : (
+                  confirmed.map((instance) => <DeviceCard key={instance.id} instance={instance} confirmed />)
+                )}
+              </CardGrid>
+            </Section>
+
+            <Section>
+              <div className="flex w-full items-center justify-between">
+                <h2 className="text-xl font-bold">
+                  {t('devicesPage.unconfirmedInstances')}{' '}
+                  {unconfirmed.length !== 0 && (
+                    <span style={{ fontWeight: '300', fontStyle: 'italic', textWrap: 'nowrap' }}>
+                      ({unconfirmed.length})
+                    </span>
+                  )}
+                </h2>
+                {selectedIds.length > 0 && (
+                  <Button onClick={handleBatchConfirm} disabled={confirming}>
+                    {t('devicesPage.confirmSelected', { count: selectedIds.length })}
+                  </Button>
+                )}
+              </div>
+              <CardGrid>
+                {unconfirmed.length === 0 ? (
+                  <EmptyState>{t('devicesPage.noUnconfirmed')}</EmptyState>
+                ) : (
+                  unconfirmed.map((instance) => (
+                    <DeviceCard
+                      key={instance.id}
+                      instance={instance}
+                      confirmed={false}
+                      selected={selectedIds.includes(instance.id)}
+                      onSelectChange={(selected) => toggleSelection(instance.id, selected)}
+                      onConfirmClick={async () => {
+                        await confirmMutation({ variables: { id: instance.id } })
+                        await refetch()
+                      }}
+                    />
+                  ))
+                )}
+              </CardGrid>
+            </Section>
+          </>
+        )}
+      </Container>
     </PageWrapper>
   )
 }

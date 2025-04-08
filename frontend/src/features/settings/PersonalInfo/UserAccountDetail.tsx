@@ -7,6 +7,8 @@ const Container = styled.div`
   flex-direction: column;
   gap: 2rem;
   align-items: center;
+  width: 100%;
+  padding: 0 8px;
 `
 
 const Card = styled.div`

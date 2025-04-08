@@ -14,7 +14,6 @@ const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1.5rem;
 `
 
 const Container = styled.div`
@@ -25,6 +24,7 @@ const Container = styled.div`
   color: hsl(var(--color-white));
   overflow-y: auto;
   width: 100%;
+  padding: 1.5rem;
 
   @media (min-width: ${breakpoints.sm}) {
     max-width: 1300px;
