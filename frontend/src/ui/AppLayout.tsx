@@ -9,7 +9,7 @@ const StyledAppLayout = styled.div`
   color: var(--color-grey-900);
   display: grid;
   grid-template-rows: 1fr auto;
-  padding-bottom: 3.6rem;
+  padding-bottom: 3.8rem;
   grid-template-areas:
     'main'
     'navbar';

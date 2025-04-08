@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useParams, useLocation, useNavigate, data } from 'react-router-dom'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@apollo/client'
 import { GET_PARAMETERS } from '@/graphql/Queries'
 import {
@@ -28,7 +28,6 @@ import { CREATE_DEVICE_TYPE, DELETE_DEVICE_TYPE, UPDATE_DEVICE_TYPE } from '@/gr
 import DeleteConfirmationModal from '@/ui/DeleteConfirmationModal'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
-import Logo from '@/ui/Logo'
 
 const PageContainer = styled.form`
   display: flex;
