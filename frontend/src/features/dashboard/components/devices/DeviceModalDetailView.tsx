@@ -31,6 +31,7 @@ import { GoLinkExternal } from 'react-icons/go'
 import { Group } from '@/context/InstancesContext'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 export interface DeviceModalDetailViewProps {
   selectedDevice: any
@@ -71,7 +72,7 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
 
   const navigate = useNavigate()
 
-  const DeviceDetailContent = () => (
+  const ParameterDetail = () => (
     <>
       <Card className="flex flex-wrap items-center justify-center gap-2 pt-2">
         <Label className="flex flex-col items-start">
@@ -87,12 +88,12 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
                 ? parameters?.find((param) => param.denotation === wholeParameter.denotation) || null
                 : null
             }
-            className="w-48"
+            className="w-32"
           />
         </Label>
         <Label className="flex flex-col items-start">
           Time Frame
-          <TimeFrameSelector onValueChange={(value) => setTimeFrame(value!)} value={timeFrame} className="w-48" />
+          <TimeFrameSelector onValueChange={(value) => setTimeFrame(value!)} value={timeFrame} className="w-32" />
         </Label>
         {renderVisualization()}
       </Card>
@@ -103,7 +104,7 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
     if (processedData.length === 0) {
       console.log('No data available for the selected device and parameter.')
       return (
-        <Skeleton className="h-[200px] w-full">
+        <Skeleton className="h-[100px] w-full">
           <div className="flex h-full w-full flex-col items-center justify-center">
             <p className="text-destructive">No data available</p>
             <p className="break-words text-center text-lg">Please select a different time frame or parameter</p>
@@ -119,7 +120,11 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
         </div>
       )
     } else {
-      return <SequentialStatesVisualization data={processedData[0].data} />
+      return (
+        <div className="h-[80px] w-full min-w-0 overflow-hidden px-2">
+          <SequentialStatesVisualization data={processedData[0].data} />
+        </div>
+      )
     }
   }
 
@@ -188,7 +193,7 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
                 </div>
               </DialogDescription>
             </DialogHeader>
-            <DeviceDetailContent />
+            <ParameterDetail />
             <DialogFooter className="pt-2">
               <Button variant="link" onClick={handleViewAllDetails} className="flex gap-1 whitespace-nowrap">
                 View all details
@@ -199,77 +204,79 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
         </Dialog>
       ) : (
         <Drawer open={isOpen && !!selectedDevice} onOpenChange={(open) => setIsOpen(open)}>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle className="flex flex-col items-center break-words text-lg sm:flex-row sm:justify-between sm:text-xl">
-                <div className="flex flex-col items-center gap-2 sm:flex-row">
-                  {IconComponent && (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full border-[1px] bg-muted text-muted-foreground shadow-md sm:h-8 sm:w-8 sm:shadow-sm">
-                      <IconComponent />
+          <DrawerContent className="flex h-fit max-h-[calc(90vh-2rem)] flex-col gap-2">
+            <ScrollArea>
+              <div className="max-h-[calc(100vh-2rem)]">
+                <DrawerHeader>
+                  <DrawerTitle className="flex flex-col items-center break-words text-lg sm:flex-row sm:justify-between sm:text-xl">
+                    <div className="flex flex-col items-center gap-2 sm:flex-row">
+                      {IconComponent && (
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full border-[1px] bg-muted text-muted-foreground shadow-md sm:h-8 sm:w-8 sm:shadow-sm">
+                          <IconComponent />
+                        </div>
+                      )}
+                      {instance?.userIdentifier!}
                     </div>
-                  )}
-                  {instance?.userIdentifier!}
-                </div>
-                <code className="mr-2 block w-fit break-all rounded bg-muted px-1.5 py-1 font-mono text-xs text-muted-foreground">
-                  {selectedDevice?.uid}
-                </code>
-              </DrawerTitle>
-              <DrawerDescription className="mt-2 space-y-1">
-                <div className="flex flex-col items-center gap-1 sm:flex-row">
-                  <span className="mr-1">Last updated:</span>
-                  <Badge variant="outline" className="font-mono text-xs">
-                    {lastUpdated}
-                  </Badge>
-                </div>
-                {instanceGroups?.length! > 0 && (
-                  <div className="flex flex-wrap items-center justify-center gap-1 text-muted-foreground sm:flex-row sm:justify-start sm:gap-2">
-                    <span>Member of:{''}</span>
-                    {instanceGroups?.map((group, index) => (
-                      <Button
-                        variant="link"
-                        key={group.id}
-                        className="m-0 h-fit p-0"
-                        onClick={() => {
-                          setIsOpen(false)
-                          navigate(`/group/${group.id}`)
-                        }}
-                      >
-                        {group.userIdentifier}
-                        {index < instanceGroups.length - 1 ? ', ' : '.'}
-                      </Button>
-                    ))}
-                  </div>
-                )}
-                {instance?.kpis?.length! > 0 && (
-                  <div className="flex flex-wrap items-center justify-center gap-1 sm:flex-row sm:items-start sm:justify-start">
-                    <span className="text-sm">KPIs:</span>
-                    {instance?.kpis.map((kpi) => (
-                      <Badge
-                        key={kpi.id}
-                        variant={kpi.fulfilled ? 'default' : 'destructive'}
-                        className="whitespace-nowrap font-mono text-xs"
-                      >
-                        {kpi.userIdentifier}
+                    <code className="mr-2 block w-fit break-all rounded bg-muted px-1.5 py-1 font-mono text-xs text-muted-foreground">
+                      {instance?.uid}
+                    </code>
+                  </DrawerTitle>
+                  <DrawerDescription className="mt-2 space-y-1">
+                    <div className="flex flex-wrap items-center justify-center gap-1 sm:justify-start sm:gap-2">
+                      <span className="mr-1">Last updated:</span>
+                      <Badge variant="outline" className="font-mono text-xs">
+                        {lastUpdated}
                       </Badge>
-                    ))}
-                  </div>
-                )}
-              </DrawerDescription>
-            </DrawerHeader>
-
-            <DeviceDetailContent />
-
-            <DrawerFooter className="pt-2">
-              <Button variant="link" onClick={handleViewAllDetails} className="flex gap-1 whitespace-nowrap">
-                View all details
-                <GoLinkExternal className="h-3 w-3 text-xs" />
-              </Button>
-              <DrawerClose asChild>
-                <Button variant="outline" className="w-full">
-                  Close
-                </Button>
-              </DrawerClose>
-            </DrawerFooter>
+                    </div>
+                    {instanceGroups?.length! > 0 && (
+                      <div className="flex flex-wrap items-center justify-center gap-1 text-muted-foreground sm:flex-row sm:justify-start sm:gap-2">
+                        <span>Member of:{''}</span>
+                        {instanceGroups?.map((group, index) => (
+                          <Button
+                            variant="link"
+                            key={group.id}
+                            className="m-0 h-fit p-0"
+                            onClick={() => {
+                              setIsOpen(false)
+                              navigate(`/group/${group.id}`)
+                            }}
+                          >
+                            {group.userIdentifier}
+                            {index < instanceGroups.length - 1 ? ', ' : '.'}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                    {instance?.kpis?.length! > 0 && (
+                      <div className="flex flex-wrap items-center justify-center gap-1 sm:flex-row sm:items-start sm:justify-start">
+                        <span className="text-sm">KPIs:</span>
+                        {instance?.kpis.map((kpi) => (
+                          <Badge
+                            key={kpi.id}
+                            variant={kpi.fulfilled ? 'default' : 'destructive'}
+                            className="whitespace-nowrap font-mono text-xs"
+                          >
+                            {kpi.userIdentifier}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </DrawerDescription>
+                </DrawerHeader>
+                <ParameterDetail />
+                <DrawerFooter className="pt-2">
+                  <Button variant="link" onClick={handleViewAllDetails} className="flex gap-1 whitespace-nowrap">
+                    View all details
+                    <GoLinkExternal className="h-3 w-3 text-xs" />
+                  </Button>
+                  <DrawerClose asChild>
+                    <Button variant="outline" className="w-full">
+                      Close
+                    </Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </div>
+            </ScrollArea>
           </DrawerContent>
         </Drawer>
       )}
