@@ -9,16 +9,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { toast } from 'sonner'
 import { CardEditDialog } from '../editors/CardEditDialog'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { BuilderResult } from '@/types/dashboard/GridItem'
-import {
-  SdInstancesWithTypeAndSnapshotQuery,
-  StatisticsOperation,
-  useStatisticsQuerySensorsWithFieldsLazyQuery
-} from '@/generated/graphql'
-import { ResponsiveBulletChart } from '../visualizations/ResponsiveBulletChart'
+import { StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
+import { BulletRow } from './components/BulletRow'
 
-// Styled components
 export const BulletContainer = styled.div<{ $editModeEnabled?: boolean }>`
   position: relative;
   margin: 0;
@@ -37,18 +31,17 @@ interface BulletCardProps {
   title: string
   layout: Layout[]
   breakPoint: string
-  editModeEnabled: boolean
   cols: { lg: number; md: number; sm: number; xs: number; xxs: number }
   height: number
   width: number
   setLayout: (layout: Layout[]) => void
   handleDeleteItem: (id: string) => void
   setHighlightedCardID: (id: string) => void
+  editModeEnabled: boolean
   beingResized: boolean
 
   configuration: any
   handleSaveEdit: (config: BuilderResult<BulletCardConfig>) => void
-  instances: SdInstancesWithTypeAndSnapshotQuery['sdInstances']
 }
 
 export const BulletCard = ({
@@ -64,14 +57,27 @@ export const BulletCard = ({
   setHighlightedCardID,
   configuration,
   beingResized,
-  handleSaveEdit,
-  instances
+  handleSaveEdit
 }: BulletCardProps) => {
   const [chartConfig, setChartConfig] = useState<BulletCardConfig>()
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const [data, setData] = useState<any[]>([])
-  const [getChartData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
   const [error, setError] = useState<string | null>(null)
+
+  // Poll interval based on the smallest time frame in the card config
+  const minimumTimeframe = useMemo(() => {
+    const rows = chartConfig?.rows
+    if (!rows) return 0
+
+    const timeframes = rows.map((row) => Number(row.config.timeFrame))
+    const minTimeframe = Math.min(...timeframes)
+
+    return minTimeframe
+  }, [chartConfig])
+
+  const [getChartData] = useStatisticsQuerySensorsWithFieldsLazyQuery({
+    pollInterval: minimumTimeframe > 0 ? minimumTimeframe * 60 * 60 * 1000 : 0
+  })
 
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -108,8 +114,16 @@ export const BulletCard = ({
       const rows = chartConfig.rows
       if (!rows) return
 
+      // "last" function rows will use real-time data
+      const aggregationRows = rows.filter((row) => row.config.function !== 'last')
+
+      if (aggregationRows.length === 0) {
+        setData([])
+        return
+      }
+
       const results = await Promise.allSettled(
-        rows.map(async (row) => {
+        aggregationRows.map(async (row) => {
           return getChartData({
             variables: {
               sensors: {
@@ -141,22 +155,29 @@ export const BulletCard = ({
         }
       })
 
-      const newData = parsedData.map((parsed, index) => {
+      const newData = aggregationRows.map((row, index) => {
+        const parsed = parsedData[index]
         if (!parsed) return null
-        const row = rows[index]
+
         const parsedValue = parsed[0]?.data ? JSON.parse(parsed[0].data) : null
         const value = parsedValue ? parsedValue[row.parameter.denotation] : undefined
+
         if (value === undefined) {
           return null
         }
+
         return {
-          id: row.config.name,
-          measures: [value],
-          markers: row.config.markers,
-          ranges: row.config.ranges ? row.config.ranges.flatMap((range) => [range.min, range.max]) : [0, 0]
+          rowIndex: rows.findIndex((r) => r === row), // Store the original row index
+          data: {
+            id: row.config.name,
+            measures: [value],
+            markers: row.config.markers,
+            ranges: row.config.ranges ? row.config.ranges.flatMap((range) => [range.min, range.max]) : [0, 0]
+          }
         }
       })
-      setData(newData)
+
+      setData(newData.filter(Boolean))
     }
   }
 
@@ -166,20 +187,15 @@ export const BulletCard = ({
     }
   }, [chartConfig])
 
-  // calculate height and width from getboundingclientrect
-
   useEffect(() => {
     if (configuration) {
       // Safe parse does not throw an error and we can leverage its success property
-      console.log('Configuration', configuration)
       const parsedConfig = bulletChartBuilderSchema.safeParse(configuration.visualizationConfig)
       if (parsedConfig.success) {
-        console.log('Parsed config', parsedConfig.data)
         setChartConfig(parsedConfig.data)
       } else {
         setError('Failed to parse configuration')
         console.error('Failed to parse configuration', parsedConfig.error)
-        toast.error('Failed to parse configuration')
       }
     }
   }, [configuration])
@@ -216,43 +232,12 @@ export const BulletCard = ({
       )}
       {chartConfig.cardTitle ? <span className="pl-2 pt-2 font-semibold">{chartConfig.cardTitle}</span> : null}
       {chartConfig.rows?.map((row, index) => {
-        const instanceName = instances.find((instance) => instance.uid === row.instance.uid)?.userIdentifier
-        if (!data[index])
-          return (
-            <BulletContainer key={index} $editModeEnabled={editModeEnabled}>
-              <Skeleton className="h-full w-full p-2" disableAnimation>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex w-full flex-col items-center justify-center">
-                        <span className="w-full truncate text-center font-bold text-destructive">
-                          Data not available
-                        </span>
-                        <span className="w-full truncate text-center text-xs text-gray-500">
-                          Device: {instanceName}
-                        </span>
-                        <span className="w-full truncate text-center text-xs text-gray-500">
-                          Parameter: {row.parameter.denotation}
-                        </span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div className="flex max-w-28 flex-col">
-                        <span className="font-semibold text-destructive">No data available</span>
-                        <span className="break-words text-xs">Device: {instanceName}</span>
-                        <span className="text-xs">Parameter: {row.parameter.denotation}</span>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </Skeleton>
-            </BulletContainer>
-          )
-        return (
-          <BulletContainer key={index} $editModeEnabled={editModeEnabled}>
-            <ResponsiveBulletChart data={data[index]} rowConfig={row} />
-          </BulletContainer>
-        )
+        if (row.config.function === 'last') {
+          return <BulletRow key={index} row={row} editModeEnabled={editModeEnabled} />
+        }
+
+        const rowData = data.find((d) => d.rowIndex === index)?.data
+        return <BulletRow key={index} row={row} aggregatedData={rowData} editModeEnabled={editModeEnabled} />
       })}
       {editModeEnabled && (
         <AccessibilityContainer

@@ -520,7 +520,6 @@ const Dashboard = () => {
                       configuration={details[item.i]}
                       beingResized={resizeCardID === item.i}
                       handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
-                      instances={instances.sdInstances}
                     />
                   </Card>
                 )

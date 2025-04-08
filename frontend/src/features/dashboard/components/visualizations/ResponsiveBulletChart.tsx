@@ -12,12 +12,13 @@ import { useLongPress } from '@uidotdev/usehooks'
 export interface ResponsiveBulletProps {
   data: Datum
   rowConfig?: BulletCardConfig['rows'][number]
+  lastUpdated?: Date
   onElementClick?: (data: any, event: MouseEvent) => void
 }
 
 const LONG_PRESS_THRESHOLD = 200
 
-const ResponsiveBulletBase = ({ data, rowConfig, onElementClick }: ResponsiveBulletProps) => {
+const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: ResponsiveBulletProps) => {
   const { isDarkMode } = useDarkMode()
   const { getInstanceById } = useInstances()
   const { setDetailsSelectedDevice } = useDeviceDetail()
@@ -134,7 +135,10 @@ const ResponsiveBulletBase = ({ data, rowConfig, onElementClick }: ResponsiveBul
         parameterName={tooltipTriggerData.parameterName}
         currentValue={tooltipTriggerData.value}
         targetValues={tooltipTriggerData.targets}
+        aggregateFunction={rowConfig?.config.function}
+        timeFrame={rowConfig?.config.timeFrame}
         chartRect={chartRect}
+        lastUpdated={lastUpdated}
         visible={tooltipVisible || touchTooltipVisible}
       />
     </>
