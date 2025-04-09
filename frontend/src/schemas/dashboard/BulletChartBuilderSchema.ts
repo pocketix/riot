@@ -6,6 +6,7 @@ const configSchema = z
     function: z.string().min(1, { message: 'Function is required' }),
     timeFrame: z.string().min(1, { message: 'Time frame is required' }).optional(),
     titleOffsetX: z.number().optional(),
+    reverse: z.boolean().optional().default(false),
     margin: z.object({
       top: z.number().optional(),
       right: z.number().optional(),
@@ -15,7 +16,12 @@ const configSchema = z
     minValue: z.union([z.number(), z.literal('auto')]).optional(),
     maxValue: z.union([z.number(), z.literal('auto')]).optional(),
     colorScheme: z.enum(['greys', 'nivo']).optional(),
-    measureSize: z.number().min(0, { message: 'Measure size must be greater than or equal to 0' }).max(1, { message: 'Measure size must be less than or equal to 1' }).optional(),
+    decimalPlaces: z.number().optional().default(2),
+    measureSize: z
+      .number()
+      .min(0, { message: 'Measure size must be greater than or equal to 0' })
+      .max(1, { message: 'Measure size must be less than or equal to 1' })
+      .optional(),
     ranges: z
       .array(
         z.object({
@@ -46,19 +52,22 @@ export const bulletChartBuilderSchema = z.object({
       z.object({
         instance: z.object({
           uid: z.string().min(1, { message: 'Instance is required' }),
-          id: z.number().min(0, { message: 'Instance ID is required' }).nullable().superRefine((data, ctx) => {
-            if (data === null) {
-              ctx.addIssue({
-                code: z.ZodIssueCode.invalid_type,
-                expected: 'number',
-                received: 'null',
-                message: 'Instance ID is required'
-              })
-              return z.NEVER
-            }
-            return data
-          }
-          )
+          id: z
+            .number()
+            .min(0, { message: 'Instance ID is required' })
+            .nullable()
+            .superRefine((data, ctx) => {
+              if (data === null) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.invalid_type,
+                  expected: 'number',
+                  received: 'null',
+                  message: 'Instance ID is required'
+                })
+                return z.NEVER
+              }
+              return data
+            })
         }),
         parameter: z.object({
           denotation: z.string().min(1, { message: 'Parameter denotation is required' }),
