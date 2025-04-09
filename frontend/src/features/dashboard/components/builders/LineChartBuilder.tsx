@@ -19,7 +19,7 @@ import {
   useSdTypeQuery,
   SdParameterType,
   SdTypeQuery,
-  StatisticsOperation
+  StatisticsOperation,
 } from '@/generated/graphql'
 import { ParameterMultiSelect } from '@/components/ui/multi-select-parameter'
 import { TbTrash } from 'react-icons/tb'
@@ -228,7 +228,7 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
 
         instance.parameters.forEach((param: any) => {
           const paramData: Serie = {
-            id: param.denotation + ' ' + instance.uid,
+            id: param.denotation + ' ' + instance.uid + ' ' + rowIndex,
             data:
               sensorDataArray.length > 0
                 ? sensorDataArray
@@ -255,8 +255,8 @@ export function LineChartBuilder({ onDataSubmit, instances, config }: LineChartB
         setData((prevData) => {
           // remove any existing data for this row's parameters
           const filteredData = prevData.filter((item) => {
-            const [_, itemInstanceUID] = String(item.id).split(' ')
-            return itemInstanceUID !== instance.uid
+            const [_, itemInstanceUID, dataRow] = String(item.id).split(' ')
+            return itemInstanceUID !== instance.uid || dataRow !== rowIndex.toString()
           })
           console.log('Filtered data:', filteredData)
 

@@ -29,7 +29,7 @@ import { TimeFrameSelector } from './components/time-frame-selector'
 type EntityCardBuilderResult = BuilderResult<EntityCardConfig>
 
 export interface EntityCardBuilderProps {
-  onDataSubmit: (data: any) => void
+  onDataSubmit: (data: EntityCardBuilderResult) => void
   instances: SdInstancesWithParamsQuery['sdInstances']
   config?: EntityCardConfig
 }
@@ -78,7 +78,15 @@ export function EntityCardBuilder({ onDataSubmit, instances, config }: EntityCar
     resolver: zodResolver(entityCardSchema),
     defaultValues: config || {
       title: 'Entity Card',
-      rows: []
+      rows: [
+        {
+          name: '',
+          instance: { uid: '', id: null },
+          parameter: { id: null, denotation: '' },
+          visualization: null,
+          timeFrame: '24'
+        }
+      ]
     }
   })
 

@@ -3,16 +3,12 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { IoAdd } from 'react-icons/io5'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import {
   SdInstancesWithParamsQuery,
   SdParameterType,
   SdTypeParametersWithSnapshotsQuery,
-  StatisticsOperation,
   useSdTypeParametersWithSnapshotsQuery
 } from '@/generated/graphql'
-import { HiOutlineQuestionMarkCircle } from 'react-icons/hi2'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { z } from 'zod'
 import { tableCardSchema, TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -26,11 +22,14 @@ import { BuilderResult } from '@/types/dashboard/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
 import { TimeFrameSelector } from './components/time-frame-selector'
+import { AggregateFunctionCombobox } from './components/aggregate-function-combobox'
+import { ResponsiveTooltip } from '@/components/responsive-tooltip'
+import { InfoIcon } from 'lucide-react'
 
 type TableCardBuilderResult = BuilderResult<TableCardConfig>
 
 export interface TableCardBuilderProps {
-  onDataSubmit: (data: any) => void
+  onDataSubmit: (data: TableCardBuilderResult) => void
   instances: SdInstancesWithParamsQuery['sdInstances']
   config?: TableCardConfig
 }
@@ -82,8 +81,19 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
       tableTitle: 'Sensors',
       timeFrame: '24',
       decimalPlaces: 1,
-      columns: [],
-      rows: []
+      columns: [
+        {
+          header: '',
+          function: ''
+        }
+      ],
+      rows: [
+        {
+          name: '',
+          instance: { uid: '', id: null },
+          parameter: { id: null, denotation: '' }
+        }
+      ]
     }
   })
 
@@ -205,24 +215,36 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                     <FormLabel>
                       <div className="flex items-center gap-2">
                         Number of decimal places
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger type="button">
-                              <HiOutlineQuestionMarkCircle className="h-5 w-5 text-primary" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="font-thin">The number of decimal places to display in the table.</p>
-                              <p>
-                                <span className="font-thin">The values inside this builder are </span>
+                        <ResponsiveTooltip
+                          content={
+                            <>
+                              <p className="text-sm">
+                                The number of decimal places to display in the table. The values inside this builder are{' '}
                                 <b>randomly generated.</b>
                               </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                              <p className="text-sm text-muted-foreground">
+                                In the final visualization, trailing zeros will be removed.
+                              </p>
+                            </>
+                          }
+                          side={'top'}
+                          sideOffset={5}
+                        >
+                          <InfoIcon size={16} />
+                        </ResponsiveTooltip>
                       </div>
                     </FormLabel>
                     <FormControl>
-                      <Input value={field.value} onChange={field.onChange} type="number" min={0} className="w-full" />
+                      <Input
+                        value={field.value}
+                        onChange={(value) => {
+                          console.log(value.target.value)
+                          field.onChange(Number(value.target.value))
+                        }}
+                        type="number"
+                        min={0}
+                        className="w-full"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -273,7 +295,7 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                                     value={field.value}
                                     onChange={field.onChange}
                                     placeholder="Header"
-                                    className="w-full"
+                                    className="h-9 w-full"
                                   />
                                 </Label>
                               </FormControl>
@@ -289,18 +311,12 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                               <FormControl>
                                 <Label>
                                   Function
-                                  <Select value={field.value} onValueChange={field.onChange}>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select a function" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {Object.values(StatisticsOperation).map((operation) => (
-                                        <SelectItem key={operation} value={operation}>
-                                          {operation}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                  <AggregateFunctionCombobox
+                                    value={field.value}
+                                    onValueChange={(value) => {
+                                      field.onChange(value)
+                                    }}
+                                  />
                                 </Label>
                               </FormControl>
                               <FormMessage />
@@ -323,6 +339,9 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                   </Button>
                 </AccordionContent>
               </AccordionItem>
+              {form.formState.errors?.columns?.length! > 0 && (
+                <FormMessage>One or more columns are invalid</FormMessage>
+              )}
               {form.formState.errors.columns && <FormMessage>{form.formState.errors.columns.message}</FormMessage>}
               {form.formState.errors.columns?.root && (
                 <FormMessage>{form.formState.errors.columns.root?.message}</FormMessage>
@@ -423,9 +442,10 @@ export function TableCardBuilder({ onDataSubmit, instances, config }: TableCardB
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+            {form.formState.errors?.rows?.length! > 0 && <FormMessage>One or more rows are invalid</FormMessage>}
             {form.formState.errors.rows && <FormMessage>{form.formState.errors.rows.message}</FormMessage>}
             {form.formState.errors.rows?.root && <FormMessage>{form.formState.errors.rows.root?.message}</FormMessage>}
-            <Button type="submit" className="mt-4 w-fit">
+            <Button type="submit" className="mt-4 w-fit" onClick={() => console.log(form.formState)}>
               Submit
             </Button>
           </form>
