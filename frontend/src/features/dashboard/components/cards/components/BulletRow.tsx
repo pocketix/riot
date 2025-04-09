@@ -2,11 +2,11 @@ import { useInstances } from '@/context/InstancesContext'
 import { useParameterSnapshot } from '@/hooks/useParameterSnapshot'
 import { BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { useMemo } from 'react'
-import { BulletContainer } from '../BulletCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ResponsiveBulletChart } from '../../visualizations/ResponsiveBulletChart'
 import { Datum } from '@nivo/bullet'
+import { ChartContainer } from '../BaseCard'
 
 interface BulletRowProps {
   row: BulletCardConfig['rows'][number]
@@ -36,7 +36,7 @@ export const BulletRow = ({ row, editModeEnabled, aggregatedData = undefined }: 
 
   if (!chartData) {
     return (
-      <BulletContainer $editModeEnabled={editModeEnabled}>
+      <ChartContainer $editModeEnabled={editModeEnabled}>
         <Skeleton className="h-full w-full p-2" disableAnimation>
           <TooltipProvider>
             <Tooltip>
@@ -59,13 +59,13 @@ export const BulletRow = ({ row, editModeEnabled, aggregatedData = undefined }: 
             </Tooltip>
           </TooltipProvider>
         </Skeleton>
-      </BulletContainer>
+      </ChartContainer>
     )
   }
 
   return (
-    <BulletContainer $editModeEnabled={editModeEnabled}>
+    <ChartContainer $editModeEnabled={editModeEnabled}>
       <ResponsiveBulletChart data={chartData} rowConfig={row} lastUpdated={lastUpdated || undefined} />
-    </BulletContainer>
+    </ChartContainer>
   )
 }
