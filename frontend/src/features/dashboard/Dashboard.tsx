@@ -471,7 +471,6 @@ const Dashboard = () => {
                     <TableCard
                       key={item.i}
                       cardID={item.i}
-                      title={`Item ${item.i}`}
                       layout={layouts![currentBreakpoint]}
                       setLayout={(newLayout) => {
                         const updatedLayouts = {
@@ -500,7 +499,6 @@ const Dashboard = () => {
                     <BulletCard
                       key={item.i}
                       cardID={item.i}
-                      title={`Item ${item.i}`}
                       layout={layouts![currentBreakpoint]}
                       setLayout={(newLayout) => {
                         const updatedLayouts = {
@@ -529,7 +527,6 @@ const Dashboard = () => {
                     <ChartCard
                       key={item.i}
                       cardID={item.i}
-                      title={`Item ${item.i}`}
                       layout={layouts![currentBreakpoint]}
                       setLayout={(newLayout) => {
                         const updatedLayouts = {
@@ -560,7 +557,6 @@ const Dashboard = () => {
                     <EntityCard
                       key={item.i}
                       cardID={item.i}
-                      title={`Item ${item.i}`}
                       layout={layouts![currentBreakpoint]}
                       setLayout={(newLayout) => {
                         const updatedLayouts = {
@@ -579,6 +575,7 @@ const Dashboard = () => {
                       setHighlightedCardID={setHighlightedCardID}
                       configuration={details[item.i]}
                       handleSaveEdit={(config) => handleSaveConfig(config, details[item.i])}
+                      beingResized={resizeCardID === item.i}
                     />
                   </Card>
                 )

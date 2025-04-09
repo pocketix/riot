@@ -31,11 +31,22 @@ import { useInstances } from '@/context/InstancesContext'
 import { useParameterSnapshotContext } from '@/context/ParameterUpdatesContext'
 import { AggregateFunctionCombobox } from './components/aggregate-function-combobox'
 import { ResponsiveBulletChart } from '../visualizations/ResponsiveBulletChart'
+import { Label } from '@/components/ui/label'
+import { ResponsiveTooltip } from '@/components/responsive-tooltip'
+import { InfoIcon } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 
 type BulletChartBuilderResult = BuilderResult<BulletCardConfig>
 
 export interface BulletChartBuilderProps {
-  onDataSubmit: (data: any) => void
+  onDataSubmit: (data: BulletChartBuilderResult) => void
   config?: BulletCardConfig
 }
 
@@ -43,7 +54,6 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
   const parameterNameMock = useRef<HTMLSpanElement | null>(null)
   const { getInstanceByUid } = useInstances()
   const { getParameterSnapshot } = useParameterSnapshotContext()
-
   const [selectedInstance, setSelectedInstance] = useState<SdInstancesWithParamsQuery['sdInstances'][number] | null>(
     null
   )
@@ -54,6 +64,10 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
   const [data, setData] = useState<Datum[]>([])
   const [rangeInput, setRangeInput] = useState<string>('')
   const [markerInput, setMarkerInput] = useState<string>('')
+  const [smartRangeDialog, setSmartRangeDialog] = useState<{ open: boolean; rowIndex: number | null }>({
+    open: false,
+    rowIndex: null
+  })
 
   const form = useForm<z.infer<typeof bulletChartBuilderSchema>>({
     resolver: zodResolver(bulletChartBuilderSchema),
@@ -67,10 +81,14 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
             name: '',
             function: '',
             timeFrame: '24',
+            decimalPlaces: 2,
+            minValue: 'auto',
+            maxValue: 'auto',
+            reverse: false,
             measureSize: 0.2,
             markers: [],
-            margin: { top: 10, right: 10, bottom: 30, left: 30 },
-            titleOffsetX: 0,
+            margin: { top: 10, right: 10, bottom: 20, left: 30 },
+            titleOffsetX: -5,
             colorScheme: 'nivo'
           }
         }
@@ -91,6 +109,128 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
     }
   }, [config])
 
+  const generateRangesAndTarget = async (rowIndex: number) => {
+    const row = form.getValues(`rows.${rowIndex}`)
+
+    if (!row?.instance?.uid || !row?.parameter?.denotation) {
+      // should not happen, but we cannot fetch without this,
+      // the checkRowAndFetch function should prevent this
+      toast.error('Please select an instance and parameter first')
+      return
+    }
+
+    toast.loading('Analyzing parameter data...', { id: 'range-generator' })
+
+    try {
+      // Fetch min, max, and avg values for the parameter
+      const results = await Promise.allSettled([
+        // Min
+        getChartData({
+          variables: {
+            sensors: {
+              sensors: [{ key: row.instance.uid, values: [row.parameter.denotation] }]
+            },
+            request: {
+              from: new Date(Date.now() - Number(row.config.timeFrame!) * 2 * 60 * 60 * 1000).toISOString(), // Use 24h for stats
+              aggregateMinutes: Number(row.config.timeFrame!) * 2 * 60 * 1000,
+              operation: StatisticsOperation.Min
+            }
+          }
+        }),
+        // Max
+        getChartData({
+          variables: {
+            sensors: {
+              sensors: [{ key: row.instance.uid, values: [row.parameter.denotation] }]
+            },
+            request: {
+              from: new Date(Date.now() - Number(row.config.timeFrame!) * 2 * 60 * 60 * 1000).toISOString(), // Use 24h for stats
+              aggregateMinutes: Number(row.config.timeFrame!) * 2 * 60 * 1000,
+              operation: StatisticsOperation.Max
+            }
+          }
+        }),
+        // Mean
+        getChartData({
+          variables: {
+            sensors: {
+              sensors: [{ key: row.instance.uid, values: [row.parameter.denotation] }]
+            },
+            request: {
+              from: new Date(Date.now() - Number(row.config.timeFrame!) * 2 * 60 * 60 * 1000).toISOString(), // Use 24h for stats
+              aggregateMinutes: Number(row.config.timeFrame!) * 2 * 60 * 1000,
+              operation: StatisticsOperation.Mean
+            }
+          }
+        })
+      ])
+
+      const minResult =
+        results[0].status === 'fulfilled' ? results[0].value.data?.statisticsQuerySensorsWithFields[0]?.data : null
+      const maxResult =
+        results[1].status === 'fulfilled' ? results[1].value.data?.statisticsQuerySensorsWithFields[0]?.data : null
+      const meanResult =
+        results[2].status === 'fulfilled' ? results[2].value.data?.statisticsQuerySensorsWithFields[0]?.data : null
+
+      if (!minResult || !maxResult || !meanResult) {
+        toast.error('Not enough data to suggest ranges', { id: 'range-generator' })
+        return
+      }
+
+      const minValue = JSON.parse(minResult)[row.parameter.denotation]
+      const maxValue = JSON.parse(maxResult)[row.parameter.denotation]
+      const meanValue = JSON.parse(meanResult)[row.parameter.denotation]
+
+      if (minValue === undefined || maxValue === undefined || meanValue === undefined) {
+        toast.error('Could not extract parameter values', { id: 'range-generator' })
+        return
+      }
+
+      const totalRange = maxValue - minValue
+      const buffer = totalRange * 0.1
+
+      const round = (value: number) => {
+        const precision = totalRange > 100 ? 0 : totalRange > 10 ? 1 : 2
+        return Number(value.toFixed(precision))
+      }
+
+      const roundedMin = round(Math.max(0, minValue - buffer))
+
+      // get the size of a single range, we want 3 ranges
+      const rangeSize = round((maxValue + buffer - roundedMin) / 3)
+
+      const ranges = [
+        { min: roundedMin, max: round(roundedMin + rangeSize) },
+        { min: round(roundedMin + rangeSize), max: round(roundedMin + 2 * rangeSize) },
+        { min: round(roundedMin + 2 * rangeSize), max: round(maxValue + buffer) }
+      ]
+
+      // Target somewhere between the max and the mean
+      const target = round(meanValue + (maxValue - meanValue) * 0.7)
+      const markers = [target]
+
+      form.setValue(`rows.${rowIndex}.config.ranges`, ranges)
+      form.setValue(`rows.${rowIndex}.config.markers`, markers)
+      form.setValue(`rows.${rowIndex}.config.minValue`, roundedMin)
+      form.setValue(`rows.${rowIndex}.config.maxValue`, Number(parseFloat(maxValue + buffer).toFixed(2)))
+
+      // Set the inputs, so that the user can change them easily
+      setRangeInput(ranges.map((r) => `${r.min}:${r.max}`).join(','))
+      setMarkerInput(markers.join(','))
+
+      handleDataChange(
+        rowIndex,
+        ranges.flatMap((range) => [range.min, range.max]),
+        markers
+      )
+
+      toast.success('Ranges generated! Feel free to adjust them to your liking.', { id: 'range-generator' })
+    } catch (error) {
+      console.error('Error generating ranges:', error)
+      toast.error('Failed to generate ranges', { id: 'range-generator' })
+    }
+  }
+
   const fetchRowData = async (rowIndex: number) => {
     const row = form.getValues(`rows.${rowIndex}`)
 
@@ -103,7 +243,6 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
         const snapshot = getParameterSnapshot(instance.id!, row.parameter.id!)
 
         if (snapshot?.number !== undefined) {
-          console.log('Found snapshot data:', snapshot)
           setData((prev) => {
             const newData = [...prev]
             newData[rowIndex] = {
@@ -180,6 +319,13 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
       row?.config?.function &&
       (row.config.function !== 'last' ? row.config.timeFrame : true)
 
+    if (valid && !config?.rows[rowIndex].instance.id) {
+      setSmartRangeDialog({
+        open: true,
+        rowIndex
+      })
+    }
+
     if (valid) {
       fetchRowData(rowIndex)
     }
@@ -212,6 +358,23 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
           })
         }
       })
+
+      setMarkerInput(
+        config.rows
+          .map((row) => row.config.markers)
+          .flat()
+          .join(', ')
+      )
+
+      setRangeInput(
+        config.rows
+          .map((row) => row.config.ranges)
+          .flat()
+          .map((range) => (range ? `${range.min}:${range.max}` : ''))
+          .filter(Boolean)
+          .join(', ')
+      )
+
       config.rows.forEach((_, index) => {
         fetchRowData(index)
       })
@@ -226,13 +389,19 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
     return parameters.filter((param) => param.type === SdParameterType.Number)
   }
 
-  const handleDataChange = (index: number, ranges?: number[], markers?: number[], id?: string): void => {
+  const handleDataChange = (
+    index: number,
+    ranges?: number[],
+    markers?: number[],
+    measures?: number[],
+    id?: string
+  ): void => {
     const newData = [...data]
     if (!newData[index]) return
     if (ranges) newData[index].ranges = ranges
     if (markers) newData[index].markers = markers
+    if (measures) newData[index].measures = measures
     if (id) newData[index].id = id.trim()
-    else newData[index].id = ''
     setData(newData)
   }
 
@@ -240,7 +409,6 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
     if (!parameterNameMock.current) return
     parameterNameMock.current.innerText = name
     const width = parameterNameMock.current.offsetWidth + 5
-    form.setValue(`rows.${index}.config.titleOffsetX`, -width / 2)
     form.setValue(`rows.${index}.config.margin.left`, width + 5)
   }
 
@@ -267,12 +435,22 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
       <Card className="h-fit w-full">
         {form.watch('cardTitle') ? <h3 className="ml-2 text-lg font-semibold">{form.watch('cardTitle')}</h3> : null}
         {fields.map((_, index) => {
-          const row = form.watch(`rows.${index}`)
+          const row = form.getValues(`rows.${index}`)
           if (!data[index]) return null
+
+          // key, the chart does not re-render when the config changes
+          const renderKey = JSON.stringify({
+            margin: row.config.margin,
+            measureSize: row.config.measureSize,
+            titleOffsetX: row.config.titleOffsetX,
+            reverse: row.config.reverse,
+            colorScheme: row.config.colorScheme
+          })
+
           return (
-            <div className="relative h-[75px] w-full" key={index}>
+            <div className="relative h-[70px] w-full" key={index}>
               <div className="absolute inset-0">
-                <ResponsiveBulletChart data={data[index]} rowConfig={row} />
+                <ResponsiveBulletChart key={`${index}-${renderKey}`} data={data[index]} rowConfig={row} />
               </div>
             </div>
           )
@@ -354,7 +532,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                   onValueChange={(value) => {
                                     form.setValue(`rows.${index}.config.name`, value?.denotation!)
                                     automaticOffset(index, value?.denotation!)
-                                    handleDataChange(index, undefined, undefined, value?.denotation)
+                                    handleDataChange(index, undefined, undefined, undefined, value?.denotation)
                                     field.onChange(value)
                                     checkRowAndFetch(index)
                                   }}
@@ -384,7 +562,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                   onChange={(e) => {
                                     field.onChange(e.target.value)
                                     automaticOffset(index, e.target.value)
-                                    handleDataChange(index, undefined, undefined, e.target.value)
+                                    handleDataChange(index, undefined, undefined, undefined, e.target.value)
                                   }}
                                 />
                               </FormControl>
@@ -436,6 +614,26 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                               )}
                             />
                           )}
+                        <FormField
+                          control={form.control}
+                          name={`rows.${index}.config.decimalPlaces`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Decimal Places</FormLabel>
+                              <FormControl>
+                                <Input
+                                  value={field.value}
+                                  type="number"
+                                  min={0}
+                                  onChange={(e) => {
+                                    field.onChange(e.target.value)
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
                       <Accordion type="single" collapsible className="mt-4 w-full">
                         <AccordionItem value="ranges">
@@ -560,6 +758,60 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                           <AccordionContent className="grid w-full grid-cols-1 gap-4 p-1 sm:grid-cols-2">
                             <FormField
                               control={form.control}
+                              name={`rows.${index}.config.colorScheme`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Color Scheme</FormLabel>
+                                  <FormControl>
+                                    <Select onValueChange={(value) => field.onChange(value)} value={field.value || ''}>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Choose a color scheme" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="greys">Black & White</SelectItem>
+                                        <SelectItem value="nivo">Colorful</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`rows.${index}.config.reverse`}
+                              render={({ field }) => (
+                                <FormItem className="flex h-full flex-col">
+                                  <FormLabel className="flex items-center gap-2">
+                                    <p>Reverse Chart</p>
+                                    <ResponsiveTooltip
+                                      content={
+                                        <div>
+                                          <p>Reverses the chart direction.</p>
+                                          <p>
+                                            Useful when dealing with <b>negative</b> values.
+                                          </p>
+                                        </div>
+                                      }
+                                    >
+                                      <InfoIcon size={16} />
+                                    </ResponsiveTooltip>
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Label className="my-auto flex h-full items-center">
+                                      <Checkbox
+                                        onCheckedChange={(checked) => field.onChange(checked)}
+                                        checked={field.value}
+                                      />
+                                      <Label className="ml-2">Reverse chart direction</Label>
+                                    </Label>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
                               name={`rows.${index}.config.measureSize`}
                               render={({ field }) => (
                                 <FormItem>
@@ -588,7 +840,15 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                 <FormItem>
                                   <FormLabel>Title Offset X</FormLabel>
                                   <FormControl>
-                                    <Input type="number" placeholder="Enter title offset X" {...field} />
+                                    <Input
+                                      type="number"
+                                      placeholder="Enter title offset X"
+                                      value={field.value}
+                                      onChange={(e) => {
+                                        console.log(form.getValues(`rows.${index}`))
+                                        field.onChange(Number(e.target.value))
+                                      }}
+                                    />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -605,7 +865,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                       Auto
                                       <Checkbox
                                         onCheckedChange={(checked) => {
-                                          field.onChange(checked ? 'auto' : '')
+                                          field.onChange(checked ? 'auto' : undefined)
                                         }}
                                         checked={field.value === 'auto'}
                                       />
@@ -617,7 +877,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                       placeholder="Enter min value"
                                       onChange={(e) => field.onChange(Number(e.target.value))}
                                       disabled={field.value === 'auto'}
-                                      value={field.value === 'auto' ? '' : field.value}
+                                      value={field.value === 'auto' ? undefined : field.value}
                                     />
                                   </FormControl>
                                   <FormMessage />
@@ -635,7 +895,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                       Auto
                                       <Checkbox
                                         onCheckedChange={(checked) => {
-                                          field.onChange(checked ? 'auto' : '')
+                                          field.onChange(checked ? 'auto' : undefined)
                                         }}
                                         checked={field.value === 'auto'}
                                       />
@@ -647,35 +907,13 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                       placeholder="Enter max value"
                                       onChange={(e) => field.onChange(Number(e.target.value))}
                                       disabled={field.value === 'auto'}
-                                      value={field.value === 'auto' ? '' : field.value}
+                                      value={field.value === 'auto' ? undefined : field.value}
                                     />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
                               )}
                             />
-                            <FormField
-                              control={form.control}
-                              name={`rows.${index}.config.colorScheme`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Color Scheme</FormLabel>
-                                  <FormControl>
-                                    <Select onValueChange={(value) => field.onChange(value)} value={field.value || ''}>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Choose a color scheme" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="greys">Black & White</SelectItem>
-                                        <SelectItem value="nivo">Colorful</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            {/* Margin adjusters */}
                             <FormField
                               control={form.control}
                               name={`rows.${index}.config.margin.top`}
@@ -764,6 +1002,8 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                         config: {
                           name: '',
                           margin: { top: 10, right: 10, bottom: 30, left: 10 },
+                          reverse: false,
+                          decimalPlaces: 2,
                           function: '',
                           minValue: 'auto',
                           maxValue: 'auto',
@@ -786,6 +1026,31 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
           </form>
         </Form>
       </Card>
+      <Dialog open={smartRangeDialog.open} onOpenChange={(open) => setSmartRangeDialog((prev) => ({ ...prev, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generate Ranges and Target</DialogTitle>
+            <DialogDescription>
+              Would you like to automatically generate ranges and targets based on historical data?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSmartRangeDialog({ open: false, rowIndex: null })}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (smartRangeDialog.rowIndex !== null) {
+                  generateRangesAndTarget(smartRangeDialog.rowIndex)
+                }
+                setSmartRangeDialog({ open: false, rowIndex: null })
+              }}
+            >
+              Generate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
