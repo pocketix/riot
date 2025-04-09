@@ -1,13 +1,14 @@
-import { memo, MouseEvent, useState, useRef, useMemo, useEffect } from 'react'
-import { ResponsiveBullet, BulletSvgProps, Datum } from '@nivo/bullet'
+import { MouseEvent, useState, useRef, useMemo, useEffect, memo } from 'react'
+import { ResponsiveBullet, BulletSvgProps, Datum, BulletMarkersItemProps } from '@nivo/bullet'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '@/features/dashboard/components/cards/components/ChartThemes'
 import { useInstances } from '@/context/InstancesContext'
 import { BulletChartToolTip } from '../cards/tooltips/BulletChartToolTip'
 import { BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
-import { getColorBlindScheme } from './color-schemes/color-impaired'
+import { getColorBlindSchemeBullet } from './color-schemes/color-impaired'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { useLongPress } from '@uidotdev/usehooks'
+import { isEqual } from 'lodash'
 
 export interface ResponsiveBulletProps {
   data: Datum
@@ -17,6 +18,29 @@ export interface ResponsiveBulletProps {
 }
 
 const LONG_PRESS_THRESHOLD = 200
+
+const bulletMarker = (props: BulletMarkersItemProps) => {
+  const { size, x, y, color } = props
+
+  const lineHeight = size
+  const triangleSize = 10
+
+  const fill = color
+  const stroke = color
+  const lineWidth = 2.5
+
+  return (
+    <g transform={`translate(${x}, ${-5})`}>
+      <line x1={0} y1={0} x2={0} y2={lineHeight + y} stroke={fill} strokeWidth={lineWidth} />
+      <polygon
+        points={`${-triangleSize / 2},0 ${triangleSize / 2},0 0,${triangleSize}`}
+        fill={stroke}
+        stroke={stroke}
+        strokeWidth={1}
+      />
+    </g>
+  )
+}
 
 const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: ResponsiveBulletProps) => {
   const { isDarkMode } = useDarkMode()
@@ -68,16 +92,19 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: 
 
   // default config
   const {
-    margin = { top: 10, right: 10, bottom: 30, left: 10 },
+    margin = { top: 0, right: 10, bottom: 30, left: 10 },
     spacing = 46,
-    titleAlign = 'end',
+    titleAlign = 'end', // not configurable
+    reverse = false,
+    titleOffsetX = -5,
     measureSize = 0.2,
     minValue = 'auto',
     maxValue = 'auto',
     rangeColors = rowConfig?.config?.colorScheme === 'greys'
       ? ['#1a1a1a', '#333333', '#4d4d4d', '#666666', '#808080', '#999999', '#b3b3b3']
-      : getColorBlindScheme(),
-    measureColors = 'seq:red_purple'
+      : getColorBlindSchemeBullet(),
+    measureColors = rowConfig?.config?.colorScheme === 'greys' ? ['#f700ff'] : ['black'],
+    markerColors = rowConfig?.config?.colorScheme === 'greys' ? ['#f700ff'] : isDarkMode ? ['white'] : ['black']
   } = (rowConfig?.config || {}) as Partial<BulletSvgProps>
 
   const handleClick = (data: any, event: React.MouseEvent) => {
@@ -102,6 +129,11 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: 
     }
   }, [data, rowConfig, getInstanceById])
 
+  const minDataValue = useMemo(() => {
+    if (data.ranges.length === 0) return 0
+    return Math.min(...data.ranges) * 1.2
+  }, [data])
+
   return (
     <>
       <div
@@ -113,17 +145,20 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: 
       >
         <ResponsiveBullet
           data={[data]}
-          margin={margin}
+          margin={{ ...margin, top: margin.top! + 5 }}
           spacing={spacing}
           titleAlign={titleAlign}
-          titleOffsetX={-5}
+          reverse={reverse}
+          titleOffsetX={titleOffsetX}
+          markerComponent={bulletMarker}
           measureSize={measureSize}
-          minValue={minValue}
+          minValue={minValue === 'auto' ? minDataValue : minValue}
           maxValue={maxValue}
           rangeColors={rangeColors}
           measureColors={measureColors}
           theme={isDarkMode ? darkTheme : lightTheme}
           animate={true}
+          markerColors={markerColors}
           onRangeClick={handleClick}
           onMeasureClick={handleClick}
           onMarkerClick={handleClick}
@@ -147,4 +182,15 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: 
 
 ResponsiveBulletBase.displayName = 'ResponsiveBulletBase'
 
-export const ResponsiveBulletChart = memo(ResponsiveBulletBase)
+// export const ResponsiveBulletChart = ResponsiveBulletBase
+export const ResponsiveBulletChart = memo(ResponsiveBulletBase, (prevProps, nextProps) => {
+  const result =
+    isEqual(prevProps.data, nextProps.data) &&
+    isEqual(prevProps.rowConfig, nextProps.rowConfig) &&
+    prevProps.lastUpdated?.getTime() === nextProps.lastUpdated?.getTime()
+
+  // TODO: Remove
+  // console.log('Comparing props:', prevProps, nextProps, result)
+
+  return result
+})

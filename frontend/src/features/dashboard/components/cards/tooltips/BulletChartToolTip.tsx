@@ -13,6 +13,7 @@ interface BulletChartToolTipProps {
   timeFrame?: string
   chartRect?: DOMRect | null
   lastUpdated?: Date
+  decimalPlaces?: number
   visible: boolean
 }
 
@@ -25,11 +26,12 @@ export const BulletChartToolTip = ({
   timeFrame,
   chartRect,
   lastUpdated,
+  decimalPlaces,
   visible
 }: BulletChartToolTipProps) => {
   const { isDarkMode } = useDarkMode()
   const formattedTargetValues = targetValues?.map((value) => value.toFixed(2))
-  const targets = formattedTargetValues?.join(' - ')
+  const targets = formattedTargetValues?.join(', ')
   const [position, setPosition] = useState<{ top: string; left: string }>({ top: '0', left: '0' })
   const [placement, setPlacement] = useState<'top' | 'bottom'>('top')
 
@@ -79,10 +81,11 @@ export const BulletChartToolTip = ({
               <span className="font-bold">{parameterName?.toLocaleUpperCase()}</span>
             </div>
             <div>
-              Current Value: <span className="font-bold">{currentValue}</span>
+              Current Value:{' '}
+              <span className="font-bold">{Number(parseFloat(currentValue!).toFixed(decimalPlaces))}</span>{' '}
             </div>
             <div>
-              Target Value: <span className="font-bold">{targets}</span>
+              Target Value{formattedTargetValues?.length! > 1 ? 's' : ''}: <span className="font-bold">{targets}</span>
             </div>
             {lastUpdated && (
               <div>
