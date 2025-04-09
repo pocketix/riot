@@ -243,56 +243,58 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
           <Command>
             <CommandInput placeholder="Search..." onKeyDown={handleInputKeyDown} />
             <CommandList>
-              <ScrollArea className="h-fit max-h-48">
-                <CommandEmpty>No results found.</CommandEmpty>
-                <CommandGroup>
-                  <CommandItem key="all" onSelect={toggleAll} className="cursor-pointer">
-                    <div
-                      className={cn(
-                        'mr-2 flex h-4 w-4 items-center justify-center rounded-sm',
-                        tempValue.length === options.length
-                          ? 'bg-primary text-primary-foreground'
-                          : 'opacity-50 [&_svg]:invisible'
-                      )}
-                    >
-                      <CheckIcon className="h-4 w-4" />
-                    </div>
-                    <span>(Select All)</span>
-                  </CommandItem>
-                  {options.map((option) => {
-                    const isSelected = selectedIds.includes(option.value)
-                    return (
-                      <CommandItem
-                        key={option.value}
-                        onSelect={() => toggleOption(option.value)}
-                        className="cursor-pointer"
+              <ScrollArea>
+                <div className="h-fit max-h-48">
+                  <CommandEmpty>No results found.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem key="all" onSelect={toggleAll} className="cursor-pointer">
+                      <div
+                        className={cn(
+                          'mr-2 flex h-4 w-4 items-center justify-center rounded-sm',
+                          tempValue.length === options.length
+                            ? 'bg-primary text-primary-foreground'
+                            : 'opacity-50 [&_svg]:invisible'
+                        )}
                       >
-                        <div
-                          className={cn(
-                            'mr-2 flex h-4 w-4 items-center justify-center rounded-sm',
-                            isSelected ? 'text-primary' : 'opacity-50 [&_svg]:invisible'
-                          )}
+                        <CheckIcon className="h-4 w-4" />
+                      </div>
+                      <span>(Select All)</span>
+                    </CommandItem>
+                    {options.map((option) => {
+                      const isSelected = selectedIds.includes(option.value)
+                      return (
+                        <CommandItem
+                          key={option.value}
+                          onSelect={() => toggleOption(option.value)}
+                          className="cursor-pointer"
                         >
-                          <CheckIcon className="h-4 w-4" />
-                        </div>
-                        {option.icon && <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />}
-                        <span>{option.label}</span>
-                      </CommandItem>
-                    )
-                  })}
-                </CommandGroup>
-                <CommandSeparator />
-                <CommandGroup>
-                  <div className="flex items-center justify-between">
-                    {tempValue.length > 0 && (
-                      <>
-                        <CommandItem onSelect={handleClear} className="flex-1 cursor-pointer justify-center">
-                          Clear
+                          <div
+                            className={cn(
+                              'mr-2 flex h-4 w-4 items-center justify-center rounded-sm',
+                              isSelected ? 'text-primary' : 'opacity-50 [&_svg]:invisible'
+                            )}
+                          >
+                            <CheckIcon className="h-4 w-4" />
+                          </div>
+                          {option.icon && <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />}
+                          <span>{option.label}</span>
                         </CommandItem>
-                      </>
-                    )}
-                  </div>
-                </CommandGroup>
+                      )
+                    })}
+                  </CommandGroup>
+                  <CommandSeparator />
+                  <CommandGroup>
+                    <div className="flex items-center justify-between">
+                      {tempValue.length > 0 && (
+                        <>
+                          <CommandItem onSelect={handleClear} className="flex-1 cursor-pointer justify-center">
+                            Clear
+                          </CommandItem>
+                        </>
+                      )}
+                    </div>
+                  </CommandGroup>
+                </div>
               </ScrollArea>
             </CommandList>
           </Command>

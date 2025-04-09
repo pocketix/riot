@@ -54,14 +54,17 @@ export function ParameterSnapshotProvider({ children }: ParameterSnapshotProvide
   )
 
   const getParameterSnapshot = useCallback((instanceId: number, parameterId: number): ParameterSnapshot | null => {
+    initializeInstance(instanceId)
     return parameterSnapshotStore.getSnapshot(instanceId, parameterId)
   }, [])
 
   const getInstanceSnapshots = useCallback((instanceId: number): Record<number, ParameterSnapshot> => {
+    initializeInstance(instanceId)
     return parameterSnapshotStore.getInstanceSnapshots(instanceId)
   }, [])
 
   const getLastUpdateForInstance = useCallback((instanceId: number): string | null => {
+    initializeInstance(instanceId)
     return instanceUpdatesStore.getTimestamp(instanceId)
   }, [])
 
