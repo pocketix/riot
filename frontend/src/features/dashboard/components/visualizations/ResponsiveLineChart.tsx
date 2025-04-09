@@ -1,4 +1,4 @@
-import { forwardRef, useRef, CSSProperties, memo, RefObject } from 'react'
+import { forwardRef, useRef, CSSProperties, memo, RefObject, useState, useEffect } from 'react'
 import { CustomLayerProps, LineSvgProps, PointTooltipProps, ResponsiveLine, Serie } from '@nivo/line'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { timeTicksLayer, getMaxValue } from '@/features/dashboard/components/utils/charts/tickUtils'
@@ -18,10 +18,11 @@ export interface ResponsiveLineChartProps {
   onPointClick?: (point: any, event: React.MouseEvent) => void
   detailsOnClick?: boolean
   height?: number
+  useSparklineMode?: boolean
 }
 
 const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartProps>(
-  ({ className, data, config = {}, height, detailsOnClick = true }, forwardedRef) => {
+  ({ className, data, config = {}, height, detailsOnClick = true, useSparklineMode }, forwardedRef) => {
     const { getInstanceById, getParameterByIds } = useInstances()
     const { isDarkMode } = useDarkMode()
     const localContainerRef = useRef<HTMLDivElement>(null)
@@ -52,6 +53,32 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
     const containerRef: RefObject<HTMLDivElement> =
       forwardedRef && 'current' in forwardedRef ? (forwardedRef as RefObject<HTMLDivElement>) : localContainerRef
     const isChartCardConfig = 'margin' in config && 'yScale' in config && 'toolTip' in config
+
+    const [tickValues, setTickValues] = useState(6)
+
+    // not really necessary, as the amount of ticks if fine upon initial render
+    // this handles window/chart resizing
+    useEffect(() => {
+      if (!containerRef.current) return
+
+      const updateTickValues = () => {
+        if (containerRef.current) {
+          setTickValues(Math.floor(containerRef.current.clientHeight / 30))
+        }
+      }
+
+      updateTickValues()
+
+      const resizeObserver = new ResizeObserver(updateTickValues)
+      resizeObserver.observe(containerRef.current)
+
+      return () => {
+        if (containerRef.current) {
+          resizeObserver.unobserve(containerRef.current)
+        }
+        resizeObserver.disconnect()
+      }
+    }, [containerRef])
 
     // Default config, if no config is provided
     const {
@@ -116,6 +143,30 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
             yName: 'Value'
           }
         }
+
+    if (useSparklineMode) {
+      return (
+        <div className={className || ''} style={{ height: '100%', width: '100%' }} ref={containerRef}>
+          <ResponsiveLine
+            data={data}
+            margin={{ top: 2, right: 2, bottom: 3, left: 2 }}
+            xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ' }}
+            xFormat="time:%Y-%m-%d %H:%M:%S"
+            yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: true, reverse: false }}
+            animate={false}
+            pointSize={0}
+            axisBottom={null}
+            axisLeft={null}
+            curve="cardinal"
+            lineWidth={2}
+            enableGridX={false}
+            enableGridY={false}
+            useMesh={false}
+            theme={isDarkMode ? darkTheme : lightTheme}
+          />
+        </div>
+      )
+    }
 
     const handlePointClick = (point: any, event: React.MouseEvent) => {
       // override
@@ -211,7 +262,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
           ]}
           axisLeft={{
             ...mergedConfig.axisLeft,
-            tickValues: containerRef.current ? Math.floor(containerRef?.current.clientHeight / 30) : 6
+            tickValues: tickValues
           }}
           layers={[
             (props: CustomLayerProps) =>
