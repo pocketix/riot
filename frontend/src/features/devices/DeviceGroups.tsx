@@ -1,15 +1,24 @@
 import styled from 'styled-components'
 import Heading from '@/ui/Heading'
-import TabSwitcher from '@/ui/TabSwitcher'
-import { useLocation } from 'react-router-dom'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useTranslation } from 'react-i18next'
 import { GroupPageController } from '@/controllers/GroupPageController'
+import Tabs from '@/ui/Tabs'
 
 const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+`
+
+const TopBar = styled.div`
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 1300px;
+  gap: 1rem;
 `
 
 const Container = styled.div`
@@ -26,34 +35,25 @@ const Container = styled.div`
   }
 `
 
-const TabsContainer = styled.div`
-  @media (min-width: ${breakpoints.sm}) {
-    align-self: flex-end;
-  }
-`
-
 export default function DeviceGroups() {
-  const location = useLocation()
   const { t } = useTranslation()
+  const isMobile = window.innerWidth < Number(breakpoints.sm.replace('px', ''))
 
   return (
     <PageWrapper>
       <Container>
-        <div className="flex w-full justify-between">
-          <Heading>Device Groups</Heading>
-          <TabsContainer>
-            <TabSwitcher
-              activeTab={location.pathname.includes('/devices') ? 'devices' : 'groups'}
-              tabs={[
-                { name: t('devicesPage.groups'), path: '/groups' },
-                { name: t('devicesPage.instances'), path: '/devices' }
-              ]}
-            />
-          </TabsContainer>
-        </div>
+        <TopBar>
+          {!isMobile && <Heading>Devices Groups</Heading>}
+          <Tabs
+            tabs={[
+              { name: t('devicesPage.groups'), path: '/groups' },
+              { name: t('devicesPage.instances'), path: '/devices' }
+            ]}
+          />
+        </TopBar>
 
         {/* Content goes here */}
-        <div className="mt-4 text-lg text-[--color-grey-500]">
+        <div className="text-lg text-[--color-grey-500]">
           <GroupPageController />
         </div>
       </Container>

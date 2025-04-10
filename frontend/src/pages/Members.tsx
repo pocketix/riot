@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
-import { X } from 'lucide-react'
+import { SearchIcon, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import Heading from '@/ui/Heading'
 import { breakpoints } from '@/styles/Breakpoints'
@@ -140,12 +140,13 @@ export default function Members() {
       <Container>
         <TopBar>
           <Heading className="">{t('membersPage.title')}</Heading>
-          <div className="relative w-full">
+          <div className="relative w-full max-w-[32rem]">
+            <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('membersPage.searchPlaceholder')}
-              className="w-full bg-[--color-grey-200] pr-10"
+              className="w-full bg-[--color-grey-200] pl-9 pr-10"
             />
             {search && (
               <ClearButton onClick={() => setSearch('')} type="button">
