@@ -117,7 +117,7 @@ export default function KPIDefinitions() {
       <Container>
         <div className="flex items-center justify-between">
           <Heading>{t('settings')}</Heading>
-          <Button variant={'goBack'} onClick={() => navigate('/settings')}>
+          <Button size={'sm'} variant={'goBack'} onClick={() => navigate('/settings')}>
             &larr; Back to Settings
           </Button>
         </div>

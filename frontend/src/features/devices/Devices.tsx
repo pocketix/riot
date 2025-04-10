@@ -156,7 +156,7 @@ export default function Devices() {
     <PageWrapper>
       <Container>
         <TopBar>
-          {!isMobile && <Heading>Devices Instances</Heading>}
+          {!isMobile && <Heading>Device Instances</Heading>}
           <Tabs
             tabs={[
               { name: t('devicesPage.groups'), path: '/groups' },
