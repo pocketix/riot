@@ -32,7 +32,6 @@ const Container = styled.div`
   gap: 1rem;
   padding: 1.5rem;
   color: hsl(var(--color-white));
-  overflow-y: auto;
   width: 100%;
   height: 100%;
 
@@ -156,8 +155,6 @@ export default function Devices() {
     }
   }
 
-  if (error) return <p>Error: {error.message}</p>
-
   return (
     <PageWrapper>
       <Container>
@@ -174,26 +171,34 @@ export default function Devices() {
           </TabsContainer>
         </TopBar>
 
-        {loading ? (
-          <Spinner />
-        ) : (
-          <>
-            <Section>
-              <SearchWrapper>
-                <Input
-                  placeholder={t('devicesPage.searchPlaceholder')}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-[--color-grey-200] pr-10"
-                />
-                {search && (
-                  <ClearButton onClick={() => setSearch('')} type="button">
-                    <X className="h-5 w-5 text-xl text-[--color-white]" />
-                  </ClearButton>
-                )}
-              </SearchWrapper>
-            </Section>
+        <Section>
+          <SearchWrapper>
+            <Input
+              placeholder={t('devicesPage.searchPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-[--color-grey-200] pr-10"
+            />
+            {search && (
+              <ClearButton onClick={() => setSearch('')} type="button">
+                <X className="h-5 w-5 text-xl text-[--color-white]" />
+              </ClearButton>
+            )}
+          </SearchWrapper>
+        </Section>
 
+        {loading && <Spinner />}
+
+        {error && (
+          <Section>
+            <EmptyState>
+              <p className="text-center text-lg font-semibold">Error: {error.message}</p>
+            </EmptyState>
+          </Section>
+        )}
+
+        {!loading && !error && (
+          <>
             <Section>
               <h2 className="text-xl font-bold">
                 {t('devicesPage.confirmedInstances')}{' '}

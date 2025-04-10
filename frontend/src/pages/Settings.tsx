@@ -19,9 +19,7 @@ const StyledPage = styled.div`
   display: flex;
   flex-direction: column;
   color: hsl(var(--color-grey-900));
-  overflow: hidden;
   gap: 1.5rem;
-  overflow-y: auto;
   width: 100%;
   height: 100%;
   align-self: center;

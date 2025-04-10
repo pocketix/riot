@@ -107,11 +107,10 @@ export default function KPIDefinitions() {
     }
   }
 
-  if (loading) return <Spinner />
-  if (!data?.kpiDefinitions?.length) return <p>{t('kpiDefinitionsPage.noKpiFound')}</p>
-  const filteredKpiDefinitions = data?.kpiDefinitions?.filter((kpiDefinition) =>
-    `${kpiDefinition.userIdentifier ?? ''}`.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredKpiDefinitions =
+    data?.kpiDefinitions?.filter((kpiDefinition) =>
+      `${kpiDefinition.userIdentifier ?? ''}`.toLowerCase().includes(searchQuery.toLowerCase())
+    ) ?? []
 
   return (
     <PageWrapper>
@@ -122,13 +121,17 @@ export default function KPIDefinitions() {
             &larr; Back to Settings
           </Button>
         </div>
+
         <Header>
           <Heading as="h2">
             {t('kpiDefinitionsPage.manageKpiDefinitions')}{' '}
-            <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
-              ({t('kpiDefinitionsPage.definitions', { count: data?.kpiDefinitions?.length || 0 })}).
-            </span>
+            {!loading && data?.kpiDefinitions && (
+              <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
+                ({t('kpiDefinitionsPage.definitions', { count: data.kpiDefinitions.length })}).
+              </span>
+            )}
           </Heading>
+
           <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
             <div className="relative w-full p-1 sm:p-0">
               <Input
@@ -147,15 +150,19 @@ export default function KPIDefinitions() {
           </div>
         </Header>
 
-        <Grid>
-          {filteredKpiDefinitions.length > 0 ? (
-            filteredKpiDefinitions.map((kpiDefinition) => (
-              <KPIDefinitionCard key={kpiDefinition.id} kpiDefinition={kpiDefinition} onDelete={handleDelete} />
-            ))
-          ) : (
-            <p>{t('kpiDefinitionsPage.noKpiFound')}</p>
-          )}
-        </Grid>
+        {loading ? (
+          <Spinner />
+        ) : (
+          <Grid>
+            {filteredKpiDefinitions.length > 0 ? (
+              filteredKpiDefinitions.map((kpiDefinition) => (
+                <KPIDefinitionCard key={kpiDefinition.id} kpiDefinition={kpiDefinition} onDelete={handleDelete} />
+              ))
+            ) : (
+              <p>{t('kpiDefinitionsPage.noKpiFound')}</p>
+            )}
+          </Grid>
+        )}
       </Container>
     </PageWrapper>
   )

@@ -69,7 +69,7 @@
     "confirmedInstances": "Confirmed Instances",
     "unconfirmedInstances": "Unconfirmed Instances",
     "confirmSelected": "Confirm Selected ({{count}})",
-    "noConfirmed": "No confirmed devices available.",
+    "noConfirmed": "No confirmed devices available...",
     "noUnconfirmed": "No unconfirmed devices..."
   },
   "membersPage": {

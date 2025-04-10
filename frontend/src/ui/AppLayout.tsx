@@ -44,10 +44,12 @@ const Main = styled.main`
   flex-grow: 1;
   overflow-y: auto;
   grid-area: main;
+  -webkit-overflow-scrolling: touch;
 
   @media (min-width: ${breakpoints.md}) {
     align-items: flex-start;
     justify-content: flex-start;
+    padding-bottom: 0;
   }
 `
 

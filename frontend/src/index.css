@@ -103,7 +103,21 @@
     margin: 0;
 
     /* Creating animations for dark mode */
-    transition: background-color 0.3s, border 0.3s;
+    transition:
+      background-color 0.3s,
+      border 0.3s;
+  }
+
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  #root {
+    height: 100%;
+    overflow: auto;
   }
 }
 

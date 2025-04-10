@@ -11,14 +11,15 @@ import { breakpoints } from '@/styles/Breakpoints'
 import { useMediaQuery } from 'react-responsive'
 
 const NavbarContainer = styled.div`
+  position: fixed;
   display: flex;
   justify-content: space-around;
   align-items: center;
   padding: 0.6rem 0.3rem;
   border-top: 2px solid rgba(0, 129, 241, 0.3);
-  position: fixed;
   bottom: 0;
   width: 100%;
+  background-color: var(--color-grey-50);
 
   @media (min-width: ${breakpoints.md}) {
     flex-direction: column;
@@ -27,6 +28,7 @@ const NavbarContainer = styled.div`
     position: relative;
     border-top: none;
     gap: 0.6rem;
+    background-color: transparent;
   }
 `
 
@@ -91,7 +93,6 @@ const NavItem = styled(NavLink)`
 const StyledNavbar = styled.div`
   display: flex;
   flex-direction: column;
-  background-color: var(--secondary);
 
   @media (min-width: ${breakpoints.md}) {
     border-right: 2px solid rgba(0, 129, 241, 0.3);

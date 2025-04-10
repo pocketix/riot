@@ -27,7 +27,6 @@ const Container = styled.div`
   flex-direction: column;
   gap: 1.5rem;
   padding: 1.5rem;
-  overflow-y: auto;
 
   @media (min-width: ${breakpoints.sm}) {
     max-width: 1300px;
@@ -76,12 +75,10 @@ export default function DeviceTypesSettings() {
   const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
 
-  if (loading) return <Spinner />
-  if (!data?.sdTypes?.length) return <p>No device types found.</p>
-
-  const filteredDeviceTypes = data.sdTypes.filter((type) =>
-    `${type.label ?? ''} ${type.denotation ?? ''}`.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredDeviceTypes =
+    data?.sdTypes?.filter((type) =>
+      `${type.label ?? ''} ${type.denotation ?? ''}`.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || []
 
   return (
     <PageWrapper>
@@ -92,14 +89,18 @@ export default function DeviceTypesSettings() {
             &larr; Back to Settings
           </Button>
         </div>
+
         <Header>
           <Heading as="h2">
             {t('manageDeviceTypes')}{' '}
-            <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
-              ({t('types', { count: filteredDeviceTypes.length })})
-            </span>
+            {!loading && (
+              <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
+                ({t('types', { count: filteredDeviceTypes.length })})
+              </span>
+            )}
             .
           </Heading>
+
           <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
             <div className="relative w-full p-1 sm:p-0">
               <Input
@@ -119,7 +120,9 @@ export default function DeviceTypesSettings() {
         </Header>
 
         <Grid>
-          {filteredDeviceTypes.length > 0 ? (
+          {loading ? (
+            <Spinner className="col-span-full" />
+          ) : filteredDeviceTypes.length > 0 ? (
             filteredDeviceTypes.map((deviceType) => <DeviceTypeCard key={deviceType.id} deviceType={deviceType} />)
           ) : (
             <p className="col-span-full text-center">{t('noDeviceTypesMatch')}</p>
