@@ -22,7 +22,6 @@ const Container = styled.div`
   flex-grow: 1;
   gap: 2rem;
   color: hsl(var(--color-white));
-  overflow-y: auto;
   width: 100%;
   padding: 1.5rem;
 

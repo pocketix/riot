@@ -5,7 +5,8 @@ import { breakpoints } from '@/styles/Breakpoints'
 
 const StyledAppLayout = styled.div`
   position: relative;
-  height: 100vh;
+  min-height: 100dvh; // 100vh causes problems on safari mobile
+  height: 100dvh;
   color: var(--color-grey-900);
   display: grid;
   grid-template-rows: 1fr auto;
