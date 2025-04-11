@@ -11,11 +11,10 @@ func ToDBModelEntityVPLProgram(vplProgram dllModel.VPLProgram) dbModel.VPLProgra
 		ID:   vplProgram.ID,
 		Name: vplProgram.Name,
 		Data: vplProgram.Data,
-		ReferencedValues: sharedUtils.Map(vplProgram.ReferencedValues, func(referencedValue dllModel.ReferencedValue) dbModel.VPLReferencedValuesEntity {
-			return dbModel.VPLReferencedValuesEntity{
-				ID:        referencedValue.ID,
-				DeviceID:  referencedValue.DeviceID,
-				Parameter: referencedValue.Parameter,
+		SDParameterSnapshots: sharedUtils.Map(vplProgram.SDParameterSnapshots, func(snapshot dllModel.SDParameterSnapshot) dbModel.SDParameterSnapshotEntity {
+			return dbModel.SDParameterSnapshotEntity{
+				SDInstanceID:  snapshot.SDInstance,
+				SDParameterID: snapshot.SDParameter,
 			}
 		}),
 	}

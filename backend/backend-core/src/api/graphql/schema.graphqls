@@ -355,14 +355,7 @@ type VPLProgram {
     id: ID!
     name: String!
     data: JSON!
-    referencedValues: [VPLReferencedValue!]!
-}
-
-type VPLReferencedValue {
-    id: ID!
-    programID: ID!
-    deviceId: String!
-    parameter: String!
+    sdParameterSnapshots: [SDParameterSnapshot!]!
 }
 
 # ----- Queries, mutations and subscriptions -----

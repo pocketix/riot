@@ -11,11 +11,10 @@ func ToGraphQLModelVPLProgram(vplProgram dllModel.VPLProgram) graphQLModel.VPLPr
 		ID:   vplProgram.ID,
 		Name: vplProgram.Name,
 		Data: vplProgram.Data,
-		ReferencedValues: sharedUtils.Map(vplProgram.ReferencedValues, func(referencedValue dllModel.ReferencedValue) graphQLModel.VPLReferencedValue {
-			return graphQLModel.VPLReferencedValue{
-				ID:        referencedValue.ID,
-				DeviceID:  referencedValue.DeviceID,
-				Parameter: referencedValue.Parameter,
+		SdParameterSnapshots: sharedUtils.Map(vplProgram.SDParameterSnapshots, func(snapshot dllModel.SDParameterSnapshot) graphQLModel.SDParameterSnapshot {
+			return graphQLModel.SDParameterSnapshot{
+				InstanceID:  snapshot.SDInstance,
+				ParameterID: snapshot.SDParameter,
 			}
 		}),
 	}

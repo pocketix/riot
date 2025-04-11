@@ -217,23 +217,12 @@ func (SDCommandInvocationEntity) TableName() string {
 }
 
 type VPLProgramsEntity struct {
-	ID               uint32                      `gorm:"column:id;primaryKey;not null"`
-	Name             string                      `gorm:"column:name;not null"`
-	Data             string                      `gorm:"column:data;type:jsonb;not null"` // Store JSON as a string
-	ReferencedValues []VPLReferencedValuesEntity `gorm:"foreignKey:ProgramID;constraint:OnDelete:CASCADE"`
+	ID                   uint32                      `gorm:"column:id;primaryKey;not null"`
+	Name                 string                      `gorm:"column:name;not null"`
+	Data                 string                      `gorm:"column:data;type:jsonb;not null"`
+	SDParameterSnapshots []SDParameterSnapshotEntity `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
 }
 
 func (VPLProgramsEntity) TableName() string {
 	return "vpl_programs"
-}
-
-type VPLReferencedValuesEntity struct {
-	ID        uint32 `gorm:"column:id;primaryKey;not null"`
-	ProgramID uint32 `gorm:"column:program_id;not null"` // Foreign key to VPLProgramsEntity
-	DeviceID  string `gorm:"column:device_id;not null"`
-	Parameter string `gorm:"column:parameter_name;not null"`
-}
-
-func (VPLReferencedValuesEntity) TableName() string {
-	return "vpl_referenced_values"
 }

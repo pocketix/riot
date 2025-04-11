@@ -380,17 +380,10 @@ type UserConfigInput struct {
 }
 
 type VPLProgram struct {
-	ID               uint32               `json:"id"`
-	Name             string               `json:"name"`
-	Data             string               `json:"data"`
-	ReferencedValues []VPLReferencedValue `json:"referencedValues"`
-}
-
-type VPLReferencedValue struct {
-	ID        uint32 `json:"id"`
-	ProgramID uint32 `json:"programID"`
-	DeviceID  string `json:"deviceId"`
-	Parameter string `json:"parameter"`
+	ID                   uint32                `json:"id"`
+	Name                 string                `json:"name"`
+	Data                 string                `json:"data"`
+	SdParameterSnapshots []SDParameterSnapshot `json:"sdParameterSnapshots"`
 }
 
 type KPINodeType string

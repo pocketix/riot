@@ -14,63 +14,63 @@ import (
 	"github.com/pocketix/pocketix-go/src/commands"
 	"github.com/pocketix/pocketix-go/src/models"
 	"github.com/pocketix/pocketix-go/src/parser"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func saveVPLProgramRequest() {
+func performVPLValidityCheckRequest() error {
 	rabbitMQClient := rabbitmq.NewClient()
 	defer rabbitMQClient.Dispose()
 
-	err := rabbitmq.ConsumeJSONMessages[sharedModel.VPLInterpretProgramRequestMessage](rabbitMQClient, sharedConstants.VPLInterpretProgramRequestQueueName, func(messagePayload sharedModel.VPLInterpretProgramRequestMessage) error {
-		log.Printf("Received VPL program save request: %v\n", messagePayload)
+	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.VPLInterpretSaveRequestBody](
+		rabbitMQClient,
+		sharedConstants.VPLInterpretSaveProgramRequestQueueName,
+		"",
+		func(messagePayload sharedModel.VPLInterpretSaveRequestBody, delivery amqp.Delivery) error {
+			log.Printf("Received VPL program save request: %v\n", messagePayload)
 
-		variableStore := models.NewVariableStore()
-		referencedValueStore := models.NewReferencedValueStore()
-		err := parser.ParseWithoutExecuting([]byte(messagePayload.ProgramCode), variableStore, referencedValueStore)
-		if err != nil {
-			log.Printf("Failed to parse VPL program: %s\n", err.Error())
+			var response sharedModel.VPLInterpretSaveResultOrError
 
-			response := sharedModel.VPLInterpretSaveResult{
-				ProgramID:   messagePayload.ProgramID,
-				ProgramName: messagePayload.ProgramName,
-				Output:      err.Error(),
+			variableStore := models.NewVariableStore()
+			referencedValueStore := models.NewReferencedValueStore()
+			err := parser.ParseWithoutExecuting([]byte(messagePayload.Data), variableStore, referencedValueStore)
+
+			if err != nil {
+				log.Printf("Failed to parse VPL program: %s\n", err.Error())
+
+				response = sharedModel.VPLInterpretSaveResultOrError{
+					Error: err.Error(),
+				}
+			} else {
+				response = sharedModel.VPLInterpretSaveResultOrError{
+					Program: sharedModel.VPLProgram{
+						Name: messagePayload.Name,
+						Data: messagePayload.Data,
+						// ReferencedValues: referencedValueStore.GetReferencedValues(),
+					},
+				}
 			}
 			jsonSerializationResult := sharedUtils.SerializeToJSON(response)
 			if jsonSerializationResult.IsFailure() {
 				log.Printf("Failed to serialize the object representing a VPL program save result into JSON: %s\n", jsonSerializationResult.GetError().Error())
 				return jsonSerializationResult.GetError()
 			}
-			err = rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.VPLInterpretProgramRequestQueueName), jsonSerializationResult.GetPayload())
+
+			err = rabbitMQClient.PublishJSONMessageRPC(
+				sharedUtils.NewEmptyOptional[string](),
+				sharedUtils.NewOptionalOf(delivery.ReplyTo),
+				jsonSerializationResult.GetPayload(),
+				delivery.CorrelationId,
+				sharedUtils.NewEmptyOptional[string](),
+			)
+
 			if err != nil {
 				log.Printf("Failed to publish VPL program save result: %s\n", err.Error())
 				return err
 			}
-		}
-
-		response := sharedModel.VPLInterpretSaveResult{
-			ProgramID:   messagePayload.ProgramID,
-			ProgramName: messagePayload.ProgramName,
-			Output:      "Program saved successfully",
-			// ProgramReferencedValues: referencedValueStore.GetReferencedValues(),
-		}
-		jsonSerializationResult := sharedUtils.SerializeToJSON(response)
-		if jsonSerializationResult.IsFailure() {
-			log.Printf("Failed to serialize the object representing a VPL program save result into JSON: %s\n", jsonSerializationResult.GetError().Error())
-			return jsonSerializationResult.GetError()
-		}
-
-		err = rabbitMQClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.VPLInterpretProgramRequestQueueName), jsonSerializationResult.GetPayload())
-		if err != nil {
-			log.Printf("Failed to publish VPL program save result: %s\n", err.Error())
-			return err
-		}
-
-		log.Printf("Successfully processed VPL program save request for ID %d\n", response.ProgramID)
-		return nil
-	})
-
-	if err != nil {
-		log.Printf("Failed to consume VPL program save request: %s\n", err.Error())
-	}
+			return nil
+		},
+	)
+	return err
 }
 
 func executeVPLProgramRequest() {
@@ -136,5 +136,12 @@ func main() {
 	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf(parsedBackendCoreURL.Hostname(), parsedBackendCoreURL.Port())), "Some dependencies of this application are inaccessible")
 	log.Println("Dependencies should be up and running...")
 	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
-	sharedUtils.WaitForAll(saveVPLProgramRequest, executeVPLProgramRequest)
+	sharedUtils.WaitForAll(
+		func() {
+			err := performVPLValidityCheckRequest()
+			if err != nil {
+				log.Println(err.Error())
+			}
+		},
+	)
 }

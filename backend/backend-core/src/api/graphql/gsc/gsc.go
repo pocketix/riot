@@ -610,14 +610,7 @@ type VPLProgram {
     id: ID!
     name: String!
     data: JSON!
-    referencedValues: [VPLReferencedValue!]!
-}
-
-type VPLReferencedValue {
-    id: ID!
-    programID: ID!
-    deviceId: String!
-    parameter: String!
+    sdParameterSnapshots: [SDParameterSnapshot!]!
 }
 
 # ----- Queries, mutations and subscriptions -----
@@ -4062,8 +4055,8 @@ func (ec *executionContext) fieldContext_Mutation_createVPLProgram(ctx context.C
 				return ec.fieldContext_VPLProgram_name(ctx, field)
 			case "data":
 				return ec.fieldContext_VPLProgram_data(ctx, field)
-			case "referencedValues":
-				return ec.fieldContext_VPLProgram_referencedValues(ctx, field)
+			case "sdParameterSnapshots":
+				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type VPLProgram", field.Name)
 		},
@@ -4127,8 +4120,8 @@ func (ec *executionContext) fieldContext_Mutation_updateVPLProgram(ctx context.C
 				return ec.fieldContext_VPLProgram_name(ctx, field)
 			case "data":
 				return ec.fieldContext_VPLProgram_data(ctx, field)
-			case "referencedValues":
-				return ec.fieldContext_VPLProgram_referencedValues(ctx, field)
+			case "sdParameterSnapshots":
+				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type VPLProgram", field.Name)
 		},
@@ -6748,8 +6741,8 @@ func (ec *executionContext) fieldContext_Query_vplProgram(ctx context.Context, f
 				return ec.fieldContext_VPLProgram_name(ctx, field)
 			case "data":
 				return ec.fieldContext_VPLProgram_data(ctx, field)
-			case "referencedValues":
-				return ec.fieldContext_VPLProgram_referencedValues(ctx, field)
+			case "sdParameterSnapshots":
+				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type VPLProgram", field.Name)
 		},
@@ -9286,8 +9279,8 @@ func (ec *executionContext) fieldContext_VPLProgram_data(_ context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _VPLProgram_referencedValues(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgram) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgram_referencedValues(ctx, field)
+func (ec *executionContext) _VPLProgram_sdParameterSnapshots(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgram) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -9300,7 +9293,7 @@ func (ec *executionContext) _VPLProgram_referencedValues(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ReferencedValues, nil
+		return obj.SdParameterSnapshots, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9312,12 +9305,12 @@ func (ec *executionContext) _VPLProgram_referencedValues(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]graphQLModel.VPLReferencedValue)
+	res := resTmp.([]graphQLModel.SDParameterSnapshot)
 	fc.Result = res
-	return ec.marshalNVPLReferencedValue2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLReferencedValueᚄ(ctx, field.Selections, res)
+	return ec.marshalNSDParameterSnapshot2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterSnapshotᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VPLProgram_referencedValues(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VPLProgram_sdParameterSnapshots(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VPLProgram",
 		Field:      field,
@@ -9325,192 +9318,20 @@ func (ec *executionContext) fieldContext_VPLProgram_referencedValues(_ context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_VPLReferencedValue_id(ctx, field)
-			case "programID":
-				return ec.fieldContext_VPLReferencedValue_programID(ctx, field)
-			case "deviceId":
-				return ec.fieldContext_VPLReferencedValue_deviceId(ctx, field)
-			case "parameter":
-				return ec.fieldContext_VPLReferencedValue_parameter(ctx, field)
+			case "instanceId":
+				return ec.fieldContext_SDParameterSnapshot_instanceId(ctx, field)
+			case "parameterId":
+				return ec.fieldContext_SDParameterSnapshot_parameterId(ctx, field)
+			case "string":
+				return ec.fieldContext_SDParameterSnapshot_string(ctx, field)
+			case "number":
+				return ec.fieldContext_SDParameterSnapshot_number(ctx, field)
+			case "boolean":
+				return ec.fieldContext_SDParameterSnapshot_boolean(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_SDParameterSnapshot_updatedAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type VPLReferencedValue", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLReferencedValue_id(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLReferencedValue) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLReferencedValue_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(uint32)
-	fc.Result = res
-	return ec.marshalNID2uint32(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLReferencedValue_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLReferencedValue",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLReferencedValue_programID(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLReferencedValue) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLReferencedValue_programID(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ProgramID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(uint32)
-	fc.Result = res
-	return ec.marshalNID2uint32(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLReferencedValue_programID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLReferencedValue",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLReferencedValue_deviceId(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLReferencedValue) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLReferencedValue_deviceId(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.DeviceID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLReferencedValue_deviceId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLReferencedValue",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLReferencedValue_parameter(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLReferencedValue) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLReferencedValue_parameter(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Parameter, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLReferencedValue_parameter(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLReferencedValue",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, fmt.Errorf("no field named %q was found under type SDParameterSnapshot", field.Name)
 		},
 	}
 	return fc, nil
@@ -14015,62 +13836,8 @@ func (ec *executionContext) _VPLProgram(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "referencedValues":
-			out.Values[i] = ec._VPLProgram_referencedValues(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var vPLReferencedValueImplementors = []string{"VPLReferencedValue"}
-
-func (ec *executionContext) _VPLReferencedValue(ctx context.Context, sel ast.SelectionSet, obj *graphQLModel.VPLReferencedValue) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, vPLReferencedValueImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("VPLReferencedValue")
-		case "id":
-			out.Values[i] = ec._VPLReferencedValue_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "programID":
-			out.Values[i] = ec._VPLReferencedValue_programID(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "deviceId":
-			out.Values[i] = ec._VPLReferencedValue_deviceId(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "parameter":
-			out.Values[i] = ec._VPLReferencedValue_parameter(ctx, field, obj)
+		case "sdParameterSnapshots":
+			out.Values[i] = ec._VPLProgram_sdParameterSnapshots(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -15276,54 +15043,6 @@ func (ec *executionContext) unmarshalNUserConfigInput2githubᚗcomᚋMichalBures
 
 func (ec *executionContext) marshalNVPLProgram2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgram(ctx context.Context, sel ast.SelectionSet, v graphQLModel.VPLProgram) graphql.Marshaler {
 	return ec._VPLProgram(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNVPLReferencedValue2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLReferencedValue(ctx context.Context, sel ast.SelectionSet, v graphQLModel.VPLReferencedValue) graphql.Marshaler {
-	return ec._VPLReferencedValue(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNVPLReferencedValue2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLReferencedValueᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.VPLReferencedValue) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNVPLReferencedValue2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLReferencedValue(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
