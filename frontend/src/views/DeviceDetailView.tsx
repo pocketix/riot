@@ -101,7 +101,7 @@ export const DeviceDetailPageView = ({
   }
 
   return (
-    <div className="min-h-[80vh] space-y-2 overflow-x-hidden pt-3 sm:px-6">
+    <div className="min-h-[80vh] space-y-2 overflow-x-hidden px-6 pt-3">
       <div className="flex w-full flex-col items-center justify-between gap-2 md:flex-row">
         <div className="flex flex-col items-center md:items-start">
           <div className="flex flex-col items-center md:flex-row md:gap-2">

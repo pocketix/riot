@@ -26,7 +26,7 @@ export const GroupDetailPageView = ({ groupData }: GroupDetailPageViewProps) => 
   }
 
   return (
-    <div className="mx-auto px-1 py-3 sm:px-3">
+    <div className="mx-auto px-6 py-3">
       <div className="mb-2 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold md:text-3xl">{groupData.userIdentifier}</h1>

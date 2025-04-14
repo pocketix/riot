@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowDownIcon, ArrowUpIcon, SearchIcon, CheckCircleIcon, XCircleIcon } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, SearchIcon, CheckCircleIcon, XCircleIcon, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent } from '@/components/ui/card'
@@ -44,13 +44,23 @@ export const GroupPageView = ({
         <div className="relative flex-1">
           <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search groups..."
+            placeholder={'Search groups...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="w-full bg-[--color-grey-200] pl-9 pr-10"
           />
+          {searchQuery && (
+            <Button
+              onClick={() => setSearchQuery('')}
+              type="button"
+              variant={'link'}
+              className="absolute right-1 top-1/2 -translate-y-1/2"
+            >
+              <X className="h-5 w-5 text-xl text-[--color-white]" />
+            </Button>
+          )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex justify-center gap-2">
           <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'kpis' | 'name' | 'size')}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Sort by" />
@@ -71,7 +81,7 @@ export const GroupPageView = ({
         </div>
       </div>
 
-      <Tabs defaultValue="all" value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'issues')}>
+      <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'issues')}>
         <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
           <TabsTrigger value="all" className="flex items-center gap-2">
             All Groups
@@ -139,7 +149,7 @@ const GroupCard = ({ group }: GroupCardProps) => {
         style={{ width: `${100 - fulfillmentPercentage}%` }}
       />
 
-      <CardContent className="relative z-10 flex h-full flex-col p-4">
+      <CardContent className="z-2 relative flex h-full flex-col p-4">
         <div className="mb-3 flex flex-col justify-between sm:flex-row">
           <h3 className="truncate pr-2 text-lg font-semibold">{group.userIdentifier}</h3>
           {hasIssues && (
@@ -167,26 +177,25 @@ const GroupCard = ({ group }: GroupCardProps) => {
             </div>
           </div>
           <Separator />
-          <div className="text-sm">
-            <div className="mb-1 flex items-center gap-1 text-muted-foreground">
-              <TbDeviceTablet className="h-3.5 w-3.5" />
+          <div className="flex flex-wrap items-center gap-1 text-sm">
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <TbDeviceTablet className="h-4 w-4" />
               <span>Devices:</span>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {group.instances.slice(0, 3).map((instance, i) => (
-                <div key={i} className="max-w-[110px] truncate rounded-md bg-muted px-2 py-1 text-xs">
-                  {instance.userIdentifier}
-                </div>
-              ))}
-              {group.instances.length > 3 && (
-                <Badge variant="outline" className="whitespace-nowrap rounded-md bg-muted text-xs">
-                  +{group.instances.length - 3} more
-                </Badge>
-              )}
-              {group.instances.length === 0 && (
-                <span className="text-xs italic text-muted-foreground">No devices in group</span>
-              )}
-            </div>
+
+            {group.instances.slice(0, 3).map((instance, i) => (
+              <div key={i} className="max-w-[150px] truncate rounded-md bg-muted px-2 py-1 text-xs">
+                {instance.userIdentifier}
+              </div>
+            ))}
+            {group.instances.length > 3 && (
+              <Badge variant="outline" className="whitespace-nowrap rounded-md bg-muted text-xs">
+                +{group.instances.length - 3} more
+              </Badge>
+            )}
+            {group.instances.length === 0 && (
+              <span className="text-xs italic text-muted-foreground">No devices in group</span>
+            )}
           </div>
         </div>
 
