@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { ButtonHTMLAttributes, forwardRef, KeyboardEvent, useEffect, useMemo, useState } from 'react'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Parameter } from '@/context/InstancesContext'
 
 export type SelectedParameters = {
@@ -265,6 +265,7 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
                     </div>
                   </CommandGroup>
                 </div>
+                <ScrollBar orientation="horizontal" />
               </ScrollArea>
             </CommandList>
           </Command>

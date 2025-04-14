@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useMemo, useState } from 'react'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Parameter } from '@/context/InstancesContext'
 import { SdParameterType } from '@/generated/graphql'
 
@@ -49,7 +49,7 @@ export function SingleParameterCombobox(props: SingleParameterComboboxProps) {
           aria-expanded={open}
           disabled={props.disabled}
           className={cn(
-            'flex w-full items-center px-2 text-left font-semibold',
+            'flex w-full items-center px-2 py-0 text-left font-semibold',
             !props.value?.id && 'font-normal text-muted-foreground',
             props.className
           )}
@@ -85,6 +85,7 @@ export function SingleParameterCombobox(props: SingleParameterComboboxProps) {
                   ))}
                 </CommandGroup>
               </div>
+              <ScrollBar orientation='horizontal'/>
             </ScrollArea>
           </CommandList>
         </Command>

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useState } from 'react'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 
 export interface TimeFrameOption {
   value: string
@@ -73,6 +73,7 @@ export function TimeFrameSelector({ onValueChange, value, disabled = false, clas
                   ))}
                 </CommandGroup>
               </div>
+              <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </CommandList>
         </Command>
