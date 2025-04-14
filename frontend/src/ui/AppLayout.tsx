@@ -5,7 +5,8 @@ import { breakpoints } from '@/styles/Breakpoints'
 
 const StyledAppLayout = styled.div`
   position: relative;
-  height: 100vh;
+  min-height: 100dvh; // 100vh causes problems on safari mobile
+  height: 100dvh;
   color: var(--color-grey-900);
   display: grid;
   grid-template-rows: 1fr auto;
@@ -44,10 +45,12 @@ const Main = styled.main`
   flex-grow: 1;
   overflow-y: auto;
   grid-area: main;
+  -webkit-overflow-scrolling: touch;
 
   @media (min-width: ${breakpoints.md}) {
     align-items: flex-start;
     justify-content: flex-start;
+    padding-bottom: 0;
   }
 `
 

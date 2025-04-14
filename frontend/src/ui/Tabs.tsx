@@ -1,3 +1,4 @@
+import { breakpoints } from '@/styles/Breakpoints'
 import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -9,9 +10,13 @@ const TabsContainer = styled.div`
   padding: 0.1rem;
   border: 1px solid var(--color-grey-300);
   transition: all 0.3s ease-in-out;
-  align-self: flex-start;
   border-radius: 12px;
   gap: 0.7rem;
+  width: 100%;
+
+  @media (min-width: ${breakpoints.sm}) {
+    width: max-content;
+  }
 `
 
 const TabButton = styled(NavLink)`
@@ -25,10 +30,16 @@ const TabButton = styled(NavLink)`
   text-decoration: none;
   text-transform: capitalize;
   transition: all 0.3s ease-in-out;
+  width: 100%;
+  text-align: center;
 
   &.active {
     color: var(--color-grey-900);
     background: var(--color-grey-300);
+  }
+
+  @media (min-width: ${breakpoints.md}) {
+    width: auto;
   }
 `
 

@@ -9,14 +9,14 @@ import { useMemo, useState } from 'react'
 import DeviceCard from './DeviceCard'
 import { ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables, SdInstancesQuery } from '@/generated/graphql'
 import { breakpoints } from '@/styles/Breakpoints'
-import { useSearchParams, useLocation } from 'react-router-dom'
-import { X } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { SearchIcon, X } from 'lucide-react'
 import tw from 'tailwind-styled-components'
 import { useTranslation } from 'react-i18next'
 import Heading from '@/ui/Heading'
-import TabSwitcher from '@/ui/TabSwitcher'
 import { useSubscription } from '@apollo/client'
 import { ON_SD_INSTANCE_REGISTERED } from '@/graphql/Subscriptions'
+import Tabs from '@/ui/Tabs'
 
 const PageWrapper = styled.div`
   display: flex;
@@ -32,7 +32,6 @@ const Container = styled.div`
   gap: 1rem;
   padding: 1.5rem;
   color: hsl(var(--color-white));
-  overflow-y: auto;
   width: 100%;
   height: 100%;
 
@@ -45,14 +44,10 @@ const TopBar = styled.div`
   display: flex;
   width: 100%;
   justify-content: space-between;
+  align-items: center;
   flex-wrap: wrap;
   max-width: 1300px;
-`
-
-const TabsContainer = styled.div`
-  @media (min-width: ${breakpoints.sm}) {
-    align-self: flex-end;
-  }
+  gap: 1rem;
 `
 
 const Section = styled.section`
@@ -101,7 +96,8 @@ const ClearButton = tw.button`
 
 export default function Devices() {
   const { t } = useTranslation()
-  const location = useLocation()
+
+  const isMobile = window.innerWidth < Number(breakpoints.sm.replace('px', ''))
 
   const { data, loading, refetch, error } = useQuery<SdInstancesQuery>(GET_INSTANCES)
 
@@ -156,44 +152,48 @@ export default function Devices() {
     }
   }
 
-  if (error) return <p>Error: {error.message}</p>
-
   return (
     <PageWrapper>
       <Container>
         <TopBar>
-          <Heading>{t('devices')}</Heading>
-          <TabsContainer>
-            <TabSwitcher
-              activeTab={location.pathname.split('/')[2] || 'groups'}
-              tabs={[
-                { name: t('devicesPage.groups'), path: '/groups' },
-                { name: t('devicesPage.instances'), path: '/devices' }
-              ]}
-            />
-          </TabsContainer>
+          {!isMobile && <Heading>Device Instances</Heading>}
+          <Tabs
+            tabs={[
+              { name: t('devicesPage.groups'), path: '/groups' },
+              { name: t('devicesPage.instances'), path: '/devices' }
+            ]}
+          />
         </TopBar>
 
-        {loading ? (
-          <Spinner />
-        ) : (
-          <>
-            <Section>
-              <SearchWrapper>
-                <Input
-                  placeholder={t('devicesPage.searchPlaceholder')}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-[--color-grey-200] pr-10"
-                />
-                {search && (
-                  <ClearButton onClick={() => setSearch('')} type="button">
-                    <X className="h-5 w-5 text-xl text-[--color-white]" />
-                  </ClearButton>
-                )}
-              </SearchWrapper>
-            </Section>
+        <Section>
+          <SearchWrapper>
+            <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t('devicesPage.searchPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-[--color-grey-200] pl-9 pr-10 text-sm md:text-base"
+            />
+            {search && (
+              <ClearButton onClick={() => setSearch('')} type="button">
+                <X className="h-5 w-5 text-xl text-[--color-white]" />
+              </ClearButton>
+            )}
+          </SearchWrapper>
+        </Section>
 
+        {loading && <Spinner />}
+
+        {error && (
+          <Section>
+            <EmptyState>
+              <p className="text-center text-lg font-semibold">Error: {error.message}</p>
+            </EmptyState>
+          </Section>
+        )}
+
+        {!loading && !error && (
+          <>
             <Section>
               <h2 className="text-xl font-bold">
                 {t('devicesPage.confirmedInstances')}{' '}

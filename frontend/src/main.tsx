@@ -14,7 +14,7 @@ createRoot(document.getElementById('root')!).render(
       <Toaster
         toastOptions={{
           style:
-            window.innerWidth < Number(breakpoints.sm.replace('px', ''))
+            window.innerWidth < Number(breakpoints.md.replace('px', ''))
               ? {
                   margin: '0 0 4rem 0'
                 }

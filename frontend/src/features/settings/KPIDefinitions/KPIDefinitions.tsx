@@ -18,7 +18,7 @@ import { breakpoints } from '@/styles/Breakpoints'
 import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import tw from 'tailwind-styled-components'
-import { X } from 'lucide-react'
+import { SearchIcon, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 const PageWrapper = styled.div`
@@ -59,11 +59,11 @@ const Grid = styled.div`
   justify-content: center;
   grid-template-columns: 1fr;
 
-  @media (min-width: 768px) {
+  @media (min-width: ${breakpoints.sm}) {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: ${breakpoints.md}) {
     grid-template-columns: repeat(3, 1fr);
   }
 `
@@ -107,35 +107,39 @@ export default function KPIDefinitions() {
     }
   }
 
-  if (loading) return <Spinner />
-  if (!data?.kpiDefinitions?.length) return <p>{t('kpiDefinitionsPage.noKpiFound')}</p>
-  const filteredKpiDefinitions = data?.kpiDefinitions?.filter((kpiDefinition) =>
-    `${kpiDefinition.userIdentifier ?? ''}`.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredKpiDefinitions =
+    data?.kpiDefinitions?.filter((kpiDefinition) =>
+      `${kpiDefinition.userIdentifier ?? ''}`.toLowerCase().includes(searchQuery.toLowerCase())
+    ) ?? []
 
   return (
     <PageWrapper>
       <Container>
         <div className="flex items-center justify-between">
           <Heading>{t('settings')}</Heading>
-          <Button variant={'goBack'} onClick={() => navigate('/settings')}>
+          <Button size={'sm'} variant={'goBack'} onClick={() => navigate('/settings')}>
             &larr; Back to Settings
           </Button>
         </div>
+
         <Header>
           <Heading as="h2">
             {t('kpiDefinitionsPage.manageKpiDefinitions')}{' '}
-            <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
-              ({t('kpiDefinitionsPage.definitions', { count: data?.kpiDefinitions?.length || 0 })}).
-            </span>
+            {!loading && data?.kpiDefinitions && (
+              <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
+                ({t('kpiDefinitionsPage.definitions', { count: data.kpiDefinitions.length })}).
+              </span>
+            )}
           </Heading>
+
           <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
             <div className="relative w-full p-1 sm:p-0">
+              <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder={t('searchDeviceTypesPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[--color-grey-300] sm:w-64"
+                className="w-full bg-[--color-grey-300] pl-9 sm:w-72"
               />
               {searchQuery && (
                 <ClearButton onClick={() => setSearchQuery('')} type="button">
@@ -147,15 +151,19 @@ export default function KPIDefinitions() {
           </div>
         </Header>
 
-        <Grid>
-          {filteredKpiDefinitions.length > 0 ? (
-            filteredKpiDefinitions.map((kpiDefinition) => (
-              <KPIDefinitionCard key={kpiDefinition.id} kpiDefinition={kpiDefinition} onDelete={handleDelete} />
-            ))
-          ) : (
-            <p>{t('kpiDefinitionsPage.noKpiFound')}</p>
-          )}
-        </Grid>
+        {loading ? (
+          <Spinner />
+        ) : (
+          <Grid>
+            {filteredKpiDefinitions.length > 0 ? (
+              filteredKpiDefinitions.map((kpiDefinition) => (
+                <KPIDefinitionCard key={kpiDefinition.id} kpiDefinition={kpiDefinition} onDelete={handleDelete} />
+              ))
+            ) : (
+              <p>{t('kpiDefinitionsPage.noKpiFound')}</p>
+            )}
+          </Grid>
+        )}
       </Container>
     </PageWrapper>
   )

@@ -324,7 +324,12 @@ export default function DeviceTypeDetail() {
   }
 
   if (loading) return <Spinner />
-  if (error) return <p>Error: {error.message}</p>
+  if (error)
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <p className="text-center text-lg font-semibold">Error: {error.message}</p>
+      </div>
+    )
 
   return (
     <PageWrapper>

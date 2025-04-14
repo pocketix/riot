@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
-import { X } from 'lucide-react'
+import { SearchIcon, X } from 'lucide-react'
 import tw from 'tailwind-styled-components'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -27,7 +27,6 @@ const Container = styled.div`
   flex-direction: column;
   gap: 1.5rem;
   padding: 1.5rem;
-  overflow-y: auto;
 
   @media (min-width: ${breakpoints.sm}) {
     max-width: 1300px;
@@ -76,37 +75,40 @@ export default function DeviceTypesSettings() {
   const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
 
-  if (loading) return <Spinner />
-  if (!data?.sdTypes?.length) return <p>No device types found.</p>
-
-  const filteredDeviceTypes = data.sdTypes.filter((type) =>
-    `${type.label ?? ''} ${type.denotation ?? ''}`.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredDeviceTypes =
+    data?.sdTypes?.filter((type) =>
+      `${type.label ?? ''} ${type.denotation ?? ''}`.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || []
 
   return (
     <PageWrapper>
       <Container>
         <div className="flex items-center justify-between">
           <Heading>{t('settings')}</Heading>
-          <Button variant={'goBack'} onClick={() => navigate('/settings')}>
+          <Button size={'sm'} variant={'goBack'} onClick={() => navigate('/settings')}>
             &larr; Back to Settings
           </Button>
         </div>
+
         <Header>
           <Heading as="h2">
             {t('manageDeviceTypes')}{' '}
-            <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
-              ({t('types', { count: filteredDeviceTypes.length })})
-            </span>
+            {!loading && (
+              <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
+                ({t('types', { count: filteredDeviceTypes.length })})
+              </span>
+            )}
             .
           </Heading>
+
           <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
             <div className="relative w-full p-1 sm:p-0">
+              <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder={t('searchDeviceTypesPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[--color-grey-300] sm:w-64"
+                className="w-full bg-[--color-grey-300] pl-9 sm:w-72"
               />
               {searchQuery && (
                 <ClearButton onClick={() => setSearchQuery('')} type="button">
@@ -119,7 +121,9 @@ export default function DeviceTypesSettings() {
         </Header>
 
         <Grid>
-          {filteredDeviceTypes.length > 0 ? (
+          {loading ? (
+            <Spinner className="col-span-full" />
+          ) : filteredDeviceTypes.length > 0 ? (
             filteredDeviceTypes.map((deviceType) => <DeviceTypeCard key={deviceType.id} deviceType={deviceType} />)
           ) : (
             <p className="col-span-full text-center">{t('noDeviceTypesMatch')}</p>
