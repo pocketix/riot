@@ -25,7 +25,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useDebounce } from 'use-debounce'
 import { Parameter } from '@/context/InstancesContext'
 import { LineChartLegend } from '../visualizations/LineChartLegend'
-import { DevTool } from '@hookform/devtools'
 
 export interface LineChartBuilderViewProps {
   chartData: Serie[]
@@ -1019,7 +1018,6 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
           </form>
         </Form>
       </Card>
-      <DevTool control={form.control} placement="top-right" />
     </div>
   )
 }
