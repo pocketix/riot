@@ -17,6 +17,8 @@ import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { GroupDetailWithKPIs } from '@/controllers/details/GroupDetailPageController'
 import { InstanceWithKPIs } from '@/context/stores/kpiStore'
+import { useNavigate } from 'react-router-dom'
+import { GoLinkExternal } from 'react-icons/go'
 
 interface GroupDetailProps {
   group: GroupDetailWithKPIs
@@ -43,7 +45,7 @@ export const GroupModalDetailView = ({ group, open, setOpen }: GroupDetailProps)
           </DialogDescription>
         </DialogHeader>
         <Separator className="my-4" />
-        <GroupContent failingInstances={failingInstances} />
+        <GroupContent failingInstances={failingInstances} groupID={group.groupID} isDesktop={isDesktop} />
       </DialogContent>
     </Dialog>
   ) : (
@@ -62,7 +64,7 @@ export const GroupModalDetailView = ({ group, open, setOpen }: GroupDetailProps)
         </DrawerHeader>
         <div className="max-h-[80vh] overflow-y-auto px-2">
           <Separator className="my-1" />
-          <GroupContent failingInstances={failingInstances} />
+          <GroupContent failingInstances={failingInstances} groupID={group.groupID} isDesktop={isDesktop} />
         </div>
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
@@ -110,19 +112,20 @@ function GroupDescription({
   )
 }
 
-const GroupContent = ({ failingInstances }: { failingInstances: InstanceWithKPIs[] }) => {
+const GroupContent = (props: { failingInstances: InstanceWithKPIs[]; groupID: number; isDesktop: boolean }) => {
+  const navigate = useNavigate()
   const { setDetailsSelectedDevice } = useDeviceDetail()
 
   return (
     <div className="space-y-4">
       <h3 className="flex items-center gap-2 text-lg font-medium">
         <RiAlertFill className="text-destructive" />
-        <span>Devices with Not Fulfilled KPIs ({failingInstances.length})</span>
+        <span>Devices with Not Fulfilled KPIs ({props.failingInstances.length})</span>
       </h3>
 
-      {failingInstances.length > 0 ? (
+      {props.failingInstances.length > 0 ? (
         <div className="grid gap-2 sm:grid-cols-1">
-          {failingInstances.map((device) => (
+          {props.failingInstances.map((device) => (
             <Card key={device.userIdentifier} className="border border-muted p-1">
               <CardHeader className="p-1">
                 <CardTitle className="text-base">
@@ -152,6 +155,14 @@ const GroupContent = ({ failingInstances }: { failingInstances: InstanceWithKPIs
       ) : (
         <p className="py-4 text-center text-muted-foreground">No devices with unfulfilled KPIs</p>
       )}
+      <Button
+        variant="link"
+        onClick={() => navigate(`/group/${props.groupID}`)}
+        className={`flex w-full gap-1 whitespace-nowrap ${props.isDesktop ? 'justify-end' : 'justify-center'}`}
+      >
+        View all details
+        <GoLinkExternal className="h-3 w-3 text-xs" />
+      </Button>
     </div>
   )
 }

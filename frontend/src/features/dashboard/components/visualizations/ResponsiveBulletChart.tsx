@@ -124,7 +124,11 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: 
       instanceName: getInstanceById(rowConfig?.instance?.id!)?.userIdentifier || 'Unknown',
       parameterName: rowConfig?.parameter?.denotation || '',
       value: String(data.measures[0]),
-      targets: data.markers || []
+      targets: data.markers || [],
+      lastUpdated: lastUpdated,
+      decimalPlaces: rowConfig?.config.decimalPlaces,
+      timeFrame: rowConfig?.config.timeFrame,
+      aggregateFunction: rowConfig?.config.function
     }
   }, [data, rowConfig, getInstanceById])
 
@@ -169,10 +173,11 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: 
         parameterName={tooltipTriggerData.parameterName}
         currentValue={tooltipTriggerData.value}
         targetValues={tooltipTriggerData.targets}
-        aggregateFunction={rowConfig?.config.function}
-        timeFrame={rowConfig?.config.timeFrame}
+        aggregateFunction={tooltipTriggerData.aggregateFunction}
+        decimalPlaces={tooltipTriggerData.decimalPlaces}
+        timeFrame={tooltipTriggerData.timeFrame}
         chartRect={chartRect}
-        lastUpdated={lastUpdated}
+        lastUpdated={tooltipTriggerData.lastUpdated}
         visible={tooltipVisible || touchTooltipVisible}
       />
     </>
