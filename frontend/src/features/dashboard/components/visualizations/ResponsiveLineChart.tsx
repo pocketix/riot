@@ -12,6 +12,7 @@ import { getColorBlindSchemeWithBW } from './color-schemes/color-impaired'
 import { useLongPress } from '@uidotdev/usehooks'
 import { CartesianMarkerProps } from '@nivo/core'
 import { LineChartLegend } from './LineChartLegend'
+import { toast } from 'sonner'
 
 export interface ResponsiveLineChartProps {
   className?: string
@@ -36,13 +37,14 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
 
     const attrs = useLongPress(
       () => {
+        toast.info('Screen locked, let go to unlock')
         document.addEventListener('touchstart', preventTouchMove, { passive: false })
         document.addEventListener('touchmove', preventTouchMove, { passive: false })
         document.addEventListener('touchend', preventTouchMove, { passive: false })
         document.addEventListener('touchcancel', preventTouchMove, { passive: false })
       },
       {
-        threshold: 100,
+        threshold: 250,
         onFinish: () => {
           document.removeEventListener('touchstart', preventTouchMove)
           document.removeEventListener('touchmove', preventTouchMove)
@@ -221,7 +223,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
 
     return (
       <div
-        className={`${className} flex w-full min-w-0 touch-none select-none flex-col overflow-hidden`}
+        className={`${className} flex w-full min-w-0 select-none flex-col overflow-hidden`}
         style={containerStyle}
         ref={containerRef}
       >
