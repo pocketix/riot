@@ -3,29 +3,18 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { BuilderResult } from '@/types/dashboard/GridItem'
-import { SensorField, StatisticsInput, StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
+import {
+  SensorField,
+  StatisticsInput,
+  StatisticsOperation,
+  useStatisticsQuerySensorsWithFieldsLazyQuery
+} from '@/generated/graphql'
 import { ResponsiveLineChart } from '../visualizations/ResponsiveLineChart'
 import { BaseCard } from './BaseCard'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Layout } from 'react-grid-layout'
+import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
 
-interface ChartCardProps {
-  cardID: string
-  handleDeleteItem: (id: string) => void
-  setLayout: (layout: Layout[]) => void
-  setHighlightedCardID: (id: string) => void
-  layout: Layout[]
-  breakPoint: string
-  editModeEnabled: boolean
-  cols: { lg: number; md: number; sm: number; xs: number; xxs: number }
-  height: number
-  width: number
-  configuration: any
-  breakpoint: string
-  beingResized: boolean
-  handleSaveEdit: (config: BuilderResult<ChartCardConfig>) => void
-}
+type ChartCardProps = BaseVisualizationCardProps<ChartCardConfig>
 
 export const ChartCard = (props: ChartCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -55,7 +44,7 @@ export const ChartCard = (props: ChartCardProps) => {
   }
 
   const fetchData = () => {
-    if (chartConfig) {
+    if (chartConfig && props.isVisible) {
       const instances = chartConfig?.instances
       if (!instances) return
 
@@ -95,10 +84,10 @@ export const ChartCard = (props: ChartCardProps) => {
   }, [props.configuration])
 
   useEffect(() => {
-    if (chartConfig) {
+    if (chartConfig && props.isVisible) {
       fetchData()
     }
-  }, [chartConfig])
+  }, [chartConfig, props.isVisible])
 
   useEffect(() => {
     if (!chartConfig) return
@@ -152,6 +141,7 @@ export const ChartCard = (props: ChartCardProps) => {
         {unavailableData?.length > 0 && (
           <div className="absolute right-2 top-0 z-10">
             <Skeleton className="h-full w-fit p-1 pt-0" disableAnimation>
+              {/* TODO: replace with responsive tooltip ? */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

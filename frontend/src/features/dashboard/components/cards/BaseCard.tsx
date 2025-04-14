@@ -1,13 +1,13 @@
-import { Container, DeleteEditContainer, DragHandle } from '@/styles/dashboard/CardGlobal'
+import { Container, DeleteEditContainer, DragHandle, OverlayContainer } from '@/styles/dashboard/CardGlobal'
 import { AiOutlineDrag } from 'react-icons/ai'
 import styled from 'styled-components'
-import { ReactNode, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ItemDeleteAlertDialog } from './components/ItemDeleteAlertDialog'
-import { Layout } from 'react-grid-layout'
 import { AccessibilityContainer } from './components/AccessibilityContainer'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CardEditDialog } from '../editors/CardEditDialog'
-import { AllConfigTypes, BuilderResult } from '@/types/dashboard/GridItem'
+import { AllConfigTypes } from '@/types/dashboard/gridItem'
+import { BaseCardProps } from '@/types/dashboard/cards/cardGeneral'
 
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   position: relative;
@@ -23,52 +23,9 @@ export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   opacity: ${(props) => (props.$editModeEnabled ? 0.25 : 1)};
   transition: opacity 0.3s;
 `
-
-export interface BaseCardProps<ConfigType extends AllConfigTypes> {
-  cardID: string
-  layout: Layout[]
-  setLayout: (layout: Layout[]) => void
-  breakPoint: string
-  editModeEnabled: boolean
-  cols: { lg: number; md: number; sm: number; xs: number; xxs: number }
-  handleDeleteItem: (id: string) => void
-  height: number
-  width: number
-  setHighlightedCardID: (id: string) => void
-  beingResized: boolean
-  handleSaveEdit: (config: BuilderResult<ConfigType>) => void
-  configuration: ConfigType
-
-  // Specific to each card implementation
-  isLoading: boolean
-  error: string | null
-  visualizationType: 'table' | 'bullet' | 'line' | 'entitycard'
-  cardTitle?: string
-  children: ReactNode
-}
-
-export const BaseCard = <ConfigType extends AllConfigTypes>({
-  cardID,
-  layout,
-  setLayout,
-  cols,
-  breakPoint,
-  editModeEnabled,
-  handleDeleteItem,
-  width,
-  height,
-  setHighlightedCardID,
-  beingResized,
-  handleSaveEdit,
-  configuration,
-  isLoading,
-  error,
-  visualizationType,
-  cardTitle,
-  children
-}: BaseCardProps<ConfigType>) => {
+export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps<ConfigType>) {
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
-  const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
+  const item = useMemo(() => props.layout.find((item) => item.i === props.cardID), [props.layout, props.cardID])
 
   let isAtRightEdge = false
   let isAtLeftEdge = false
@@ -77,8 +34,8 @@ export const BaseCard = <ConfigType extends AllConfigTypes>({
 
   if (item) {
     isAtRightEdge = useMemo(() => {
-      return item?.x + item?.w === cols[breakPoint as keyof typeof cols]
-    }, [item, cols, breakPoint])
+      return item?.x + item?.w === props.cols[props.breakPoint as keyof typeof props.cols]
+    }, [item, props.cols, props.breakPoint])
 
     isAtLeftEdge = useMemo(() => {
       return item?.x === 0
@@ -90,26 +47,26 @@ export const BaseCard = <ConfigType extends AllConfigTypes>({
 
     // Check if there are any items below
     isBottom = useMemo(() => {
-      return layout.some((l) => l.y === item.y + item.h && l.x < item.x + item.w && l.x + l.w > item.x)
-    }, [layout, item])
+      return props.layout.some((l) => l.y === item.y + item.h && l.x < item.x + item.w && l.x + l.w > item.x)
+    }, [props.layout, item])
   }
 
   useEffect(() => {
-    if (highlight) setHighlightedCardID(cardID)
-  }, [cardID, highlight, setHighlightedCardID])
+    if (highlight) props.setHighlightedCardID(props.cardID)
+  }, [props.cardID, highlight, props.setHighlightedCardID])
 
-  if (isLoading || beingResized || error) {
+  if (props.isLoading || props.beingResized || props.error) {
     return (
       <>
         <Skeleton className="h-full w-full" />
-        {error && (
+        {props.error && (
           <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center rounded-lg bg-destructive text-primary">
-            <span className="text-sm font-semibold">{error}</span>
+            <span className="text-sm font-semibold">{props.error}</span>
           </div>
         )}
-        {editModeEnabled && (
+        {props.editModeEnabled && (
           <DeleteEditContainer>
-            <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+            <ItemDeleteAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID)} />
           </DeleteEditContainer>
         )}
       </>
@@ -117,30 +74,35 @@ export const BaseCard = <ConfigType extends AllConfigTypes>({
   }
 
   return (
-    <Container key={cardID} className={`${cardID}`}>
-      {editModeEnabled && (
+    <Container key={props.cardID} className={`${props.cardID}`}>
+      {props.editModeEnabled && (
         <DragHandle>
           <AiOutlineDrag className="drag-handle h-[40px] w-[40px] rounded-lg border-2 p-1" />
         </DragHandle>
       )}
-      {editModeEnabled && (
+      {props.editModeEnabled && (
         <DeleteEditContainer>
-          <CardEditDialog config={configuration} onSave={handleSaveEdit} visualizationType={visualizationType} />
-          <ItemDeleteAlertDialog onSuccess={() => handleDeleteItem(cardID)} />
+          <CardEditDialog
+            config={props.configuration}
+            onSave={props.handleSaveEdit}
+            visualizationType={props.visualizationType}
+          />
+          <ItemDeleteAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID)} />
         </DeleteEditContainer>
       )}
 
-      {cardTitle && <span className="pl-2 pt-2 font-semibold">{cardTitle}</span>}
+      {props.cardTitle && <span className="pl-2 pt-2 font-semibold">{props.cardTitle}</span>}
 
-      <ChartContainer $editModeEnabled={editModeEnabled}>{children}</ChartContainer>
+      <ChartContainer $editModeEnabled={props.editModeEnabled}>{props.children}</ChartContainer>
 
-      {editModeEnabled && (
+      {props.editModeEnabled && <OverlayContainer />}
+      {props.editModeEnabled && (
         <AccessibilityContainer
-          cols={cols}
-          layout={layout}
-          setLayout={setLayout}
-          breakPoint={breakPoint}
-          cardID={cardID}
+          cols={props.cols}
+          layout={props.layout}
+          setLayout={props.setLayout}
+          breakPoint={props.breakPoint}
+          cardID={props.cardID}
           setHighlight={setHighlight}
           isAtRightEdge={isAtRightEdge}
           isAtLeftEdge={isAtLeftEdge}
@@ -153,13 +115,13 @@ export const BaseCard = <ConfigType extends AllConfigTypes>({
         <>
           {!isAtRightEdge && item?.w !== item?.maxW && (
             <div
-              style={{ width: `${width}px` }}
+              style={{ width: `${props.width}px` }}
               className={`absolute left-full top-0 h-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-r-lg bg-green-400 transition-opacity duration-200`}
             />
           )}
           {item?.w !== 1 && item?.w !== item?.minW && (
             <div
-              style={{ width: `${width}px` }}
+              style={{ width: `${props.width}px` }}
               className={`absolute right-0 top-0 h-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-r-lg bg-red-400 transition-opacity duration-200`}
             />
           )}
@@ -170,13 +132,13 @@ export const BaseCard = <ConfigType extends AllConfigTypes>({
         <>
           {item?.h !== item?.maxH && (
             <div
-              style={{ height: `${height}px` }}
+              style={{ height: `${props.height}px` }}
               className={`absolute left-0 top-full w-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-b-lg bg-green-400 transition-opacity duration-200`}
             />
           )}
           {item?.h !== item?.minH && item?.h !== 1 && (
             <div
-              style={{ height: `${height}px` }}
+              style={{ height: `${props.height}px` }}
               className={`absolute bottom-0 left-0 w-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-b-lg bg-red-400 transition-opacity duration-200`}
             />
           )}

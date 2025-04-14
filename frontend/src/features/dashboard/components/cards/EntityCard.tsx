@@ -3,26 +3,11 @@ import { entityCardSchema, EntityCardConfig } from '@/schemas/dashboard/EntityCa
 import { toast } from 'sonner'
 import { StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 import { BaseCard } from './BaseCard'
-import { Layout } from 'react-grid-layout'
-import { BuilderResult } from '@/types/dashboard/GridItem'
 import { ResponsiveEntityTable } from '../visualizations/ResponsiveEntityTable'
 import { Serie } from '@nivo/line'
+import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
 
-interface EntityCardProps {
-  cardID: string
-  layout: Layout[]
-  setLayout: (layout: Layout[]) => void
-  breakPoint: string
-  editModeEnabled: boolean
-  cols: { lg: number; md: number; sm: number; xs: number; xxs: number }
-  handleDeleteItem: (id: string) => void
-  height: number
-  width: number
-  setHighlightedCardID: (id: string) => void
-  configuration: any
-  handleSaveEdit: (config: BuilderResult<EntityCardConfig>) => void
-  beingResized: boolean
-}
+type EntityCardProps = BaseVisualizationCardProps<EntityCardConfig>
 
 export const EntityCard = (props: EntityCardProps) => {
   const [sparklineData, setSparklineData] = useState<Record<string, Serie[]>>({})
@@ -113,10 +98,10 @@ export const EntityCard = (props: EntityCardProps) => {
   }, [props.configuration])
 
   useEffect(() => {
-    if (chartConfig) {
+    if (chartConfig && props.isVisible) {
       fetchSparklineData()
     }
-  }, [chartConfig])
+  }, [chartConfig, props.isVisible])
 
   const isLoading = !chartConfig || !chartConfig.rows
 

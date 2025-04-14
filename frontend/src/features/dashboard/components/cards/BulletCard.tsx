@@ -1,33 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
-import { BuilderResult } from '@/types/dashboard/GridItem'
 import { StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 import { BulletRow } from './components/BulletRow'
 import { BaseCard } from './BaseCard'
-import { Layout } from 'react-grid-layout'
+import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
 
-interface BulletCardProps {
-  cardID: string
-  layout: Layout[]
-  breakPoint: string
-  cols: { lg: number; md: number; sm: number; xs: number; xxs: number }
-  height: number
-  width: number
-  setLayout: (layout: Layout[]) => void
-  handleDeleteItem: (id: string) => void
-  setHighlightedCardID: (id: string) => void
-  editModeEnabled: boolean
-  beingResized: boolean
-  configuration: any
-  handleSaveEdit: (config: BuilderResult<BulletCardConfig>) => void
-}
+type BulletCardProps = BaseVisualizationCardProps<BulletCardConfig>
 
 export const BulletCard = (props: BulletCardProps) => {
   const [chartConfig, setChartConfig] = useState<BulletCardConfig>()
   const [data, setData] = useState<any[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  // Poll interval based on the smallest time frame in the card config
+  // Poll interval based on the smallest aggregate time frame in the card config
   const minimumTimeframe = useMemo(() => {
     const rows = chartConfig?.rows
     if (!rows) return 0
@@ -43,7 +28,7 @@ export const BulletCard = (props: BulletCardProps) => {
   })
 
   const fetchData = async () => {
-    if (chartConfig) {
+    if (chartConfig && props.isVisible) {
       const rows = chartConfig.rows
       if (!rows) return
 
@@ -148,7 +133,7 @@ export const BulletCard = (props: BulletCardProps) => {
         {chartConfig?.rows?.map((row, index) => {
           if (row.config.function === 'last') {
             return (
-              <div className="h-full max-h-[70px] w-full overflow-hidden">
+              <div key={index} className="h-full max-h-[70px] w-full overflow-hidden">
                 <BulletRow key={index} row={row} editModeEnabled={props.editModeEnabled} />
               </div>
             )

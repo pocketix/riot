@@ -5,24 +5,9 @@ import { SensorField, StatisticsOperation, useStatisticsQuerySensorsWithFieldsLa
 import { ResponsiveTable, TableRowData } from '../visualizations/ResponsiveTable'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { BaseCard } from './BaseCard'
-import { BuilderResult } from '@/types/dashboard/GridItem'
-import { Layout } from 'react-grid-layout'
+import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
 
-interface TableCardProps {
-  cardID: string
-  layout: Layout[]
-  setLayout: (layout: Layout[]) => void
-  breakPoint: string
-  editModeEnabled: boolean
-  cols: { lg: number; md: number; sm: number; xs: number; xxs: number }
-  handleDeleteItem: (id: string) => void
-  height: number
-  width: number
-  setHighlightedCardID: (id: string) => void
-  beingResized: boolean
-  handleSaveEdit: (config: BuilderResult<TableCardConfig>) => void
-  configuration: any
-}
+type TableCardProps = BaseVisualizationCardProps<TableCardConfig>
 
 export const TableCard = (props: TableCardProps) => {
   const { setDetailsSelectedDevice } = useDeviceDetail()
@@ -83,7 +68,7 @@ export const TableCard = (props: TableCardProps) => {
 
   useEffect(() => {
     const fetchAggregatedData = async () => {
-      if (!tableConfig) return
+      if (!tableConfig || !props.isVisible) return
 
       const sensors: SensorField[] = tableConfig.rows.map((row) => ({
         key: row.instance.uid,
@@ -167,7 +152,7 @@ export const TableCard = (props: TableCardProps) => {
     }
 
     fetchAggregatedData()
-  }, [tableConfig, fetchTableData])
+  }, [tableConfig, fetchTableData, props.isVisible])
 
   const handleRowClick = (instanceId: number, parameterId: number) => {
     setDetailsSelectedDevice(instanceId, parameterId)
@@ -184,13 +169,7 @@ export const TableCard = (props: TableCardProps) => {
       cardTitle={tableConfig?.title}
       configuration={tableConfig!}
     >
-      <ResponsiveTable
-        data={tableData}
-        config={tableConfig!}
-        onRowClick={handleRowClick}
-        height={props.height}
-        className="px-2"
-      />
+      <ResponsiveTable data={tableData} config={tableConfig!} onRowClick={handleRowClick} className="px-2" />
     </BaseCard>
   )
 }

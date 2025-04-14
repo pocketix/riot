@@ -1,5 +1,4 @@
 // https://github.com/react-grid-layout/react-grid-layout/issues/1306
-
 import { Layout, CompactType } from 'react-grid-layout'
 
 declare module 'react-grid-layout' {

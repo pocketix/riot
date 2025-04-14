@@ -1,4 +1,4 @@
-import { AllConfigTypes } from './GridItem'
+import { AllConfigTypes } from './gridItem'
 
 export type DBItemDetails<ConfigType extends AllConfigTypes> = {
   layoutID?: string
