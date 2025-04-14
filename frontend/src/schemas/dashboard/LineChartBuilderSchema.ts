@@ -12,6 +12,13 @@ export const lineChartBuilderSchema = z.object({
   timeFrame: z.string().min(1, { message: 'Time frame must be at least 1' }),
   aggregateMinutes: z.number().min(1, { message: 'Aggregate minutes must be at least 1' }),
   decimalPlaces: z.number().min(0, { message: 'Decimal places must be at least 0' }),
+  chartArea: z.boolean().default(true),
+  legend: z
+    .object({
+      enabled: z.boolean().default(true),
+      position: z.enum(['top', 'bottom']).optional()
+    })
+    .optional(),
   margin: z.object({
     top: z.number().optional(),
     right: z.number().optional(),
@@ -50,41 +57,62 @@ export const lineChartBuilderSchema = z.object({
     legend: z.string().optional(),
     legendOffset: z.number().optional(),
     legendPosition: z.enum(['start', 'middle', 'end']).optional(),
-    // Determines the amount of ticks
-    tickValues: z.union([z.string(), z.number()]).optional(),
     format: z.union([z.literal('%H:%M'), z.literal('%m/%d')]).optional()
   }),
   enableGridX: z.boolean().optional(),
   enableGridY: z.boolean().optional(),
-  instances: z
+  xAxisMarkers: z
     .array(
       z.object({
-        uid: z.string().min(1, { message: 'Instance is required' }),
-        id: z
-          .number()
-          .min(0, { message: 'Instance ID is required' })
-          .nullable()
-          .superRefine((data, ctx) => {
-            if (data === null) {
-              ctx.addIssue({
-                code: z.ZodIssueCode.invalid_type,
-                expected: 'number',
-                received: 'null',
-                message: 'Instance ID is required'
-              })
-              return z.NEVER
-            }
-            return data
-          }),
-        parameters: z
-          .array(
-            z.object({
-              id: z.number().min(1, { message: 'Parameter ID is required' }),
-              denotation: z.string().min(1, { message: 'Parameter denotation is required' })
-            })
-          )
-          .min(1, { message: 'At least one parameter is required' })
+        value: z.number(),
+        color: z.enum(['#ef4444', '#eab308', '#22c55e', '#6b7280', '#3b82f6']),
+        style: z.enum(['solid', 'dashed', 'dotted']),
+        legend: z.string().optional(),
+        legendPosition: z
+          .enum(['top-left', 'top', 'top-right', 'right', 'bottom-right', 'bottom', 'bottom-left'])
+          .optional()
       })
+    )
+    .optional(),
+  instances: z
+    .array(
+      z
+        .object({
+          uid: z.string().min(1, { message: 'Instance is required' }),
+          id: z
+            .number()
+            .min(0, { message: 'Instance ID is required' })
+            .nullable()
+            .superRefine((data, ctx) => {
+              if (data === null) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.invalid_type,
+                  expected: 'number',
+                  received: 'null',
+                  message: 'Instance ID is required'
+                })
+                return z.NEVER
+              }
+              return data
+            }),
+          parameters: z
+            .array(
+              z.object({
+                id: z.number().min(1, { message: 'Parameter ID is required' }),
+                denotation: z.string().min(1, { message: 'Parameter denotation is required' })
+              })
+            )
+            .min(1, { message: 'At least one parameter is required' })
+        })
+        .superRefine((data, ctx) => {
+          if (!data.uid || data.uid.length === 0 || data.id === null) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Instance is required',
+              path: []
+            })
+          }
+        })
     )
     .min(1, { message: 'At least one instance is required' })
 })

@@ -41,6 +41,9 @@ export const Navbar = styled.div`
 `
 
 export const MainGrid = styled.div`
-  margin-top: 60px; /* Height of the navbar */
+  display: flex;
+  flex-direction: column;
+  margin-top: 60px; /* Height of the top navbar */
+  min-height: 90vh;
   height: calc(max-content + 100px);
 `

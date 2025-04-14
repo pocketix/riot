@@ -186,7 +186,8 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
         <div className="relative h-[150px] w-full overflow-hidden">
           <div className="absolute inset-0 pb-2">
             <ResponsiveLineChart data={dataLine} />
-            <div className="absolute inset-0 z-10" />
+            {/* overlay to disable tooltips, same with bulletchart below */}
+            <div className="z-2 absolute inset-0" />
           </div>
         </div>
       </Card>
@@ -197,6 +198,7 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
         <div className="relative h-[80px] w-full overflow-hidden">
           <div className="absolute inset-0 p-2 px-2">
             <ResponsiveBulletChart data={dataBullet} />
+            <div className="z-2 absolute inset-0" />
           </div>
         </div>
       </Card>

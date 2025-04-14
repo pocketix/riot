@@ -18,7 +18,7 @@ export const DragHandle = styled.div`
   top: 20%;
   left: 50%;
   transform: translateX(-50%) translateY(-50%);
-  z-index: 100;
+  z-index: 2;
   background-color: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   border: 1px solid hsl(var(--border));
@@ -36,7 +36,7 @@ export const ArrowContainer = styled.div`
   border-radius: 4px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border: 1px solid hsl(var(--border));
-  z-index: 99;
+  z-index: 2;
   display: flex;
   flex-direction: row;
   gap: 8px;
@@ -67,7 +67,6 @@ export const Arrow = styled.button<{ disabled?: boolean; $red?: boolean; $green?
   }
 `
 
-// TODO: remove ? used for the icon that delets a card
 export const DeleteEditContainer = styled.div`
   position: absolute;
   display: flex;
@@ -75,10 +74,19 @@ export const DeleteEditContainer = styled.div`
   gap: 10px;
   top: 10px;
   right: 10px;
-  z-index: 100;
+  z-index: 2;
   background-color: hsl(var(--primary));
   border: 1px solid hsl(var(--border));
   padding: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
+`
+
+export const OverlayContainer = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 `

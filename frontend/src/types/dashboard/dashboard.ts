@@ -1,6 +1,6 @@
 import { Layouts } from 'react-grid-layout'
-import { DBItemDetails } from './DBItem'
-import { AllConfigTypes } from './GridItem'
+import { DBItemDetails } from './dbItem'
+import { AllConfigTypes } from './gridItem'
 
 export type RiotDashboardConfig = {
   riot: {
