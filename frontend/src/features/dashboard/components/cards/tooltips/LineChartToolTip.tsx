@@ -13,6 +13,8 @@ export interface ToolTipProps {
 
 export const ChartToolTip = ({ position, containerRef, instanceName, parameterName, xName, yName }: ToolTipProps) => {
   const { isDarkMode } = useDarkMode()
+  const [date, time] = String(position.point.data.xFormatted).split(' ')
+  const containerWidth = containerRef.current?.getBoundingClientRect().width
 
   return (
     <>
@@ -22,14 +24,15 @@ export const ChartToolTip = ({ position, containerRef, instanceName, parameterNa
           isDarkMode={isDarkMode}
           container={containerRef as React.RefObject<HTMLDivElement>}
         >
-          <div>
-            <span className="font-bold">{instanceName}</span>
-          </div>
-          <div>
+          <div className="flex flex-col justify-center">
+            <span className="text-center font-bold">{instanceName}</span>
             <span className="font-bold">{parameterName}</span>
           </div>
-          <div>
-            {xName ? xName : 'X'}: <span className="font-bold">{position.point.data.xFormatted}</span>
+          <div className={`flex ${containerWidth! < 300 ? 'flex-col' : 'gap-1'} justify-center`}>
+            <div>
+              {xName ? xName : 'X'}: <span className="text-xs">{date}</span>
+            </div>
+            <span className="text-center text-xs font-semibold">{time}</span>
           </div>
           <div>
             {yName ? yName : 'Y'}: <span className="font-bold">{position.point.data.yFormatted}</span>

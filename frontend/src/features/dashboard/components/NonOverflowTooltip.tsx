@@ -56,16 +56,20 @@ export function NonOverflowTooltip(props: NonOverflowTooltipProps) {
 
   const offsetVertical = useMemo(() => {
     // only show it above the pointer when we are close to the bottom edge
-
-    if (props.point.y < tooltipSize.height) {
-      return tooltipSize.height + 30
+    if (props.point.y + 20 < tooltipSize.height) {
+      return tooltipSize.height + 20
     }
 
     return 0
   }, [tooltipSize.height, props.point.y, containerSize.height])
 
   return (
-    <ToolTipContainer $isDarkMode={props.isDarkMode} ref={ref} $offsetHorizontal={offsetHorizontal} $offsetVertical={offsetVertical}>
+    <ToolTipContainer
+      $isDarkMode={props.isDarkMode}
+      ref={ref}
+      $offsetHorizontal={offsetHorizontal}
+      $offsetVertical={offsetVertical}
+    >
       {props.children}
     </ToolTipContainer>
   )
