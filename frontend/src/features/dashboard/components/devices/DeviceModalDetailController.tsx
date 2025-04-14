@@ -118,10 +118,6 @@ export const DeviceModalDetailController = () => {
     ]
   }, [graphData, selectedDevice, currentParameter])
 
-  useEffect(() => {
-    console.log('Procssed data:', processedData)
-  }, [processedData])
-
   const handleViewAllDetails = () => {
     setIsOpen(false)
     navigate(`/device/${instance?.id}`)
@@ -145,7 +141,7 @@ export const DeviceModalDetailController = () => {
     processedData,
     handleViewAllDetails,
     instanceGroups,
-    parameterLastValue : parameterLastValue.value,
+    parameterLastValue: parameterLastValue.value
   }
 
   return <DeviceModalDetailView {...viewProps} />

@@ -1,10 +1,9 @@
 import styled from 'styled-components'
-import { LineChartBuilder } from './builders/LineChartBuilder'
-import { BulletChartBuilder } from './builders/BulletChartBuilder'
-import { SdInstancesWithParamsQuery } from '@/generated/graphql'
-import { TableCardBuilder } from './builders/TableCardBuilder'
-import { EntityCardBuilder } from './builders/EntityCardBuilder'
-import { AllConfigTypes, BuilderResult } from '@/types/dashboard/GridItem'
+import { AllConfigTypes, BuilderResult } from '@/types/dashboard/gridItem'
+import { LineChartBuilderController } from './builders/LineChartBuidlerController'
+import { BulletChartBuilderController } from './builders/BulletChartBuilderController'
+import { EntityCardBuilderController } from './builders/EntityCardBuilderController'
+import { TableCardBuilderController } from './builders/TableCardBuilderController'
 
 export const VisualizationBuilderContainer = styled.div`
   display: flex;
@@ -18,13 +17,11 @@ export interface VisualizationBuilderProps {
   selectedVisualization: string | null
   setVisualizationConfig<ConfigType extends AllConfigTypes>(config: BuilderResult<ConfigType>): void
   setActiveTab: (tab: string) => void
-  instances: SdInstancesWithParamsQuery['sdInstances']
 }
 
 export function VisualizationBuilder({
   setVisualizationConfig,
   selectedVisualization,
-  instances
 }: VisualizationBuilderProps) {
   function handleDataChange<ConfigType extends AllConfigTypes>(data: BuilderResult<ConfigType>) {
     setVisualizationConfig(data)
@@ -32,12 +29,10 @@ export function VisualizationBuilder({
 
   return (
     <VisualizationBuilderContainer>
-      {selectedVisualization === 'line' && <LineChartBuilder onDataSubmit={handleDataChange} instances={instances} />}
-      {selectedVisualization === 'bullet' && <BulletChartBuilder onDataSubmit={handleDataChange} />}
-      {selectedVisualization === 'table' && <TableCardBuilder onDataSubmit={handleDataChange} instances={instances} />}
-      {selectedVisualization === 'entitycard' && (
-        <EntityCardBuilder onDataSubmit={handleDataChange} instances={instances} />
-      )}
+      {selectedVisualization === 'line' && <LineChartBuilderController onDataSubmit={handleDataChange} />}
+      {selectedVisualization === 'bullet' && <BulletChartBuilderController onDataSubmit={handleDataChange} />}
+      {selectedVisualization === 'table' && <TableCardBuilderController onDataSubmit={handleDataChange} />}
+      {selectedVisualization === 'entitycard' && <EntityCardBuilderController onDataSubmit={handleDataChange} />}
     </VisualizationBuilderContainer>
   )
 }

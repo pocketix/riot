@@ -1,18 +1,29 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { 
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription 
+} from '@/components/ui/drawer'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Button } from '@/components/ui/button'
 import { CiEdit } from 'react-icons/ci'
 import { useState } from 'react'
 import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
-import { LineChartBuilder } from '../builders/LineChartBuilder'
 import { EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
-import { EntityCardBuilder } from '../builders/EntityCardBuilder'
 import { TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
-import { TableCardBuilder } from '../builders/TableCardBuilder'
 import { BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
-import { BulletChartBuilder } from '../builders/BulletChartBuilder'
-import { useSdInstancesWithParamsQuery } from '@/generated/graphql'
 import { toast } from 'sonner'
 import { DialogDescription } from '@radix-ui/react-dialog'
-import { AllConfigTypes, BuilderResult } from '@/types/dashboard/GridItem'
+import { AllConfigTypes, BuilderResult } from '@/types/dashboard/gridItem'
+import { LineChartBuilderController } from '../builders/LineChartBuidlerController'
+import { BulletChartBuilderController } from '../builders/BulletChartBuilderController'
+import { EntityCardBuilderController } from '../builders/EntityCardBuilderController'
+import { TableCardBuilderController } from '../builders/TableCardBuilderController'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 
 export interface CardEditDialogProps<ConfigType extends AllConfigTypes> {
   config?: ConfigType
@@ -22,25 +33,28 @@ export interface CardEditDialogProps<ConfigType extends AllConfigTypes> {
 
 export function CardEditDialog<ConfigType extends AllConfigTypes>({
   config,
-  onSave,
-  visualizationType
+  visualizationType,
+  onSave
 }: CardEditDialogProps<ConfigType>) {
   const [dialogOpen, setDialogOpen] = useState(false)
-  const { data } = useSdInstancesWithParamsQuery()
+  const isDesktop = useMediaQuery('(min-width: 768px)')
 
   const handleSave = (result: BuilderResult<ConfigType>) => {
     onSave(result)
     setDialogOpen(false)
   }
 
+  const handleOpenChange = (isOpen: boolean) => {
+    setDialogOpen(isOpen)
+  }
+
   const renderBuilder = () => {
     switch (visualizationType) {
       case 'line':
         return (
-          <LineChartBuilder
+          <LineChartBuilderController
             config={config as ChartCardConfig}
             onDataSubmit={(data: BuilderResult<ChartCardConfig>) => handleSave(data as BuilderResult<ConfigType>)}
-            instances={data?.sdInstances || []}
           />
         )
       case 'switch':
@@ -48,25 +62,23 @@ export function CardEditDialog<ConfigType extends AllConfigTypes>({
         return <div>Switch</div>
       case 'table':
         return (
-          <TableCardBuilder
+          <TableCardBuilderController
             config={config as TableCardConfig}
             onDataSubmit={(data: BuilderResult<TableCardConfig>) => handleSave(data as BuilderResult<ConfigType>)}
-            instances={data?.sdInstances || []}
           />
         )
       case 'bullet':
         return (
-          <BulletChartBuilder
+          <BulletChartBuilderController
             config={config as BulletCardConfig}
             onDataSubmit={(data: BuilderResult<BulletCardConfig>) => handleSave(data as BuilderResult<ConfigType>)}
           />
         )
       case 'entitycard':
         return (
-          <EntityCardBuilder
+          <EntityCardBuilderController
             config={config as EntityCardConfig}
             onDataSubmit={(data: BuilderResult<EntityCardConfig>) => handleSave(data as BuilderResult<ConfigType>)}
-            instances={data?.sdInstances || []}
           />
         )
       default:
@@ -75,18 +87,55 @@ export function CardEditDialog<ConfigType extends AllConfigTypes>({
     }
   }
 
-  return (
-    <Dialog open={dialogOpen} onOpenChange={() => setDialogOpen(!dialogOpen)}>
-      <DialogTrigger>
+  const trigger = (
+    <DialogTrigger asChild>
+      <button>
         <CiEdit className="text-secondary" />
-      </DialogTrigger>
-      <DialogContent>
+      </button>
+    </DialogTrigger>
+  )
+
+  const modalContent = (
+    <>
+      {isDesktop ? (
         <DialogHeader>
           <DialogTitle>Card editor</DialogTitle>
           <DialogDescription>Make changes to the card configuration</DialogDescription>
         </DialogHeader>
-        {renderBuilder()}
-      </DialogContent>
+      ) : (
+        <DrawerHeader>
+          <DrawerTitle>Card editor</DrawerTitle>
+          <DrawerDescription>Make changes to the card configuration</DrawerDescription>
+        </DrawerHeader>
+      )}
+      {renderBuilder()}
+      {!isDesktop && (
+        <DrawerFooter className="pt-4">
+          <DrawerClose asChild>
+            <Button variant="outline" className="w-full">
+              Close
+            </Button>
+          </DrawerClose>
+        </DrawerFooter>
+      )}
+    </>
+  )
+
+  return isDesktop ? (
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+      {trigger}
+      <DialogContent>{modalContent}</DialogContent>
     </Dialog>
+  ) : (
+    <Drawer open={dialogOpen} onOpenChange={handleOpenChange}>
+      {trigger}
+      <DrawerContent>
+        <ScrollArea>
+          <div className="h-fit max-h-[calc(95vh-2rem)] sm:p-4">
+            {modalContent}
+          </div>
+        </ScrollArea>
+      </DrawerContent>
+    </Drawer>
   )
 }
