@@ -202,8 +202,9 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                           }}
                           variant={'destructive'}
                           size={'icon'}
+                          className="h-6 w-6"
                         >
-                          <TbTrash />
+                          <TbTrash size={14} />
                         </Button>
                       </div>
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
