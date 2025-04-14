@@ -10,6 +10,8 @@ import { useInstances } from '@/context/InstancesContext'
 import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
 import { getColorBlindSchemeWithBW } from './color-schemes/color-impaired'
 import { useLongPress } from '@uidotdev/usehooks'
+import { CartesianMarkerProps } from '@nivo/core'
+import { LineChartLegend } from './LineChartLegend'
 
 export interface ResponsiveLineChartProps {
   className?: string
@@ -91,8 +93,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
       curve = 'linear',
       axisLeft,
       axisBottom,
-      onClick,
-      tooltip
+      onClick
     } = config as Partial<LineSvgProps>
 
     const mergedConfig = isChartCardConfig
@@ -100,6 +101,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
           margin: (config as ChartCardConfig).margin,
           yScale: (config as ChartCardConfig).yScale,
           yFormat: (config as ChartCardConfig).toolTip?.yFormat,
+          chartArea: (config as ChartCardConfig).chartArea,
           axisBottom: {
             ...(config as ChartCardConfig).axisBottom,
             tickValues: 0 // we are generating the ticks by the custom layer called timeTicksLayer
@@ -108,13 +110,33 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
             ...(config as ChartCardConfig).axisLeft,
             format: '~s'
           },
-          enableGridX: (config as ChartCardConfig).enableGridX || false,
-          enableGridY: (config as ChartCardConfig).enableGridY || true,
+          enableGridX: (config as ChartCardConfig).enableGridX,
+          enableGridY: (config as ChartCardConfig).enableGridY,
           pointSize: (config as ChartCardConfig).pointSize || 5,
           tooltipConfig: {
             xName: (config as ChartCardConfig).toolTip.x,
             yName: (config as ChartCardConfig).toolTip.y,
             yFormat: (config as ChartCardConfig).toolTip?.yFormat
+          },
+          markers: (config as ChartCardConfig).xAxisMarkers?.map((marker) => ({
+            axis: 'y',
+            value: marker.value,
+            lineStyle: {
+              stroke: marker.color,
+              strokeWidth: 2,
+              strokeDasharray: marker.style === 'solid' ? undefined : marker.style === 'dashed' ? '4 2' : '2 2'
+            },
+            legend: marker.legend,
+            legendPosition: marker.legendPosition,
+            textStyle: {
+              fill: marker.color,
+              fontSize: 12,
+              fontWeight: 500
+            }
+          })) as CartesianMarkerProps[],
+          legend: {
+            enabled: (config as ChartCardConfig).legend?.enabled,
+            position: (config as ChartCardConfig).legend?.position
           }
         }
       : {
@@ -191,111 +213,111 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
     // https://stackoverflow.com/questions/59276119/nivo-responsive-line-graph-only-responsive-on-making-wider-not-making-narrower
     const containerStyle: CSSProperties = height
       ? {
-          height: `${height}px`,
-          width: '100%',
-          minWidth: 0,
-          overflow: 'hidden',
-          userSelect: 'none',
-          touchAction: 'none'
+          height: `${height}px`
         }
       : {
-          height: '100%',
-          width: '100%',
-          minWidth: 0,
-          overflow: 'hidden',
-          userSelect: 'none',
-          touchAction: 'none'
+          height: '100%'
         }
 
     return (
-      <div className={className || ''} style={containerStyle} ref={containerRef}>
-        <ResponsiveLine
-          data={data}
-          enableArea={true}
-          useMesh={data.some((serie) => serie.data.length > 0)} // if no data, we cannot use mesh as it will throw an error upon hover
-          enableGridX={false} // always false, as the timeTicksLayer is used to draw the grid
-          animate={true}
-          enableCrosshair={true}
-          enableTouchCrosshair={true}
-          isInteractive={true}
-          onTouchStart={(_, event) => attrs.onTouchStart(event)}
-          onTouchEnd={(_, event) => attrs.onTouchEnd(event)}
-          areaOpacity={0.2}
-          margin={mergedConfig.margin}
-          xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ', useUTC: true }}
-          xFormat="time:%Y-%m-%d %H:%M:%S"
-          yScale={
-            {
-              ...mergedConfig.yScale,
-              min: 'auto',
-              max: mergedConfig.yScale.max === 'auto' ? getMaxValue(data) * 1.01 : Number(mergedConfig.yScale.max),
-              nice: true,
-              clamp: true
-            } as ScaleSpec
-          }
-          yFormat={mergedConfig.tooltipConfig.yFormat}
-          axisBottom={{ ...mergedConfig.axisBottom, tickValues: 0 }}
-          curve={curve}
-          // Gradient from https://nivo.rocks/storybook/?path=/docs/line--docs
-          defs={[
-            {
-              colors: [
-                {
-                  color: 'inherit',
-                  offset: 0
-                },
-                {
-                  color: 'inherit',
-                  offset: 100,
-                  opacity: 0
-                }
-              ],
-              id: 'gradient',
-              type: 'linearGradient'
+      <div
+        className={`${className} flex w-full min-w-0 touch-none select-none flex-col overflow-hidden`}
+        style={containerStyle}
+        ref={containerRef}
+      >
+        {mergedConfig.legend?.enabled && mergedConfig.legend.position === 'top' && (
+          <div className="flex-shrink-0">
+            <LineChartLegend data={data} />
+          </div>
+        )}
+        <div className="min-h-0 flex-grow">
+          <ResponsiveLine
+            data={data}
+            enableArea={mergedConfig.chartArea}
+            useMesh={data.some((serie) => serie.data.length > 0)} // if no data, we cannot use mesh as it will throw an error upon hover
+            enableGridX={false} // always false, as the timeTicksLayer is used to draw the grid
+            animate={true}
+            enableCrosshair={true}
+            enableTouchCrosshair={true}
+            isInteractive={true}
+            onTouchStart={(_, event) => attrs.onTouchStart(event)}
+            onTouchEnd={(_, event) => attrs.onTouchEnd(event)}
+            areaOpacity={isDarkMode ? 0.2 : 0.1}
+            margin={mergedConfig.margin}
+            xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ', useUTC: true }}
+            xFormat="time:%Y-%m-%d %H:%M:%S"
+            yScale={
+              {
+                ...mergedConfig.yScale,
+                min: 'auto',
+                max: mergedConfig.yScale.max === 'auto' ? getMaxValue(data) * 1.01 : Number(mergedConfig.yScale.max),
+                nice: true,
+                clamp: true
+              } as ScaleSpec
             }
-          ]}
-          fill={[
-            {
-              id: 'gradient',
-              match: '*'
-            }
-          ]}
-          axisLeft={{
-            ...mergedConfig.axisLeft,
-            tickValues: tickValues
-          }}
-          layers={[
-            (props: CustomLayerProps) =>
-              timeTicksLayer({
-                xScale: props.xScale,
-                data: data[0] ? data[0].data : [],
-                isDarkMode,
-                width: props.innerWidth,
-                height: props.innerHeight,
-                enableGridX: mergedConfig.enableGridX
-              }),
-            'grid',
-            'axes',
-            'lines',
-            'crosshair',
-            'points',
-            'areas',
-            'mesh' // must be last for tooltip to work
-            // TODO: maybe use slices instead
-            // TODO: add legends
-          ]}
-          pointSize={mergedConfig.pointSize}
-          pointColor={isDarkMode ? '#ffffff' : '#000000'}
-          pointBorderWidth={pointBorderWidth}
-          pointBorderColor={{ from: 'serieColor' }}
-          pointLabelYOffset={-10}
-          enableGridY={mergedConfig.enableGridY}
-          colors={getColorBlindSchemeWithBW(isDarkMode)}
-          theme={isDarkMode ? darkTheme : lightTheme}
-          onClick={handlePointClick}
-          tooltip={
-            tooltip ||
-            ((pos: PointTooltipProps) => {
+            yFormat={mergedConfig.tooltipConfig.yFormat}
+            axisBottom={{ ...mergedConfig.axisBottom, tickValues: 0 }}
+            curve={curve}
+            // Gradient from https://nivo.rocks/storybook/?path=/docs/line--docs
+            defs={[
+              {
+                colors: [
+                  {
+                    color: 'inherit',
+                    offset: 0
+                  },
+                  {
+                    color: 'inherit',
+                    offset: 100,
+                    opacity: 0
+                  }
+                ],
+                id: 'gradient',
+                type: 'linearGradient'
+              }
+            ]}
+            fill={[
+              {
+                id: 'gradient',
+                match: '*'
+              }
+            ]}
+            axisLeft={{
+              ...mergedConfig.axisLeft,
+              tickValues: tickValues
+            }}
+            layers={[
+              (props: CustomLayerProps) =>
+                timeTicksLayer({
+                  xScale: props.xScale,
+                  data: data[0] ? data[0].data : [],
+                  isDarkMode,
+                  width: props.innerWidth,
+                  height: props.innerHeight,
+                  enableGridX: mergedConfig.enableGridX!
+                }),
+              'grid',
+              'axes',
+              'markers', // trade-off, markers' legends can be hidden behind the line of the chart
+              'lines',
+              'crosshair',
+              'points',
+              'areas',
+              'mesh' // must be last for tooltip to work
+              // TODO: maybe use slices instead
+              // TODO: add legends
+            ]}
+            markers={mergedConfig.markers}
+            pointSize={mergedConfig.pointSize}
+            pointColor={isDarkMode ? '#ffffff' : '#000000'}
+            pointBorderWidth={pointBorderWidth}
+            pointBorderColor={{ from: 'serieColor' }}
+            pointLabelYOffset={-10}
+            enableGridY={mergedConfig.enableGridY}
+            colors={getColorBlindSchemeWithBW(isDarkMode)}
+            theme={isDarkMode ? darkTheme : lightTheme}
+            onClick={handlePointClick}
+            tooltip={(pos: PointTooltipProps) => {
               const pointIdParts = pos.point.id.split(' ')
               const rawInstanceID = pointIdParts.length > 1 ? pointIdParts[1].trim() : ''
 
@@ -317,14 +339,17 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
                   yName={mergedConfig.tooltipConfig.yName}
                 />
               )
-            })
-          }
-        />
+            }}
+          />
+        </div>
+        {mergedConfig.legend?.enabled && mergedConfig.legend.position === 'bottom' && (
+          <div className="flex-shrink-0">
+            <LineChartLegend data={data} />
+          </div>
+        )}
       </div>
     )
   }
 )
-
-ResponsiveLineChartBase.displayName = 'ResponsiveLineChartBase'
 
 export const ResponsiveLineChart = memo(ResponsiveLineChartBase)
