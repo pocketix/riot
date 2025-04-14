@@ -19,7 +19,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Serie } from '@nivo/line'
 import { SingleParameterCombobox } from '../builders/components/single-parameter-combobox'
 import { SequentialStatesVisualization } from './components/SequentialStatesVisualization'
-import { TimeFrameSelector } from '../builders/components/time-frame-selector'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { FC } from 'react'
@@ -33,6 +32,7 @@ import { Card } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ParameterSnapshotHookResult } from '@/hooks/useParameterSnapshot'
 import { InstanceWithKPIs } from '@/context/stores/kpiStore'
+import { TimeFrameButtonSelector } from '../builders/components/time-frame-button-selectors'
 
 export interface DeviceModalDetailViewProps {
   selectedDevice: any
@@ -78,6 +78,12 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
   const ParameterDetail = () => (
     <>
       <Card className="flex flex-col items-center justify-center">
+        <Label className="flex items-center justify-center gap-2 pt-1">
+          Last Value
+          <Badge variant="outline" className="font-mono text-xs">
+            {parameterLastValue?.toString() || 'N/A'}
+          </Badge>
+        </Label>
         <div className="flex flex-wrap items-center justify-center gap-1 pt-2">
           <Label className="flex flex-col items-start">
             Parameter
@@ -92,20 +98,21 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
                   ? parameters?.find((param) => param.denotation === wholeParameter.denotation) || null
                   : null
               }
-              className="w-32"
+              className="w-48"
             />
           </Label>
-          <Label className="flex flex-col items-start">
-            Time Frame
-            <TimeFrameSelector onValueChange={(value) => setTimeFrame(value!)} value={timeFrame} className="w-32" />
-          </Label>
+          <div className="flex flex-col items-start">
+            <span className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Time Frame
+            </span>
+            <TimeFrameButtonSelector
+              compact={true}
+              onValueChange={(value) => setTimeFrame(value!)}
+              value={timeFrame}
+              className="w-32"
+            />
+          </div>
         </div>
-        <Label className="flex items-center justify-center gap-2 pt-1">
-          Last Value
-          <Badge variant="outline" className="font-mono text-xs">
-            {parameterLastValue?.toString() || 'N/A'}
-          </Badge>
-        </Label>
         {renderVisualization()}
       </Card>
     </>
