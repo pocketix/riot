@@ -336,6 +336,7 @@ export function BulletChartBuilderController({ onDataSubmit, config }: BulletCha
       getParameterOptions={getParameterOptions}
       smartRangeDialog={smartRangeDialog}
       onSmartRangeDialogChange={setSmartRangeDialog}
+      getInstanceName={(instanceID: number | null) => getInstanceById(instanceID!)?.userIdentifier || null}
     />
   )
 }

@@ -54,6 +54,7 @@ export interface BulletChartBuilderViewProps {
       id?: string
     }
   ) => void
+  getInstanceName: (instanceID: number | null) => string | null
   onRemoveRow: (index: number) => void
   getParameterOptions: (instanceID: number | null) => Parameter[]
 
@@ -246,11 +247,12 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
         {form.watch('cardTitle') ? <h3 className="ml-2 text-lg font-semibold">{form.watch('cardTitle')}</h3> : null}
         {fields.map((_, index) => {
           const row = form.watch(`rows.${index}`)
+          const key = JSON.stringify(row)
           if (!props.chartData[index]) return null
           return (
             <div className="relative mb-2 box-border h-[65px] w-full" key={index}>
               <div className="absolute inset-0">
-                <BulletRow row={row} editModeEnabled={false} aggregatedData={props.chartData[index]} />
+                <BulletRow key={key} row={row} editModeEnabled={false} aggregatedData={props.chartData[index]} />
               </div>
             </div>
           )
@@ -281,23 +283,35 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                 )}
               />
             </div>
-            <Accordion type="single" collapsible className="mt-4 w-full" defaultValue="instances">
-              <AccordionItem value="instances">
-                <AccordionTrigger>Instances</AccordionTrigger>
-                <AccordionContent className="w-full">
-                  {fields.map((item, index) => (
+            <Accordion type="multiple" className="w-full" defaultValue={props.config ? [''] : ['instance-0']}>
+              {fields.map((item, index) => (
+                <AccordionItem key={item.id} value={`instance-${index}`}>
+                  <AccordionTrigger className="flex w-full items-center justify-between">
+                    <div className="flex flex-1 flex-wrap items-center">
+                      <span>
+                        {props.getInstanceName(form.watch(`rows.${index}.instance.id`)) || `Instance ${index + 1}`}
+                      </span>
+                      {form.watch(`rows.${index}.parameter.denotation`) && (
+                        <Badge variant="outline" className="ml-2">
+                          {form.watch(`rows.${index}.parameter.denotation`)}
+                        </Badge>
+                      )}
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation() // prevents other open accordions from closing
+                        props.onRemoveRow(index)
+                        remove(index)
+                      }}
+                      className="mr-2 h-6 w-6"
+                    >
+                      <TbTrash size={14} />
+                    </Button>
+                  </AccordionTrigger>
+                  <AccordionContent className="w-full">
                     <div key={item.id} className="relative mb-4 rounded-lg border p-4">
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => {
-                          props.onRemoveRow(index)
-                          remove(index)
-                        }}
-                        className="absolute right-0 top-0"
-                      >
-                        <TbTrash />
-                      </Button>
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <FormField
                           control={form.control}
@@ -748,36 +762,36 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                         </AccordionItem>
                       </Accordion>
                     </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      append({
-                        instance: { uid: '', id: null },
-                        parameter: { denotation: '', id: null },
-                        config: {
-                          name: '',
-                          margin: { top: 0, right: 10, bottom: 20, left: 10 },
-                          reverse: false,
-                          decimalPlaces: 2,
-                          function: '',
-                          minValue: 'auto',
-                          maxValue: 'auto',
-                          timeFrame: '24',
-                          measureSize: 0.2,
-                          markers: []
-                        }
-                      })
-                    }}
-                    className="mx-auto flex items-center gap-1 shadow-sm"
-                  >
-                    <IoAdd />
-                    Add Instance
-                  </Button>
-                </AccordionContent>
-              </AccordionItem>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  append({
+                    instance: { uid: '', id: null },
+                    parameter: { denotation: '', id: null },
+                    config: {
+                      name: '',
+                      margin: { top: 0, right: 10, bottom: 20, left: 10 },
+                      reverse: false,
+                      decimalPlaces: 2,
+                      function: '',
+                      minValue: 'auto',
+                      maxValue: 'auto',
+                      timeFrame: '24',
+                      measureSize: 0.2,
+                      markers: []
+                    }
+                  })
+                }}
+                className="mx-auto flex items-center gap-1 shadow-sm"
+              >
+                <IoAdd />
+                Add Instance
+              </Button>
             </Accordion>
             <Button type="submit" className="ml-auto mt-2 flex">
               Submit
