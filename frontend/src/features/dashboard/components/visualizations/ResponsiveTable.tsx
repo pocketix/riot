@@ -122,16 +122,19 @@ const TableCell = memo(({ column, row, columnIndex, decimalPlaces }: TableCellPr
   // real-time parameter snapshots for "last" function
   const useRealTimeData = column.function === 'last'
   const { value: snapshotValue } = useRealTimeData
-    ? useParameterSnapshot(row.instance.id!, row.parameter.id!)
+    ? useParameterSnapshot(row.instance?.id!, row.parameter?.id!)
     : { value: undefined }
+
+  const directValue = row.values?.[columnIndex]?.value
 
   const cellValue = useMemo(() => {
     if (useRealTimeData) {
-      return snapshotValue !== undefined ? Number(snapshotValue) : undefined
+      const result = snapshotValue !== undefined ? Number(snapshotValue) : undefined
+      return result
+    } else {
+      return directValue
     }
-
-    return row.values[columnIndex]?.value
-  }, [useRealTimeData, snapshotValue, row.values, columnIndex])
+  }, [useRealTimeData, snapshotValue, directValue, column.function, columnIndex])
 
   if (cellValue === undefined || isNaN(cellValue)) {
     return (
@@ -145,8 +148,8 @@ const TableCell = memo(({ column, row, columnIndex, decimalPlaces }: TableCellPr
               <TooltipContent>
                 <div className="flex max-w-28 flex-col">
                   <span className="font-semibold text-destructive">No data available</span>
-                  <span className="break-words text-xs">Device: {row.instance.uid}</span>
-                  <span className="break-words text-xs">Parameter: {row.parameter.denotation}</span>
+                  <span className="break-words text-xs">Device: {row.instance?.uid}</span>
+                  <span className="break-words text-xs">Parameter: {row.parameter?.denotation}</span>
                 </div>
               </TooltipContent>
             </Tooltip>

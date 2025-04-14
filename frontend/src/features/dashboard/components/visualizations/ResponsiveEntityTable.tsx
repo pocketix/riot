@@ -6,6 +6,7 @@ import { useParameterSnapshot } from '@/hooks/useParameterSnapshot'
 import { ResponsiveLineChart } from './ResponsiveLineChart'
 import { EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
 import { Serie } from '@nivo/line'
+import { Switch } from '@/components/ui/switch'
 
 export interface EntityRowData {
   sparklineData?: Serie[]
@@ -51,7 +52,7 @@ const ResponsiveEntityTableBase = ({ config, sparklineData, className, height }:
             <EntityRow
               key={rowIndex}
               row={row}
-              sparklineData={sparklineData[`${row.instance.id}-${row.parameter.id}`]}
+              sparklineData={sparklineData[`${row.instance?.id!}-${row.parameter?.id!}`]}
               onRowClick={() => setDetailsSelectedDevice(row.instance.id!, row.parameter.id)}
             />
           ))}
@@ -68,7 +69,7 @@ interface EntityRowProps {
 }
 
 const EntityRow = memo(({ row, sparklineData, onRowClick }: EntityRowProps) => {
-  const { value } = useParameterSnapshot(row.instance.id!, row.parameter.id!)
+  const { value } = useParameterSnapshot(row.instance?.id!, row.parameter?.id!)
 
   const hasData = useMemo(() => {
     if (row.visualization === 'sparkline') {
@@ -91,8 +92,8 @@ const EntityRow = memo(({ row, sparklineData, onRowClick }: EntityRowProps) => {
                 <TooltipContent>
                   <div className="flex max-w-28 flex-col">
                     <span className="font-semibold text-destructive">No data available</span>
-                    <span className="break-words text-xs">Device: {row.instance.uid}</span>
-                    <span className="break-words text-xs">Parameter: {row.parameter.denotation}</span>
+                    <span className="break-words text-xs">Device: {row.instance?.uid!}</span>
+                    <span className="break-words text-xs">Parameter: {row.parameter?.denotation!}</span>
                   </div>
                 </TooltipContent>
               </Tooltip>
@@ -108,16 +109,21 @@ const EntityRow = memo(({ row, sparklineData, onRowClick }: EntityRowProps) => {
       <td className="text-sm">{row.name}</td>
 
       {row.visualization === 'sparkline' && (
-        <td className="h-[24px] w-[75px] min-w-0 text-center text-sm">
+        <td className="h-[24px] w-[75px] min-w-0 text-end text-sm">
           <ResponsiveLineChart data={sparklineData!} detailsOnClick={false} useSparklineMode={true} />
         </td>
       )}
 
-      {row.visualization === 'immediate' && <td className="text-center text-sm">{value}</td>}
+      {row.visualization === 'immediate' && (
+        <td className="w-fit text-end text-sm">
+          {typeof value === 'number' ? Number(value.toFixed(row.decimalPlaces)) : String(value)} {row.valueSymbol!}
+        </td>
+      )}
 
       {row.visualization === 'switch' && (
-        <td className="text-center text-sm">
-          {/* Not yet implemented properly */}
+        <td className="text-end text-sm">
+          {/* command invocation on onCheckedChange - not setup */}
+          <Switch disabled={false} checked={Boolean(value)} className="cursor-not-allowed" />
         </td>
       )}
     </tr>
