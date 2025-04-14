@@ -22,7 +22,10 @@ export const BulletRow = ({ row, editModeEnabled, aggregatedData = undefined }: 
     if (aggregatedData) {
       return aggregatedData
     }
-    const ranges = row.config.ranges ? row.config.ranges.flatMap((range) => [range.min, range.max]) : []
+
+    const ranges = row.config.ranges
+      ? [...row.config.ranges.flatMap((range) => [range.min, range.max])]
+      : [0, 0, -1, -1]
 
     return {
       id: row.config.name,

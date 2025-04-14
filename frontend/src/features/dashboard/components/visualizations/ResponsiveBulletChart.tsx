@@ -8,7 +8,6 @@ import { BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { getColorBlindSchemeBullet } from './color-schemes/color-impaired'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { useLongPress } from '@uidotdev/usehooks'
-import { isEqual } from 'lodash'
 
 export interface ResponsiveBulletProps {
   data: Datum
@@ -31,7 +30,7 @@ const bulletMarker = (props: BulletMarkersItemProps) => {
 
   return (
     <g transform={`translate(${x}, ${-5})`}>
-      <line x1={0} y1={0} x2={0} y2={lineHeight + y} stroke={fill} strokeWidth={lineWidth} />
+      <line x1={0} y1={0} x2={0} y2={lineHeight + y + 5} stroke={fill} strokeWidth={lineWidth} />
       <polygon
         points={`${-triangleSize / 2},0 ${triangleSize / 2},0 0,${triangleSize}`}
         fill={stroke}
@@ -182,15 +181,4 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: 
 
 ResponsiveBulletBase.displayName = 'ResponsiveBulletBase'
 
-// export const ResponsiveBulletChart = ResponsiveBulletBase
-export const ResponsiveBulletChart = memo(ResponsiveBulletBase, (prevProps, nextProps) => {
-  const result =
-    isEqual(prevProps.data, nextProps.data) &&
-    isEqual(prevProps.rowConfig, nextProps.rowConfig) &&
-    prevProps.lastUpdated?.getTime() === nextProps.lastUpdated?.getTime()
-
-  // TODO: Remove
-  // console.log('Comparing props:', prevProps, nextProps, result)
-
-  return result
-})
+export const ResponsiveBulletChart = memo(ResponsiveBulletBase)

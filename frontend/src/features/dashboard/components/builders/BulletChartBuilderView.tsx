@@ -3,14 +3,6 @@ import { Datum } from '@nivo/bullet'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import {
-  SdParameterType,
-  StatisticsOperation,
-  SdTypeParametersWithSnapshotsQuery,
-  useSdTypeParametersWithSnapshotsQuery,
-  useStatisticsQuerySensorsWithFieldsLazyQuery,
-  SdInstancesWithParamsQuery
-} from '@/generated/graphql'
 import { z } from 'zod'
 import { BulletCardConfig, bulletChartBuilderSchema } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -22,18 +14,15 @@ import { IoAdd } from 'react-icons/io5'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { toast } from 'sonner'
-import { BuilderResult } from '@/types/dashboard/GridItem'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
 import { TimeFrameSelector } from './components/time-frame-selector'
-import { useInstances } from '@/context/InstancesContext'
-import { useParameterSnapshotContext } from '@/context/ParameterUpdatesContext'
 import { AggregateFunctionCombobox } from './components/aggregate-function-combobox'
-import { ResponsiveBulletChart } from '../visualizations/ResponsiveBulletChart'
 import { Label } from '@/components/ui/label'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
 import { InfoIcon } from 'lucide-react'
+import { toast } from 'sonner'
+import { Parameter } from '@/context/InstancesContext'
 import {
   Dialog,
   DialogContent,
@@ -42,36 +31,45 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
+import { BulletRow } from '../cards/components/BulletRow'
+import { SdParameterType } from '@/generated/graphql'
 
-type BulletChartBuilderResult = BuilderResult<BulletCardConfig>
-
-export interface BulletChartBuilderProps {
-  onDataSubmit: (data: BulletChartBuilderResult) => void
+export interface BulletChartBuilderViewProps {
+  chartData: Datum[]
   config?: BulletCardConfig
+  onSubmit: (values: BulletCardConfig) => void
+  onCheckRowAndFetch: (rowIndex: number, rowData: any) => Promise<boolean>
+  onGenerateRangesAndTarget: (rowData: BulletCardConfig['rows'][number]) => Promise<{
+    ranges: { min: number; max: number }[]
+    markers: number[]
+    minValue: number
+    maxValue: number
+  } | null>
+  onBulletDataChange: (
+    index: number,
+    data: {
+      ranges?: number[]
+      markers?: number[]
+      measures?: number[]
+      id?: string
+    }
+  ) => void
+  onRemoveRow: (index: number) => void
+  getParameterOptions: (instanceID: number | null) => Parameter[]
+
+  // The dialog is also controlled by the controller
+  smartRangeDialog: { open: boolean; rowIndex: number | null }
+  onSmartRangeDialogChange: (state: { open: boolean; rowIndex: number | null }) => void
 }
 
-export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderProps) {
+export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
   const parameterNameMock = useRef<HTMLSpanElement | null>(null)
-  const { getInstanceByUid } = useInstances()
-  const { getParameterSnapshot } = useParameterSnapshotContext()
-  const [selectedInstance, setSelectedInstance] = useState<SdInstancesWithParamsQuery['sdInstances'][number] | null>(
-    null
-  )
-  const [availableParameters, setAvailableParameters] = useState<{
-    [key: string]: SdTypeParametersWithSnapshotsQuery['sdType']['parameters']
-  }>({})
-  const [getChartData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
-  const [data, setData] = useState<Datum[]>([])
-  const [rangeInput, setRangeInput] = useState<string>('')
-  const [markerInput, setMarkerInput] = useState<string>('')
-  const [smartRangeDialog, setSmartRangeDialog] = useState<{ open: boolean; rowIndex: number | null }>({
-    open: false,
-    rowIndex: null
-  })
+  const [rangeInputs, setRangeInputs] = useState<Record<number, string>>({})
+  const [markerInputs, setMarkerInputs] = useState<Record<number, string>>({})
 
   const form = useForm<z.infer<typeof bulletChartBuilderSchema>>({
     resolver: zodResolver(bulletChartBuilderSchema),
-    defaultValues: config || {
+    defaultValues: props.config || {
       cardTitle: 'Bullet Charts',
       rows: [
         {
@@ -87,7 +85,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
             reverse: false,
             measureSize: 0.2,
             markers: [],
-            margin: { top: 10, right: 10, bottom: 20, left: 30 },
+            margin: { top: 0, right: 10, bottom: 20, left: 30 },
             titleOffsetX: -5,
             colorScheme: 'nivo'
           }
@@ -101,309 +99,100 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
     name: 'rows'
   })
 
-  useEffect(() => {
-    if (config) {
-      config.rows.forEach((_, index) => {
-        checkRowAndFetch(index)
+  const handleRangeInputChange = (rowIndex: number, input: string) => {
+    setRangeInputs((prev) => ({
+      ...prev,
+      [rowIndex]: input
+    }))
+
+    const newRanges = input
+      .split(',')
+      .map((range) => {
+        const [min, max] = range.split(':').map((value) => Number(value.trim()))
+        if (!isNaN(min) && !isNaN(max)) {
+          return { min, max }
+        }
+        return null
       })
-    }
-  }, [config])
+      .filter(Boolean) as { min: number; max: number }[]
 
-  const generateRangesAndTarget = async (rowIndex: number) => {
-    const row = form.getValues(`rows.${rowIndex}`)
-
-    if (!row?.instance?.uid || !row?.parameter?.denotation) {
-      // should not happen, but we cannot fetch without this,
-      // the checkRowAndFetch function should prevent this
-      toast.error('Please select an instance and parameter first')
-      return
-    }
-
-    toast.loading('Analyzing parameter data...', { id: 'range-generator' })
-
-    try {
-      // Fetch min, max, and avg values for the parameter
-      const results = await Promise.allSettled([
-        // Min
-        getChartData({
-          variables: {
-            sensors: {
-              sensors: [{ key: row.instance.uid, values: [row.parameter.denotation] }]
-            },
-            request: {
-              from: new Date(Date.now() - Number(row.config.timeFrame!) * 2 * 60 * 60 * 1000).toISOString(), // Use 24h for stats
-              aggregateMinutes: Number(row.config.timeFrame!) * 2 * 60 * 1000,
-              operation: StatisticsOperation.Min
-            }
-          }
-        }),
-        // Max
-        getChartData({
-          variables: {
-            sensors: {
-              sensors: [{ key: row.instance.uid, values: [row.parameter.denotation] }]
-            },
-            request: {
-              from: new Date(Date.now() - Number(row.config.timeFrame!) * 2 * 60 * 60 * 1000).toISOString(), // Use 24h for stats
-              aggregateMinutes: Number(row.config.timeFrame!) * 2 * 60 * 1000,
-              operation: StatisticsOperation.Max
-            }
-          }
-        }),
-        // Mean
-        getChartData({
-          variables: {
-            sensors: {
-              sensors: [{ key: row.instance.uid, values: [row.parameter.denotation] }]
-            },
-            request: {
-              from: new Date(Date.now() - Number(row.config.timeFrame!) * 2 * 60 * 60 * 1000).toISOString(), // Use 24h for stats
-              aggregateMinutes: Number(row.config.timeFrame!) * 2 * 60 * 1000,
-              operation: StatisticsOperation.Mean
-            }
-          }
-        })
-      ])
-
-      const minResult =
-        results[0].status === 'fulfilled' ? results[0].value.data?.statisticsQuerySensorsWithFields[0]?.data : null
-      const maxResult =
-        results[1].status === 'fulfilled' ? results[1].value.data?.statisticsQuerySensorsWithFields[0]?.data : null
-      const meanResult =
-        results[2].status === 'fulfilled' ? results[2].value.data?.statisticsQuerySensorsWithFields[0]?.data : null
-
-      if (!minResult || !maxResult || !meanResult) {
-        toast.error('Not enough data to suggest ranges', { id: 'range-generator' })
-        return
-      }
-
-      const minValue = JSON.parse(minResult)[row.parameter.denotation]
-      const maxValue = JSON.parse(maxResult)[row.parameter.denotation]
-      const meanValue = JSON.parse(meanResult)[row.parameter.denotation]
-
-      if (minValue === undefined || maxValue === undefined || meanValue === undefined) {
-        toast.error('Could not extract parameter values', { id: 'range-generator' })
-        return
-      }
-
-      const totalRange = maxValue - minValue
-      const buffer = totalRange * 0.1
-
-      const round = (value: number) => {
-        const precision = totalRange > 100 ? 0 : totalRange > 10 ? 1 : 2
-        return Number(value.toFixed(precision))
-      }
-
-      const roundedMin = round(Math.max(0, minValue - buffer))
-
-      // get the size of a single range, we want 3 ranges
-      const rangeSize = round((maxValue + buffer - roundedMin) / 3)
-
-      const ranges = [
-        { min: roundedMin, max: round(roundedMin + rangeSize) },
-        { min: round(roundedMin + rangeSize), max: round(roundedMin + 2 * rangeSize) },
-        { min: round(roundedMin + 2 * rangeSize), max: round(maxValue + buffer) }
-      ]
-
-      // Target somewhere between the max and the mean
-      const target = round(meanValue + (maxValue - meanValue) * 0.7)
-      const markers = [target]
-
-      form.setValue(`rows.${rowIndex}.config.ranges`, ranges)
-      form.setValue(`rows.${rowIndex}.config.markers`, markers)
-      form.setValue(`rows.${rowIndex}.config.minValue`, roundedMin)
-      form.setValue(`rows.${rowIndex}.config.maxValue`, Number(parseFloat(maxValue + buffer).toFixed(2)))
-
-      // Set the inputs, so that the user can change them easily
-      setRangeInput(ranges.map((r) => `${r.min}:${r.max}`).join(','))
-      setMarkerInput(markers.join(','))
-
-      handleDataChange(
-        rowIndex,
-        ranges.flatMap((range) => [range.min, range.max]),
-        markers
-      )
-
-      toast.success('Ranges generated! Feel free to adjust them to your liking.', { id: 'range-generator' })
-    } catch (error) {
-      console.error('Error generating ranges:', error)
-      toast.error('Failed to generate ranges', { id: 'range-generator' })
-    }
+    form.setValue(`rows.${rowIndex}.config.ranges`, newRanges)
+    props.onBulletDataChange(rowIndex, {
+      ranges: newRanges.flatMap((range) => [range.min, range.max])
+    })
   }
 
-  const fetchRowData = async (rowIndex: number) => {
-    const row = form.getValues(`rows.${rowIndex}`)
+  const handleMarkerInputChange = (rowIndex: number, input: string) => {
+    setMarkerInputs((prev) => ({
+      ...prev,
+      [rowIndex]: input
+    }))
 
-    try {
-      // 'last' function uses snapshot data
-      if (row.config.function === 'last') {
-        const instance = getInstanceByUid(row.instance.uid)
-        if (!instance) return
-
-        const snapshot = getParameterSnapshot(instance.id!, row.parameter.id!)
-
-        if (snapshot?.number !== undefined) {
-          setData((prev) => {
-            const newData = [...prev]
-            newData[rowIndex] = {
-              id: row.config.name || row.parameter.denotation,
-              ranges: [
-                ...(row.config.ranges || []).flatMap((range: { min: number; max: number }) => [range.min, range.max]),
-                0,
-                0
-              ],
-              measures: [snapshot.number!],
-              markers: row.config.markers || []
-            }
-            return newData
-          })
-        } else {
-          toast.error(`No snapshot data available for ${instance.userIdentifier} - ${row.parameter.denotation}`)
+    const newMarkers = input
+      .split(',')
+      .map((marker) => {
+        const value = Number(marker.trim())
+        if (!isNaN(value)) {
+          return value
         }
-        return
-      }
-
-      // other functions using statistics API
-      const result = await getChartData({
-        variables: {
-          sensors: {
-            sensors: [{ key: row.instance.uid, values: [row.parameter.denotation] }]
-          },
-          request: {
-            from: new Date(Date.now() - Number(row.config.timeFrame) * 60 * 60 * 1000).toISOString(),
-            aggregateMinutes: Number(row.config.timeFrame) * 60 * 1000,
-            operation: row.config.function as StatisticsOperation
-          }
-        }
+        return null
       })
+      .filter((marker): marker is number => marker !== null)
 
-      if (result.data?.statisticsQuerySensorsWithFields.length! > 0) {
-        const parsedValue = result.data?.statisticsQuerySensorsWithFields[0]?.data
-          ? JSON.parse(result.data?.statisticsQuerySensorsWithFields[0].data)
-          : null
-
-        const value = parsedValue ? parsedValue[row.parameter.denotation] : undefined
-
-        if (value !== undefined) {
-          setData((prev) => {
-            const newData = [...prev]
-            newData[rowIndex] = {
-              id: row.config.name || row.parameter.denotation,
-              ranges: [
-                ...(row.config.ranges || []).flatMap((range: { min: number; max: number }) => [range.min, range.max]),
-                0,
-                0
-              ],
-              measures: [value],
-              markers: row.config.markers || []
-            }
-            return newData
-          })
-        }
-      }
-    } catch (error) {
-      const instance = getInstanceByUid(row.instance.uid)
-      toast.error(
-        `Failed to fetch data for '${instance?.userIdentifier || row.instance.uid} - ${row.parameter.denotation}'`
-      )
-      console.error('Fetch error:', error)
-    }
+    form.setValue(`rows.${rowIndex}.config.markers`, newMarkers)
+    props.onBulletDataChange(rowIndex, { markers: newMarkers })
   }
 
-  const checkRowAndFetch = (rowIndex: any) => {
-    // Check if row at index is valid and fetch data
-    const row = form.getValues(`rows.${rowIndex}`)
-    const valid =
-      row?.instance?.uid &&
-      row?.parameter?.denotation &&
-      row?.config?.function &&
-      (row.config.function !== 'last' ? row.config.timeFrame : true)
+  const handleRangeDelete = (rowIndex: number, rangeIndex: number) => {
+    const ranges = form.getValues(`rows.${rowIndex}.config.ranges`)
+    if (!ranges) return
 
-    if (valid && !config?.rows[rowIndex].instance.id) {
-      setSmartRangeDialog({
-        open: true,
-        rowIndex
-      })
-    }
+    const newRanges = ranges.filter((_, i) => i !== rangeIndex)
+    form.setValue(`rows.${rowIndex}.config.ranges`, newRanges)
 
-    if (valid) {
-      fetchRowData(rowIndex)
-    }
+    setRangeInputs((prev) => ({
+      ...prev,
+      [rowIndex]: newRanges.map((r: { min: number; max: number }) => `${r.min}:${r.max}`).join(', ')
+    }))
+
+    props.onBulletDataChange(rowIndex, {
+      ranges: newRanges.flatMap((range) => [range.min, range.max])
+    })
   }
 
-  const { data: parametersData, refetch: refetchParameters } = useSdTypeParametersWithSnapshotsQuery({
-    variables: { sdTypeId: selectedInstance?.type.id! },
-    skip: !selectedInstance
-  })
+  const handleMarkerDelete = (rowIndex: number, markerIndex: number) => {
+    const markers = form.getValues(`rows.${rowIndex}.config.markers`)
+    if (!markers) return
+
+    const newMarkers = markers.filter((_, i) => i !== markerIndex)
+    form.setValue(`rows.${rowIndex}.config.markers`, newMarkers)
+
+    setMarkerInputs((prev) => ({
+      ...prev,
+      [rowIndex]: newMarkers.join(', ')
+    }))
+
+    props.onBulletDataChange(rowIndex, { markers: newMarkers })
+  }
 
   useEffect(() => {
-    if (parametersData && selectedInstance) {
-      setAvailableParameters((prev) => ({
-        ...prev,
-        [selectedInstance.type.id]: parametersData.sdType.parameters
-      }))
-    }
-  }, [parametersData, selectedInstance])
+    if (props.config) {
+      const newRangeInputs: Record<number, string> = {}
+      const newMarkerInputs: Record<number, string> = {}
 
-  useEffect(() => {
-    if (config) {
-      config.rows.forEach((row) => {
-        const instance = getInstanceByUid(row.instance.uid)
-        if (instance) {
-          refetchParameters({ sdTypeId: instance.type.id }).then((result) => {
-            setAvailableParameters((prev) => ({
-              ...prev,
-              [instance.type.id]: result.data.sdType.parameters
-            }))
-          })
-        }
-      })
+      props.config.rows.forEach((row, rowIndex) => {
+        newMarkerInputs[rowIndex] = (row.config.markers || []).join(', ')
 
-      setMarkerInput(
-        config.rows
-          .map((row) => row.config.markers)
-          .flat()
-          .join(', ')
-      )
-
-      setRangeInput(
-        config.rows
-          .map((row) => row.config.ranges)
-          .flat()
+        newRangeInputs[rowIndex] = (row.config.ranges || [])
           .map((range) => (range ? `${range.min}:${range.max}` : ''))
           .filter(Boolean)
           .join(', ')
-      )
-
-      config.rows.forEach((_, index) => {
-        fetchRowData(index)
       })
+
+      setRangeInputs(newRangeInputs)
+      setMarkerInputs(newMarkerInputs)
     }
-  }, [config, refetchParameters])
-
-  const getParameterOptions = (instanceUID: string) => {
-    const instance = getInstanceByUid(instanceUID)
-    if (!instance) return []
-    const parameters = availableParameters[instance.type?.id!]
-    if (!parameters) return []
-    return parameters.filter((param) => param.type === SdParameterType.Number)
-  }
-
-  const handleDataChange = (
-    index: number,
-    ranges?: number[],
-    markers?: number[],
-    measures?: number[],
-    id?: string
-  ): void => {
-    const newData = [...data]
-    if (!newData[index]) return
-    if (ranges) newData[index].ranges = ranges
-    if (markers) newData[index].markers = markers
-    if (measures) newData[index].measures = measures
-    if (id) newData[index].id = id.trim()
-    setData(newData)
-  }
+  }, [props.config])
 
   const automaticOffset = (index: number, name: string) => {
     if (!parameterNameMock.current) return
@@ -412,16 +201,37 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
     form.setValue(`rows.${index}.config.margin.left`, width + 5)
   }
 
-  const handleSubmit = (values: z.infer<typeof bulletChartBuilderSchema>) => {
-    const result: BulletChartBuilderResult = {
-      config: values,
-      sizing: {
-        h: values.rows.length,
-        w: 2
-      }
-    }
+  const handleGenerateRangesAndTarget = async (rowIndex: number) => {
+    const row = form.getValues(`rows.${rowIndex}`)
+    const result = await props.onGenerateRangesAndTarget(row)
 
-    onDataSubmit(result)
+    if (result) {
+      const { ranges, markers, minValue, maxValue } = result
+
+      form.setValue(`rows.${rowIndex}.config.ranges`, ranges)
+      form.setValue(`rows.${rowIndex}.config.markers`, markers)
+      form.setValue(`rows.${rowIndex}.config.minValue`, minValue)
+      form.setValue(`rows.${rowIndex}.config.maxValue`, maxValue)
+
+      // Update inputs for only this specific row
+      setRangeInputs((prev) => ({
+        ...prev,
+        [rowIndex]: ranges.map((r) => `${r.min}:${r.max}`).join(', ')
+      }))
+
+      setMarkerInputs((prev) => ({
+        ...prev,
+        [rowIndex]: markers.join(',')
+      }))
+
+      // Update chart 'data', not the measure though
+      props.onBulletDataChange(rowIndex, {
+        ranges: ranges.flatMap((range) => [range.min, range.max]),
+        markers: markers
+      })
+
+      toast.success('Ranges generated! Feel free to adjust them to your liking.')
+    }
   }
 
   return (
@@ -435,22 +245,12 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
       <Card className="h-fit w-full">
         {form.watch('cardTitle') ? <h3 className="ml-2 text-lg font-semibold">{form.watch('cardTitle')}</h3> : null}
         {fields.map((_, index) => {
-          const row = form.getValues(`rows.${index}`)
-          if (!data[index]) return null
-
-          // key, the chart does not re-render when the config changes
-          const renderKey = JSON.stringify({
-            margin: row.config.margin,
-            measureSize: row.config.measureSize,
-            titleOffsetX: row.config.titleOffsetX,
-            reverse: row.config.reverse,
-            colorScheme: row.config.colorScheme
-          })
-
+          const row = form.watch(`rows.${index}`)
+          if (!props.chartData[index]) return null
           return (
-            <div className="relative h-[70px] w-full" key={index}>
+            <div className="relative mb-2 box-border h-[65px] w-full" key={index}>
               <div className="absolute inset-0">
-                <ResponsiveBulletChart key={`${index}-${renderKey}`} data={data[index]} rowConfig={row} />
+                <BulletRow row={row} editModeEnabled={false} aggregatedData={props.chartData[index]} />
               </div>
             </div>
           )
@@ -459,7 +259,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
       <Card className="mt-4 h-fit w-full overflow-hidden p-2 pt-0 shadow-lg">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={form.handleSubmit(props.onSubmit)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -481,7 +281,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                 )}
               />
             </div>
-            <Accordion type="single" collapsible className="mt-4 w-full">
+            <Accordion type="single" collapsible className="mt-4 w-full" defaultValue="instances">
               <AccordionItem value="instances">
                 <AccordionTrigger>Instances</AccordionTrigger>
                 <AccordionContent className="w-full">
@@ -491,7 +291,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                         variant="destructive"
                         size="icon"
                         onClick={() => {
-                          setData((prev) => prev.filter((_, i) => i !== index))
+                          props.onRemoveRow(index)
                           remove(index)
                         }}
                         className="absolute right-0 top-0"
@@ -508,10 +308,9 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                               <FormControl>
                                 <SingleInstanceCombobox
                                   onValueChange={(instance) => {
-                                    setSelectedInstance(instance)
                                     field.onChange(instance)
                                     form.setValue(`rows.${index}.parameter`, { denotation: '', id: null })
-                                    checkRowAndFetch(index)
+                                    props.onCheckRowAndFetch(index, form.getValues(`rows.${index}`))
                                   }}
                                   value={field.value.id}
                                 />
@@ -529,18 +328,29 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                               <FormControl>
                                 <SingleParameterCombobox
                                   value={field.value}
+                                  filter={SdParameterType.Number}
                                   onValueChange={(value) => {
                                     form.setValue(`rows.${index}.config.name`, value?.denotation!)
                                     automaticOffset(index, value?.denotation!)
-                                    handleDataChange(index, undefined, undefined, undefined, value?.denotation)
+
+                                    props.onBulletDataChange(index, { id: value?.denotation })
+
+                                    form.setValue(`rows.${index}.config.ranges`, [])
+                                    setRangeInputs((prev) => ({
+                                      ...prev,
+                                      [index]: ''
+                                    }))
+
+                                    form.setValue(`rows.${index}.config.markers`, [])
+                                    setMarkerInputs((prev) => ({
+                                      ...prev,
+                                      [index]: ''
+                                    }))
+
                                     field.onChange(value)
-                                    checkRowAndFetch(index)
+                                    props.onCheckRowAndFetch(index, form.getValues(`rows.${index}`))
                                   }}
-                                  options={
-                                    form.watch(`rows.${index}.instance.uid`)
-                                      ? getParameterOptions(form.watch(`rows.${index}.instance.uid`))
-                                      : []
-                                  }
+                                  options={props.getParameterOptions(form.watch(`rows.${index}.instance.id`))}
                                   disabled={!form.getValues(`rows.${index}.instance.uid`)}
                                 />
                               </FormControl>
@@ -562,7 +372,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                   onChange={(e) => {
                                     field.onChange(e.target.value)
                                     automaticOffset(index, e.target.value)
-                                    handleDataChange(index, undefined, undefined, undefined, e.target.value)
+                                    props.onBulletDataChange(index, { id: e.target.value })
                                   }}
                                 />
                               </FormControl>
@@ -584,7 +394,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                     if (value === 'last') {
                                       form.setValue(`rows.${index}.config.timeFrame`, '24')
                                     }
-                                    checkRowAndFetch(index)
+                                    props.onCheckRowAndFetch(index, form.getValues(`rows.${index}`))
                                   }}
                                 />
                               </FormControl>
@@ -605,7 +415,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                       value={field.value}
                                       onValueChange={(value) => {
                                         field.onChange(value)
-                                        checkRowAndFetch(index)
+                                        props.onCheckRowAndFetch(index, form.getValues(`rows.${index}`))
                                       }}
                                     />
                                   </FormControl>
@@ -649,21 +459,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                       {range.min} : {range.max}
                                       <TbTrash
                                         className="ml-2 cursor-pointer text-destructive"
-                                        onClick={() => {
-                                          if (!field.value) return
-                                          const newRanges = field.value?.filter((_, i) => i !== rangeIndex)
-                                          field.onChange(newRanges)
-                                          setRangeInput(
-                                            newRanges
-                                              .map((r: { min: number; max: number }) => `${r.min}:${r.max}`)
-                                              .join(', ')
-                                          )
-                                          handleDataChange(
-                                            index,
-                                            newRanges.flatMap((range) => [range.min, range.max]),
-                                            undefined
-                                          )
-                                        }}
+                                        onClick={() => handleRangeDelete(index, rangeIndex)}
                                       />
                                     </Badge>
                                   ))}
@@ -671,26 +467,8 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                     <Input
                                       type="text"
                                       placeholder="Format: '10:20,20:30,...'"
-                                      onChange={(e) => {
-                                        setRangeInput(e.target.value)
-                                        const newRanges = e.target.value
-                                          .split(',')
-                                          .map((range) => {
-                                            const [min, max] = range.split(':').map((value) => Number(value.trim()))
-                                            if (!isNaN(min) && !isNaN(max)) {
-                                              return { min, max }
-                                            }
-                                            return null
-                                          })
-                                          .filter(Boolean)
-                                        field.onChange(newRanges)
-                                        handleDataChange(
-                                          index,
-                                          newRanges.flatMap((range) => [range!.min, range!.max]),
-                                          undefined
-                                        )
-                                      }}
-                                      value={rangeInput}
+                                      onChange={(e) => handleRangeInputChange(index, e.target.value)}
+                                      value={rangeInputs[index] || ''}
                                     />
                                   </FormControl>
                                 </FormItem>
@@ -714,12 +492,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                       {marker}
                                       <TbTrash
                                         className="ml-2 cursor-pointer text-destructive"
-                                        onClick={() => {
-                                          const newMarkers = field.value?.filter((_, i) => i !== markerIndex)
-                                          field.onChange(newMarkers)
-                                          setMarkerInput(newMarkers.join(', '))
-                                          handleDataChange(index, undefined, newMarkers, undefined)
-                                        }}
+                                        onClick={() => handleMarkerDelete(index, markerIndex)}
                                       />
                                     </Badge>
                                   ))}
@@ -727,22 +500,8 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                     <Input
                                       type="text"
                                       placeholder="Format : '100,20,30,...'"
-                                      onChange={(e) => {
-                                        setMarkerInput(e.target.value)
-                                        const newMarkers = e.target.value
-                                          .split(',')
-                                          .map((marker) => {
-                                            const value = Number(marker.trim())
-                                            if (!isNaN(value)) {
-                                              return value
-                                            }
-                                            return null
-                                          })
-                                          .filter((marker): marker is number => marker !== null)
-                                        field.onChange(newMarkers)
-                                        handleDataChange(index, undefined, newMarkers, undefined)
-                                      }}
-                                      value={markerInput}
+                                      onChange={(e) => handleMarkerInputChange(index, e.target.value)}
+                                      value={markerInputs[index] || ''}
                                     />
                                   </FormControl>
                                 </FormItem>
@@ -845,7 +604,6 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                                       placeholder="Enter title offset X"
                                       value={field.value}
                                       onChange={(e) => {
-                                        console.log(form.getValues(`rows.${index}`))
                                         field.onChange(Number(e.target.value))
                                       }}
                                     />
@@ -993,15 +751,15 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                   ))}
                   <Button
                     type="button"
-                    variant="green"
-                    className="m-auto mt-4 flex w-1/2 items-center justify-center"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       append({
                         instance: { uid: '', id: null },
                         parameter: { denotation: '', id: null },
                         config: {
                           name: '',
-                          margin: { top: 10, right: 10, bottom: 30, left: 10 },
+                          margin: { top: 0, right: 10, bottom: 20, left: 10 },
                           reverse: false,
                           decimalPlaces: 2,
                           function: '',
@@ -1013,6 +771,7 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                         }
                       })
                     }}
+                    className="mx-auto flex items-center gap-1 shadow-sm"
                   >
                     <IoAdd />
                     Add Instance
@@ -1020,13 +779,22 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-            <Button type="submit" className="mx-auto mt-4 flex w-3/4 justify-center">
+            <Button type="submit" className="ml-auto mt-2 flex">
               Submit
             </Button>
           </form>
         </Form>
       </Card>
-      <Dialog open={smartRangeDialog.open} onOpenChange={(open) => setSmartRangeDialog((prev) => ({ ...prev, open }))}>
+
+      <Dialog
+        open={props.smartRangeDialog.open}
+        onOpenChange={(open) =>
+          props.onSmartRangeDialogChange({
+            ...props.smartRangeDialog,
+            open
+          })
+        }
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Generate Ranges and Target</DialogTitle>
@@ -1035,15 +803,15 @@ export function BulletChartBuilder({ onDataSubmit, config }: BulletChartBuilderP
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSmartRangeDialog({ open: false, rowIndex: null })}>
+            <Button variant="outline" onClick={() => props.onSmartRangeDialogChange({ open: false, rowIndex: null })}>
               Cancel
             </Button>
             <Button
               onClick={() => {
-                if (smartRangeDialog.rowIndex !== null) {
-                  generateRangesAndTarget(smartRangeDialog.rowIndex)
+                if (props.smartRangeDialog.rowIndex !== null) {
+                  handleGenerateRangesAndTarget(props.smartRangeDialog.rowIndex)
                 }
-                setSmartRangeDialog({ open: false, rowIndex: null })
+                props.onSmartRangeDialogChange({ open: false, rowIndex: null })
               }}
             >
               Generate
