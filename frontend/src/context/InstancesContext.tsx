@@ -10,6 +10,7 @@ import {
 
 export type Instance = SdInstancesWithTypeAndSnapshotQuery['sdInstances'][0]
 export type Group = GroupsQuery['sdInstanceGroups'][0]
+export type Parameter = GetAllSdTypesQuery['sdTypes'][0]['parameters'][number]
 
 interface InstancesContextState {
   instances: Instance[]
@@ -18,10 +19,8 @@ interface InstancesContextState {
   getInstanceByUid: (uid: string) => Instance | undefined
   getInstanceById: (id: number) => Instance | undefined
   getInstanceGroups: (instanceId: number) => Group[]
-  getParameterByIds: (
-    instanceId: number,
-    parameterId: number
-  ) => GetAllSdTypesQuery['sdTypes'][0]['parameters'][number] | null
+  getParameterByIds: (instanceId: number, parameterId: number) => Parameter | null
+  getInstanceParameters: (instanceId: number) => Parameter[]
 
   isLoading: boolean
   isError: boolean
@@ -41,9 +40,15 @@ export function InstancesProvider({ children }: { children: ReactNode }) {
   const instances = instancesData?.sdInstances || []
   const groups = groupsData?.sdInstanceGroups || []
 
+  const filteredInstances = instances.filter((instance) => {
+    const userConfirmed = instance.confirmedByUser
+    return userConfirmed === true
+  })
+
   const getInstanceByUid = (uid: string) => instances.find((instance) => instance.uid === uid)
   const getInstanceById = (id: number) => instances.find((instance) => instance.id === id)
   const getInstanceGroups = (instanceId: number) => groups.filter((group) => group.sdInstanceIDs.includes(instanceId))
+
   const getParameterByIds = (instanceId: number, parameterId: number) => {
     const instance = getInstanceById(instanceId)
     if (!instance) return null
@@ -53,9 +58,18 @@ export function InstancesProvider({ children }: { children: ReactNode }) {
     if (!parameter) return null
     return parameter
   }
+  const getInstanceParameters = (instanceId: number): Parameter[] => {
+    const instance = getInstanceById(instanceId)
+    if (!instance) return []
+    const type = typesData?.sdTypes.find((type) => type.id === instance.type.id)
+    if (!type) return []
+    const parameters = type.parameters
+    if (!parameters) return []
+    return parameters
+  }
 
   const contextValue: InstancesContextState = {
-    instances,
+    instances: filteredInstances,
     groups,
 
     isLoading: instancesLoading || groupsLoading || typesLoading,
@@ -64,7 +78,8 @@ export function InstancesProvider({ children }: { children: ReactNode }) {
     getInstanceByUid,
     getInstanceById,
     getInstanceGroups,
-    getParameterByIds
+    getParameterByIds,
+    getInstanceParameters
   }
 
   return <InstancesContext.Provider value={contextValue}>{children}</InstancesContext.Provider>
