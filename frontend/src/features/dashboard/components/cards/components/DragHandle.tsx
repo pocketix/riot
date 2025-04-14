@@ -3,17 +3,17 @@ import styled from 'styled-components'
 import { RxCornerBottomRight } from 'react-icons/rx'
 
 interface ResizeHandleProps {
-  editMode: boolean
+  $editMode: boolean
   handleAxis?: string
 }
 
-const ResizeHandle = styled.div<ResizeHandleProps>`
+const ResizeHandle = styled.div<{ $editMode: boolean }>`
   position: absolute;
   width: 20px;
   height: 20px;
   cursor: nwse-resize;
-  z-index: 100;
-  display: ${({ editMode }) => (editMode ? 'block' : 'none')};
+  z-index: 1;
+  display: ${({ $editMode }) => ($editMode ? 'block' : 'none')};
   &.handle-se {
     bottom: 0px;
     right: 0px;
@@ -21,10 +21,12 @@ const ResizeHandle = styled.div<ResizeHandleProps>`
   }
 `
 
-export const MyHandle = forwardRef<HTMLDivElement, ResizeHandleProps>(({ handleAxis, editMode, ...restProps }, ref) => {
-  return (
-    <ResizeHandle ref={ref} className={`resizeHandle handle-${handleAxis}`} editMode={editMode} {...restProps}>
-      <RxCornerBottomRight className="w-full h-full" />
-    </ResizeHandle>
-  )
-})
+export const MyHandle = forwardRef<HTMLDivElement, ResizeHandleProps>(
+  ({ handleAxis, $editMode, ...restProps }, ref) => {
+    return (
+      <ResizeHandle ref={ref} className={`resizeHandle handle-${handleAxis}`} $editMode={$editMode} {...restProps}>
+        <RxCornerBottomRight className="h-full w-full" />
+      </ResizeHandle>
+    )
+  }
+)

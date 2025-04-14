@@ -22,4 +22,7 @@ export const ToolTipContainer = styled.div<{
   z-index: 1000;
   font-size: 12px;
   line-height: 16px;
+  word-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `

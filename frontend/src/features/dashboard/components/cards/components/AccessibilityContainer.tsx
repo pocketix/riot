@@ -19,21 +19,32 @@ export interface AccessibilityContainerProps {
   isBottom: boolean
 }
 
-export const AccessibilityContainer = ({ cols, layout, setLayout, breakPoint, cardID, setHighlight, isAtRightEdge, isAtLeftEdge, isAtTopEdge, isBottom }: AccessibilityContainerProps) => {
+export const AccessibilityContainer = ({
+  cols,
+  layout,
+  setLayout,
+  breakPoint,
+  cardID,
+  setHighlight,
+  isAtRightEdge,
+  isAtLeftEdge,
+  isAtTopEdge,
+  isBottom
+}: AccessibilityContainerProps) => {
   const [disabled, setDisabled] = useState(false)
 
   // Get the item from the layout
   // TODO: Make this better
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
-  const handleMove = (direction: 'left' | 'right' | 'up' | 'down' | 'widthminus' | 'widthplus' | 'heightminus' | 'heightplus') => {
+  const handleMove = (
+    direction: 'left' | 'right' | 'up' | 'down' | 'widthminus' | 'widthplus' | 'heightminus' | 'heightplus'
+  ) => {
     if (disabled) return
     setDisabled(true)
 
     const columnCount = cols[breakPoint as keyof typeof cols] || cols.lg // Fallback to lg if invalid
-    console.log('Old layout:', layout)
     const newLayout = moveWidget(layout, cardID, direction, columnCount)
-    console.log('New layout:', newLayout)
     setLayout(newLayout)
 
     setTimeout(() => {
