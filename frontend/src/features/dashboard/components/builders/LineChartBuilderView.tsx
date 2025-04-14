@@ -457,19 +457,18 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
             <Separator className="my-2" />
 
             {fields.map((field, index) => (
-              <div key={`${field['rhfKey']}-${index}`} className="relative mb-4 rounded-lg border p-4">
+              <Card key={`${field['rhfKey']}-${index}`} className="relative mb-4 rounded-lg p-4 pt-2">
                 <Button
-                  type="button"
-                  variant="default"
+                  variant="destructive"
                   size="icon"
-                  className="absolute right-2 top-2 p-1"
                   onClick={() => {
                     const instance = form.getValues(`instances.${index}`)
                     props.onRemoveInstance(index, instance)
                     remove(index)
                   }}
+                  className="absolute right-2 top-2 h-6 w-6"
                 >
-                  <TbTrash size={16} className="text-red-700" />
+                  <TbTrash size={14} />
                 </Button>
                 <FormField
                   control={form.control}
@@ -483,6 +482,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                           onValueChange={(selectedInstance) => {
                             props.onInstanceSelectionChange(index, field.value)
                             field.onChange({ id: selectedInstance.id, uid: selectedInstance.uid, parameters: [] })
+                            form.setValue(`instances.${index}.parameters`, [])
                           }}
                         />
                       </FormControl>
@@ -499,7 +499,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                       <FormControl>
                         <ParameterMultiSelect
                           value={field.value}
-                          options={props.getParameterOptions(form.watch(`instances.${index}.id`))}
+                          options={props.getParameterOptions(form.getValues(`instances.${index}.id`))}
                           reset={!!form.watch(`instances.${index}.uid`) && field.value.length === 0}
                           modalPopover={true}
                           onValueChange={(value) => {
@@ -516,7 +516,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                     </FormItem>
                   )}
                 />
-              </div>
+              </Card>
             ))}
 
             {form.formState.errors.instances && (
@@ -1011,7 +1011,6 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-
             <Button type="submit" className="ml-auto mt-2 flex">
               Submit
             </Button>
