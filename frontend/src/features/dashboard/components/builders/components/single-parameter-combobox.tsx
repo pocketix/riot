@@ -3,9 +3,10 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { useState } from 'react'
-import { SdParameter } from '@/generated/graphql'
+import { useMemo, useState } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Parameter } from '@/context/InstancesContext'
+import { SdParameterType } from '@/generated/graphql'
 
 export interface ParameterOption {
   id: number | null
@@ -13,21 +14,31 @@ export interface ParameterOption {
 }
 
 interface SingleParameterComboboxProps {
-  options: SdParameter[]
+  options: Parameter[]
   onValueChange: (value: ParameterOption | null) => void
   value?: ParameterOption | null
   disabled?: boolean
+  filter?: SdParameterType
   className?: string
 }
 
-export function SingleParameterCombobox({
-  onValueChange,
-  options,
-  value,
-  disabled = false,
-  className
-}: SingleParameterComboboxProps) {
+export function SingleParameterCombobox(props: SingleParameterComboboxProps) {
   const [open, setOpen] = useState(false)
+  const sortedOptions = useMemo(() => {
+    if (!props.options) return []
+    if (props.options.length === 0) return []
+    return [...props.options].sort((a, b) => a.denotation.localeCompare(b.denotation))
+  }, [props.options])
+
+  const filteredOptions = useMemo(() => {
+    if (!sortedOptions) return []
+    if (sortedOptions.length === 0) return []
+    if (!props.filter) return sortedOptions
+    return sortedOptions.filter((option) => {
+      return option.type === props.filter
+    })
+  }, [sortedOptions, props.filter])
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -36,14 +47,14 @@ export function SingleParameterCombobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          disabled={disabled}
+          disabled={props.disabled}
           className={cn(
             'flex w-full items-center px-2 text-left font-semibold',
-            !value?.id && 'font-normal text-muted-foreground',
-            className
+            !props.value?.id && 'font-normal text-muted-foreground',
+            props.className
           )}
         >
-          <span className="flex-1 truncate">{value?.id ? value.denotation : 'Select parameter...'}</span>
+          <span className="flex-1 truncate">{props.value?.id ? props.value.denotation : 'Select parameter...'}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -52,23 +63,23 @@ export function SingleParameterCombobox({
           <CommandInput placeholder="Search parameter..." />
           <CommandList>
             <ScrollArea>
-              <div className="h-fit max-h-[150px]">
+              <div className="h-fit max-h-[150px] sm:max-h-[300px]">
                 <CommandEmpty>No parameter found.</CommandEmpty>
                 <CommandGroup>
-                  {options.map((option) => (
+                  {filteredOptions.map((option) => (
                     <CommandItem
                       key={option.id}
                       value={option.denotation}
                       onSelect={() => {
-                        if (value?.id === option.id) {
+                        if (props.value?.id === option.id) {
                           setOpen(false)
                         }
 
-                        onValueChange(option)
+                        props.onValueChange(option)
                         setOpen(false)
                       }}
                     >
-                      <Check className={cn(value?.id === option.id ? 'opacity-100' : 'opacity-0')} />
+                      <Check className={cn(props.value?.id === option.id ? 'opacity-100' : 'opacity-0')} />
                       {option.denotation}
                     </CommandItem>
                   ))}

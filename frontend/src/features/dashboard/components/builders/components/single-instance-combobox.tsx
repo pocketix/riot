@@ -38,6 +38,8 @@ export function SingleInstanceCombobox({
       return
     }
 
+    // Key for groups that do not have a label set
+    const OTHERS_GROUP_KEY = -1
     const groups: { [key: number]: InstanceGroup } = {}
 
     // Sort the instances
@@ -45,7 +47,7 @@ export function SingleInstanceCombobox({
 
     // Group instances by type.id
     sortedInstances.forEach((instance) => {
-      const typeID = instance.type?.id || -1
+      const typeID = instance.type?.label ? instance.type?.id || -1 : -1
       const typeLabel = instance.type?.label || 'Other'
       const typeIcon = instance.type?.icon || ''
 
@@ -61,8 +63,12 @@ export function SingleInstanceCombobox({
       groups[typeID].instances.push(instance)
     })
 
-    // sort the group names
-    const sortedGroups = Object.values(groups).sort((a, b) => a.typeLabel.localeCompare(b.typeLabel))
+    // Sort the groups, putting "Other" at the end
+    const sortedGroups = Object.values(groups).sort((a, b) => {
+      if (a.typeID === OTHERS_GROUP_KEY) return 1
+      if (b.typeID === OTHERS_GROUP_KEY) return -1
+      return a.typeLabel.localeCompare(b.typeLabel)
+    })
 
     setInstanceGroups(sortedGroups)
   }, [instances])
@@ -95,7 +101,7 @@ export function SingleInstanceCombobox({
           <CommandInput placeholder="Search instances..." />
           <CommandList>
             <ScrollArea>
-              <div className="h-fit max-h-[150px]">
+              <div className="h-fit max-h-[150px] sm:max-h-[300px]">
                 <CommandEmpty>No instance found.</CommandEmpty>
                 {instanceGroups.map((group) => (
                   <CommandGroup key={group.typeID} heading={group.typeLabel}>

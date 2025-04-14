@@ -57,7 +57,7 @@ export function AggregateFunctionCombobox({
           <CommandInput placeholder="Search functions..." />
           <CommandList>
             <ScrollArea>
-              <div className="h-fit max-h-[150px]">
+              <div className="h-fit max-h-[150px] sm:max-h-[300px]">
                 <CommandGroup>
                   {options.map((option) => (
                     <CommandItem

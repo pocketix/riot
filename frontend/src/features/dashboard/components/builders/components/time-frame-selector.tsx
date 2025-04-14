@@ -30,12 +30,7 @@ const options: TimeFrameOption[] = [
   { value: '720', label: '30 days' }
 ]
 
-export function TimeFrameSelector({
-  onValueChange,
-  value,
-  disabled = false,
-  className
-}: TimeFrameSelectorProps) {
+export function TimeFrameSelector({ onValueChange, value, disabled = false, className }: TimeFrameSelectorProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -47,7 +42,7 @@ export function TimeFrameSelector({
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
-          className={cn('w-full justify-between truncate px-2', className)}
+          className={cn('w-full justify-between truncate px-2 shadow-none', className)}
         >
           {value ? options.find((option) => option.value === value)?.label : 'Select timeframe...'}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -57,7 +52,7 @@ export function TimeFrameSelector({
         <Command>
           <CommandList>
             <ScrollArea>
-              <div className="h-fit max-h-[150px]">
+              <div className="h-fit max-h-[150px] sm:max-h-[300px]">
                 <CommandGroup>
                   {options.map((option) => (
                     <CommandItem
