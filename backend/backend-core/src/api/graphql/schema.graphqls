@@ -358,6 +358,12 @@ type VPLProgram {
     sdParameterSnapshots: [SDParameterSnapshot!]!
 }
 
+type VPLProgramExecutionResult {
+    program: VPLProgram!
+    SDParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
+    SDCommandInvocations: [SDCommandInvocation!]!
+}
+
 # ----- Queries, mutations and subscriptions -----
 
 type Query {
@@ -402,7 +408,7 @@ type Mutation {
   createVPLProgram(name: String!, data: JSON!): VPLProgram!
   updateVPLProgram(id: ID!, name: String!, data: JSON!): VPLProgram!
   deleteVPLProgram(id: ID!): Boolean!
-  executeVPLProgram(id: ID!): Boolean!
+  executeVPLProgram(id: ID!): VPLProgramExecutionResult!
 }
 
 type Subscription {

@@ -1,11 +1,5 @@
 package sharedModel
 
-type VPLInterpretProgramRequestMessage struct {
-	ProgramID   uint32 `json:"programID"`
-	ProgramName string `json:"programName"`
-	ProgramCode string `json:"programCode"`
-}
-
 type VPLProgram struct {
 	ID               uint32            `json:"id"`
 	Name             string            `json:"name"`
@@ -14,7 +8,6 @@ type VPLProgram struct {
 }
 
 type VPLInterpretSaveRequestBody struct {
-	Name string `json:"name"`
 	Data string `json:"data"`
 }
 
@@ -29,8 +22,28 @@ type VPLInterpretSaveResultOrError struct {
 	Error   string     `json:"error,omitempty"`
 }
 
-type VPLInterpretExecuteResult struct {
-	ProgramID   uint32 `json:"programID"`
-	ProgramName string `json:"programName"`
-	Output      string `json:"output"`
+type VPLInterpretExecuteResultOrError struct {
+	Program                      VPLProgram                       `json:"program"`
+	SDParameterSnapshotsToUpdate []SDParameterSnapshotInfoMessage `json:"snapshots,omitempty"`
+	SDCommandInvocations         []SDCommandInvocationMessage     `json:"commands,omitempty"`
+	Error                        string                           `json:"error,omitempty"`
+}
+
+type SDCommandInvocationMessage struct {
+	SDInstanceUID string                `json:"sdInstanceUID"`
+	CommandName   string                `json:"commandName"`
+	Parameters    []SDParameterSnapshot `json:"parameters"`
+}
+
+type VPLInterpretGetSnapshotsResultOrError struct {
+	SDParameterSnapshotsValues []SDParameterSnapshotValue `json:"snapshots,omitempty"`
+	Error                      string                     `json:"error,omitempty"`
+}
+
+type SDParameterSnapshotValue struct {
+	SDInstanceUID string   `json:"sdInstanceUID"`
+	SDType        string   `json:"sdType"`
+	String        *string  `json:"string,omitempty"`
+	Number        *float64 `json:"number,omitempty"`
+	Boolean       *bool    `json:"boolean,omitempty"`
 }

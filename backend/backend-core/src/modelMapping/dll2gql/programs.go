@@ -19,3 +19,15 @@ func ToGraphQLModelVPLProgram(vplProgram dllModel.VPLProgram) graphQLModel.VPLPr
 		}),
 	}
 }
+
+func ToGraphQLModelPLProgramExecutionResult(program dllModel.VPLProgramExecutionResult) graphQLModel.VPLProgramExecutionResult {
+	return graphQLModel.VPLProgramExecutionResult{
+		Program: ToGraphQLModelVPLProgram(program.Program),
+		SDParameterSnapshotsToUpdate: sharedUtils.Map(program.SDParameterSnapshotList, func(snapshot dllModel.SDParameterSnapshot) graphQLModel.SDParameterSnapshot {
+			return ToGraphQLModelSdParameterSnapshot(snapshot)
+		}),
+		SDCommandInvocations: sharedUtils.Map(program.SDCommandInvocationList, func(invocation dllModel.SDCommandInvocation) graphQLModel.SDCommandInvocation {
+			return ToGraphQLModelSDCommandInvocation(invocation)
+		}),
+	}
+}

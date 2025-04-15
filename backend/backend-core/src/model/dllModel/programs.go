@@ -6,3 +6,9 @@ type VPLProgram struct {
 	Data                 string
 	SDParameterSnapshots []SDParameterSnapshot
 }
+
+type VPLProgramExecutionResult struct {
+	Program                 VPLProgram
+	SDParameterSnapshotList []SDParameterSnapshot
+	SDCommandInvocationList []SDCommandInvocation
+}

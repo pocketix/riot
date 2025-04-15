@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -11,13 +12,13 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
-	"github.com/pocketix/pocketix-go/src/commands"
+	"github.com/pocketix/interpret-unit/src/utils"
 	"github.com/pocketix/pocketix-go/src/models"
 	"github.com/pocketix/pocketix-go/src/parser"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func performVPLValidityCheckRequest() error {
+func PerformVPLValidityCheckRequest() error {
 	rabbitMQClient := rabbitmq.NewClient()
 	defer rabbitMQClient.Dispose()
 
@@ -43,7 +44,6 @@ func performVPLValidityCheckRequest() error {
 			} else {
 				response = sharedModel.VPLInterpretSaveResultOrError{
 					Program: sharedModel.VPLProgram{
-						Name: messagePayload.Name,
 						Data: messagePayload.Data,
 						// ReferencedValues: referencedValueStore.GetReferencedValues(),
 					},
@@ -73,55 +73,54 @@ func performVPLValidityCheckRequest() error {
 	return err
 }
 
-func executeVPLProgramRequest() {
-	rabbitmqClient := rabbitmq.NewClient()
-	defer rabbitmqClient.Dispose()
+func ExecuteVPLProgramRequest() error {
+	rabbitMQClient := rabbitmq.NewClient()
+	defer rabbitMQClient.Dispose()
 
-	err := rabbitmq.ConsumeJSONMessages[sharedModel.VPLInterpretProgramRequestMessage](rabbitmqClient, sharedConstants.VPLInterpretProgramRequestQueueName, func(messagePayload sharedModel.VPLInterpretProgramRequestMessage) error {
-		variableStore := models.NewVariableStore()
-		referencedValueStore := models.NewReferencedValueStore()
+	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.VPLProgram](
+		rabbitMQClient,
+		sharedConstants.VPLInterpretExecuteProgramRequestQueueName,
+		"",
+		func(messagePayload sharedModel.VPLProgram, delivery amqp.Delivery) error {
+			go func() {
+				newClient := rabbitmq.NewClient()
+				defer newClient.Dispose()
+				correlationId := utils.RandomString(32)
+				outputChannel := make(chan sharedUtils.Result[[]sharedModel.SDParameterSnapshotValue])
 
-		commandList, err := parser.Parse([]byte(messagePayload.ProgramCode), variableStore, referencedValueStore)
-		if err != nil {
-			log.Printf("Failed to parse VPL program: %s\n", err.Error())
-			return err
-		}
-		for _, command := range commandList {
-			if _, ok := command.(*commands.DeviceCommand); ok {
-				// Send the command to the device somehow
-			} else {
-				_, err := command.Execute(variableStore, referencedValueStore)
+				log.Printf("Received VPL program execution request: %v\n", messagePayload)
+
+				err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.VPLInterpretGetSnapshotsResultOrError](
+					newClient,
+					sharedConstants.VPLInterpretGetSnapshotsResponseQueueName,
+					correlationId,
+					func(messagePayload sharedModel.VPLInterpretGetSnapshotsResultOrError, delivery amqp.Delivery) error {
+						if messagePayload.Error != "" {
+							outputChannel <- sharedUtils.NewFailureResult[[]sharedModel.SDParameterSnapshotValue](errors.New(messagePayload.Error))
+						} else {
+							outputChannel <- sharedUtils.NewSuccessResult[[]sharedModel.SDParameterSnapshotValue](messagePayload.SDParameterSnapshotsValues)
+						}
+						close(outputChannel)
+						return nil
+					},
+				)
+
 				if err != nil {
-					log.Printf("Failed to execute command: %s\n", err.Error())
-					return err
+					log.Printf("Failed to consume VPL program execution request: %s\n", err.Error())
+					outputChannel <- sharedUtils.NewFailureResult[[]sharedModel.SDParameterSnapshotValue](err)
+					close(outputChannel)
 				}
-			}
-		}
+			}()
 
-		response := sharedModel.VPLInterpretExecuteResult{
-			ProgramID:   messagePayload.ProgramID,
-			ProgramName: messagePayload.ProgramName,
-			Output:      "Program executed successfully",
-		}
-		jsonSerializationResult := sharedUtils.SerializeToJSON(response)
-		if jsonSerializationResult.IsFailure() {
-			log.Printf("Failed to serialize the object representing a VPL program execution result into JSON: %s\n", jsonSerializationResult.GetError().Error())
-			return jsonSerializationResult.GetError()
-		}
+			// referencedValues := referencedValueStore.GetReferencedValues()
+			// err := rabbitMQClient.PublishJSONMessageRPC(
+			// 	sharedUtils.NewEmptyOptional[string](),
+			// 	sharedUtils.NewOptionalOf(sharedConstants.VPLInterpretGetSnapshotsRequestQueueName),
 
-		err = rabbitmqClient.PublishJSONMessage(sharedUtils.NewEmptyOptional[string](), sharedUtils.NewOptionalOf(sharedConstants.VPLInterpretProgramRequestQueueName), jsonSerializationResult.GetPayload())
-		if err != nil {
-			log.Printf("Failed to publish VPL program execution result: %s\n", err.Error())
-			return err
-		}
-		log.Printf("Successfully processed VPL program execution request for ID %d\n", response.ProgramID)
-		return nil
-	})
-
-	if err != nil {
-		log.Printf("Failed to consume VPL program execution request: %s\n", err.Error())
-	}
-
+			return nil
+		},
+	)
+	return err
 }
 
 func main() {
@@ -138,7 +137,7 @@ func main() {
 	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
 	sharedUtils.WaitForAll(
 		func() {
-			err := performVPLValidityCheckRequest()
+			err := PerformVPLValidityCheckRequest()
 			if err != nil {
 				log.Println(err.Error())
 			}

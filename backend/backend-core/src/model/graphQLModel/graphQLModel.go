@@ -386,6 +386,12 @@ type VPLProgram struct {
 	SdParameterSnapshots []SDParameterSnapshot `json:"sdParameterSnapshots"`
 }
 
+type VPLProgramExecutionResult struct {
+	Program                      VPLProgram            `json:"program"`
+	SDParameterSnapshotsToUpdate []SDParameterSnapshot `json:"SDParameterSnapshotsToUpdate"`
+	SDCommandInvocations         []SDCommandInvocation `json:"SDCommandInvocations"`
+}
+
 type KPINodeType string
 
 const (
