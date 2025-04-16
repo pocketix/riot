@@ -20,6 +20,7 @@ type SDType {
   label: String
   icon: String
   parameters: [SDParameter!]!
+  commands: [SDCommand!]!
 }
 
 input SDParameterInput {
