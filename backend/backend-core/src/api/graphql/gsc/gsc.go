@@ -65,7 +65,7 @@ type MutationResolver interface {
 	UpdateUserConfig(ctx context.Context, userID uint32, input graphQLModel.UserConfigInput) (graphQLModel.UserConfig, error)
 	DeleteUserConfig(ctx context.Context, userID uint32) (bool, error)
 	CreateSDCommand(ctx context.Context, input graphQLModel.SDCommandInput) (graphQLModel.SDCommand, error)
-	UpdateSDCommand(ctx context.Context, id uint32, name *string, description *string) (graphQLModel.SDCommand, error)
+	UpdateSDCommand(ctx context.Context, id uint32, name *string, payload *string) (graphQLModel.SDCommand, error)
 	DeleteSDCommand(ctx context.Context, id uint32) (bool, error)
 	CreateSDCommandInvocation(ctx context.Context, input graphQLModel.SDCommandInvocationInput) (graphQLModel.SDCommandInvocation, error)
 	InvokeSDCommand(ctx context.Context, id uint32) (bool, error)
@@ -124,6 +124,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputKPIDefinitionInput,
 		ec.unmarshalInputKPINodeInput,
 		ec.unmarshalInputSDCommandInput,
+		ec.unmarshalInputSDCommandInputWithoutType,
 		ec.unmarshalInputSDCommandInvocationInput,
 		ec.unmarshalInputSDInstanceGroupInput,
 		ec.unmarshalInputSDInstanceUpdateInput,
@@ -283,18 +284,24 @@ input SDTypeInput {
   label: String
   icon: String
   parameters: [SDParameterInput!]!
+  commands: [SDCommandInputWithoutType!]
+}
+
+input SDCommandInputWithoutType {
+  name: String!
+  payload: String
 }
 
 type SDCommand {
   id: ID!
   name: String!
-  description: String
+  payload: String
   sdTypeId: ID!
 }
 
 input SDCommandInput {
   name: String!
-  description: String
+  payload: String
   sdTypeId: ID!
 }
 
@@ -635,7 +642,7 @@ type Mutation {
   updateUserConfig(userId: ID!, input: UserConfigInput!): UserConfig!
   deleteUserConfig(userId: ID!): Boolean!
   createSDCommand(input: SDCommandInput!): SDCommand! # Creating a command
-  updateSDCommand(id: ID!, name: String, description: String): SDCommand! # Updating a command
+  updateSDCommand(id: ID!, name: String, payload: String): SDCommand! # Updating a command
   deleteSDCommand(id: ID!): Boolean! # Deleting a command
   createSDCommandInvocation(input: SDCommandInvocationInput!): SDCommandInvocation! # Creating an invocation
   invokeSDCommand(id: ID!): Boolean! # Starting an existing invocation
@@ -1055,11 +1062,11 @@ func (ec *executionContext) field_Mutation_updateSDCommand_args(ctx context.Cont
 		return nil, err
 	}
 	args["name"] = arg1
-	arg2, err := ec.field_Mutation_updateSDCommand_argsDescription(ctx, rawArgs)
+	arg2, err := ec.field_Mutation_updateSDCommand_argsPayload(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["description"] = arg2
+	args["payload"] = arg2
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_updateSDCommand_argsID(
@@ -1098,17 +1105,17 @@ func (ec *executionContext) field_Mutation_updateSDCommand_argsName(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_updateSDCommand_argsDescription(
+func (ec *executionContext) field_Mutation_updateSDCommand_argsPayload(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*string, error) {
-	if _, ok := rawArgs["description"]; !ok {
+	if _, ok := rawArgs["payload"]; !ok {
 		var zeroVal *string
 		return zeroVal, nil
 	}
 
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
-	if tmp, ok := rawArgs["description"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("payload"))
+	if tmp, ok := rawArgs["payload"]; ok {
 		return ec.unmarshalOString2ᚖstring(ctx, tmp)
 	}
 
@@ -3516,8 +3523,8 @@ func (ec *executionContext) fieldContext_Mutation_createSDCommand(ctx context.Co
 				return ec.fieldContext_SDCommand_id(ctx, field)
 			case "name":
 				return ec.fieldContext_SDCommand_name(ctx, field)
-			case "description":
-				return ec.fieldContext_SDCommand_description(ctx, field)
+			case "payload":
+				return ec.fieldContext_SDCommand_payload(ctx, field)
 			case "sdTypeId":
 				return ec.fieldContext_SDCommand_sdTypeId(ctx, field)
 			}
@@ -3552,7 +3559,7 @@ func (ec *executionContext) _Mutation_updateSDCommand(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateSDCommand(rctx, fc.Args["id"].(uint32), fc.Args["name"].(*string), fc.Args["description"].(*string))
+		return ec.resolvers.Mutation().UpdateSDCommand(rctx, fc.Args["id"].(uint32), fc.Args["name"].(*string), fc.Args["payload"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3581,8 +3588,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSDCommand(ctx context.Co
 				return ec.fieldContext_SDCommand_id(ctx, field)
 			case "name":
 				return ec.fieldContext_SDCommand_name(ctx, field)
-			case "description":
-				return ec.fieldContext_SDCommand_description(ctx, field)
+			case "payload":
+				return ec.fieldContext_SDCommand_payload(ctx, field)
 			case "sdTypeId":
 				return ec.fieldContext_SDCommand_sdTypeId(ctx, field)
 			}
@@ -6025,8 +6032,8 @@ func (ec *executionContext) fieldContext_Query_sdCommand(ctx context.Context, fi
 				return ec.fieldContext_SDCommand_id(ctx, field)
 			case "name":
 				return ec.fieldContext_SDCommand_name(ctx, field)
-			case "description":
-				return ec.fieldContext_SDCommand_description(ctx, field)
+			case "payload":
+				return ec.fieldContext_SDCommand_payload(ctx, field)
 			case "sdTypeId":
 				return ec.fieldContext_SDCommand_sdTypeId(ctx, field)
 			}
@@ -6090,8 +6097,8 @@ func (ec *executionContext) fieldContext_Query_sdCommands(_ context.Context, fie
 				return ec.fieldContext_SDCommand_id(ctx, field)
 			case "name":
 				return ec.fieldContext_SDCommand_name(ctx, field)
-			case "description":
-				return ec.fieldContext_SDCommand_description(ctx, field)
+			case "payload":
+				return ec.fieldContext_SDCommand_payload(ctx, field)
 			case "sdTypeId":
 				return ec.fieldContext_SDCommand_sdTypeId(ctx, field)
 			}
@@ -6447,8 +6454,8 @@ func (ec *executionContext) fieldContext_SDCommand_name(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _SDCommand_description(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDCommand) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SDCommand_description(ctx, field)
+func (ec *executionContext) _SDCommand_payload(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDCommand) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDCommand_payload(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -6461,7 +6468,7 @@ func (ec *executionContext) _SDCommand_description(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Description, nil
+		return obj.Payload, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6475,7 +6482,7 @@ func (ec *executionContext) _SDCommand_description(ctx context.Context, field gr
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDCommand_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDCommand_payload(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDCommand",
 		Field:      field,
@@ -10765,7 +10772,7 @@ func (ec *executionContext) unmarshalInputSDCommandInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "sdTypeId"}
+	fieldsInOrder := [...]string{"name", "payload", "sdTypeId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -10779,13 +10786,13 @@ func (ec *executionContext) unmarshalInputSDCommandInput(ctx context.Context, ob
 				return it, err
 			}
 			it.Name = data
-		case "description":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+		case "payload":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payload"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Description = data
+			it.Payload = data
 		case "sdTypeId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sdTypeId"))
 			data, err := ec.unmarshalNID2uint32(ctx, v)
@@ -10793,6 +10800,40 @@ func (ec *executionContext) unmarshalInputSDCommandInput(ctx context.Context, ob
 				return it, err
 			}
 			it.SdTypeID = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSDCommandInputWithoutType(ctx context.Context, obj any) (graphQLModel.SDCommandInputWithoutType, error) {
+	var it graphQLModel.SDCommandInputWithoutType
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "payload"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "payload":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payload"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Payload = data
 		}
 	}
 
@@ -10970,7 +11011,7 @@ func (ec *executionContext) unmarshalInputSDTypeInput(ctx context.Context, obj a
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"denotation", "label", "icon", "parameters"}
+	fieldsInOrder := [...]string{"denotation", "label", "icon", "parameters", "commands"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -11005,6 +11046,13 @@ func (ec *executionContext) unmarshalInputSDTypeInput(ctx context.Context, obj a
 				return it, err
 			}
 			it.Parameters = data
+		case "commands":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commands"))
+			data, err := ec.unmarshalOSDCommandInputWithoutType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutTypeᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Commands = data
 		}
 	}
 
@@ -12533,8 +12581,8 @@ func (ec *executionContext) _SDCommand(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "description":
-			out.Values[i] = ec._SDCommand_description(ctx, field, obj)
+		case "payload":
+			out.Values[i] = ec._SDCommand_payload(ctx, field, obj)
 		case "sdTypeId":
 			out.Values[i] = ec._SDCommand_sdTypeId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13782,6 +13830,11 @@ func (ec *executionContext) unmarshalNSDCommandInput2githubᚗcomᚋMichalBures�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNSDCommandInputWithoutType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutType(ctx context.Context, v any) (graphQLModel.SDCommandInputWithoutType, error) {
+	res, err := ec.unmarshalInputSDCommandInputWithoutType(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNSDCommandInvocation2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInvocation(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDCommandInvocation) graphql.Marshaler {
 	return ec._SDCommandInvocation(ctx, sel, &v)
 }
@@ -14569,6 +14622,24 @@ func (ec *executionContext) marshalOLogicalOperationType2ᚖgithubᚗcomᚋMicha
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOSDCommandInputWithoutType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutTypeᚄ(ctx context.Context, v any) ([]graphQLModel.SDCommandInputWithoutType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]graphQLModel.SDCommandInputWithoutType, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNSDCommandInputWithoutType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutType(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalOSDParameterSnapshot2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterSnapshotᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDParameterSnapshot) graphql.Marshaler {
