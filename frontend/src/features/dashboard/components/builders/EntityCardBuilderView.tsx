@@ -16,7 +16,7 @@ import { TimeFrameSelector } from './components/time-frame-selector'
 import { Parameter } from '@/context/InstancesContext'
 import { ResponsiveEntityTable } from '../visualizations/ResponsiveEntityTable'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
-import { InfoIcon } from 'lucide-react'
+import { ChevronDown, ChevronUp, InfoIcon } from 'lucide-react'
 import { SdParameterType } from '@/generated/graphql'
 import { useRef } from 'react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -24,9 +24,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 export interface EntityCardBuilderViewProps {
   config?: EntityCardConfig
   onSubmit: (values: EntityCardConfig, height: number) => void
-  onCheckRowAndFetch: (rowData: EntityCardConfig['rows'][number]) => void
+  onCheckRowAndFetch: (rowData: EntityCardConfig['rows'][number], rowIndex: number) => void
   getParameterOptions: (instanceID: number | null, visualization: string | null) => Parameter[]
-  sparklineData: Record<string, Serie[]>
+  handleRowMove: (from: number, to: number) => void
+  sparklineData: Serie[]
 }
 
 export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
@@ -50,7 +51,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
     }
   })
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray({
     control: form.control,
     name: 'rows'
   })
@@ -94,17 +95,47 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                     <div className="flex flex-1 flex-wrap items-center">
                       <span>{form.watch(`rows.${index}.name`) || `Row ${index + 1}`}</span>
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        remove(index)
-                      }}
-                      className="mr-2 h-6 w-6"
-                    >
-                      <TbTrash size={14} />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        disabled={index === 0}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          props.handleRowMove(index, index - 1)
+                          move(index, index - 1)
+                        }}
+                      >
+                        <ChevronUp size={14} />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        disabled={index === fields.length - 1}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          props.handleRowMove(index, index + 1)
+                          move(index, index + 1)
+                        }}
+                      >
+                        <ChevronDown size={14} />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          remove(index)
+                        }}
+                        className="h-6 w-6"
+                      >
+                        <TbTrash size={14} />
+                      </Button>
+                    </div>
                   </AccordionTrigger>
                   <AccordionContent className="w-full">
                     <Card className="grid w-full grid-cols-1 gap-2 px-2 py-2 sm:grid-cols-2 md:grid-cols-3">
@@ -190,7 +221,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                                 )}
                                 onValueChange={(value) => {
                                   field.onChange(value)
-                                  props.onCheckRowAndFetch(form.getValues(`rows.${index}`))
+                                  props.onCheckRowAndFetch(form.getValues(`rows.${index}`), index)
                                 }}
                                 value={field.value ? { id: field.value.id!, denotation: field.value.denotation } : null}
                                 disabled={
@@ -215,7 +246,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                                 <TimeFrameSelector
                                   onValueChange={(value) => {
                                     field.onChange(value)
-                                    props.onCheckRowAndFetch(form.getValues(`rows.${index}`))
+                                    props.onCheckRowAndFetch(form.getValues(`rows.${index}`), index)
                                   }}
                                   value={field.value}
                                 />

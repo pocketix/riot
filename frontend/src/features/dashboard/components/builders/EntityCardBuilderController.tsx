@@ -14,7 +14,7 @@ export interface EntityCardBuilderControllerProps {
 }
 
 export function EntityCardBuilderController({ onDataSubmit, config }: EntityCardBuilderControllerProps) {
-  const [sparklineData, setSparklineData] = useState<Record<string, Serie[]>>({})
+  const [sparklineData, setSparklineData] = useState<Serie[]>([])
 
   const { getInstanceParameters } = useInstances()
   const [fetchData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
@@ -22,13 +22,13 @@ export function EntityCardBuilderController({ onDataSubmit, config }: EntityCard
   // Initialize with config values if provided
   useEffect(() => {
     if (config) {
-      config.rows.forEach((row) => {
-        checkRowAndFetch(row)
+      config.rows.forEach((row, rowIndex) => {
+        checkRowAndFetch(row, rowIndex)
       })
     }
   }, [config])
 
-  const checkRowAndFetch = async (rowData: EntityCardConfig['rows'][number]) => {
+  const checkRowAndFetch = async (rowData: EntityCardConfig['rows'][number], rowIndex: number) => {
     if (!rowData?.instance?.uid || !rowData?.parameter?.id || !rowData?.visualization) {
       return
     }
@@ -36,14 +36,12 @@ export function EntityCardBuilderController({ onDataSubmit, config }: EntityCard
     // Only sparkline data fetching is needed,
     //  the responsive entity table component handles others
     if (rowData.visualization === 'sparkline') {
-      await fetchSparklineData(rowData)
+      await fetchSparklineData(rowData, rowIndex)
     }
   }
 
-  const fetchSparklineData = async (rowData: EntityCardConfig['rows'][number]) => {
+  const fetchSparklineData = async (rowData: EntityCardConfig['rows'][number], rowIndex: number) => {
     if (!rowData?.instance?.uid || !rowData?.parameter?.denotation) return
-
-    const rowId = `${rowData.instance.id}-${rowData.parameter.id}`
 
     try {
       const result = await fetchData({
@@ -69,10 +67,14 @@ export function EntityCardBuilderController({ onDataSubmit, config }: EntityCard
           }
         })
 
-        setSparklineData((prev) => ({
-          ...prev,
-          [rowId]: [{ id: rowId, data: sparklinePoints! }]
-        }))
+        setSparklineData((prevData) => {
+          const newData = [...prevData]
+          newData[rowIndex] = {
+            id: rowData.name + rowIndex,
+            data: sparklinePoints || []
+          }
+          return newData
+        })
       }
     } catch (error) {
       console.error('Error fetching sparkline data', error)
@@ -105,6 +107,16 @@ export function EntityCardBuilderController({ onDataSubmit, config }: EntityCard
     onDataSubmit(result)
   }
 
+  const handleRowMove = (fromIndex: number, toIndex: number) => {
+    // If the row was a sparkline, we need to move the data as well
+    setSparklineData((prevData) => {
+      const newData = [...prevData]
+      const movedRow = newData.splice(fromIndex, 1)[0]
+      newData.splice(toIndex, 0, movedRow)
+      return newData
+    })
+  }
+
   return (
     <EntityCardBuilderView
       config={config}
@@ -112,6 +124,7 @@ export function EntityCardBuilderController({ onDataSubmit, config }: EntityCard
       onCheckRowAndFetch={checkRowAndFetch}
       getParameterOptions={getParameterOptions}
       sparklineData={sparklineData}
+      handleRowMove={handleRowMove}
     />
   )
 }

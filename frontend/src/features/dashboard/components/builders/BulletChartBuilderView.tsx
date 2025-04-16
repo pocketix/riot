@@ -20,7 +20,7 @@ import { TimeFrameSelector } from './components/time-frame-selector'
 import { AggregateFunctionCombobox } from './components/aggregate-function-combobox'
 import { Label } from '@/components/ui/label'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
-import { InfoIcon } from 'lucide-react'
+import { ChevronDown, ChevronUp, InfoIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Parameter } from '@/context/InstancesContext'
 import {
@@ -56,6 +56,7 @@ export interface BulletChartBuilderViewProps {
   ) => void
   getInstanceName: (instanceID: number | null) => string | null
   onRemoveRow: (index: number) => void
+  onRowMove: (from: number, to: number) => void
   getParameterOptions: (instanceID: number | null) => Parameter[]
 
   // The dialog is also controlled by the controller
@@ -95,7 +96,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
     }
   })
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray({
     control: form.control,
     name: 'rows'
   })
@@ -235,6 +236,23 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
     }
   }
 
+  const swapRangesAndTargets = (fromIndex: number, toIndex: number) => {
+    const tempMarkers = markerInputs[toIndex] || ''
+    const tempRanges = rangeInputs[toIndex] || ''
+
+    setMarkerInputs((prev) => ({
+      ...prev,
+      [toIndex]: prev[fromIndex],
+      [fromIndex]: tempMarkers
+    }))
+
+    setRangeInputs((prev) => ({
+      ...prev,
+      [toIndex]: prev[fromIndex],
+      [fromIndex]: tempRanges
+    }))
+  }
+
   return (
     <div className="w-full">
       <span
@@ -297,18 +315,51 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                         </Badge>
                       )}
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={(e) => {
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        disabled={index === 0}
+                        onClick={(e) => {
+                          e.stopPropagation()
+
+                          props.onRowMove(index, index - 1)
+                          move(index, index - 1)
+                          swapRangesAndTargets(index, index - 1)
+                        }}
+                      >
+                        <ChevronUp size={14} />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        disabled={index === fields.length - 1}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          props.onRowMove(index, index + 1)
+                          move(index, index + 1)
+                          swapRangesAndTargets(index, index + 1)
+                        }}
+                      >
+                        <ChevronDown size={14} />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={(e) => {
                         e.stopPropagation() // prevents other open accordions from closing
-                        props.onRemoveRow(index)
-                        remove(index)
-                      }}
-                      className="mr-2 h-6 w-6"
-                    >
-                      <TbTrash size={14} />
-                    </Button>
+                          props.onRemoveRow(index)
+                          remove(index)
+                        }}
+                        className="h-6 w-6"
+                      >
+                        <TbTrash size={14} />
+                      </Button>
+                    </div>
                   </AccordionTrigger>
                   <AccordionContent className="w-full">
                     <div key={item.id} className="relative mb-4 rounded-lg border p-4">

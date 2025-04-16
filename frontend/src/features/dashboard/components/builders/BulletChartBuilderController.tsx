@@ -324,6 +324,15 @@ export function BulletChartBuilderController({ onDataSubmit, config }: BulletCha
     })
   }
 
+  const handleRowMove = (fromIndex: number, toIndex: number) => {
+    setData((prev) => {
+      const newData = [...prev]
+      const movedRow = newData.splice(fromIndex, 1)[0]
+      newData.splice(toIndex, 0, movedRow)
+      return newData
+    })
+  }
+
   return (
     <BulletChartBuilderView
       chartData={data}
@@ -333,6 +342,7 @@ export function BulletChartBuilderController({ onDataSubmit, config }: BulletCha
       onGenerateRangesAndTarget={generateRangesAndTarget}
       onBulletDataChange={handleBulletDataChange}
       onRemoveRow={handleRemoveRow}
+      onRowMove={handleRowMove}
       getParameterOptions={getParameterOptions}
       smartRangeDialog={smartRangeDialog}
       onSmartRangeDialogChange={setSmartRangeDialog}
