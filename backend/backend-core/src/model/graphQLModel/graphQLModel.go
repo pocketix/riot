@@ -311,6 +311,7 @@ type SDType struct {
 	Label      *string       `json:"label,omitempty"`
 	Icon       *string       `json:"icon,omitempty"`
 	Parameters []SDParameter `json:"parameters"`
+	Commands   []SDCommand   `json:"commands"`
 }
 
 type SDTypeInput struct {

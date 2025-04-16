@@ -271,6 +271,7 @@ type SDType {
   label: String
   icon: String
   parameters: [SDParameter!]!
+  commands: [SDCommand!]!
 }
 
 input SDParameterInput {
@@ -2720,6 +2721,8 @@ func (ec *executionContext) fieldContext_Mutation_createSDType(ctx context.Conte
 				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
+			case "commands":
+				return ec.fieldContext_SDType_commands(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
@@ -2842,6 +2845,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSDType(ctx context.Conte
 				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
+			case "commands":
+				return ec.fieldContext_SDType_commands(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
@@ -5316,6 +5321,8 @@ func (ec *executionContext) fieldContext_Query_sdType(ctx context.Context, field
 				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
+			case "commands":
+				return ec.fieldContext_SDType_commands(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
@@ -5383,6 +5390,8 @@ func (ec *executionContext) fieldContext_Query_sdTypes(_ context.Context, field 
 				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
+			case "commands":
+				return ec.fieldContext_SDType_commands(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
@@ -7028,6 +7037,8 @@ func (ec *executionContext) fieldContext_SDInstance_type(_ context.Context, fiel
 				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
+			case "commands":
+				return ec.fieldContext_SDType_commands(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
@@ -7987,6 +7998,60 @@ func (ec *executionContext) fieldContext_SDType_parameters(_ context.Context, fi
 				return ec.fieldContext_SDParameter_parameterSnapshots(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDParameter", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDType_commands(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDType) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDType_commands(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Commands, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]graphQLModel.SDCommand)
+	fc.Result = res
+	return ec.marshalNSDCommand2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDType_commands(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDType",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SDCommand_id(ctx, field)
+			case "name":
+				return ec.fieldContext_SDCommand_name(ctx, field)
+			case "payload":
+				return ec.fieldContext_SDCommand_payload(ctx, field)
+			case "sdTypeId":
+				return ec.fieldContext_SDCommand_sdTypeId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SDCommand", field.Name)
 		},
 	}
 	return fc, nil
@@ -12928,6 +12993,11 @@ func (ec *executionContext) _SDType(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._SDType_icon(ctx, field, obj)
 		case "parameters":
 			out.Values[i] = ec._SDType_parameters(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "commands":
+			out.Values[i] = ec._SDType_commands(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
