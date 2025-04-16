@@ -13,9 +13,9 @@ export type BulletRowData = {
 }
 
 type RowPollingInfo = {
-  rowId: string
+  rowIndex: number
   intervalId: NodeJS.Timeout | null
-  timeFrame: number
+  lastUpdatedAt?: Date
 }
 
 export const BulletCardController = (props: BulletCardProps) => {
@@ -26,7 +26,7 @@ export const BulletCardController = (props: BulletCardProps) => {
   const [isLoading, setIsLoading] = useState(true)
 
   // Track polling intervals for each row as they can have different timeframes
-  const rowPollingMap = useRef<Map<string, RowPollingInfo>>(new Map())
+  const rowPollingMap = useRef<Map<number, RowPollingInfo>>(new Map())
 
   const [getChartData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
 
@@ -141,7 +141,6 @@ export const BulletCardController = (props: BulletCardProps) => {
 
     chartConfig.rows.forEach((row, rowIndex) => {
       if (row.config.function === 'last') return
-      const rowId = `${row.instance.id}-${row.parameter.id}-${row.config.function}-${row.config.timeFrame}`
       const timeFrameInMs = Number(row.config.timeFrame) * 60 * 60 * 1000
 
       const pollInterval = timeFrameInMs / FETCHES_PER_TIMEFRAME
@@ -150,14 +149,14 @@ export const BulletCardController = (props: BulletCardProps) => {
         fetchRowData(row, rowIndex)
           .then(() => {
             const newIntervalId = setTimeout(scheduleFetch, pollInterval)
-            rowPollingMap.current.set(rowId, {
-              rowId,
+            rowPollingMap.current.set(rowIndex, {
+              rowIndex: rowIndex,
               intervalId: newIntervalId,
-              timeFrame: Number(row.config.timeFrame)
+              lastUpdatedAt: new Date()
             })
           })
           .catch((error) => {
-            console.error(`Error fetching data for row ${rowId}:`, error)
+            console.error(`Error fetching data for row ${rowIndex}:`, error)
           })
       }
 

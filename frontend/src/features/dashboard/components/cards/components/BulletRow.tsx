@@ -3,20 +3,23 @@ import { useParameterSnapshot } from '@/hooks/useParameterSnapshot'
 import { BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
 import { useMemo } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ResponsiveBulletChart } from '../../visualizations/ResponsiveBulletChart'
 import { Datum } from '@nivo/bullet'
 import { ChartContainer } from '../BaseCard'
+import { ResponsiveTooltip } from '@/components/responsive-tooltip'
 
 interface BulletRowProps {
   row: BulletCardConfig['rows'][number]
   editModeEnabled: boolean
   aggregatedData?: Datum
+  aggregateUpdatedAt?: Date
 }
 
-export const BulletRow = ({ row, editModeEnabled, aggregatedData = undefined }: BulletRowProps) => {
-  const { value, lastUpdated } = useParameterSnapshot(row.instance.id!, row.parameter.id!)
+export const BulletRow = ({ row, editModeEnabled, aggregatedData = undefined, aggregateUpdatedAt = undefined }: BulletRowProps) => {
+  let { value, lastUpdated } = useParameterSnapshot(row.instance.id!, row.parameter.id!)
   const { getInstanceById } = useInstances()
+
+  lastUpdated = aggregatedData !== undefined ? aggregateUpdatedAt! : lastUpdated
 
   const chartData: Datum = useMemo(() => {
     if (aggregatedData) {
@@ -41,26 +44,21 @@ export const BulletRow = ({ row, editModeEnabled, aggregatedData = undefined }: 
     return (
       <ChartContainer $editModeEnabled={editModeEnabled}>
         <Skeleton className="h-full w-full p-2" disableAnimation>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex w-full flex-col items-center justify-center">
-                  <span className="w-full truncate text-center font-bold text-destructive">Data not available</span>
-                  <span className="w-full truncate text-center text-xs text-gray-500">Device: {instanceName}</span>
-                  <span className="w-full truncate text-center text-xs text-gray-500">
-                    Parameter: {row.config.name}
-                  </span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <div className="flex max-w-28 flex-col">
-                  <span className="font-semibold text-destructive">No data available</span>
-                  <span className="break-words text-xs">Device: {instanceName}</span>
-                  <span className="text-xs">Parameter: {row.config.name}</span>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <ResponsiveTooltip
+            content={
+              <div className="flex max-w-28 flex-col">
+                <span className="font-semibold text-destructive">No data available</span>
+                <span className="break-words text-xs">Device: {instanceName}</span>
+                <span className="text-xs">Parameter: {row.config.name}</span>
+              </div>
+            }
+          >
+            <div className="flex w-full flex-col items-center justify-center">
+              <span className="w-full truncate text-center font-bold text-destructive">Data not available</span>
+              <span className="w-full truncate text-center text-xs text-gray-500">Device: {instanceName}</span>
+              <span className="w-full truncate text-center text-xs text-gray-500">Parameter: {row.config.name}</span>
+            </div>
+          </ResponsiveTooltip>
         </Skeleton>
       </ChartContainer>
     )
