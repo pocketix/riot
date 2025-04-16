@@ -16,21 +16,24 @@ import { SingleParameterCombobox } from './components/single-parameter-combobox'
 import { TimeFrameSelector } from './components/time-frame-selector'
 import { AggregateFunctionCombobox } from './components/aggregate-function-combobox'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
-import { InfoIcon } from 'lucide-react'
+import { ChevronDown, ChevronUp, InfoIcon } from 'lucide-react'
 import { Parameter } from '@/context/InstancesContext'
-import { TableRowData } from '../visualizations/ResponsiveTable'
 import { ResponsiveTable } from '../visualizations/ResponsiveTable'
 import { useRef } from 'react'
+import { TableColumnData } from '../cards/TableCardController'
 
 export interface TableCardBuilderViewProps {
   config?: TableCardConfig
-  tableData: TableRowData[]
+  tableData: TableColumnData[]
   onSubmit: (values: TableCardConfig, height: number) => void
-  checkRowAndFetch: (config: TableCardConfig, rowIndex: number) => void
   fetchFullTableData: (config: TableCardConfig) => void
+  fetchSingleRowData: (config: TableCardConfig, rowIndex: number) => void
+  fetchSingleColumnData: (config: TableCardConfig, columnIndex: number) => void
   getParameterOptions: (instanceID: number | null, columns: TableCardConfig['columns']) => Parameter[]
+  handleRowMove: (fromIndex: number, toIndex: number) => void
   handleRowDelete: (rowIndex: number) => void
-  handleRowRename: (rowIndex: number, newName: string) => void
+  handleColumnMove: (fromIndex: number, toIndex: number) => void
+  handleColumnDelete: (columnIndex: number) => void
 }
 
 export function TableCardBuilderView(props: TableCardBuilderViewProps) {
@@ -61,7 +64,8 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
   const {
     fields: columnFields,
     append: appendColumn,
-    remove: removeColumn
+    remove: removeColumn,
+    move: moveColumn
   } = useFieldArray({
     control: form.control,
     name: 'columns'
@@ -70,7 +74,8 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
   const {
     fields: rowFields,
     append: appendRow,
-    remove: removeRow
+    remove: removeRow,
+    move: moveRow
   } = useFieldArray({
     control: form.control,
     name: 'rows'
@@ -82,7 +87,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
         {form.watch('title') && <h3 className="text-lg font-semibold">{form.watch('title')}</h3>}
         <ResponsiveTable
           key={JSON.stringify(props.tableData)}
-          data={props.tableData}
+          columnData={props.tableData}
           config={{
             ...form.watch()
           }}
@@ -194,18 +199,46 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                       {index !== 0 && <Separator className="my-2" />}
                       <div className="flex w-full items-center justify-between gap-2">
                         <h4 className="font-semibold">Column {index + 1}</h4>
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            removeColumn(index)
-                            props.fetchFullTableData(form.getValues())
-                          }}
-                          variant={'destructive'}
-                          size={'icon'}
-                          className="h-6 w-6"
-                        >
-                          <TbTrash size={14} />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            disabled={index === 0}
+                            onClick={() => {
+                              props.handleColumnMove(index, index - 1)
+                              moveColumn(index, index - 1)
+                            }}
+                          >
+                            <ChevronUp size={14} />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            disabled={index === columnFields.length - 1}
+                            onClick={() => {
+                              props.handleColumnMove(index, index + 1)
+                              moveColumn(index, index + 1)
+                            }}
+                          >
+                            <ChevronDown size={14} />
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              props.handleColumnDelete(index)
+                              removeColumn(index)
+                            }}
+                            variant="destructive"
+                            size="icon"
+                            className="h-6 w-6"
+                          >
+                            <TbTrash size={14} />
+                          </Button>
+                        </div>
                       </div>
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <FormField
@@ -240,7 +273,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                                     value={field.value}
                                     onValueChange={(value) => {
                                       field.onChange(value)
-                                      props.fetchFullTableData(form.getValues())
+                                      props.fetchSingleColumnData(form.getValues(), index)
                                     }}
                                   />
                                 </Label>
@@ -277,17 +310,46 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                       {rowIndex !== 0 && <Separator className="my-2" />}
                       <div className="flex w-full items-center justify-between gap-4">
                         <h4 className="font-semibold">Row {rowIndex + 1}</h4>
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            removeRow(rowIndex)
-                            props.handleRowDelete(rowIndex)
-                          }}
-                          variant={'destructive'}
-                          size={'icon'}
-                        >
-                          <TbTrash />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            disabled={rowIndex === 0}
+                            onClick={() => {
+                              props.handleRowMove(rowIndex, rowIndex - 1)
+                              moveRow(rowIndex, rowIndex - 1)
+                            }}
+                          >
+                            <ChevronUp size={14} />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            disabled={rowIndex === rowFields.length - 1}
+                            onClick={() => {
+                              props.handleRowMove(rowIndex, rowIndex + 1)
+                              moveRow(rowIndex, rowIndex + 1)
+                            }}
+                          >
+                            <ChevronDown size={14} />
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              removeRow(rowIndex)
+                              props.handleRowDelete(rowIndex)
+                            }}
+                            variant="destructive"
+                            size="icon"
+                            className="h-6 w-6"
+                          >
+                            <TbTrash size={14} />
+                          </Button>
+                        </div>
                       </div>
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <FormField
@@ -303,7 +365,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                                     onChange={(e) => {
                                       const value = e.target.value
                                       field.onChange(value)
-                                      props.handleRowRename(rowIndex, value)
+                                      // props.handleRowRename(rowIndex, value)
                                     }}
                                     placeholder="Row Name"
                                     className="w-full"
@@ -358,7 +420,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                                     onValueChange={(value) => {
                                       field.onChange(value)
                                       // Trigger data fetch when parameter changes
-                                      props.checkRowAndFetch(form.getValues(), rowIndex)
+                                      props.fetchSingleRowData(form.getValues(), rowIndex)
                                     }}
                                     disabled={!form.watch(`rows.${rowIndex}.instance.uid`)}
                                   />
