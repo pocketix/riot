@@ -43,7 +43,7 @@ const bulletMarker = (props: BulletMarkersItemProps) => {
 
 const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: ResponsiveBulletProps) => {
   const { isDarkMode } = useDarkMode()
-  const { getInstanceById } = useInstances()
+  const { getInstanceById, getParameterByIds } = useInstances()
   const { setDetailsSelectedDevice } = useDeviceDetail()
   const [tooltipVisible, setTooltipVisible] = useState(false)
   const [touchTooltipVisible, setTouchTooltipVisible] = useState(false)
@@ -120,9 +120,11 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: 
   }
 
   const tooltipTriggerData = useMemo(() => {
+    const wholeInstance = getInstanceById(rowConfig?.instance?.id!)
+    const wholeParameter = getParameterByIds(rowConfig?.instance?.id!, rowConfig?.parameter?.id!)
     return {
-      instanceName: getInstanceById(rowConfig?.instance?.id!)?.userIdentifier || 'Unknown',
-      parameterName: rowConfig?.parameter?.denotation || '',
+      instanceName: wholeInstance?.userIdentifier || 'Unknown',
+      parameterName: wholeParameter?.label || wholeParameter?.denotation || 'Unknown',
       value: String(data.measures[0]),
       targets: data.markers || [],
       lastUpdated: lastUpdated,
@@ -176,8 +178,8 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: 
         aggregateFunction={tooltipTriggerData.aggregateFunction}
         decimalPlaces={tooltipTriggerData.decimalPlaces}
         timeFrame={tooltipTriggerData.timeFrame}
-        chartRect={chartRect}
         lastUpdated={tooltipTriggerData.lastUpdated}
+        chartRect={chartRect}
         visible={tooltipVisible || touchTooltipVisible}
       />
     </>

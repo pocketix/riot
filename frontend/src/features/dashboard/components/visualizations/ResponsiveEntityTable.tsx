@@ -1,12 +1,13 @@
 import { memo, CSSProperties, useMemo } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { useParameterSnapshot } from '@/hooks/useParameterSnapshot'
 import { ResponsiveLineChart } from './ResponsiveLineChart'
 import { EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
 import { Serie } from '@nivo/line'
 import { Switch } from '@/components/ui/switch'
+import { ResponsiveTooltip } from '@/components/responsive-tooltip'
+import { useInstances } from '@/context/InstancesContext'
 
 export interface EntityRowData {
   sparklineData?: Serie[]
@@ -15,7 +16,7 @@ export interface EntityRowData {
 
 export interface ResponsiveEntityTableProps {
   config: EntityCardConfig
-  sparklineData: Record<string, Serie[]>
+  sparklineData: Serie[]
   className?: string
   height?: number
 }
@@ -52,7 +53,7 @@ const ResponsiveEntityTableBase = ({ config, sparklineData, className, height }:
             <EntityRow
               key={rowIndex}
               row={row}
-              sparklineData={sparklineData[`${row.instance?.id!}-${row.parameter?.id!}`]}
+              sparklineData={sparklineData[rowIndex]}
               onRowClick={() => setDetailsSelectedDevice(row.instance.id!, row.parameter.id)}
             />
           ))}
@@ -64,16 +65,19 @@ const ResponsiveEntityTableBase = ({ config, sparklineData, className, height }:
 
 interface EntityRowProps {
   row: EntityCardConfig['rows'][number]
-  sparklineData?: Serie[]
+  sparklineData?: Serie
   onRowClick: () => void
 }
 
 const EntityRow = memo(({ row, sparklineData, onRowClick }: EntityRowProps) => {
   const { value } = useParameterSnapshot(row.instance?.id!, row.parameter?.id!)
+  const { getParameterByIds } = useInstances()
+
+  const wholeParameter = getParameterByIds(row.instance?.id!, row.parameter?.id!)
 
   const hasData = useMemo(() => {
     if (row.visualization === 'sparkline') {
-      return sparklineData && sparklineData.length > 0 && sparklineData[0].data.length > 0
+      return sparklineData && sparklineData.data && sparklineData.data.length > 0
     }
     return value !== undefined
   }, [row.visualization, sparklineData, value])
@@ -84,20 +88,17 @@ const EntityRow = memo(({ row, sparklineData, onRowClick }: EntityRowProps) => {
         <td className="text-sm">{row.name}</td>
         <td className="h-[24px] w-[75px] text-center text-sm">
           <Skeleton className="h-full w-full" disableAnimation>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="truncate text-xs font-semibold text-destructive">Unavailable</span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="flex max-w-28 flex-col">
-                    <span className="font-semibold text-destructive">No data available</span>
-                    <span className="break-words text-xs">Device: {row.instance?.uid!}</span>
-                    <span className="break-words text-xs">Parameter: {row.parameter?.denotation!}</span>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <ResponsiveTooltip
+              content={
+                <div className="flex max-w-28 flex-col">
+                  <span className="font-semibold text-destructive">No data available</span>
+                  <span className="break-words text-xs">Device: {row.instance?.uid!}</span>
+                  <span className="break-words text-xs">Parameter: {wholeParameter?.label || wholeParameter?.denotation || 'Unknown'}</span>
+                </div>
+              }
+            >
+              <span className="truncate text-xs font-semibold text-destructive">Unavailable</span>
+            </ResponsiveTooltip>
           </Skeleton>
         </td>
       </tr>
@@ -110,7 +111,7 @@ const EntityRow = memo(({ row, sparklineData, onRowClick }: EntityRowProps) => {
 
       {row.visualization === 'sparkline' && (
         <td className="h-[24px] w-[75px] min-w-0 text-end text-sm">
-          <ResponsiveLineChart data={sparklineData!} detailsOnClick={false} useSparklineMode={true} />
+          <ResponsiveLineChart data={[sparklineData!]} detailsOnClick={false} useSparklineMode={true} />
         </td>
       )}
 
@@ -123,7 +124,18 @@ const EntityRow = memo(({ row, sparklineData, onRowClick }: EntityRowProps) => {
       {row.visualization === 'switch' && (
         <td className="text-end text-sm">
           {/* command invocation on onCheckedChange - not setup */}
-          <Switch disabled={false} checked={Boolean(value)} className="cursor-not-allowed" />
+          <ResponsiveTooltip
+            content={
+              <div className="flex max-w-28 flex-col">
+                <span className="font-semibold text-destructive">Command actions not yet available</span>
+                <span className="break-words text-xs text-muted-foreground">
+                  This button only displays the current state
+                </span>
+              </div>
+            }
+          >
+            <Switch disabled={false} checked={Boolean(value)} className="cursor-not-allowed" />
+          </ResponsiveTooltip>
         </td>
       )}
     </tr>
