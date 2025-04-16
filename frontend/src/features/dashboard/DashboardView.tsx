@@ -8,10 +8,6 @@ import { DashboardRoot, Navbar, MainGrid } from '@/styles/dashboard/DashboardGlo
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@mui/material'
-import { ChartCard } from './components/cards/ChartCard'
-import { BulletCard } from './components/cards/BulletCard'
-import { TableCard } from './components/cards/TableCard'
-import { EntityCard } from './components/cards/EntityCard'
 import { AddItemModal } from './components/AddItemModal'
 import { RestoreLayoutDialog } from './components/RestoreLayoutDialog'
 import { DashboardGroupCardsController } from './components/groups/DashboardGroupCardsController'
@@ -23,6 +19,10 @@ import { Instance } from '@/context/InstancesContext'
 import { toast } from 'sonner'
 import { useDebounce } from 'use-debounce'
 import { FaPlus } from 'react-icons/fa'
+import { BulletCardController } from './components/cards/BulletCardController'
+import { ChartCardController } from './components/cards/ChartCardController'
+import { TableCardController } from './components/cards/TableCardController'
+import { EntityCardController } from './components/cards/EntityCardController'
 
 interface DashboardViewProps {
   layouts: { [key: string]: Layout[] }
@@ -239,7 +239,7 @@ const DashboardView = (props: DashboardViewProps) => {
                       <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
                         {({ inView, ref }) => (
                           <div ref={ref} className="h-full w-full">
-                            <TableCard key={itemId} {...visualizationProps} isVisible={inView} />
+                            <TableCardController key={itemId} {...visualizationProps} isVisible={inView} />
                           </div>
                         )}
                       </InView>
@@ -249,7 +249,7 @@ const DashboardView = (props: DashboardViewProps) => {
                       <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
                         {({ inView, ref }) => (
                           <div ref={ref} className="h-full w-full">
-                            <BulletCard key={itemId} {...visualizationProps} isVisible={inView} />
+                            <BulletCardController key={itemId} {...visualizationProps} isVisible={inView} />
                           </div>
                         )}
                       </InView>
@@ -259,7 +259,7 @@ const DashboardView = (props: DashboardViewProps) => {
                       <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
                         {({ inView, ref }) => (
                           <div ref={ref} className="h-full w-full">
-                            <ChartCard key={itemId} {...visualizationProps} isVisible={inView} />
+                            <ChartCardController key={itemId} {...visualizationProps} isVisible={inView} />
                           </div>
                         )}
                       </InView>
@@ -269,7 +269,7 @@ const DashboardView = (props: DashboardViewProps) => {
                       <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
                         {({ inView, ref }) => (
                           <div ref={ref} className="h-full w-full">
-                            <EntityCard key={itemId} {...visualizationProps} isVisible={inView} />
+                            <EntityCardController key={itemId} {...visualizationProps} isVisible={inView} />
                           </div>
                         )}
                       </InView>
