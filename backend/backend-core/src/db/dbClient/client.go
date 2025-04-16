@@ -65,6 +65,7 @@ type RelationalDatabaseClient interface {
 	PersistSDCommand(sdCommand dllModel.SDCommand) sharedUtils.Result[uint32]
 	DeleteSDCommand(id uint32) error
 	LoadSDCommands() sharedUtils.Result[[]dllModel.SDCommand]
+	PersistSDParameterSnapshot(snapshot dllModel.SDParameterSnapshot) sharedUtils.Result[sharedUtils.Pair[uint32, uint32]]
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -204,6 +205,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.UserEntity),
 		new(dbModel.UserSessionEntity),
 		new(dbModel.UserConfigEntity),
+		new(dbModel.SDParameterSnapshotEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
 
@@ -350,7 +352,11 @@ func (r *relationalDatabaseClientImpl) PersistSDType(sdType dllModel.SDType) sha
 }
 
 func loadSDType(g *gorm.DB, whereClause dbUtil.WhereClause) sharedUtils.Result[dllModel.SDType] {
-	sdTypeEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDTypeEntity](g, dbUtil.Preload("Parameters"), whereClause)
+	sdTypeEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDTypeEntity](g,
+		dbUtil.Preload("Parameters"),
+		dbUtil.Preload("Parameters.SDParameterSnapshot"),
+		whereClause,
+	)
 	if sdTypeEntityLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[dllModel.SDType](sdTypeEntityLoadResult.GetError())
 	}
@@ -372,7 +378,10 @@ func (r *relationalDatabaseClientImpl) LoadSDTypeBasedOnDenotation(denotation st
 func (r *relationalDatabaseClientImpl) LoadSDTypes() sharedUtils.Result[[]dllModel.SDType] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	sdTypeEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDTypeEntity](r.db, dbUtil.Preload("Parameters"))
+	sdTypeEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDTypeEntity](r.db,
+		dbUtil.Preload("Parameters"),
+		dbUtil.Preload("Parameters.SDParameterSnapshot"),
+	)
 	if sdTypeEntitiesLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[[]dllModel.SDType](sdTypeEntitiesLoadResult.GetError())
 	}
@@ -441,7 +450,12 @@ func (r *relationalDatabaseClientImpl) PersistNewSDInstance(uid string, sdTypeSp
 func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) sharedUtils.Result[dllModel.SDInstance] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](r.db, dbUtil.Preload("SDType"), dbUtil.Where("id = ?", id))
+	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](
+		r.db,
+		dbUtil.Preload("SDType"),
+		dbUtil.Preload("SDParameterSnapshot"),
+		dbUtil.Where("id = ?", id),
+	)
 	if sdInstanceEntityLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[dllModel.SDInstance](sdInstanceEntityLoadResult.GetError())
 	}
@@ -466,7 +480,12 @@ func (r *relationalDatabaseClientImpl) LoadSDInstanceBasedOnUID(uid string) shar
 func (r *relationalDatabaseClientImpl) LoadSDInstances() sharedUtils.Result[[]dllModel.SDInstance] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	sdInstanceEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDInstanceEntity](r.db, dbUtil.Preload("SDType"))
+	sdInstanceEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDInstanceEntity](
+		r.db,
+		dbUtil.Preload("SDType"),
+		dbUtil.Preload("SDType.Parameters"),
+		dbUtil.Preload("SDParameterSnapshot"),
+	)
 	if sdInstanceEntitiesLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[[]dllModel.SDInstance](sdInstanceEntitiesLoadResult.GetError())
 	}
@@ -660,4 +679,17 @@ func (r *relationalDatabaseClientImpl) DeleteUserConfig(userId uint32) error {
 	defer r.mu.Unlock()
 
 	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.UserConfigEntity](r.db, userId)
+}
+
+func (r *relationalDatabaseClientImpl) PersistSDParameterSnapshot(snapshot dllModel.SDParameterSnapshot) sharedUtils.Result[sharedUtils.Pair[uint32, uint32]] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	snapshotEntity := dll2db.ToDBModelEntitySDParameterSnapshot(snapshot, snapshot.SDInstance, snapshot.SDParameter)
+
+	if err := dbUtil.PersistEntityIntoDB(r.db, &snapshotEntity); err != nil {
+		return sharedUtils.NewFailureResult[sharedUtils.Pair[uint32, uint32]](err)
+	}
+
+	return sharedUtils.NewSuccessResult[sharedUtils.Pair[uint32, uint32]](sharedUtils.NewPairOf(snapshotEntity.SDParameterID, snapshotEntity.SDInstanceID))
 }

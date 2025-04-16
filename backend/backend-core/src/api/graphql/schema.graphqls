@@ -11,6 +11,7 @@ type SDParameter {
   denotation: String!
   label: String
   type: SDParameterType!
+  parameterSnapshots: [SDParameterSnapshot!]!
 }
 
 type SDType {
@@ -68,12 +69,22 @@ type SDInstance {
   confirmedByUser: Boolean!
   userIdentifier: String!
   type: SDType!
+  parameterSnapshots: [SDParameterSnapshot!]
   commandInvocations: [SDCommandInvocation!]!
 }
 
 input SDInstanceUpdateInput {
   userIdentifier: String
   confirmedByUser: Boolean
+}
+
+type SDParameterSnapshot {
+  instanceId:  ID!
+  parameterId: ID!
+  string:      String
+  number:      Float
+  boolean:     Boolean
+  updatedAt:   Date!
 }
 
 input SDCommandInvocationInput {
@@ -358,6 +369,7 @@ type Query {
   statisticsQuerySimpleSensors(request: StatisticsInput sensors: SimpleSensors!): [OutputData!]!
   statisticsQuerySensorsWithFields(request: StatisticsInput sensors: SensorsWithFields!): [OutputData!]!
   userConfig(id: ID!): UserConfig!
+  myUserConfig: UserConfig!
   sdCommand(id: ID!): SDCommand! # Returns a specific SDCommand by its ID
   sdCommands: [SDCommand!]! # Returns all SDCommands
   sdCommandInvocation(id: ID!): SDCommandInvocation! # Returns a specific SDCommandInvocation
@@ -367,6 +379,7 @@ type Query {
 type Mutation {
   createSDType(input: SDTypeInput!): SDType!
   deleteSDType(id: ID!): Boolean!
+  updateSDType(id: ID!, input: SDTypeInput!): SDType!
   updateSDInstance(id: ID!, input: SDInstanceUpdateInput!): SDInstance!
   createKPIDefinition(input: KPIDefinitionInput!): KPIDefinition!
   updateKPIDefinition(id: ID!, input: KPIDefinitionInput!): KPIDefinition!
@@ -387,5 +400,6 @@ type Mutation {
 type Subscription {
   onSDInstanceRegistered: SDInstance!
   onKPIFulfillmentChecked: KPIFulfillmentCheckResultTuple!
+  onSDParameterSnapshotUpdate: SDParameterSnapshot!
   commandInvocationStateChanged: SDCommandInvocation! # Subscription for command state changes
 }

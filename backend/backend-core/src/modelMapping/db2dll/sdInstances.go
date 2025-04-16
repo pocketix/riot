@@ -13,6 +13,7 @@ func ToDLLModelSDInstance(sdInstanceEntity dbModel.SDInstanceEntity) dllModel.SD
 		ConfirmedByUser:    sdInstanceEntity.ConfirmedByUser,
 		UserIdentifier:     sdInstanceEntity.UserIdentifier,
 		SDType:             ToDLLModelSDType(sdInstanceEntity.SDType),
+		ParameterSnapshots: sharedUtils.Map(sdInstanceEntity.SDParameterSnapshot, ToDLLModelSDParameterSnapshot),
 		CommandInvocations: ToDLLModelSDCommandInvocations(sdInstanceEntity.CommandInvocations),
 	}
 }

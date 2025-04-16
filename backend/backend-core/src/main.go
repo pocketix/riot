@@ -33,6 +33,7 @@ func kickstartISC() {
 	go isc.ProcessIncomingMessageProcessingUnitConnectionNotifications()
 	go isc.ProcessIncomingSDInstanceRegistrationRequests(&graphql.SDInstanceGraphQLSubscriptionChannel)
 	go isc.ProcessIncomingKPIFulfillmentCheckResults(&graphql.KPIFulfillmentCheckResulTupleGraphQLSubscriptionChannel)
+	go isc.ProcessIncomingSDParameterSnapshotUpdates(&graphql.SDParameterSnapshotUpdateSubscriptionChannel)
 }
 
 func main() {

@@ -2,18 +2,20 @@
 FROM golang:1.24.1-alpine AS build
 # Set the working directory inside the container
 WORKDIR /app
-# Copy the go.mod file, go.sum file, and src directory from backend-core
-COPY ./backend-core/go.mod ./backend-core/go.sum /app/backend-core/
-COPY ./backend-core/src /app/backend-core/src
-# Copy the go.mod file, go.sum file, and src directory from commons
+
+# Copy dependencies for commons and backend core
 COPY ./commons/go.mod ./commons/go.sum /app/commons/
-COPY ./commons/src /app/commons/src
-# Change working directory to where the Go app's main module is located
+COPY ./backend-core/go.mod ./backend-core/go.sum /app/backend-core/
+
 WORKDIR /app/backend-core
-# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
-RUN go mod tidy
+
+# Download all dependencies
 RUN go mod download
-# Build the Go app
+
+# Copy source code
+COPY ./commons/src /app/commons/src
+COPY ./backend-core/src /app/backend-core/src
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o RIoT-backend-core src/main.go
 
 # Move to production alpine image

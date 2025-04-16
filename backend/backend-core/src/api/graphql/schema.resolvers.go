@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql/gsc"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/domainLogicLayer"
@@ -24,6 +25,14 @@ func (r *mutationResolver) DeleteSDType(ctx context.Context, id uint32) (bool, e
 		return false, err
 	}
 	return true, nil
+}
+
+func (r *mutationResolver) UpdateSDType(ctx context.Context, id uint32, input graphQLModel.SDTypeInput) (graphQLModel.SDType, error) {
+	updateSDTypeResult := domainLogicLayer.UpdateSDType(id, input)
+	if updateSDTypeResult.IsFailure() {
+		log.Printf("Error occurred (update SD type): %s\n", updateSDTypeResult.GetError().Error())
+	}
+	return updateSDTypeResult.Unwrap()
 }
 
 func (r *mutationResolver) UpdateSDInstance(ctx context.Context, id uint32, input graphQLModel.SDInstanceUpdateInput) (graphQLModel.SDInstance, error) {
@@ -230,6 +239,19 @@ func (r *queryResolver) UserConfig(ctx context.Context, id uint32) (graphQLModel
 	return getUserConfigResult.Unwrap()
 }
 
+func (r *queryResolver) MyUserConfig(ctx context.Context) (graphQLModel.UserConfig, error) {
+	userIdString, ok := ctx.Value("userId").(string)
+	if !ok {
+		return graphQLModel.UserConfig{}, fmt.Errorf("user config id not set")
+	}
+	userId, err := strconv.ParseUint(userIdString, 10, 32)
+	if err != nil {
+		return graphQLModel.UserConfig{}, err
+	}
+
+	return domainLogicLayer.GetUserConfig(uint32(userId)).Unwrap()
+}
+
 func (r *queryResolver) SdCommand(ctx context.Context, id uint32) (graphQLModel.SDCommand, error) {
 	getSDCommandResult := domainLogicLayer.GetSDCommand(id)
 	if getSDCommandResult.IsFailure() {
@@ -271,6 +293,10 @@ func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-ch
 
 func (r *subscriptionResolver) OnKPIFulfillmentChecked(ctx context.Context) (<-chan graphQLModel.KPIFulfillmentCheckResultTuple, error) {
 	return KPIFulfillmentCheckResulTupleGraphQLSubscriptionChannel, nil
+}
+
+func (r *subscriptionResolver) OnSDParameterSnapshotUpdate(ctx context.Context) (<-chan graphQLModel.SDParameterSnapshot, error) {
+	return SDParameterSnapshotUpdateSubscriptionChannel, nil
 }
 
 func (r *subscriptionResolver) CommandInvocationStateChanged(ctx context.Context) (<-chan graphQLModel.SDCommandInvocation, error) {
