@@ -1,5 +1,5 @@
-import { forwardRef, useRef, CSSProperties, memo, RefObject, useState, useEffect } from 'react'
-import { CustomLayerProps, LineSvgProps, PointTooltipProps, ResponsiveLine, Serie } from '@nivo/line'
+import React, { forwardRef, useRef, CSSProperties, memo, RefObject, useState, useEffect } from 'react'
+import { CustomLayerProps, LineSvgProps, Point, PointTooltipProps, ResponsiveLine, Serie } from '@nivo/line'
 import { useDarkMode } from '@/context/DarkModeContext'
 import { timeTicksLayer, getMaxValue } from '@/features/dashboard/components/utils/charts/tickUtils'
 import { darkTheme, lightTheme } from '@/features/dashboard/components/cards/components/ChartThemes'
@@ -9,10 +9,10 @@ import { ScaleSpec } from '@nivo/scales'
 import { useInstances } from '@/context/InstancesContext'
 import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
 import { getColorBlindSchemeWithBW } from './color-schemes/color-impaired'
-import { useLongPress } from '@uidotdev/usehooks'
 import { CartesianMarkerProps } from '@nivo/core'
 import { LineChartLegend } from './LineChartLegend'
 import { toast } from 'sonner'
+import { useChartLongPress } from '@/hooks/useLineChartLongPress'
 
 export interface ResponsiveLineChartProps {
   className?: string
@@ -28,30 +28,33 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
   ({ className, data, config = {}, height, detailsOnClick = true, useSparklineMode }, forwardedRef) => {
     const { getInstanceById, getParameterByIds } = useInstances()
     const { isDarkMode } = useDarkMode()
-    const localContainerRef = useRef<HTMLDivElement>(null)
     const { setDetailsSelectedDevice } = useDeviceDetail()
+    const localContainerRef = useRef<HTMLDivElement>(null)
+    const [isScreenLocked, setScreenLocked] = useState(false)
 
-    const preventTouchMove = (e: TouchEvent) => {
-      e.preventDefault()
-    }
+    useEffect(() => {
+      if (isScreenLocked) {
+        const preventTouchMove = (e: TouchEvent) => e.preventDefault()
 
-    const attrs = useLongPress(
-      () => {
-        toast.info('Screen locked, let go to unlock')
-        document.addEventListener('touchstart', preventTouchMove, { passive: false })
         document.addEventListener('touchmove', preventTouchMove, { passive: false })
-        document.addEventListener('touchend', preventTouchMove, { passive: false })
-        document.addEventListener('touchcancel', preventTouchMove, { passive: false })
-      },
-      {
-        threshold: 250,
-        onFinish: () => {
-          document.removeEventListener('touchstart', preventTouchMove)
+        document.addEventListener('touchend', () => setScreenLocked(false), { once: true })
+
+        return () => {
           document.removeEventListener('touchmove', preventTouchMove)
-          document.removeEventListener('touchend', preventTouchMove)
-          document.removeEventListener('touchcancel', preventTouchMove)
+          document.removeEventListener('touchend', () => setScreenLocked(false))
         }
       }
+    }, [isScreenLocked])
+
+    const { onTouchStart, onTouchMove, onTouchEnd } = useChartLongPress(
+      () => {
+        setScreenLocked(true)
+        toast.info('Screen locked, let go to unlock')
+      },
+      (point : Point) => {
+        handleSetDetailsSelectedDevice(point)
+      },
+      { threshold: 250, moveThreshold: 10 }
     )
 
     const containerRef: RefObject<HTMLDivElement> =
@@ -192,15 +195,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
       )
     }
 
-    const handlePointClick = (point: any, event: React.MouseEvent) => {
-      // override
-      if (onClick) {
-        onClick(point, event)
-        return
-      }
-
-      if (!detailsOnClick) return
-
+    const handleSetDetailsSelectedDevice = (point: Point) => {
       const pointIdParts = point.id.split(' ')
       const rawInstanceID = pointIdParts.length > 1 ? pointIdParts[1].trim() : ''
 
@@ -209,6 +204,18 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
       const parameterID = pointIdParts[0].trim()
 
       setDetailsSelectedDevice(Number(instanceID), Number(parameterID))
+    }
+
+    const handlePointClick = (point: Point, event: React.MouseEvent ) => {
+      // override
+      if (onClick) {
+        onClick(point, event)
+        return
+      }
+
+      if (!detailsOnClick) return
+
+      handleSetDetailsSelectedDevice(point)
     }
 
     // minWidth 0 makes the chart responsive when adjusting the window size
@@ -242,8 +249,9 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
             enableCrosshair={true}
             enableTouchCrosshair={true}
             isInteractive={true}
-            onTouchStart={(_, event) => attrs.onTouchStart(event)}
-            onTouchEnd={(_, event) => attrs.onTouchEnd(event)}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
             areaOpacity={isDarkMode ? 0.2 : 0.1}
             margin={mergedConfig.margin}
             xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ', useUTC: true }}
@@ -336,7 +344,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
                   position={pos}
                   containerRef={containerRef as React.RefObject<HTMLDivElement>}
                   instanceName={instanceName}
-                  parameterName={wholeParameter?.denotation}
+                  parameterName={wholeParameter?.label || wholeParameter?.denotation}
                   xName={mergedConfig.tooltipConfig.xName}
                   yName={mergedConfig.tooltipConfig.yName}
                 />
