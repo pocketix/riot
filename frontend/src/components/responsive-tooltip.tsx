@@ -45,20 +45,27 @@ export const ResponsiveTooltip = ({
     <TooltipProvider delayDuration={0}>
       <Tooltip open={open}>
         <TooltipTrigger asChild>
-          <button
-            type="button"
-            className={cn('cursor-pointer', className)}
+          <div
+            className={cn('cursor-pointer select-none', className)}
             onClick={() => setOpen(!open)}
             onMouseEnter={() => setOpen(true)}
             onMouseLeave={() => setOpen(false)}
             onTouchStart={() => setOpen(!open)}
+            onTouchCancel={(e) => {
+              e.preventDefault()
+              setOpen(false)
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault()
+              setOpen(false)
+            }}
             onKeyDown={(e) => {
               e.preventDefault()
               e.key === 'Enter' && setOpen(!open)
             }}
           >
             {children}
-          </button>
+          </div>
         </TooltipTrigger>
         <TooltipContent
           className={cn('!p-3', !content ? 'hidden' : '', contentClassName)}
