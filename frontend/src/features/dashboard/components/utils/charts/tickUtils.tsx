@@ -29,10 +29,14 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
       return timeTicksCache.get(cacheKey)!
     }
 
+    if (!data.length) {
+      return []
+    }
+
     const availableWidth = maxRange - minRange
 
     // tick every 50 pixels
-    const widthTickCount = Math.max(2, Math.floor(availableWidth / 50))
+    const widthTickCount = Math.max(2, Math.floor(availableWidth / 70))
 
     // .nice makes sure that the ticks are rounded to nice values,
     // the highlighting of midnight rellies on this
@@ -42,6 +46,27 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
       const pos = xScale(date)
       return pos >= minRange && pos <= maxRange
     })
+
+    if (visibleTicks[0].getMonth() !== visibleTicks[visibleTicks.length - 1].getMonth()) {
+      // if not all the ticks are within the same month,
+      // D3 displays the last day of the first month and the first day of the second month
+      // only keep the first day of the second month in these cases
+
+      for (let i = 0; i < visibleTicks.length - 1; i++) {
+        const currentDate = visibleTicks[i]
+        const nextDate = visibleTicks[i + 1]
+
+        if (
+          currentDate.getDate() === new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() &&
+          nextDate.getDate() === 1
+        ) {
+          if (currentDate.getMonth() !== nextDate.getMonth()) {
+            visibleTicks.splice(i, 1)
+            i--
+          }
+        }
+      }
+    }
 
     timeTicksCache.set(cacheKey, visibleTicks)
     return visibleTicks
@@ -79,7 +104,7 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
                   x2={0}
                   y1={0}
                   y2={height}
-                  stroke={isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)'}
+                  stroke={isDarkMode ? darkTheme.axis.ticks.text.fill : lightTheme.axis.ticks.text.fill}
                   strokeWidth={1}
                   strokeDasharray="3,2"
                 />
@@ -87,8 +112,8 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
                   style={{
                     fontSize: isDarkMode ? darkTheme.axis.ticks.text.fontSize : lightTheme.axis.ticks.text.fontSize,
                     textAnchor: 'middle',
-                    fill: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
-                    fontWeight: 'bold',
+                    fill: isDarkMode ? darkTheme.axis.ticks.text.fill : lightTheme.axis.ticks.text.fill,
+                    fontWeight: date.getDate() === 1 ? 'bold' : 'normal',
                     fontFamily: 'sans-serif'
                   }}
                   y={height + 16}
@@ -101,7 +126,7 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
                 style={{
                   fontSize: isDarkMode ? darkTheme.axis.ticks.text.fontSize : lightTheme.axis.ticks.text.fontSize,
                   textAnchor: 'middle',
-                  fill: isDarkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
+                  fill: isDarkMode ? darkTheme.axis.ticks.text.fill : lightTheme.axis.ticks.text.fill,
                   fontFamily: 'sans-serif'
                 }}
                 y={height + 16}

@@ -4,8 +4,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { useParameterSnapshot } from '@/hooks/useParameterSnapshot'
+import { TableColumnData } from '../cards/TableCardController'
 
-export interface TableRowData {
+interface TableRowData {
   name: string
   instance: {
     uid: string
@@ -23,13 +24,13 @@ export interface TableRowData {
 
 export interface ResponsiveTableProps {
   className?: string
-  data: TableRowData[]
+  columnData: TableColumnData[]
   config: TableCardConfig
   onRowClick?: (instanceId: number, parameterId: number) => void
   height?: number
 }
 
-const ResponsiveTableBase = ({ className, data, config, onRowClick, height }: ResponsiveTableProps) => {
+const ResponsiveTableBase = ({ className, columnData, config, onRowClick, height }: ResponsiveTableProps) => {
   const { setDetailsSelectedDevice } = useDeviceDetail()
 
   const containerStyle: CSSProperties = height
@@ -48,12 +49,24 @@ const ResponsiveTableBase = ({ className, data, config, onRowClick, height }: Re
         userSelect: 'none'
       }
 
+  // As we are fetching the data by columns, we need to transform the data into rows
+  // for easier rendering
+  const rows = useMemo(() => {
+    if (!config?.rows?.length) return []
+    return config.rows.map((row, rowIndex) => ({
+      ...row,
+      values: config.columns.map((col, colIndex) => ({
+        function: col.function,
+        value: columnData[colIndex]?.values?.[rowIndex]
+      }))
+    }))
+  }, [config, columnData])
+
   const handleRowClick = (instanceId: number | null, parameterId: number | null) => {
     if (onRowClick && instanceId !== null && parameterId !== null) {
       onRowClick(instanceId, parameterId)
       return
     }
-
     setDetailsSelectedDevice(instanceId!, parameterId)
   }
 
@@ -71,7 +84,7 @@ const ResponsiveTableBase = ({ className, data, config, onRowClick, height }: Re
           </tr>
         </thead>
         <tbody>
-          {data.map((row, rowIndex) => (
+          {rows.map((row, rowIndex) => (
             <TableRow
               key={rowIndex}
               row={row}

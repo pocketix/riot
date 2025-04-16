@@ -4,7 +4,7 @@ import { Arrow, ArrowContainer } from '@/styles/dashboard/CardGlobal'
 import { moveWidget } from '@/lib/dashboard/LayoutArrows'
 import { ResizePopover } from './ResizePopover'
 import { TbBorderBottomPlus, TbBorderRightPlus } from 'react-icons/tb'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 export interface AccessibilityContainerProps {
   cols: { lg: number; md: number; sm: number; xs: number; xxs: number }
@@ -31,66 +31,75 @@ export const AccessibilityContainer = ({
   isAtTopEdge,
   isBottom
 }: AccessibilityContainerProps) => {
-  const [disabled, setDisabled] = useState(false)
-
   // Get the item from the layout
-  // TODO: Make this better
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
   const handleMove = (
     direction: 'left' | 'right' | 'up' | 'down' | 'widthminus' | 'widthplus' | 'heightminus' | 'heightplus'
   ) => {
-    if (disabled) return
-    setDisabled(true)
-
-    const columnCount = cols[breakPoint as keyof typeof cols] || cols.lg // Fallback to lg if invalid
+    const columnCount = cols[breakPoint as keyof typeof cols]
     const newLayout = moveWidget(layout, cardID, direction, columnCount)
     setLayout(newLayout)
-
-    setTimeout(() => {
-      setDisabled(false)
-    }, 1000)
   }
+
+  // Only show the popover if at least one of the buttons is enabled
+  const showWidthResize = !(item?.w === item?.minW && (isAtRightEdge || item?.w === item?.maxW))
+  const showHeightResize = !(item?.h === item?.minH && item?.h === item?.maxH)
 
   return (
     <ArrowContainer>
-      <Arrow onClick={() => handleMove('left')} disabled={disabled || isAtLeftEdge}>
-        <FaLongArrowAltLeft />
-      </Arrow>
-      <Arrow onClick={() => handleMove('up')} disabled={disabled || isAtTopEdge}>
-        <FaLongArrowAltUp />
-      </Arrow>
-      <Arrow onClick={() => handleMove('down')} disabled={disabled || !isBottom}>
-        <FaLongArrowAltDown />
-      </Arrow>
-      <Arrow onClick={() => handleMove('right')} disabled={disabled || isAtRightEdge}>
-        <FaLongArrowAltRight />
-      </Arrow>
-      <ResizePopover
-        onDecrease={() => handleMove('widthminus')}
-        onIncrease={() => handleMove('widthplus')}
-        maxValue={item?.maxW}
-        minValue={item?.minW || 1}
-        currentValue={item?.w}
-        rightEdge={isAtRightEdge}
-        disabled={disabled}
-        highlight="width"
-        setHighlight={setHighlight}
-      >
-        <TbBorderRightPlus />
-      </ResizePopover>
-      <ResizePopover
-        onDecrease={() => handleMove('heightminus')}
-        onIncrease={() => handleMove('heightplus')}
-        maxValue={item?.maxH}
-        minValue={item?.minH || 1}
-        currentValue={item?.h}
-        disabled={disabled}
-        highlight="height"
-        setHighlight={setHighlight}
-      >
-        <TbBorderBottomPlus />
-      </ResizePopover>
+      {!isAtLeftEdge && (
+        <Arrow onClick={() => handleMove('left')}>
+          <FaLongArrowAltLeft />
+        </Arrow>
+      )}
+
+      {!isAtTopEdge && (
+        <Arrow onClick={() => handleMove('up')}>
+          <FaLongArrowAltUp />
+        </Arrow>
+      )}
+
+      {isBottom && (
+        <Arrow onClick={() => handleMove('down')}>
+          <FaLongArrowAltDown />
+        </Arrow>
+      )}
+
+      {!isAtRightEdge && (
+        <Arrow onClick={() => handleMove('right')}>
+          <FaLongArrowAltRight />
+        </Arrow>
+      )}
+
+      {showWidthResize && (
+        <ResizePopover
+          onDecrease={() => handleMove('widthminus')}
+          onIncrease={() => handleMove('widthplus')}
+          maxValue={item?.maxW}
+          minValue={item?.minW || 1}
+          currentValue={item?.w}
+          rightEdge={isAtRightEdge}
+          highlight="width"
+          setHighlight={setHighlight}
+        >
+          <TbBorderRightPlus />
+        </ResizePopover>
+      )}
+
+      {showHeightResize && (
+        <ResizePopover
+          onDecrease={() => handleMove('heightminus')}
+          onIncrease={() => handleMove('heightplus')}
+          maxValue={item?.maxH}
+          minValue={item?.minH || 1}
+          currentValue={item?.h}
+          highlight="height"
+          setHighlight={setHighlight}
+        >
+          <TbBorderBottomPlus />
+        </ResizePopover>
+      )}
     </ArrowContainer>
   )
 }

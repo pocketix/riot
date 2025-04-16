@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { SdInstancesWithParamsQuery } from '@/generated/graphql'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { useInstances } from '@/context/InstancesContext'
 
 interface SingleInstanceComboboxProps {
@@ -124,6 +124,7 @@ export function SingleInstanceCombobox({
                   </CommandGroup>
                 ))}
               </div>
+              <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </CommandList>
         </Command>

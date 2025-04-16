@@ -16,7 +16,7 @@ const configSchema = z
     minValue: z.union([z.number(), z.literal('auto')]).optional(),
     maxValue: z.union([z.number(), z.literal('auto')]).optional(),
     colorScheme: z.enum(['greys', 'nivo']).optional(),
-    decimalPlaces: z.number().optional().default(2),
+    decimalPlaces: z.coerce.number().optional().default(2),
     measureSize: z
       .number()
       .min(0, { message: 'Measure size must be greater than or equal to 0' })

@@ -9,7 +9,7 @@ import { BuilderResult } from '@/types/dashboard/gridItem'
 import { TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
 import { TableCardBuilderView } from './TableCardBuilderView'
 import { Parameter, useInstances } from '@/context/InstancesContext'
-import { TableRowData } from '../visualizations/ResponsiveTable'
+import { TableColumnData } from '../cards/TableCardController'
 
 type TableCardBuilderResult = BuilderResult<TableCardConfig>
 
@@ -19,7 +19,7 @@ export interface TableCardBuilderControllerProps {
 }
 
 export function TableCardBuilderController({ onDataSubmit, config }: TableCardBuilderControllerProps) {
-  const [tableData, setTableData] = useState<TableRowData[]>([])
+  const [columnData, setColumnData] = useState<TableColumnData[]>([])
   const [fetchTableData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
   const { getInstanceParameters } = useInstances()
 
@@ -29,55 +29,15 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
     }
   }, [config])
 
-  const handleRowRename = (rowIndex: number, newName: string) => {
-    setTableData((prevData) => {
-      const updatedData = [...prevData]
-      updatedData[rowIndex] = {
-        ...updatedData[rowIndex],
-        name: newName
-      }
-      return updatedData
-    })
-  }
-
-  const fetchSingleRowData = async (
-    rowData: TableCardConfig['rows'][number],
-    rowIndex: number,
-    columns: TableCardConfig['columns'],
-    timeFrame: string
-  ) => {
-    if (!rowData?.instance?.uid || !rowData?.parameter?.denotation) {
-      return
-    }
+  const fetchSingleRowData = async (config: TableCardConfig, rowIndex: number) => {
+    const rowData = config.rows[rowIndex]
+    const timeFrame = config.timeFrame
+    const columns = config.columns
+    if (!rowData || !config || !config.rows.length || !config.columns.length) return
+    if (!rowData.instance?.uid || !rowData.parameter?.denotation) return
 
     // Get columns that need to be fetched
     const aggregatedColumns = columns.filter((column) => column.function !== 'last' && column.function !== '')
-
-    const newRow: TableRowData = {
-      ...rowData,
-      values: columns.map((column) => ({
-        function: column.function,
-        value: undefined
-      }))
-    }
-
-    setTableData((prevData) => {
-      const updatedData = [...prevData]
-
-      // Make space for the new data
-      while (updatedData.length <= rowIndex) {
-        updatedData.push({
-          name: '',
-          instance: { uid: '', id: null },
-          parameter: { id: null, denotation: '' },
-          values: []
-        })
-      }
-
-      // Insert the new row, which does not have any values yet
-      updatedData[rowIndex] = newRow
-      return updatedData
-    })
 
     if (aggregatedColumns.length === 0) {
       return
@@ -109,134 +69,131 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
         }
       })
 
-      // Fill in the values for this row
-      aggregatedColumns.forEach((column, idx) => {
-        const columnData = parsedData[idx]
-
-        if (columnData) {
-          const instanceData = columnData.find((data: any) => data.deviceId === rowData.instance.uid)
-          if (instanceData) {
+      let aggregateIndex = 0
+      columns.forEach((column, index) => {
+        if (column.function === 'last') return
+        
+        const columnData = parsedData[aggregateIndex]
+        aggregateIndex++
+        
+        if (columnData && columnData.length > 0) {
+          const deviceDataMap: Record<string, any> = {}
+          columnData.forEach((item) => {
             try {
-              const parsedValue = JSON.parse(instanceData.data)
-              newRow.values[idx] = {
-                function: column.function,
-                value: parsedValue[rowData.parameter.denotation]
-              }
-            } catch (e) {
-              console.error('Error parsing data:', e)
+              deviceDataMap[item.deviceId] = JSON.parse(item.data)
+            } catch (err) {
+              console.error(`Error parsing data for ${item.deviceId}:`, err)
             }
-          }
-        }
-      })
+          })
 
-      setTableData((prevData) => {
-        const updatedData = [...prevData]
-        updatedData[rowIndex] = newRow
-        console.log('Updated row data:', updatedData[rowIndex])
-        return updatedData
+          // Build the column data while keeping the previous values
+          setColumnData((prev) => {
+            const updated = [...prev]
+            const prevValues = prev[index]?.values
+            const deviceParsed = deviceDataMap[rowData.instance.uid]
+
+            // Insert the new row value at the rowIndex, which is the index of row being changed
+            prevValues[rowIndex] = deviceParsed ? deviceParsed[rowData.parameter.denotation] : undefined
+
+            // Update the whole column with new the value
+            updated[index] = { function: column.function, values: prevValues }
+            return updated
+          })
+        } else {
+          setColumnData((prev) => {
+            const updated = [...prev]
+            const prevValues = prev[index]?.values
+
+            // Only set the missing data to undefined
+            prevValues[rowIndex] = undefined
+            updated[index] = { function: column.function, values: prevValues }
+            return updated
+          })
+        }
       })
     } catch (error) {
       console.error('Fetch error:', error)
     }
   }
 
-  const checkRowAndFetch = async (config: TableCardConfig, rowIndex: number) => {
-    if (!config.rows[rowIndex]?.instance?.uid || !config.rows[rowIndex]?.parameter?.denotation) {
-      return
-    }
+  const fetchSingleColumnData = async (config: TableCardConfig, columnIndex: number) => {
+    const column = config.columns[columnIndex]
+    if (!column || !config.rows.length) return
 
-    await fetchSingleRowData(config.rows[rowIndex], rowIndex, config.columns, config.timeFrame)
-  }
+    // Reset the whole column
+    setColumnData((prev) => {
+      const updated = [...prev]
+      updated[columnIndex] = { function: column.function, values: config.rows.map(() => undefined) }
+      return updated
+    })
 
-  const handleRowDelete = (removedIndex: number) => {
-    setTableData((prevData) => {
-      const updatedData = [...prevData]
-      updatedData.splice(removedIndex, 1)
-      return updatedData
+    if (column.function === 'last' || column.function === '') return
+
+    config.rows.forEach(async (row, rowIndex) => {
+      if (!row?.instance?.uid || !row?.parameter?.denotation) return
+
+      const sensorField: SensorField = {
+        key: row.instance.uid,
+        values: [row.parameter.denotation]
+      }
+
+      try {
+        const result = await fetchData(
+          [sensorField],
+          new Date(Date.now() - Number(config.timeFrame) * 60 * 60 * 1000).toISOString(),
+          Number(config.timeFrame) * 60 * 1000,
+          column.function
+        )
+
+        const columnData = result.data?.statisticsQuerySensorsWithFields
+        if (columnData && columnData.length > 0) {
+          const deviceDataMap: Record<string, any> = {}
+          columnData.forEach((item) => {
+            try {
+              deviceDataMap[item.deviceId] = JSON.parse(item.data)
+            } catch (err) {
+              console.error(`Error parsing data for ${item.deviceId}:`, err)
+            }
+          })
+
+          // The same principle as when fetching a single row
+          setColumnData((prev) => {
+            const updated = [...prev]
+            const prevValues = prev[columnIndex]?.values
+            const deviceParsed = deviceDataMap[row.instance.uid]
+            prevValues[rowIndex] = deviceParsed ? deviceParsed[row.parameter.denotation] : undefined
+            updated[columnIndex] = { function: column.function, values: prevValues }
+            return updated
+          })
+        } else {
+          setColumnData((prev) => {
+            const updated = [...prev]
+            const prevValues = prev[columnIndex]?.values
+            prevValues[rowIndex] = undefined
+            updated[columnIndex] = { function: column.function, values: prevValues }
+            return updated
+          })
+        }
+      } catch (error) {
+        console.error('Column fetching error:', error)
+      }
     })
   }
 
   const fetchFullTableData = async (config: TableCardConfig) => {
     if (!config || !config.rows.length || !config.columns.length) return
 
-    const validRows = config.rows.filter((row) => row.instance?.uid && row.parameter?.denotation)
-
-    if (!validRows.length) return
-
-    const sensors: SensorField[] = validRows.map((row) => ({
-      key: row.instance.uid,
-      values: [row.parameter.denotation]
-    }))
-
-    const combinedSensors = combineSensors(sensors)
-
-    const aggregatedColumns = config.columns.filter((column) => column.function !== 'last' && column.function !== '')
-
-    const rows = config.rows.map((row) => ({
-      ...row,
-      values: config.columns.map((column) => ({
-        function: column.function,
-        value: undefined
+    // Reset the whole table
+    setColumnData(
+      config.columns.map((col) => ({
+        function: col.function,
+        values: config.rows.map(() => undefined)
       }))
-    }))
+    )
 
-    if (aggregatedColumns.length === 0 || combinedSensors.length === 0) {
-      setTableData(rows)
-      return
-    }
-
-    try {
-      const results = await Promise.allSettled(
-        aggregatedColumns.map((column) =>
-          fetchData(
-            combinedSensors,
-            new Date(Date.now() - Number(config.timeFrame) * 60 * 60 * 1000).toISOString(),
-            Number(config.timeFrame) * 60 * 1000,
-            column.function
-          )
-        )
-      )
-
-      const parsedData = results.map((result) => {
-        if (result.status === 'fulfilled' && result.value.data?.statisticsQuerySensorsWithFields.length! > 0) {
-          return result.value.data?.statisticsQuerySensorsWithFields
-        } else {
-          return null
-        }
-      })
-
-      const updatedRows = config.rows.map((row) => {
-        const values = config.columns.map((column) => ({
-          function: column.function,
-          value: undefined
-        }))
-
-        aggregatedColumns.forEach((column, idx) => {
-          const columnData = parsedData[idx]
-
-          if (columnData) {
-            const instanceData = columnData.find((data: any) => data.deviceId === row.instance.uid)
-            if (instanceData) {
-              try {
-                let parsedValue = JSON.parse(instanceData.data)
-                values[idx] = {
-                  function: column.function,
-                  value: parsedValue[row.parameter.denotation]
-                }
-              } catch (e) {
-                console.error('Error parsing data:', e)
-              }
-            }
-          }
-        })
-
-        return { ...row, values }
-      })
-
-      setTableData(updatedRows)
-    } catch (error) {
-      console.error('Fetch error:', error)
-    }
+    config.rows.forEach(async (_, rowIndex) => {
+      await fetchSingleRowData(config, rowIndex)
+    })
   }
 
   function combineSensors(sensors: SensorField[]): SensorField[] {
@@ -256,9 +213,10 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
   }
 
   const fetchData = async (sensors: SensorField[], from: string, aggregateMinutes: number, operation: string) => {
+    const combinedSensors = combineSensors(sensors)
     return fetchTableData({
       variables: {
-        sensors: { sensors },
+        sensors: { sensors: combinedSensors },
         request: {
           from: from,
           aggregateMinutes: Math.ceil(aggregateMinutes),
@@ -270,14 +228,12 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
 
   const getParameterOptions = (instanceID: number | null, columns: TableCardConfig['columns']): Parameter[] => {
     if (!instanceID) return []
-
+    // Only allow number parameters if any column is an aggregate
     const allParameters = getInstanceParameters(instanceID)
     const numberOnly = columns.some((col) => col.function !== 'last' && col.function !== '')
-
     if (numberOnly) {
       return allParameters.filter((param) => param.type === SdParameterType.Number)
     }
-
     return allParameters
   }
 
@@ -292,16 +248,52 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
     onDataSubmit(result)
   }
 
+  const handleRowDelete = (rowIndex: number) => {
+    setColumnData((prev) =>
+      prev.map((col) => ({
+        ...col,
+        values: col.values.filter((_, idx) => idx !== rowIndex)
+      }))
+    )
+  }
+
+  const handleColumnMove = (fromIndex: number, toIndex: number) => {
+    setColumnData((prev) => {
+      const newColumnData = [...prev]
+      const movedColumn = newColumnData.splice(fromIndex, 1)[0]
+      newColumnData.splice(toIndex, 0, movedColumn)
+      return newColumnData
+    })
+  }
+
+  const handleColumnDelete = (columnIndex: number) => {
+    setColumnData((prev) => prev.filter((_, idx) => idx !== columnIndex))
+  }
+
+  const handleRowMove = (fromIndex: number, toIndex: number) => {
+    setColumnData((prev) =>
+      prev.map((col) => {
+        const newValues = [...col.values]
+        const [moved] = newValues.splice(fromIndex, 1)
+        newValues.splice(toIndex, 0, moved)
+        return { ...col, values: newValues }
+      })
+    )
+  }
+
   return (
     <TableCardBuilderView
       config={config}
-      tableData={tableData}
+      tableData={columnData}
       onSubmit={handleSubmit}
-      checkRowAndFetch={checkRowAndFetch}
-      handleRowDelete={handleRowDelete}
       fetchFullTableData={fetchFullTableData}
+      fetchSingleColumnData={fetchSingleColumnData}
       getParameterOptions={getParameterOptions}
-      handleRowRename={handleRowRename}
+      fetchSingleRowData={fetchSingleRowData}
+      handleRowDelete={handleRowDelete}
+      handleColumnMove={handleColumnMove}
+      handleColumnDelete={handleColumnDelete}
+      handleRowMove={handleRowMove}
     />
   )
 }

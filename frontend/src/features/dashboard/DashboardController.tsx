@@ -29,8 +29,8 @@ const DashboardController = () => {
   const [mounted, setMounted] = useState<boolean>(false)
 
   // Configuration
-  const cols = { lg: 6, md: 3, sm: 3, xs: 3, xxs: 1 }
-  const rowHeight = 10
+  const COLS_CONST = { lg: 6, md: 3, sm: 3, xs: 3, xxs: 1 }
+  const ROW_HEIGHT = 10
 
   const handleSaveToDB = useCallback(
     (layout: Layouts, details: { [key: string]: DBItemDetails<AllConfigTypes> }) => {
@@ -139,7 +139,7 @@ const DashboardController = () => {
         breakpoint: string,
         item: GridItem<ConfigType>
       ) => {
-        const colsCount = cols[breakpoint as keyof typeof cols]
+        const colsCount = COLS_CONST[breakpoint as keyof typeof COLS_CONST]
         console.log('Cols for breakpoint', breakpoint, 'are', colsCount)
         const sizing = item.visualizationConfig?.sizing
         const itemLayout: Layout = {
@@ -168,11 +168,11 @@ const DashboardController = () => {
             true,
             false,
             'vertical',
-            cols[breakpoint as keyof typeof cols],
+            COLS_CONST[breakpoint as keyof typeof COLS_CONST],
             false
           ),
           'vertical',
-          cols[breakpoint as keyof typeof cols]
+          COLS_CONST[breakpoint as keyof typeof COLS_CONST]
         )
       })
 
@@ -189,7 +189,7 @@ const DashboardController = () => {
       setLayouts(newLayouts)
       handleSaveToDB(newLayouts, newDetails)
     },
-    [layouts, details, cols, handleSaveToDB]
+    [layouts, details, COLS_CONST, handleSaveToDB]
   )
 
   const handleSaveConfig = useCallback(
@@ -247,7 +247,7 @@ const DashboardController = () => {
       // We did not get any layouts from the database,
       // create the default empty layouts with breakpoints
       const defaultLayouts: Layouts = {}
-      Object.keys(cols).forEach((key) => {
+      Object.keys(COLS_CONST).forEach((key) => {
         defaultLayouts[key] = []
       })
 
@@ -279,8 +279,8 @@ const DashboardController = () => {
       details={details}
       instances={instances}
       mounted={mounted}
-      cols={cols}
-      rowHeight={rowHeight}
+      cols={COLS_CONST}
+      rowHeight={ROW_HEIGHT}
       onLayoutChange={layoutChanged}
       onDeleteItem={handleDeleteItem}
       onRestoreLayout={handleRestoreLayout}

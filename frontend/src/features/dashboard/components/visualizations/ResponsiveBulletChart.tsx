@@ -43,7 +43,7 @@ const bulletMarker = (props: BulletMarkersItemProps) => {
 
 const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: ResponsiveBulletProps) => {
   const { isDarkMode } = useDarkMode()
-  const { getInstanceById } = useInstances()
+  const { getInstanceById, getParameterByIds } = useInstances()
   const { setDetailsSelectedDevice } = useDeviceDetail()
   const [tooltipVisible, setTooltipVisible] = useState(false)
   const [touchTooltipVisible, setTouchTooltipVisible] = useState(false)
@@ -120,11 +120,17 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: 
   }
 
   const tooltipTriggerData = useMemo(() => {
+    const wholeInstance = getInstanceById(rowConfig?.instance?.id!)
+    const wholeParameter = getParameterByIds(rowConfig?.instance?.id!, rowConfig?.parameter?.id!)
     return {
-      instanceName: getInstanceById(rowConfig?.instance?.id!)?.userIdentifier || 'Unknown',
-      parameterName: rowConfig?.parameter?.denotation || '',
+      instanceName: wholeInstance?.userIdentifier || 'Unknown',
+      parameterName: wholeParameter?.label || wholeParameter?.denotation || 'Unknown',
       value: String(data.measures[0]),
-      targets: data.markers || []
+      targets: data.markers || [],
+      lastUpdated: lastUpdated,
+      decimalPlaces: rowConfig?.config.decimalPlaces,
+      timeFrame: rowConfig?.config.timeFrame,
+      aggregateFunction: rowConfig?.config.function
     }
   }, [data, rowConfig, getInstanceById])
 
@@ -169,10 +175,11 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: 
         parameterName={tooltipTriggerData.parameterName}
         currentValue={tooltipTriggerData.value}
         targetValues={tooltipTriggerData.targets}
-        aggregateFunction={rowConfig?.config.function}
-        timeFrame={rowConfig?.config.timeFrame}
+        aggregateFunction={tooltipTriggerData.aggregateFunction}
+        decimalPlaces={tooltipTriggerData.decimalPlaces}
+        timeFrame={tooltipTriggerData.timeFrame}
+        lastUpdated={tooltipTriggerData.lastUpdated}
         chartRect={chartRect}
-        lastUpdated={lastUpdated}
         visible={tooltipVisible || touchTooltipVisible}
       />
     </>
