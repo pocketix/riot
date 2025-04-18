@@ -108,3 +108,29 @@ export const UPDATE_DEVICE_TYPE = gql`
     }
   }
 `
+
+export const CREATE_GROUP = gql`
+  mutation CreateSDInstanceGroup($input: SDInstanceGroupInput!) {
+    createSDInstanceGroup(input: $input) {
+      id
+      userIdentifier
+      sdInstanceIDs
+    }
+  }
+`
+
+export const UPDATE_GROUP = gql`
+  mutation UpdateSDInstanceGroup($updateSdInstanceGroupId: ID!, $input: SDInstanceGroupInput!) {
+    updateSDInstanceGroup(id: $updateSdInstanceGroupId, input: $input) {
+      id
+      userIdentifier
+      sdInstanceIDs
+    }
+  }
+`
+
+export const DELETE_GROUP = gql`
+  mutation DeleteSDInstanceGroup($deleteSdInstanceGroupId: ID!) {
+    deleteSDInstanceGroup(id: $deleteSdInstanceGroupId)
+  }
+`

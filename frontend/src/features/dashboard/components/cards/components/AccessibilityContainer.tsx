@@ -7,7 +7,7 @@ import { TbBorderBottomPlus, TbBorderRightPlus } from 'react-icons/tb'
 import { useMemo } from 'react'
 
 export interface AccessibilityContainerProps {
-  cols: { lg: number; md: number; sm: number; xs: number; xxs: number }
+  cols: { lg: number; md: number; xs: number; xxs: number }
   layout: Layout[]
   setLayout: (layout: Layout[]) => void
   breakPoint: string

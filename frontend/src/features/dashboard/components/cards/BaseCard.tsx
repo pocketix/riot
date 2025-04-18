@@ -2,7 +2,7 @@ import { Container, DeleteEditContainer, DragHandle, OverlayContainer } from '@/
 import { AiOutlineDrag } from 'react-icons/ai'
 import styled from 'styled-components'
 import { useEffect, useMemo, useState } from 'react'
-import { ItemDeleteAlertDialog } from './components/ItemDeleteAlertDialog'
+import { DeleteAlertDialog } from './components/DeleteAlertDialog'
 import { AccessibilityContainer } from './components/AccessibilityContainer'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CardEditDialog } from '../editors/CardEditDialog'
@@ -66,7 +66,7 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
         )}
         {props.editModeEnabled && (
           <DeleteEditContainer>
-            <ItemDeleteAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID)} />
+            <DeleteAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID, props.breakPoint)} />
           </DeleteEditContainer>
         )}
       </>
@@ -87,7 +87,7 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
             onSave={props.handleSaveEdit}
             visualizationType={props.visualizationType}
           />
-          <ItemDeleteAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID)} />
+          <DeleteAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID, props.breakPoint)} />
         </DeleteEditContainer>
       )}
 

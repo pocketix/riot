@@ -1,43 +1,51 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Layouts, Layout } from 'react-grid-layout'
 import { toast } from 'sonner'
 import { AllConfigTypes, BuilderResult, GridItem } from '@/types/dashboard/gridItem'
-import { DBItemDetails } from '@/types/dashboard/dbItem'
 import { useUpdateUserConfigMutation, useUserConfigQuery } from '@/generated/graphql'
-import { RiotDashboardConfig } from '@/types/dashboard/dashboard'
 import { useInstances } from '@/context/InstancesContext'
 import { utils } from 'react-grid-layout'
 import _ from 'lodash'
 import DashboardView from './DashboardView'
+import { DashboardConfig, DBItemDetails, RiotDashboardConfigSchema, Tab } from '@/schemas/dashboard/DashboardSchema'
+import { AddTabFormSchemaType } from '@/schemas/dashboard/AddTabSchema'
 
 const DashboardController = () => {
   const userID = 1 // TODO: Replace with real user id
+  const { instances } = useInstances()
+  const [mounted, setMounted] = useState<boolean>(false)
+  const [tabs, setTabs] = useState<Tab[]>([])
+  const [activeTabID, setActiveTabID] = useState<number>(0)
   const [updateUserConfig, { data: saveConfigData, loading: saveConfigLoading, error: saveConfigError }] =
     useUpdateUserConfigMutation()
 
-  const { data: fetchedConfigData, error: fetchedConfigError } = useUserConfigQuery({
+  const {
+    data: fetchedConfigData,
+    loading: fetchedConfigLoading,
+    error: fetchedConfigError
+  } = useUserConfigQuery({
     variables: {
       userConfigId: userID
     },
     skip: !userID
   })
 
-  const { instances } = useInstances()
+  const activeTab = useMemo(() => {
+    return tabs.find((tab) => tab.id === activeTabID)
+  }, [tabs, activeTabID])
 
-  const [layouts, setLayouts] = useState<{ [key: string]: Layout[] }>({})
-  const [details, setDetails] = useState<{ [key: string]: DBItemDetails<AllConfigTypes> }>({})
-  const [mounted, setMounted] = useState<boolean>(false)
+  const layouts = useMemo(() => activeTab?.layout || {}, [activeTab])
+  const details = useMemo(() => activeTab?.details || {}, [activeTab])
 
-  // Configuration
-  const COLS_CONST = { lg: 6, md: 3, sm: 3, xs: 3, xxs: 1 }
+  // CONSTANTS
+  const COLS_CONST = { lg: 6, md: 4, xs: 2, xxs: 1 }
   const ROW_HEIGHT = 10
 
   const handleSaveToDB = useCallback(
-    (layout: Layouts, details: { [key: string]: DBItemDetails<AllConfigTypes> }) => {
-      const DBDataStructure: RiotDashboardConfig = {
+    (updatedTabs: Tab[]) => {
+      const DBDataStructure: DashboardConfig = {
         riot: {
-          layout,
-          details
+          tabs: updatedTabs
         }
       }
 
@@ -83,49 +91,141 @@ const DashboardController = () => {
 
       if (_.isEqual(normalizedOldLayouts, normalizedNewLayouts)) return
 
-      setLayouts(newLayouts)
-      handleSaveToDB(newLayouts, details)
+      const updatedTabs = tabs.map((tab) => {
+        if (tab.id === activeTabID) {
+          return {
+            ...tab,
+            layout: newLayouts
+          }
+        }
+        return tab
+      })
+
+      setTabs(updatedTabs)
+      handleSaveToDB(updatedTabs)
     },
-    [layouts, details, handleSaveToDB]
+    [tabs, activeTabID, handleSaveToDB]
   )
+
+  const handleAddTab = (values: AddTabFormSchemaType) => {
+    let highestId = 0
+    if (tabs.length > 0) {
+      highestId = Math.max(...tabs.map((tab) => Number(tab.id)))
+    }
+
+    const newTabId = highestId + 1
+
+    const defaultLayouts: Layouts = {}
+    Object.keys(COLS_CONST).forEach((key) => {
+      defaultLayouts[key] = []
+    })
+
+    const newTab: Tab = {
+      id: newTabId,
+      userIdentifier: values.userIdentifier,
+      icon: values.icon,
+      layout: defaultLayouts,
+      details: {}
+    }
+
+    const updatedTabs = [...tabs, newTab] // append the new tab
+    setTabs(updatedTabs)
+    setActiveTabID(newTabId)
+    handleSaveToDB(updatedTabs)
+  }
+
+  const handleChangeTab = (tabId: number) => setActiveTabID(tabId)
+
+  const handleResize = (_layout: Layout[], _oldItem: Layout, newItem: Layout, currentBreakpoint: string) => {
+    if (!activeTabID || !activeTab) return
+
+    const newLayouts = { ...activeTab.layout }
+
+    // Only update the current breakpoint's layout
+    if (newLayouts[currentBreakpoint]) {
+      newLayouts[currentBreakpoint] = newLayouts[currentBreakpoint].map((item) => {
+        if (item.i === newItem.i) {
+          return {
+            ...item,
+            w: newItem.w,
+            h: newItem.h
+          }
+        }
+        return item
+      })
+    }
+
+    const updatedTabs = tabs.map((tab) => {
+      if (tab.id === activeTabID) {
+        return {
+          ...tab,
+          layout: newLayouts
+        }
+      }
+      return tab
+    })
+
+    setTabs(updatedTabs)
+    handleSaveToDB(updatedTabs)
+  }
 
   const handleDeleteItem = useCallback(
-    (id: string) => {
-      const newLayouts = { ...layouts }
-      for (const key in newLayouts) {
-        newLayouts[key] = newLayouts[key].filter((item) => item.i !== id)
-      }
-      setLayouts(newLayouts)
-      const newDetails = { ...details }
-      delete newDetails[id]
-      setDetails(newDetails)
-      handleSaveToDB(newLayouts, newDetails)
-    },
-    [layouts, details, handleSaveToDB]
-  )
+    (id: string, breakpoint: string) => {
+      if (!activeTabID || !activeTab) return
 
-  const handleRestoreLayout = useCallback(
-    (layout: Layouts): boolean => {
-      if (layout) {
-        setLayouts(layout)
-        handleSaveToDB(layout, details)
-        return true
+      const newLayouts = { ...activeTab.layout }
+
+      if (breakpoint) {
+        if (newLayouts[breakpoint]) {
+          newLayouts[breakpoint] = newLayouts[breakpoint].filter((item) => item.i !== id)
+        }
+      } else {
+        Object.keys(newLayouts).forEach((key) => {
+          newLayouts[key] = newLayouts[key].filter((item) => item.i !== id)
+        })
       }
-      return false
+
+      const stillExists = Object.values(newLayouts).some((layoutArr) => layoutArr.some((item) => item.i === id))
+
+      const newDetails = { ...activeTab.details }
+      if (!stillExists) {
+        delete newDetails[id]
+      }
+
+      const updatedTabs = tabs.map((tab) => {
+        if (tab.id === activeTabID) {
+          return {
+            ...tab,
+            layout: newLayouts,
+            details: newDetails
+          }
+        }
+        return tab
+      })
+
+      setTabs(updatedTabs)
+      handleSaveToDB(updatedTabs)
     },
-    [details, handleSaveToDB]
+    [tabs, activeTabID, activeTab, handleSaveToDB]
   )
 
   const handleAddItem = useCallback(
     <ConfigType extends AllConfigTypes>(item: GridItem<ConfigType>) => {
-      const newLayouts = { ...layouts }
+      if (!activeTabID || !activeTab) return
 
+      const newLayouts = { ...activeTab.layout }
+      const currentDetails = { ...activeTab.details }
+
+      // Find largest index across all layouts in all tabs
       let largestIndex = 0
-      Object.keys(newLayouts).forEach((breakpoint) => {
-        newLayouts[breakpoint].forEach((layoutItem) => {
-          if (parseInt(layoutItem.i) > largestIndex) {
-            largestIndex = parseInt(layoutItem.i)
-          }
+      tabs.forEach((tab) => {
+        Object.keys(tab.layout).forEach((breakpoint) => {
+          tab.layout[breakpoint].forEach((layoutItem) => {
+            const itemIndex = parseInt(layoutItem.i)
+            if (!isNaN(itemIndex) && itemIndex > largestIndex) {
+              largestIndex = itemIndex
+            }
+          })
         })
       })
 
@@ -140,7 +240,6 @@ const DashboardController = () => {
         item: GridItem<ConfigType>
       ) => {
         const colsCount = COLS_CONST[breakpoint as keyof typeof COLS_CONST]
-        console.log('Cols for breakpoint', breakpoint, 'are', colsCount)
         const sizing = item.visualizationConfig?.sizing
         const itemLayout: Layout = {
           w: Math.min(sizing?.w! || 2, colsCount),
@@ -154,17 +253,16 @@ const DashboardController = () => {
         return itemLayout
       }
 
-      // Insert into all layouts
+      // Insert into all layouts for the current tab
       Object.keys(newLayouts).forEach((breakpoint) => {
         const itemLayout = getItemLayoutForBreakpoint(breakpoint, item)
-        console.log('inserting itemLayout', itemLayout, ' into breakpoint', breakpoint)
         newLayouts[breakpoint].push({ ...itemLayout })
         newLayouts[breakpoint] = utils.compact(
           utils.moveElement(
             newLayouts[breakpoint],
             itemLayout,
             0,
-            0,
+            Infinity,
             true,
             false,
             'vertical',
@@ -177,38 +275,50 @@ const DashboardController = () => {
       })
 
       // Create database item entry
-      const dbItemDetails: DBItemDetails<AllConfigTypes> = {
-        layoutID: newIndex,
+      const dbItemDetails = {
         visualization: item.visualization,
         visualizationConfig: item.visualizationConfig.config
-      }
+      } as DBItemDetails
 
-      const newDetails = { ...details, [newIndex]: dbItemDetails }
+      currentDetails[newIndex] = dbItemDetails
 
-      setDetails(newDetails)
-      setLayouts(newLayouts)
-      handleSaveToDB(newLayouts, newDetails)
+      const updatedTabs = tabs.map((tab) => {
+        if (tab.id === activeTabID) {
+          return {
+            ...tab,
+            layout: newLayouts,
+            details: currentDetails
+          }
+        }
+        return tab
+      })
+
+      setTabs(updatedTabs)
+      handleSaveToDB(updatedTabs)
     },
-    [layouts, details, COLS_CONST, handleSaveToDB]
+    [tabs, activeTabID, activeTab, COLS_CONST, handleSaveToDB]
   )
 
   const handleSaveConfig = useCallback(
     <ConfigType extends AllConfigTypes>(
       builderResult: BuilderResult<ConfigType>,
-      dbItemDetails: DBItemDetails<ConfigType>
+      dbItemDetails: DBItemDetails,
+      detailsIndex: string
     ) => {
-      const newDetails = { ...details }
-      const newDetailsItem: DBItemDetails<AllConfigTypes> = {
-        layoutID: dbItemDetails.layoutID,
+      if (!activeTabID) return
+
+      const currentDetails = { ...activeTab?.details }
+
+      const newDetailsItem = {
         visualization: dbItemDetails.visualization,
         visualizationConfig: builderResult.config
       }
 
       // Update layouts with new sizing
-      const newLayouts = { ...layouts }
+      const newLayouts = { ...activeTab?.layout }
       Object.keys(newLayouts).forEach((breakpoint) => {
         newLayouts[breakpoint] = newLayouts[breakpoint].map((layoutItem) => {
-          if (layoutItem.i === dbItemDetails.layoutID) {
+          if (layoutItem.i === detailsIndex) {
             return {
               ...layoutItem,
               w: builderResult.sizing?.w || layoutItem.w,
@@ -221,55 +331,186 @@ const DashboardController = () => {
         })
       })
 
-      setLayouts(newLayouts)
-      newDetails[dbItemDetails?.layoutID!] = newDetailsItem
-      setDetails(newDetails)
-      handleSaveToDB(newLayouts, newDetails)
+      currentDetails[detailsIndex] = newDetailsItem as DBItemDetails
+
+      const updatedTabs = tabs.map((tab) => {
+        if (tab.id === activeTabID) {
+          return {
+            ...tab,
+            layout: newLayouts,
+            details: currentDetails
+          }
+        }
+        return tab
+      })
+
+      setTabs(updatedTabs)
+      handleSaveToDB(updatedTabs)
     },
-    [details, layouts, handleSaveToDB]
+    [tabs, activeTabID, handleSaveToDB]
   )
 
-  // Process fetched config data
+  const handleRestoreAllTabs = (savedTabsState: Tab[]): boolean => {
+    if (!savedTabsState || savedTabsState.length === 0) return false
+
+    setTabs(savedTabsState)
+    handleSaveToDB(savedTabsState)
+    return true
+  }
+
+  const handleDeleteTab = useCallback(
+    (tabId: number) => {
+      const tabToDelete = tabs.find((tab) => tab.id === tabId)
+      if (!tabToDelete) {
+        toast.error('Tab not found')
+        return
+      }
+
+      toast.loading(`Deleting tab "${tabToDelete.userIdentifier}"...`, {
+        id: 'delete-tab'
+      })
+
+      const updatedTabs = tabs.filter((tab) => tab.id !== tabId)
+      setTabs(updatedTabs)
+      handleSaveToDB(updatedTabs)
+
+      toast.success(`Tab "${tabToDelete.userIdentifier}" deleted`, {
+        id: 'delete-tab'
+      })
+    },
+    [tabs, activeTabID, handleSaveToDB]
+  )
+
   useEffect(() => {
     if (fetchedConfigError) {
-      toast.error('Failed to fetch from database')
+      toast.error('Failed to fetch from database', { id: 'dashboard-config-load' })
       console.error('Failed to fetch from database:', fetchedConfigError)
     }
 
-    if (fetchedConfigData) {
-      const config = fetchedConfigData.userConfig.config
-      const parsedConfig: RiotDashboardConfig = JSON.parse(config)
-
-      if (!parsedConfig.riot) {
-        console.warn('Invalid config format or empty config')
-      }
-
-      // We did not get any layouts from the database,
-      // create the default empty layouts with breakpoints
-      const defaultLayouts: Layouts = {}
-      Object.keys(COLS_CONST).forEach((key) => {
-        defaultLayouts[key] = []
-      })
-
-      setLayouts(parsedConfig.riot?.layout || defaultLayouts)
-      setDetails(parsedConfig.riot?.details || {})
-      setMounted(true)
+    if (fetchedConfigLoading) {
+      toast.loading('Loading dashboard configuration...', { id: 'dashboard-config-load' })
     }
-  }, [fetchedConfigError, fetchedConfigData])
+
+    if (fetchedConfigData) {
+      try {
+        const config = fetchedConfigData.userConfig.config
+        const parsedResult = RiotDashboardConfigSchema.safeParse(JSON.parse(config))
+
+        if (!parsedResult.success) {
+          toast.error('Invalid dashboard config format', { id: 'dashboard-config-load' })
+          console.warn('Config validation error:', parsedResult.error)
+
+          // TODO: handle this somehow better ?
+          // Create a default tab when config format is invalid
+          const defaultLayouts: Layouts = {}
+          Object.keys(COLS_CONST).forEach((key) => {
+            defaultLayouts[key] = []
+          })
+
+          const defaultTab: Tab = {
+            id: 1,
+            userIdentifier: 'Dashboard',
+            icon: '',
+            layout: defaultLayouts,
+            details: {}
+          }
+
+          setTabs([defaultTab])
+          setActiveTabID(1)
+          setMounted(true)
+          return
+        }
+
+        const parsedConfig = parsedResult.data
+
+        if (!parsedConfig.riot || !parsedConfig.riot.tabs || parsedConfig.riot.tabs.length === 0) {
+          console.warn('No tabs found in config, creating default tab')
+
+          // Create a default tab when no tabs exist
+          const defaultLayouts: Layouts = {}
+          Object.keys(COLS_CONST).forEach((key) => {
+            defaultLayouts[key] = []
+          })
+
+          const defaultTab: Tab = {
+            id: 1,
+            userIdentifier: 'General',
+            icon: '',
+            layout: defaultLayouts,
+            details: {}
+          }
+
+          setTabs([defaultTab])
+          setActiveTabID(1)
+          handleSaveToDB([defaultTab])
+        } else {
+          setTabs(parsedConfig.riot.tabs)
+
+          if (parsedConfig.riot.tabs.length > 0) setActiveTabID(parsedConfig.riot.tabs[0].id)
+        }
+
+        toast.dismiss('dashboard-config-load')
+        setMounted(true)
+      } catch (error) {
+        console.error('Error parsing dashboard config:', error)
+        toast.error('Error loading dashboard configuration', { id: 'dashboard-config-load' })
+
+        // Create an empty default tab when parsing fails
+        const defaultLayouts: Layouts = {}
+        Object.keys(COLS_CONST).forEach((key) => {
+          defaultLayouts[key] = []
+        })
+
+        const defaultTab: Tab = {
+          id: 1,
+          userIdentifier: 'General',
+          icon: '',
+          layout: defaultLayouts,
+          details: {}
+        }
+
+        setTabs([defaultTab])
+        setActiveTabID(1)
+        setMounted(true)
+      }
+    }
+  }, [fetchedConfigError, fetchedConfigData, fetchedConfigLoading])
+
+  const handleEditTab = (tabId: number, values: AddTabFormSchemaType) => {
+    const updatedTabs = tabs.map((tab) => {
+      if (tab.id === tabId) {
+        return {
+          ...tab,
+          userIdentifier: values.userIdentifier,
+          icon: values.icon
+        }
+      }
+      return tab
+    })
+    toast.loading(`Saving tab "${values.userIdentifier}"...`, {
+      id: 'edit-tab'
+    })
+
+    setTabs(updatedTabs)
+    handleSaveToDB(updatedTabs)
+    toast.success(`Tab "${values.userIdentifier}" updated successfully`, {
+      id: 'edit-tab'
+    })
+  }
 
   useEffect(() => {
     if (saveConfigLoading) {
-      toast.info('Saving to database')
+      toast.loading('Saving changes...', { id: 'dashboard-config-save' })
     }
 
     if (saveConfigError) {
-      toast.error('Failed to save to database')
+      toast.error('Failed to save to database', { id: 'dashboard-config-save' })
       console.error('Failed to save to DB:', saveConfigError)
     }
 
     if (saveConfigData) {
       console.log('Saved to DB:', saveConfigData)
-      toast.success('Saved to database')
+      toast.success('Changes saved!', { id: 'dashboard-config-save' })
     }
   }, [saveConfigLoading, saveConfigError, saveConfigData])
 
@@ -282,10 +523,17 @@ const DashboardController = () => {
       cols={COLS_CONST}
       rowHeight={ROW_HEIGHT}
       onLayoutChange={layoutChanged}
+      handleResize={handleResize}
       onDeleteItem={handleDeleteItem}
-      onRestoreLayout={handleRestoreLayout}
+      onRestoreAllTabs={handleRestoreAllTabs}
       onAddItem={handleAddItem}
       onSaveConfig={handleSaveConfig}
+      onAddTab={handleAddTab}
+      onChangeTab={handleChangeTab}
+      onDeleteTab={handleDeleteTab}
+      onEditTab={handleEditTab}
+      tabs={tabs}
+      activeTabId={activeTabID}
     />
   )
 }
