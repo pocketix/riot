@@ -71,6 +71,7 @@
     "confirmedInstances": "Potvrzené instance",
     "unconfirmedInstances": "Nepotvrzené instance",
     "confirmSelected": "Potvrdit vybrané ({{count}})",
+    "createSelectedGroups": "Vytvořit skupinu ({{count}})",
     "noConfirmed": "Žádné potvrzené zařízení.",
     "noUnconfirmed": "Žádné nepotvrzené zařízení."
   },

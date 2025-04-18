@@ -31,7 +31,6 @@ export default function DeleteConfirmationModal({
           <DialogTitle>{t('confirmDeletion')}</DialogTitle>
         </DialogHeader>
 
-        {/* Add Description for Accessibility */}
         <DialogDescription>{t('confirmDeletePrompt', { item: itemName })}</DialogDescription>
 
         <DialogFooter className="flex justify-end gap-2">

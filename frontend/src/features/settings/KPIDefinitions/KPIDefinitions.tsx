@@ -77,9 +77,12 @@ export default function KPIDefinitions() {
   const navigate = useNavigate()
   const { t } = useTranslation()
 
-  const { data, loading, refetch } = useQuery<KpiDefinitionsQuery, KpiDefinitionsQueryVariables>(GET_KPI_DEFINITIONS, {
-    fetchPolicy: 'cache-first'
-  })
+  const { data, loading, refetch, error } = useQuery<KpiDefinitionsQuery, KpiDefinitionsQueryVariables>(
+    GET_KPI_DEFINITIONS,
+    {
+      fetchPolicy: 'cache-first'
+    }
+  )
 
   const [deleteKpiDefinitionMutation] = useMutation<DeleteKpiDefinitionMutation, DeleteKpiDefinitionMutationVariables>(
     DELETE_KPI_DEFINITION
@@ -151,7 +154,9 @@ export default function KPIDefinitions() {
           </div>
         </Header>
 
-        {loading ? (
+        {error ? (
+          <p>Error: {error.message}</p>
+        ) : loading ? (
           <Spinner />
         ) : (
           <Grid>

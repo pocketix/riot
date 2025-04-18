@@ -47,6 +47,9 @@
     --color-grey-800: #1f2937;
     --color-grey-900: #111827;
     --color-white: rgb(9, 8, 8);
+
+    --color-green-500: #22c55e;
+    --color-red-500: #ef4444;
   }
 
   .dark-mode {
@@ -93,6 +96,9 @@
     --color-grey-800: #f3f4f6;
     --color-grey-900: #f9fafb;
     --color-white: #e3e3e3;
+
+    --color-green-500: #22c55e;
+    --color-red-500: #ef4444;
   }
 
   *,

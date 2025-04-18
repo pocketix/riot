@@ -67,7 +67,7 @@ const ClearButton = tw.button`
 export default function DeviceTypesSettings() {
   const { t } = useTranslation()
 
-  const { data, loading } = useQuery<SdTypesQuery, SdTypesQueryVariables>(GET_SD_TYPES, {
+  const { data, loading, error } = useQuery<SdTypesQuery, SdTypesQueryVariables>(GET_SD_TYPES, {
     fetchPolicy: 'cache-first',
     nextFetchPolicy: 'cache-first'
   })
@@ -95,10 +95,9 @@ export default function DeviceTypesSettings() {
             {t('manageDeviceTypes')}{' '}
             {!loading && (
               <span style={{ fontWeight: '200', fontStyle: 'italic', textWrap: 'nowrap' }}>
-                ({t('types', { count: filteredDeviceTypes.length })})
+                ({t('types', { count: filteredDeviceTypes.length })}).
               </span>
             )}
-            .
           </Heading>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
@@ -120,15 +119,19 @@ export default function DeviceTypesSettings() {
           </div>
         </Header>
 
-        <Grid>
-          {loading ? (
-            <Spinner className="col-span-full" />
-          ) : filteredDeviceTypes.length > 0 ? (
-            filteredDeviceTypes.map((deviceType) => <DeviceTypeCard key={deviceType.id} deviceType={deviceType} />)
-          ) : (
-            <p className="col-span-full text-center">{t('noDeviceTypesMatch')}</p>
-          )}
-        </Grid>
+        {error ? (
+          <p>Error: {error.message}</p>
+        ) : (
+          <Grid>
+            {loading ? (
+              <Spinner className="col-span-full" />
+            ) : filteredDeviceTypes.length > 0 ? (
+              filteredDeviceTypes.map((deviceType) => <DeviceTypeCard key={deviceType.id} deviceType={deviceType} />)
+            ) : (
+              <p className="col-span-full text-center">{t('noDeviceTypesMatch')}</p>
+            )}
+          </Grid>
+        )}
       </Container>
     </PageWrapper>
   )

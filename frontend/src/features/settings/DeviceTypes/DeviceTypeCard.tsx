@@ -126,7 +126,7 @@ export default function DeviceTypeCard({ deviceType }: DeviceTypeCardProps) {
         {t('viewDetails')}
       </Button>
       <ButtonGroup>
-        <Button size={isMobile ? 'sm' : undefined}>
+        <Button size={isMobile ? 'sm' : undefined} onClick={() => navigate(`/devices?search=${denotation}`)}>
           <FaList /> {t('viewInstances')}
         </Button>
         <>
