@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import tw from 'tailwind-styled-components'
 import AutomationProgramCard from '@/features/automations/AutomationProgramCard'
+import { useState } from 'react'
 
 const PageWrapper = styled.div`
   display: flex;
@@ -95,10 +96,13 @@ const mockPrograms = [
 
 export default function Automations() {
   const navigate = useNavigate()
+  const [search, setSearch] = useState('')
 
   const handleRun = (programId: string) => {
     console.log('Run program with ID:', programId)
   }
+
+  const filteredPrograms = mockPrograms.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
 
   return (
     <PageWrapper>
@@ -108,9 +112,14 @@ export default function Automations() {
           <div className="flex w-full flex-row items-center justify-between">
             <div className="relative w-full max-w-[32rem]">
               <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search programs..." className="w-full bg-[--color-grey-200] pl-9 pr-10" />
-              {true && (
-                <ClearButton type="button">
+              <Input
+                placeholder="Search programs..."
+                className="w-full bg-[--color-grey-200] pl-9 pr-10"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {search && (
+                <ClearButton type="button" onClick={() => setSearch('')}>
                   <X className="h-5 w-5 text-xl text-[--color-white]" />
                 </ClearButton>
               )}
@@ -120,7 +129,7 @@ export default function Automations() {
         </TopBar>
 
         <Grid>
-          {mockPrograms.map((program) => (
+          {filteredPrograms.map((program) => (
             <AutomationProgramCard key={program.id} program={program} onRun={handleRun} />
           ))}
         </Grid>
