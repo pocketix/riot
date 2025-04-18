@@ -4,7 +4,7 @@ import { useDarkMode } from '@/context/DarkModeContext'
 import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
 import { SdParameterType } from '@/generated/graphql'
 import { Switch } from '@/components/ui/switch'
-import { EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
+import { EntityCardConfig } from '@/schemas/dashboard/visualizations/EntityCardBuilderSchema'
 import { ResponsiveLineChart } from '../visualizations/ResponsiveLineChart'
 import { ResponsiveBulletChart } from '../visualizations/ResponsiveBulletChart'
 

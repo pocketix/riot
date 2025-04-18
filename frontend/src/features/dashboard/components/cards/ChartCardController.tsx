@@ -1,7 +1,7 @@
 import { Serie } from '@nivo/line'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { lineChartBuilderSchema, ChartCardConfig } from '@/schemas/dashboard/visualizations/LineChartBuilderSchema'
 import {
   SensorField,
   StatisticsInput,

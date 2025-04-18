@@ -1,4 +1,4 @@
-import { TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
+import { TableCardConfig } from '@/schemas/dashboard/visualizations/TableBuilderSchema'
 import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
 import { ResponsiveTable } from '../visualizations/ResponsiveTable'
 import { BaseCard } from './BaseCard'
@@ -22,11 +22,11 @@ export const TableCardView = (props: TableCardViewProps) => {
       cardTitle={props.tableConfig?.title}
       configuration={props.tableConfig!}
     >
-      <ResponsiveTable 
+      <ResponsiveTable
         columnData={props.columnData}
-        config={props.tableConfig!} 
-        onRowClick={props.onRowClick} 
-        className="px-2" 
+        config={props.tableConfig!}
+        onRowClick={props.onRowClick}
+        className="px-2"
       />
     </BaseCard>
   )

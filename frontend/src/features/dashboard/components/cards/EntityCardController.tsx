@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { entityCardSchema, EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
+import { entityCardSchema, EntityCardConfig } from '@/schemas/dashboard/visualizations/EntityCardBuilderSchema'
 import { toast } from 'sonner'
 import { StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 import { Serie } from '@nivo/line'

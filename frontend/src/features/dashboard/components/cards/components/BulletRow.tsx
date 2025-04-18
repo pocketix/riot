@@ -1,6 +1,6 @@
 import { useInstances } from '@/context/InstancesContext'
 import { useParameterSnapshot } from '@/hooks/useParameterSnapshot'
-import { BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
+import { BulletCardConfig } from '@/schemas/dashboard/visualizations/BulletChartBuilderSchema'
 import { useMemo } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ResponsiveBulletChart } from '../../visualizations/ResponsiveBulletChart'
@@ -15,7 +15,12 @@ interface BulletRowProps {
   aggregateUpdatedAt?: Date
 }
 
-export const BulletRow = ({ row, editModeEnabled, aggregatedData = undefined, aggregateUpdatedAt = undefined }: BulletRowProps) => {
+export const BulletRow = ({
+  row,
+  editModeEnabled,
+  aggregatedData = undefined,
+  aggregateUpdatedAt = undefined
+}: BulletRowProps) => {
   let { value, lastUpdated } = useParameterSnapshot(row.instance.id!, row.parameter.id!)
   const { getInstanceById } = useInstances()
 

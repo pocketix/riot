@@ -1,7 +1,7 @@
 import { memo, CSSProperties, useMemo } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
+import { TableCardConfig } from '@/schemas/dashboard/visualizations/TableBuilderSchema'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { useParameterSnapshot } from '@/hooks/useParameterSnapshot'
 import { TableColumnData } from '../cards/TableCardController'

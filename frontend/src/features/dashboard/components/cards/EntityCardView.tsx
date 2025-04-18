@@ -1,4 +1,4 @@
-import { EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
+import { EntityCardConfig } from '@/schemas/dashboard/visualizations/EntityCardBuilderSchema'
 import { Serie } from '@nivo/line'
 import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
 import { BaseCard } from './BaseCard'

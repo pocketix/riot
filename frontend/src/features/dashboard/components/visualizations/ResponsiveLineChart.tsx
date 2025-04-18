@@ -7,7 +7,7 @@ import { ChartToolTip } from '@/features/dashboard/components/cards/tooltips/Lin
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { ScaleSpec } from '@nivo/scales'
 import { useInstances } from '@/context/InstancesContext'
-import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { ChartCardConfig } from '@/schemas/dashboard/visualizations/LineChartBuilderSchema'
 import { getColorBlindSchemeWithBW } from './color-schemes/color-impaired'
 import { CartesianMarkerProps } from '@nivo/core'
 import { LineChartLegend } from './LineChartLegend'
@@ -51,7 +51,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
         setScreenLocked(true)
         toast.info('Screen locked, let go to unlock')
       },
-      (point : Point) => {
+      (point: Point) => {
         handleSetDetailsSelectedDevice(point)
       },
       { threshold: 250, moveThreshold: 10 }
@@ -206,7 +206,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
       setDetailsSelectedDevice(Number(instanceID), Number(parameterID))
     }
 
-    const handlePointClick = (point: Point, event: React.MouseEvent ) => {
+    const handlePointClick = (point: Point, event: React.MouseEvent) => {
       // override
       if (onClick) {
         onClick(point, event)

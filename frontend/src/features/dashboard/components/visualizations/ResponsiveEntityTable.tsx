@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { useParameterSnapshot } from '@/hooks/useParameterSnapshot'
 import { ResponsiveLineChart } from './ResponsiveLineChart'
-import { EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
+import { EntityCardConfig } from '@/schemas/dashboard/visualizations/EntityCardBuilderSchema'
 import { Serie } from '@nivo/line'
 import { Switch } from '@/components/ui/switch'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
@@ -93,7 +93,9 @@ const EntityRow = memo(({ row, sparklineData, onRowClick }: EntityRowProps) => {
                 <div className="flex max-w-28 flex-col">
                   <span className="font-semibold text-destructive">No data available</span>
                   <span className="break-words text-xs">Device: {row.instance?.uid!}</span>
-                  <span className="break-words text-xs">Parameter: {wholeParameter?.label || wholeParameter?.denotation || 'Unknown'}</span>
+                  <span className="break-words text-xs">
+                    Parameter: {wholeParameter?.label || wholeParameter?.denotation || 'Unknown'}
+                  </span>
                 </div>
               }
             >

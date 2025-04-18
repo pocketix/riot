@@ -1,6 +1,6 @@
 import { Serie } from '@nivo/line'
 import { RefObject } from 'react'
-import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { ChartCardConfig } from '@/schemas/dashboard/visualizations/LineChartBuilderSchema'
 import { ResponsiveLineChart } from '../visualizations/ResponsiveLineChart'
 import { BaseCard } from './BaseCard'
 import { Skeleton } from '@/components/ui/skeleton'
