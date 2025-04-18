@@ -386,6 +386,19 @@ type UserConfigInput struct {
 	Config string `json:"config"`
 }
 
+type VPLProgram struct {
+	ID                   uint32                `json:"id"`
+	Name                 string                `json:"name"`
+	Data                 string                `json:"data"`
+	SdParameterSnapshots []SDParameterSnapshot `json:"sdParameterSnapshots"`
+}
+
+type VPLProgramExecutionResult struct {
+	Program                      VPLProgram            `json:"program"`
+	SDParameterSnapshotsToUpdate []SDParameterSnapshot `json:"SDParameterSnapshotsToUpdate"`
+	SDCommandInvocations         []SDCommandInvocation `json:"SDCommandInvocations"`
+}
+
 type KPINodeType string
 
 const (

@@ -74,7 +74,7 @@ type SDParameterEntity struct {
 	ID                  uint32                      `gorm:"column:id;primaryKey;not null"`
 	SDTypeID            uint32                      `gorm:"column:sd_type_id;not null"`
 	Denotation          string                      `gorm:"column:denotation;not null"`
-	Label      string `gorm:"column:label"`
+	Label               string                      `gorm:"column:label"`
 	Type                string                      `gorm:"column:type;not null"`
 	SDParameterSnapshot []SDParameterSnapshotEntity `gorm:"foreignKey:SDParameterID;constraint:OnDelete:CASCADE"`
 }
@@ -214,4 +214,15 @@ type SDCommandInvocationEntity struct {
 
 func (SDCommandInvocationEntity) TableName() string {
 	return "command_invocation"
+}
+
+type VPLProgramsEntity struct {
+	ID                   uint32                      `gorm:"column:id;primaryKey;not null"`
+	Name                 string                      `gorm:"column:name;not null"`
+	Data                 string                      `gorm:"column:data;type:jsonb;not null"`
+	SDParameterSnapshots []SDParameterSnapshotEntity `gorm:"foreignKey:SDInstanceID;constraint:OnDelete:CASCADE"`
+}
+
+func (VPLProgramsEntity) TableName() string {
+	return "vpl_programs"
 }
