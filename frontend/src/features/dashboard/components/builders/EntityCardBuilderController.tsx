@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { SdParameterType, StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 import { BuilderResult } from '@/types/dashboard/gridItem'
-import { EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
+import { EntityCardConfig } from '@/schemas/dashboard/visualizations/EntityCardBuilderSchema'
 import { EntityCardBuilderView } from './EntityCardBuilderView'
 import { Serie } from '@nivo/line'
 import { Parameter, useInstances } from '@/context/InstancesContext'

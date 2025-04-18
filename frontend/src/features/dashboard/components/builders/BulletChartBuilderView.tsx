@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { z } from 'zod'
-import { BulletCardConfig, bulletChartBuilderSchema } from '@/schemas/dashboard/BulletChartBuilderSchema'
+import { BulletCardConfig, bulletChartBuilderSchema } from '@/schemas/dashboard/visualizations/BulletChartBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -351,7 +351,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                         variant="destructive"
                         size="icon"
                         onClick={(e) => {
-                        e.stopPropagation() // prevents other open accordions from closing
+                          e.stopPropagation() // prevents other open accordions from closing
                           props.onRemoveRow(index)
                           remove(index)
                         }}

@@ -6,7 +6,7 @@ import {
   useStatisticsQuerySensorsWithFieldsLazyQuery
 } from '@/generated/graphql'
 import { BuilderResult } from '@/types/dashboard/gridItem'
-import { TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
+import { TableCardConfig } from '@/schemas/dashboard/visualizations/TableBuilderSchema'
 import { TableCardBuilderView } from './TableCardBuilderView'
 import { Parameter, useInstances } from '@/context/InstancesContext'
 import { TableColumnData } from '../cards/TableCardController'
@@ -72,10 +72,10 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
       let aggregateIndex = 0
       columns.forEach((column, index) => {
         if (column.function === 'last') return
-        
+
         const columnData = parsedData[aggregateIndex]
         aggregateIndex++
-        
+
         if (columnData && columnData.length > 0) {
           const deviceDataMap: Record<string, any> = {}
           columnData.forEach((item) => {
