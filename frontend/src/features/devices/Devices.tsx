@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import { useQuery, useMutation } from '@apollo/client'
 import { GET_INSTANCES } from '@/graphql/Queries'
-import { CONFIRM_SD_INSTANCE } from '@/graphql/Mutations'
+import { CONFIRM_SD_INSTANCE, CREATE_SD_INSTANCE_GROUP } from '@/graphql/Mutations'
 import Spinner from '@/ui/Spinner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,7 +9,7 @@ import { useMemo, useState } from 'react'
 import DeviceCard from './DeviceCard'
 import { ConfirmSdInstanceMutation, ConfirmSdInstanceMutationVariables, SdInstancesQuery } from '@/generated/graphql'
 import { breakpoints } from '@/styles/Breakpoints'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { SearchIcon, X } from 'lucide-react'
 import tw from 'tailwind-styled-components'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +17,7 @@ import Heading from '@/ui/Heading'
 import { useSubscription } from '@apollo/client'
 import { ON_SD_INSTANCE_REGISTERED } from '@/graphql/Subscriptions'
 import Tabs from '@/ui/Tabs'
+import CreateGroupModal from '@/ui/CreateGroupModal'
 
 const PageWrapper = styled.div`
   display: flex;
@@ -96,6 +97,7 @@ const ClearButton = tw.button`
 
 export default function Devices() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   const isMobile = window.innerWidth < Number(breakpoints.sm.replace('px', ''))
 
@@ -113,9 +115,13 @@ export default function Devices() {
     ConfirmSdInstanceMutationVariables
   >(CONFIRM_SD_INSTANCE)
 
-  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [createSDInstanceGroupMutation, { loading: creatingGroup }] = useMutation(CREATE_SD_INSTANCE_GROUP)
+
+  const [selectedIdsConfirm, setSelectedIdsConfirm] = useState<number[]>([])
+  const [selectedIdsGroups, setSelectedIdsGroups] = useState<number[]>([])
   const [searchParams, setSearchParams] = useSearchParams()
   const search = searchParams.get('search')?.toLowerCase() || ''
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false)
 
   const setSearch = (value: string) => {
     if (value) searchParams.set('search', value)
@@ -138,18 +144,38 @@ export default function Devices() {
   const confirmed = useMemo(() => filteredInstances.filter((i) => i.confirmedByUser), [filteredInstances])
   const unconfirmed = useMemo(() => filteredInstances.filter((i) => !i.confirmedByUser), [filteredInstances])
 
-  const toggleSelection = (id: number, selected: boolean) => {
-    setSelectedIds((prev) => (selected ? [...prev, id] : prev.filter((selectedId) => selectedId !== id)))
+  const toggleSelectionConfirm = (id: number, selected: boolean) => {
+    setSelectedIdsConfirm((prev) => (selected ? [...prev, id] : prev.filter((selectedId) => selectedId !== id)))
+  }
+  const toggleSelectionGroups = (id: number, selected: boolean) => {
+    setSelectedIdsGroups((prev) => (selected ? [...prev, id] : prev.filter((selectedId) => selectedId !== id)))
   }
 
   const handleBatchConfirm = async () => {
     try {
-      await Promise.all(selectedIds.map((id) => confirmMutation({ variables: { id } })))
+      await Promise.all(selectedIdsConfirm.map((id) => confirmMutation({ variables: { id } })))
       await refetch()
-      setSelectedIds([])
+      setSelectedIdsConfirm([])
     } catch (error) {
       console.error('Confirmation failed', error)
     }
+  }
+
+  const handleCreateGroup = async (identifier: string) => {
+    console.log('Creating group with selected devices:', selectedIdsGroups)
+    const { data } = await createSDInstanceGroupMutation({
+      variables: {
+        input: {
+          sdInstanceIDs: selectedIdsGroups,
+          userIdentifier: identifier
+        }
+      }
+    })
+    console.log(data)
+    await refetch()
+    setSelectedIdsGroups([])
+    setIsGroupModalOpen(false)
+    navigate(`/group/${data.createSDInstanceGroup.id}`)
   }
 
   return (
@@ -195,15 +221,36 @@ export default function Devices() {
         {!loading && !error && (
           <>
             <Section>
-              <h2 className="text-xl font-bold">
-                {t('devicesPage.confirmedInstances')}{' '}
-                <span style={{ fontWeight: '300', fontStyle: 'italic', textWrap: 'nowrap' }}>({confirmed.length})</span>
-              </h2>
+              <div className="flex h-10 w-full items-center justify-between gap-4">
+                <h2 className="text-xl font-bold">
+                  {t('devicesPage.confirmedInstances')}{' '}
+                  <span style={{ fontWeight: '300', fontStyle: 'italic', textWrap: 'nowrap' }}>
+                    ({confirmed.length})
+                  </span>
+                </h2>
+                {selectedIdsGroups.length > 0 && (
+                  <Button
+                    size={isMobile ? 'sm' : undefined}
+                    onClick={() => setIsGroupModalOpen(true)}
+                    disabled={creatingGroup}
+                  >
+                    {t('devicesPage.createSelectedGroups', { count: selectedIdsGroups.length })}
+                  </Button>
+                )}
+              </div>
               <CardGrid>
                 {confirmed.length === 0 ? (
                   <EmptyState>{t('devicesPage.noConfirmed')}</EmptyState>
                 ) : (
-                  confirmed.map((instance) => <DeviceCard key={instance.id} instance={instance} confirmed />)
+                  confirmed.map((instance) => (
+                    <DeviceCard
+                      key={instance.id}
+                      instance={instance}
+                      selectedConfirm={selectedIdsGroups.includes(instance.id)}
+                      onSelectChange={(selected) => toggleSelectionGroups(instance.id, selected)}
+                      confirmed={false}
+                    />
+                  ))
                 )}
               </CardGrid>
             </Section>
@@ -218,9 +265,9 @@ export default function Devices() {
                     </span>
                   )}
                 </h2>
-                {selectedIds.length > 0 && (
-                  <Button onClick={handleBatchConfirm} disabled={confirming}>
-                    {t('devicesPage.confirmSelected', { count: selectedIds.length })}
+                {selectedIdsConfirm.length > 0 && (
+                  <Button size={isMobile ? 'sm' : undefined} onClick={handleBatchConfirm} disabled={confirming}>
+                    {t('devicesPage.confirmSelected', { count: selectedIdsConfirm.length })}
                   </Button>
                 )}
               </div>
@@ -233,8 +280,8 @@ export default function Devices() {
                       key={instance.id}
                       instance={instance}
                       confirmed={false}
-                      selected={selectedIds.includes(instance.id)}
-                      onSelectChange={(selected) => toggleSelection(instance.id, selected)}
+                      selectedConfirm={selectedIdsConfirm.includes(instance.id)}
+                      onSelectChange={(selected) => toggleSelectionConfirm(instance.id, selected)}
                       onConfirmClick={async () => {
                         await confirmMutation({ variables: { id: instance.id } })
                         await refetch()
@@ -247,6 +294,14 @@ export default function Devices() {
           </>
         )}
       </Container>
+      <CreateGroupModal
+        isOpen={isGroupModalOpen}
+        onClose={() => setIsGroupModalOpen(false)}
+        onConfirm={handleCreateGroup}
+        selectedDeviceNames={confirmed
+          .filter((i) => selectedIdsGroups.includes(i.id))
+          .map((i) => i.userIdentifier || i.uid)}
+      />
     </PageWrapper>
   )
 }

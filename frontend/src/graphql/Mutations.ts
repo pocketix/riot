@@ -108,3 +108,13 @@ export const UPDATE_DEVICE_TYPE = gql`
     }
   }
 `
+
+export const CREATE_SD_INSTANCE_GROUP = gql`
+  mutation CreateSDInstanceGroup($input: SDInstanceGroupInput!) {
+    createSDInstanceGroup(input: $input) {
+      id
+      userIdentifier
+      sdInstanceIDs
+    }
+  }
+`

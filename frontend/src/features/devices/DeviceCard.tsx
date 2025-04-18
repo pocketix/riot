@@ -90,7 +90,8 @@ type SdInstanceCardProps = {
     }
   }
   confirmed: boolean
-  selected?: boolean
+  selectedConfirm?: boolean
+  selectedGroups?: boolean
   onSelectChange?: (selected: boolean) => void
   onUserIdentifierChange?: (newId: string) => void
   onConfirmClick?: () => void
@@ -99,7 +100,8 @@ type SdInstanceCardProps = {
 export default function DeviceCard({
   instance,
   confirmed,
-  selected = false,
+  selectedConfirm = false,
+  selectedGroups = false,
   onSelectChange,
   onConfirmClick
 }: SdInstanceCardProps) {
@@ -164,8 +166,13 @@ export default function DeviceCard({
           )}
         </TitleWrapper>
 
+        {/* Checkbox for confirmation */}
         {!confirmed && onSelectChange && (
-          <Checkbox checked={selected} onCheckedChange={(v) => onSelectChange(Boolean(v))} />
+          <Checkbox checked={selectedConfirm} onCheckedChange={(v) => onSelectChange(Boolean(v))} />
+        )}
+        {/* Checkbox for creating a group */}
+        {confirmed && onSelectChange && (
+          <Checkbox checked={selectedGroups} onCheckedChange={(v) => onSelectChange(Boolean(v))} />
         )}
       </Header>
 

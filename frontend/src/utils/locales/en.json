@@ -69,6 +69,7 @@
     "confirmedInstances": "Confirmed Instances",
     "unconfirmedInstances": "Unconfirmed Instances",
     "confirmSelected": "Confirm Selected ({{count}})",
+    "createSelectedGroups": "Create Group ({{count}})",
     "noConfirmed": "No confirmed devices available...",
     "noUnconfirmed": "No unconfirmed devices..."
   },
