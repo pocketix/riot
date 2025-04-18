@@ -6,14 +6,37 @@ import { getIcon } from '@/utils/getIcon'
 const iconOptions = [
   {
     category: 'Devices & Connectivity',
-    icons: ['TbDeviceDesktop', 'TbDeviceMobile', 'TbDeviceTablet', 'TbDeviceWatch', 'TbDevices', 'TbRouter', 'TbSatellite', 'TbAntennaBars5', 'TbWifi', 'TbBluetooth']
+    icons: [
+      'TbDeviceDesktop',
+      'TbDeviceMobile',
+      'TbDeviceTablet',
+      'TbDeviceWatch',
+      'TbDevices',
+      'TbRouter',
+      'TbSatellite',
+      'TbAntennaBars5',
+      'TbWifi',
+      'TbBluetooth'
+    ]
   },
-  { category: 'Sensors & Measurements', icons: ['TbTemperature', 'TbThermometer', 'TbGauge', 'TbBarometer', 'TbDashboard', 'TbSpeedometer'] },
+  {
+    category: 'Sensors & Measurements',
+    icons: ['TbTemperature', 'TbThermometer', 'TbGauge', 'TbTestPipe2Filled', 'TbDashboard', 'TbBrandSpeedtest']
+  },
   { category: 'Home Automation', icons: ['TbBulb', 'TbPlug', 'TbSwitch', 'TbHome', 'TbLock', 'TbKey'] },
-  { category: 'Networking & Cloud', icons: ['TbCloud', 'TbCloudUpload', 'TbCloudDownload', 'TbServer', 'TbDatabase', 'TbNetwork'] },
+  {
+    category: 'Networking & Cloud',
+    icons: ['TbCloud', 'TbCloudUpload', 'TbCloudDownload', 'TbServer', 'TbDatabase', 'TbNetwork']
+  },
   { category: 'Security & Alerts', icons: ['TbShield', 'TbShieldLock', 'TbAlertCircle', 'TbBell', 'TbAlarm'] },
-  { category: 'Automation & Control', icons: ['TbSettings', 'TbAdjustments', 'TbSliders', 'TbSwitchHorizontal', 'TbSwitchVertical'] },
-  { category: 'Energy & Power', icons: ['TbBattery', 'TbBatteryCharging', 'TbBatteryFull', 'TbBatteryLow', 'TbPlugConnected'] }
+  {
+    category: 'Automation & Control',
+    icons: ['TbSettings', 'TbAdjustments', 'TbSettingsAutomation', 'TbSwitchHorizontal', 'TbSwitchVertical']
+  },
+  {
+    category: 'Energy & Power',
+    icons: ['TbBattery', 'TbBatteryCharging', 'TbBatteryFilled', 'TbBattery1', 'TbPlugConnected']
+  }
 ]
 
 interface IconPickerProps {
@@ -32,7 +55,7 @@ export default function IconPicker({ icon, setIcon }: IconPickerProps) {
             {IconComponent ? <IconComponent /> : 'Select Icon'}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56 max-h-60 overflow-auto">
+        <DropdownMenuContent className="max-h-60 w-56 overflow-auto">
           {iconOptions.map((group) => (
             <div key={group.category}>
               <DropdownMenuItem disabled className="font-bold text-gray-500">
@@ -41,7 +64,11 @@ export default function IconPicker({ icon, setIcon }: IconPickerProps) {
               {group.icons.map((iconName) => {
                 const Icon = getIcon(iconName)
                 return (
-                  <DropdownMenuItem key={iconName} onClick={() => setIcon(iconName)} className="flex items-center gap-2">
+                  <DropdownMenuItem
+                    key={iconName}
+                    onClick={() => setIcon(iconName)}
+                    className="flex items-center gap-2"
+                  >
                     {Icon && <Icon />} {iconName}
                   </DropdownMenuItem>
                 )

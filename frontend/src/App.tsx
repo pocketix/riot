@@ -24,6 +24,7 @@ import { GroupDetailPage } from './pages/GroupDetailPage'
 import { ParameterSnapshotProvider } from './context/ParameterUpdatesContext'
 import { InstancesProvider } from './context/InstancesContext'
 import { DeviceModalDetailController } from './features/dashboard/components/devices/DeviceModalDetailController'
+import AutomationsEditor from './features/automations/AutomationsEditor'
 
 export default function App() {
   return (
@@ -45,7 +46,8 @@ export default function App() {
                           <Route path="/group/:id" element={<GroupDetailPage />} />
                           <Route path="members" element={<Members />} />
                           <Route path="members/:id" element={<MembersDetail />} />
-                          <Route path="automations" element={<Automations />} />
+                          <Route path="/automations" element={<Automations />} />
+                          <Route path="/automations/editor" element={<AutomationsEditor />} />
                           <Route path="/settings" element={<Settings />} />
                           <Route path="/settings/deivce-types/addNewType" element={<DeviceTypeDetail />} />
                           <Route path="/settings/device-types" element={<DeviceTypesSettings />} />
