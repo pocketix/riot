@@ -74,7 +74,7 @@ type SDParameterEntity struct {
 	ID                  uint32                      `gorm:"column:id;primaryKey;not null"`
 	SDTypeID            uint32                      `gorm:"column:sd_type_id;not null"`
 	Denotation          string                      `gorm:"column:denotation;not null"`
-	Label      string `gorm:"column:label"`
+	Label               string                      `gorm:"column:label"`
 	Type                string                      `gorm:"column:type;not null"`
 	SDParameterSnapshot []SDParameterSnapshotEntity `gorm:"foreignKey:SDParameterID;constraint:OnDelete:CASCADE"`
 }
@@ -193,8 +193,8 @@ func (UserConfigEntity) TableName() string {
 
 type SDCommandEntity struct {
 	ID       uint32 `gorm:"column:id;primaryKey;not null"`
-	SDTypeID uint32 `gorm:"column:sd_type_id;not null"` // One type of smart device has the same set of commands
-	Name     string `gorm:"column:denotation;not null"`
+	SDTypeID uint32 `gorm:"column:sd_type_id;not null;uniqueIndex:idx_typeid_denotation"` // One type of smart device has the same set of commands
+	Name     string `gorm:"column:denotation;not null;uniqueIndex:idx_typeid_denotation"`
 	Type     string `gorm:"column:type;not null"`
 	Payload  string `gorm:"column:payload;not null"`
 }

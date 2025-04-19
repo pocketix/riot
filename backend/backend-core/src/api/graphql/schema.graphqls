@@ -39,19 +39,19 @@ input SDTypeInput {
 
 input SDCommandInputWithoutType {
   name: String!
-  payload: String
+  payload: String!
 }
 
 type SDCommand {
   id: ID!
   name: String!
-  payload: String
+  payload: String!
   sdTypeId: ID!
 }
 
 input SDCommandInput {
   name: String!
-  payload: String
+  payload: String!
   sdTypeId: ID!
 }
 
