@@ -21,7 +21,7 @@ import { SingleParameterCombobox } from '../builders/components/single-parameter
 import { SequentialStatesVisualization } from './components/SequentialStatesVisualization'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { SdParameterType, SdTypeParametersQuery } from '@/generated/graphql'
 import { ResponsiveLineChart } from '../visualizations/ResponsiveLineChart'
 import { Label } from '@/components/ui/label'
@@ -54,26 +54,8 @@ export interface DeviceModalDetailViewProps {
 }
 
 export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
-  const {
-    selectedDevice,
-    isOpen,
-    setIsOpen,
-    instance,
-    parameters,
-    setSelectedParameter,
-    timeFrame,
-    setTimeFrame,
-    wholeParameter,
-    isDesktop,
-    lastUpdated,
-    IconComponent,
-    processedData,
-    handleViewAllDetails,
-    instanceGroups,
-    parameterLastValue
-  } = props
-
   const navigate = useNavigate()
+  const failingKPIs = useMemo(() => props.instance?.kpis?.filter((kpi) => !kpi.fulfilled), [props.instance])
 
   const ParameterDetail = () => (
     <>
@@ -81,21 +63,21 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
         <Label className="flex items-center justify-center gap-2 pt-1">
           Last Value
           <Badge variant="outline" className="font-mono text-xs">
-            {parameterLastValue?.toString() || 'N/A'}
+            {props.parameterLastValue?.toString() || 'N/A'}
           </Badge>
         </Label>
         <div className="flex flex-wrap items-center justify-center gap-1 pt-2">
           <Label className="flex flex-col items-start">
             Parameter
             <SingleParameterCombobox
-              options={(parameters || []).map((param) => ({
+              options={(props.parameters || []).map((param) => ({
                 ...param,
                 parameterSnapshots: []
               }))}
-              onValueChange={(value) => setSelectedParameter(value?.denotation || null)}
+              onValueChange={(value) => props.setSelectedParameter(value?.denotation || null)}
               value={
-                wholeParameter
-                  ? parameters?.find((param) => param.denotation === wholeParameter.denotation) || null
+                props.wholeParameter
+                  ? props.parameters?.find((param) => param.denotation === props.wholeParameter!.denotation) || null
                   : null
               }
               className="w-48"
@@ -107,8 +89,8 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
             </span>
             <TimeFrameButtonSelector
               compact={true}
-              onValueChange={(value) => setTimeFrame(value!)}
-              value={timeFrame}
+              onValueChange={(value) => props.setTimeFrame(value!)}
+              value={props.timeFrame}
               className="w-32"
             />
           </div>
@@ -119,7 +101,7 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
   )
 
   const renderVisualization = () => {
-    if (processedData.length === 0) {
+    if (props.processedData.length === 0) {
       console.log('No data available for the selected device and parameter.')
       return (
         <Skeleton className="h-[100px] w-full">
@@ -131,18 +113,18 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
       )
     }
 
-    if (wholeParameter?.type === SdParameterType.Number) {
+    if (props.wholeParameter?.type === SdParameterType.Number) {
       return (
         <div className="relative h-[200px] w-full min-w-0 overflow-hidden">
           <div className="absolute inset-0 h-full w-full">
-            <ResponsiveLineChart data={processedData} />
+            <ResponsiveLineChart data={props.processedData} />
           </div>
         </div>
       )
     } else {
       return (
         <div className="h-[80px] w-full min-w-0 overflow-hidden px-2">
-          <SequentialStatesVisualization data={processedData[0].data} />
+          <SequentialStatesVisualization data={props.processedData[0].data} />
         </div>
       )
     }
@@ -150,22 +132,22 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
 
   return (
     <>
-      {isDesktop ? (
-        <Dialog open={isOpen && !!selectedDevice} onOpenChange={(open) => setIsOpen(open)}>
+      {props.isDesktop ? (
+        <Dialog open={props.isOpen && !!props.selectedDevice} onOpenChange={(open) => props.setIsOpen(open)}>
           <DialogContent className="gap-2 overflow-hidden sm:max-w-[700px]">
             <DialogHeader>
               <DialogTitle asChild>
                 <h2 className="flex flex-col items-center break-words text-lg sm:flex-row sm:justify-between sm:text-xl">
                   <div className="flex items-center gap-2">
-                    {IconComponent && (
+                    {props.IconComponent && (
                       <div className="flex h-8 w-8 items-center justify-center rounded-full border-[1px] bg-muted text-muted-foreground shadow-sm">
-                        <IconComponent />
+                        <props.IconComponent />
                       </div>
                     )}
-                    <span>{instance?.userIdentifier!}</span>
+                    <span>{props.instance?.userIdentifier!}</span>
                   </div>
                   <code className="mr-2 block w-fit break-all rounded bg-muted px-1.5 py-1 font-mono text-xs text-muted-foreground">
-                    {instance?.uid}
+                    {props.instance?.uid}
                   </code>
                 </h2>
               </DialogTitle>
@@ -174,32 +156,32 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
                   <div className="flex flex-col items-center gap-1 sm:flex-row">
                     <span className="mr-1">Last updated:</span>
                     <Badge variant="outline" className="font-mono text-xs">
-                      {lastUpdated}
+                      {props.lastUpdated}
                     </Badge>
                   </div>
-                  {instanceGroups?.length! > 0 && (
+                  {props.instanceGroups?.length! > 0 && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       Member of:{''}
-                      {instanceGroups?.map((group, index) => (
+                      {props.instanceGroups?.map((group, index) => (
                         <Button
                           variant="link"
                           key={group.id}
                           className="m-0 p-0 text-sm"
                           onClick={() => {
-                            setIsOpen(false)
+                            props.setIsOpen(false)
                             navigate(`/group/${group.id}`)
                           }}
                         >
                           {group.userIdentifier}
-                          {index < instanceGroups.length - 1 ? ', ' : '.'}
+                          {index < props.instanceGroups!.length - 1 ? ', ' : '.'}
                         </Button>
                       ))}
                     </div>
                   )}
-                  {instance?.kpis?.length! > 0 && (
+                  {failingKPIs!.length! > 0 && (
                     <div className="flex flex-wrap items-center gap-1">
                       <span className="text-sm">KPIs:</span>
-                      {instance?.kpis.map((kpi) => (
+                      {failingKPIs!.map((kpi) => (
                         <Badge
                           key={kpi.id}
                           variant={kpi.fulfilled ? 'success' : 'destructive'}
@@ -215,7 +197,7 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
             </DialogHeader>
             <ParameterDetail />
             <DialogFooter className="pt-2">
-              <Button variant="link" onClick={handleViewAllDetails} className="flex gap-1 whitespace-nowrap">
+              <Button variant="link" onClick={props.handleViewAllDetails} className="flex gap-1 whitespace-nowrap">
                 View all details
                 <GoLinkExternal className="h-3 w-3 text-xs" />
               </Button>
@@ -223,54 +205,54 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
           </DialogContent>
         </Dialog>
       ) : (
-        <Drawer open={isOpen && !!selectedDevice} onOpenChange={(open) => setIsOpen(open)}>
+        <Drawer open={props.isOpen && !!props.selectedDevice} onOpenChange={(open) => props.setIsOpen(open)}>
           <DrawerContent className="flex h-fit max-h-[calc(90vh-2rem)] flex-col gap-2">
             <ScrollArea>
               <div className="max-h-[calc(100vh-2rem)]">
                 <DrawerHeader>
                   <DrawerTitle className="flex flex-col items-center break-words text-lg sm:flex-row sm:justify-between sm:text-xl">
                     <div className="flex flex-col items-center gap-2 sm:flex-row">
-                      {IconComponent && (
+                      {props.IconComponent && (
                         <div className="flex h-12 w-12 items-center justify-center rounded-full border-[1px] bg-muted text-muted-foreground shadow-md sm:h-8 sm:w-8 sm:shadow-sm">
-                          <IconComponent />
+                          <props.IconComponent />
                         </div>
                       )}
-                      {instance?.userIdentifier!}
+                      {props.instance?.userIdentifier!}
                     </div>
                     <code className="mr-2 block w-fit break-all rounded bg-muted px-1.5 py-1 font-mono text-xs text-muted-foreground">
-                      {instance?.uid}
+                      {props.instance?.uid}
                     </code>
                   </DrawerTitle>
                   <DrawerDescription className="mt-2 space-y-1">
                     <div className="flex flex-wrap items-center justify-center gap-1 sm:justify-start sm:gap-2">
                       <span className="mr-1">Last updated:</span>
                       <Badge variant="outline" className="font-mono text-xs">
-                        {lastUpdated}
+                        {props.lastUpdated}
                       </Badge>
                     </div>
-                    {instanceGroups?.length! > 0 && (
+                    {props.instanceGroups?.length! > 0 && (
                       <div className="flex flex-wrap items-center justify-center gap-1 text-muted-foreground sm:flex-row sm:justify-start sm:gap-2">
                         <span>Member of:{''}</span>
-                        {instanceGroups?.map((group, index) => (
+                        {props.instanceGroups?.map((group, index) => (
                           <Button
                             variant="link"
                             key={group.id}
                             className="m-0 h-fit p-0"
                             onClick={() => {
-                              setIsOpen(false)
+                              props.setIsOpen(false)
                               navigate(`/group/${group.id}`)
                             }}
                           >
                             {group.userIdentifier}
-                            {index < instanceGroups.length - 1 ? ', ' : '.'}
+                            {index < props.instanceGroups!.length - 1 ? ', ' : '.'}
                           </Button>
                         ))}
                       </div>
                     )}
-                    {instance?.kpis?.length! > 0 && (
+                    {props.instance?.kpis?.length! > 0 && (
                       <div className="flex flex-wrap items-center justify-center gap-1 sm:flex-row sm:items-start sm:justify-start">
                         <span className="text-sm">KPIs:</span>
-                        {instance?.kpis.map((kpi) => (
+                        {props.instance?.kpis.map((kpi) => (
                           <Badge
                             key={kpi.id}
                             variant={kpi.fulfilled ? 'default' : 'destructive'}
@@ -285,7 +267,7 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
                 </DrawerHeader>
                 <ParameterDetail />
                 <DrawerFooter className="pt-2">
-                  <Button variant="link" onClick={handleViewAllDetails} className="flex gap-1 whitespace-nowrap">
+                  <Button variant="link" onClick={props.handleViewAllDetails} className="flex gap-1 whitespace-nowrap">
                     View all details
                     <GoLinkExternal className="h-3 w-3 text-xs" />
                   </Button>
