@@ -498,6 +498,18 @@ const DashboardController = () => {
     })
   }
 
+  const getNextTabId = () => {
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTabID)
+    const nextIndex = (currentIndex + 1) % tabs.length
+    return tabs[nextIndex].id
+  }
+
+  const getPreviousTabId = () => {
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTabID)
+    const previousIndex = (currentIndex - 1 + tabs.length) % tabs.length
+    return tabs[previousIndex].id
+  }
+
   useEffect(() => {
     if (saveConfigLoading) {
       toast.loading('Saving changes...', { id: 'dashboard-config-save' })
@@ -534,6 +546,8 @@ const DashboardController = () => {
       onEditTab={handleEditTab}
       tabs={tabs}
       activeTabId={activeTabID}
+      getNextTabId={getNextTabId}
+      getPreviousTabId={getPreviousTabId}
     />
   )
 }

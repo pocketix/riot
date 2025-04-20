@@ -25,6 +25,7 @@ import { EntityCardController } from './components/cards/EntityCardController'
 import { DBItemDetails, Tab } from '@/schemas/dashboard/DashboardSchema'
 import { AddTabFormSchemaType } from '@/schemas/dashboard/AddTabSchema'
 import { ResponsiveTabsWithScroll } from './components/ResponsiveTabsWithScroll'
+import { useSwipeable } from 'react-swipeable'
 
 interface DashboardViewProps {
   layouts: { [key: string]: Layout[] }
@@ -52,6 +53,8 @@ interface DashboardViewProps {
   onChangeTab: (tabId: number) => void
   onDeleteTab: (tabId: number) => void
   onEditTab: (tabId: number, values: AddTabFormSchemaType) => void
+  getNextTabId: () => number
+  getPreviousTabId: () => number
 }
 
 const DashboardView = (props: DashboardViewProps) => {
@@ -148,6 +151,22 @@ const DashboardView = (props: DashboardViewProps) => {
     }
   }, [props.mounted, currentBreakpoint, props.layouts, debouncedCalculateWidth])
 
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (props.tabs.length > 1) {
+        props.onChangeTab(props.getNextTabId())
+      }
+    },
+    onSwipedRight: () => {
+      if (props.tabs.length > 1) {
+        props.onChangeTab(props.getPreviousTabId())
+      }
+    },
+    // TODO: maybe adjust?
+    swipeDuration: 500,
+    delta: 80
+  })
+
   if (!props.mounted || !props.layouts || !props.details || !props.instances || !ResponsiveGridLayout) {
     return (
       <div className="grid grid-cols-2 gap-4 overflow-hidden p-4">
@@ -174,7 +193,7 @@ const DashboardView = (props: DashboardViewProps) => {
           </Button>
         </div>
       </Navbar>
-      <MainGrid>
+      <MainGrid {...swipeHandlers}>
         <DashboardGroupCardsController />
         <ResponsiveTabsWithScroll
           tabs={props.tabs}
