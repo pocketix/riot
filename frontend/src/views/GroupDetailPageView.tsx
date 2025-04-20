@@ -7,12 +7,16 @@ import { RiDashboardLine, RiErrorWarningLine } from 'react-icons/ri'
 import { useMemo } from 'react'
 import { Separator } from '@/components/ui/separator'
 import { GroupDeviceCard } from '@/features/dashboard/components/groups/components/GroupDeviceCard'
+import { AddEditGroupDialogController } from './components/AddEditGroupController'
+import { Settings } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 interface GroupDetailPageViewProps {
   groupData: GroupDetailWithKPIs
 }
 
 export const GroupDetailPageView = ({ groupData }: GroupDetailPageViewProps) => {
+  const navigate = useNavigate()
   const devicesWithFailingKPIs = useMemo(() => {
     return groupData.instances.filter((instance) => instance.kpis.some((kpi) => kpi.fulfilled === false))
   }, [groupData.instances])
@@ -29,7 +33,19 @@ export const GroupDetailPageView = ({ groupData }: GroupDetailPageViewProps) => 
     <div className="mx-auto px-6 py-3">
       <div className="mb-2 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold md:text-3xl">{groupData.userIdentifier}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold md:text-3xl">{groupData.userIdentifier}</h1>
+            <AddEditGroupDialogController
+              initial={{
+                userIdentifier: groupData.userIdentifier!,
+                sdInstanceIDs: groupData.instances.map((instance) => instance.id)!,
+                groupID: groupData.groupID!
+              }}
+              onDelete={() => navigate('/groups')}
+            >
+              <Settings className="h-5 w-5 cursor-pointer text-muted-foreground transition-colors duration-200 hover:text-primary" />
+            </AddEditGroupDialogController>
+          </div>
           <div className="flex items-center gap-2">
             <p className="flex items-center gap-1 text-sm text-muted-foreground">
               Group ID:
