@@ -187,6 +187,18 @@ func (r *mutationResolver) ExecuteVPLProgram(ctx context.Context, id uint32) (gr
 	panic(fmt.Errorf("not implemented: ExecuteVPLProgram - executeVPLProgram"))
 }
 
+func (r *mutationResolver) CreateVPLProcedure(ctx context.Context, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error) {
+	panic(fmt.Errorf("not implemented: CreateVPLProcedure - createVPLProcedure"))
+}
+
+func (r *mutationResolver) UpdateVPLProcedure(ctx context.Context, id uint32, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error) {
+	panic(fmt.Errorf("not implemented: UpdateVPLProcedure - updateVPLProcedure"))
+}
+
+func (r *mutationResolver) DeleteVPLProcedure(ctx context.Context, id uint32) (bool, error) {
+	panic(fmt.Errorf("not implemented: DeleteVPLProcedure - deleteVPLProcedure"))
+}
+
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
 	getSDTypeResult := domainLogicLayer.GetSDType(id)
 	if getSDTypeResult.IsFailure() {
@@ -326,6 +338,14 @@ func (r *queryResolver) VplProgram(ctx context.Context, id uint32) (graphQLModel
 		return graphQLModel.VPLProgram{}, getVPLProgramResult.GetError()
 	}
 	return getVPLProgramResult.Unwrap()
+}
+
+func (r *queryResolver) VplProcedure(ctx context.Context, id uint32) (graphQLModel.VPLProcedure, error) {
+	panic(fmt.Errorf("not implemented: VplProcedure - vplProcedure"))
+}
+
+func (r *queryResolver) VplProcedures(ctx context.Context) ([]graphQLModel.VPLProcedure, error) {
+	panic(fmt.Errorf("not implemented: VplProcedures - vplProcedures"))
 }
 
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {

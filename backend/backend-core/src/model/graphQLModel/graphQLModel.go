@@ -379,6 +379,19 @@ type UserConfigInput struct {
 	Config string `json:"config"`
 }
 
+type VPLProcedure struct {
+	ID        uint32 `json:"id"`
+	Name      string `json:"name"`
+	Data      string `json:"data"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+}
+
+type VPLProcedureInput struct {
+	Name string `json:"name"`
+	Data string `json:"data"`
+}
+
 type VPLProgram struct {
 	ID                   uint32                `json:"id"`
 	Name                 string                `json:"name"`
