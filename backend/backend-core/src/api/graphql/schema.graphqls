@@ -364,6 +364,22 @@ type VPLProgramExecutionResult {
     SDCommandInvocations: [SDCommandInvocation!]!
 }
 
+# ----- VPL Procedures -----
+
+type VPLProcedure {
+
+    id: ID!
+    name: String!
+    data: JSON!
+    createdAt: Date!
+    updatedAt: Date!
+}
+
+input VPLProcedureInput {
+    name: String!
+    data: JSON!
+}
+
 # ----- Queries, mutations and subscriptions -----
 
 type Query {
@@ -384,6 +400,8 @@ type Query {
   sdCommandInvocation(id: ID!): SDCommandInvocation! # Returns a specific SDCommandInvocation
   sdCommandInvocations: [SDCommandInvocation!]! # Returns all SDCommandInvocations
   vplProgram(id: ID!): VPLProgram! # Returns a specific VPLProgram by its ID
+  vplProcedure(id: ID!): VPLProcedure! # Returns a specific VPLProcedure by its ID
+  vplProcedures: [VPLProcedure!]! # Returns all VPLProcedures
 }
 
 type Mutation {
@@ -409,6 +427,9 @@ type Mutation {
   updateVPLProgram(id: ID!, name: String!, data: JSON!): VPLProgram!
   deleteVPLProgram(id: ID!): Boolean!
   executeVPLProgram(id: ID!): VPLProgramExecutionResult!
+  createVPLProcedure(input: VPLProcedureInput!): VPLProcedure! # Creating a procedure
+  updateVPLProcedure(id: ID!, input: VPLProcedureInput!): VPLProcedure! # Updating a procedure
+  deleteVPLProcedure(id: ID!): Boolean! # Deleting a procedure
 }
 
 type Subscription {
