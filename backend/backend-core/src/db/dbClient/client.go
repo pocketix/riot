@@ -356,23 +356,61 @@ func (r *relationalDatabaseClientImpl) DeleteKPIDefinition(id uint32) error {
 func (r *relationalDatabaseClientImpl) PersistSDType(sdType dllModel.SDType) sharedUtils.Result[dllModel.SDType] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
+	// DB conversion
 	sdTypeEntity := dll2db.ToDBModelEntitySDType(sdType)
-	// Try to find an existing record by denotation
+
+	// Is a specified sdtype exist?
 	var existingEntity dbModel.SDTypeEntity
-	result := r.db.Where("denotation = ?", sdTypeEntity.Denotation).First(&existingEntity)
+	result := r.db.Preload("Commands").Preload("Parameters").Where("denotation = ?", sdTypeEntity.Denotation).First(&existingEntity)
+
 	if result.Error == nil {
-		// The record exists - take the ID
+		// If it exists, take the ID and merge Commands + Parameters
 		sdTypeEntity.ID = existingEntity.ID
+
+		// === MERGE COMMANDS ===
+		existingCommands := make(map[string]dbModel.SDCommandEntity)
+		for _, cmd := range existingEntity.Commands {
+			existingCommands[cmd.Name] = cmd
+		}
+
+		mergedCommands := make([]dbModel.SDCommandEntity, 0)
+		for _, newCmd := range sdTypeEntity.Commands {
+			if existingCmd, found := existingCommands[newCmd.Name]; found {
+				newCmd.ID = existingCmd.ID // Update
+			}
+			newCmd.SDTypeID = sdTypeEntity.ID
+			mergedCommands = append(mergedCommands, newCmd)
+		}
+		sdTypeEntity.Commands = mergedCommands
+
+		// === MERGE PARAMETERS ===
+		existingParams := make(map[string]dbModel.SDParameterEntity)
+		for _, param := range existingEntity.Parameters {
+			existingParams[param.Denotation] = param
+		}
+
+		mergedParams := make([]dbModel.SDParameterEntity, 0)
+		for _, newParam := range sdTypeEntity.Parameters {
+			if existingParam, found := existingParams[newParam.Denotation]; found {
+				newParam.ID = existingParam.ID // Update
+			}
+			newParam.SDTypeID = sdTypeEntity.ID
+			mergedParams = append(mergedParams, newParam)
+		}
+		sdTypeEntity.Parameters = mergedParams
+
 	} else if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		// An error occurred other than the record does not exist
 		return sharedUtils.NewFailureResult[dllModel.SDType](result.Error)
 	}
-	// Save entity (insert or update depending on whether the ID is set)
+	
 	if err := dbUtil.PersistEntityIntoDB[dbModel.SDTypeEntity](r.db, &sdTypeEntity); err != nil {
 		return sharedUtils.NewFailureResult[dllModel.SDType](err)
 	}
+
 	return sharedUtils.NewSuccessResult[dllModel.SDType](db2dll.ToDLLModelSDType(sdTypeEntity))
 }
+
 
 func loadSDType(g *gorm.DB, whereClause dbUtil.WhereClause) sharedUtils.Result[dllModel.SDType] {
 	sdTypeEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDTypeEntity](g,
