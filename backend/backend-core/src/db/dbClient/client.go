@@ -212,6 +212,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.UserEntity),
 		new(dbModel.UserSessionEntity),
 		new(dbModel.UserConfigEntity),
+		new(dbModel.VPLProgramsEntity),
 		new(dbModel.SDParameterSnapshotEntity),
 		new(dbModel.VPLProgramsEntity),
 		new(dbModel.VPLProceduresEntity),
