@@ -220,6 +220,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.UserEntity),
 		new(dbModel.UserSessionEntity),
 		new(dbModel.UserConfigEntity),
+		new(dbModel.VPLProgramsEntity),
 		new(dbModel.SDParameterSnapshotEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
