@@ -120,8 +120,8 @@ func (r *mutationResolver) CreateSDCommand(ctx context.Context, input graphQLMod
 	return createSDCommandResult.Unwrap()
 }
 
-func (r *mutationResolver) UpdateSDCommand(ctx context.Context, id uint32, name *string, description *string) (graphQLModel.SDCommand, error) {
-	updateSDCommandResult := domainLogicLayer.UpdateSDCommand(id, name, description)
+func (r *mutationResolver) UpdateSDCommand(ctx context.Context, id uint32, name *string, payload *string) (graphQLModel.SDCommand, error) {
+	updateSDCommandResult := domainLogicLayer.UpdateSDCommand(id, name, payload)
 	if updateSDCommandResult.IsFailure() {
 		log.Printf("Error occurred (update SD command): %s\n", updateSDCommandResult.GetError().Error())
 		return graphQLModel.SDCommand{}, updateSDCommandResult.GetError()

@@ -20,6 +20,7 @@ type SDType {
   label: String
   icon: String
   parameters: [SDParameter!]!
+  commands: [SDCommand!]!
 }
 
 input SDParameterInput {
@@ -33,18 +34,24 @@ input SDTypeInput {
   label: String
   icon: String
   parameters: [SDParameterInput!]!
+  commands: [SDCommandInputWithoutType!]
+}
+
+input SDCommandInputWithoutType {
+  name: String!
+  payload: String
 }
 
 type SDCommand {
   id: ID!
   name: String!
-  description: String
+  payload: String
   sdTypeId: ID!
 }
 
 input SDCommandInput {
   name: String!
-  description: String
+  payload: String
   sdTypeId: ID!
 }
 
@@ -419,7 +426,7 @@ type Mutation {
   updateUserConfig(userId: ID!, input: UserConfigInput!): UserConfig!
   deleteUserConfig(userId: ID!): Boolean!
   createSDCommand(input: SDCommandInput!): SDCommand! # Creating a command
-  updateSDCommand(id: ID!, name: String, description: String): SDCommand! # Updating a command
+  updateSDCommand(id: ID!, name: String, payload: String): SDCommand! # Updating a command
   deleteSDCommand(id: ID!): Boolean! # Deleting a command
   createSDCommandInvocation(input: SDCommandInvocationInput!): SDCommandInvocation! # Creating an invocation
   invokeSDCommand(id: ID!): Boolean! # Starting an existing invocation
