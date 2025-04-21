@@ -151,6 +151,18 @@ func (r *relationalDatabaseClientImpl) PersistSDCommand(sdCommand dllModel.SDCom
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	entity := dll2db.ToDBModelEntitySDCommand(sdCommand)
+	// Search for an existing command with the same name for the device type
+	var existingEntity dbModel.SDCommandEntity
+	err := r.db.
+		Where("denotation = ? AND sd_type_id = ?", entity.Name, entity.SDTypeID).
+		First(&existingEntity).Error
+	if err == nil {
+		// The record exists - overriding the ID, this makes Save() become UPDATE
+		entity.ID = existingEntity.ID
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return sharedUtils.NewFailureResult[uint32](err)
+	}
+	// Persist (insert or update according to ID settings)
 	if err := dbUtil.PersistEntityIntoDB(r.db, &entity); err != nil {
 		return sharedUtils.NewFailureResult[uint32](err)
 	}
@@ -348,6 +360,17 @@ func (r *relationalDatabaseClientImpl) PersistSDType(sdType dllModel.SDType) sha
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	sdTypeEntity := dll2db.ToDBModelEntitySDType(sdType)
+	// Try to find an existing record by denotation
+	var existingEntity dbModel.SDTypeEntity
+	result := r.db.Where("denotation = ?", sdTypeEntity.Denotation).First(&existingEntity)
+	if result.Error == nil {
+		// The record exists - take the ID
+		sdTypeEntity.ID = existingEntity.ID
+	} else if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		// An error occurred other than the record does not exist
+		return sharedUtils.NewFailureResult[dllModel.SDType](result.Error)
+	}
+	// Save entity (insert or update depending on whether the ID is set)
 	if err := dbUtil.PersistEntityIntoDB[dbModel.SDTypeEntity](r.db, &sdTypeEntity); err != nil {
 		return sharedUtils.NewFailureResult[dllModel.SDType](err)
 	}
