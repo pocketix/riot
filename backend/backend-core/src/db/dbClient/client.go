@@ -69,6 +69,10 @@ type RelationalDatabaseClient interface {
 	PersistVPLProgram(vplProgram dllModel.VPLProgram) sharedUtils.Result[dllModel.VPLProgram]
 	LoadVPLProgram(id uint32) sharedUtils.Result[dllModel.VPLProgram]
 	DeleteVPLProgram(id uint32) error
+	PersistVPLProcedure(vplProcedure dllModel.VPLProcedure) sharedUtils.Result[dllModel.VPLProcedure]
+	LoadVPLProcedure(id uint32) sharedUtils.Result[dllModel.VPLProcedure]
+	LoadVPLProcedures() sharedUtils.Result[[]dllModel.VPLProcedure]
+	DeleteVPLProcedure(id uint32) error
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -209,6 +213,8 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.UserSessionEntity),
 		new(dbModel.UserConfigEntity),
 		new(dbModel.SDParameterSnapshotEntity),
+		new(dbModel.VPLProgramsEntity),
+		new(dbModel.VPLProceduresEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
 
@@ -728,4 +734,50 @@ func (r *relationalDatabaseClientImpl) DeleteVPLProgram(id uint32) error {
 	defer r.mu.Unlock()
 
 	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.VPLProgramsEntity](r.db, id)
+}
+
+func (r *relationalDatabaseClientImpl) PersistVPLProcedure(vplProcedure dllModel.VPLProcedure) sharedUtils.Result[dllModel.VPLProcedure] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	vplProcedureEntity := dll2db.ToDBModelEntityVPLProcedure(vplProcedure)
+
+	if err := dbUtil.PersistEntityIntoDB(r.db, &vplProcedureEntity); err != nil {
+		return sharedUtils.NewFailureResult[dllModel.VPLProcedure](err)
+	}
+
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProcedure(vplProcedureEntity))
+}
+
+func (r *relationalDatabaseClientImpl) LoadVPLProcedure(id uint32) sharedUtils.Result[dllModel.VPLProcedure] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	vplProcedureEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.VPLProceduresEntity](r.db, dbUtil.Where("id = ?", id))
+
+	if vplProcedureEntityLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[dllModel.VPLProcedure](vplProcedureEntityLoadResult.GetError())
+	}
+
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProcedure(vplProcedureEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) LoadVPLProcedures() sharedUtils.Result[[]dllModel.VPLProcedure] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	vplProcedureEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.VPLProceduresEntity](r.db)
+
+	if vplProcedureEntitiesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProcedure](vplProcedureEntitiesLoadResult.GetError())
+	}
+
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(vplProcedureEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelVplProcedure))
+}
+
+func (r *relationalDatabaseClientImpl) DeleteVPLProcedure(id uint32) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.VPLProceduresEntity](r.db, id)
 }
