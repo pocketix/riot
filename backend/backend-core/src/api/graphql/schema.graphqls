@@ -79,6 +79,7 @@ type SDParameterSnapshot {
   number:      Float
   boolean:     Boolean
   updatedAt:   Date!
+  vplPrograms: [VPLProgram!]!
 }
 
 input SDCommandInvocationInput {
@@ -362,6 +363,11 @@ type VPLProgramExecutionResult {
     program: VPLProgram!
     SDParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
     SDCommandInvocations: [SDCommandInvocation!]!
+    ExecutionTime: String!
+    Enabled: Boolean!
+    Success: Boolean!
+    Error: String
+    ReasonForExecuting: String
 }
 
 # ----- Queries, mutations and subscriptions -----
