@@ -226,3 +226,13 @@ type VPLProgramsEntity struct {
 func (VPLProgramsEntity) TableName() string {
 	return "vpl_programs"
 }
+
+type VPLProceduresEntity struct {
+	gorm.Model  
+	Name string `gorm:"column:name;not null;uniqueIndex"`
+	Data string `gorm:"column:data;type:jsonb;not null"`
+}
+
+func (VPLProceduresEntity) TableName() string {
+	return "vpl_procedures"
+}
