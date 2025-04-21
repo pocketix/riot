@@ -1,0 +1,55 @@
+{
+  "name": "bp-bures-riot-frontend",
+  "source": "src/index.html",
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "scripts": {
+    "start": "parcel",
+    "build": "parcel build",
+    "codegen": "graphql-codegen --config codegen.ts",
+    "format": "prettier --write \"**/*.{html,ts,tsx,scss,graphql}\"",
+    "check-format": "prettier --check \"**/*.{html,ts,tsx,scss,graphql}"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "5.0.0",
+    "@graphql-codegen/client-preset": "4.1.0",
+    "@parcel/transformer-graphql": "^2.10.2",
+    "@parcel/transformer-sass": "^2.10.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/uuid": "^9.0.8",
+    "parcel": "latest",
+    "postcss": "^8.4.38",
+    "prettier": "3.0.3",
+    "prettier-plugin-tailwindcss": "^0.5.14",
+    "process": "^0.11.10",
+    "tailwindcss": "^3.4.3"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.8.7",
+    "@apollo/sandbox": "^2.5.1",
+    "@ebay/nice-modal-react": "^1.2.13",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/typescript": "^4.0.1",
+    "@graphql-codegen/typescript-operations": "^4.0.1",
+    "@graphql-codegen/typescript-react-apollo": "^4.1.0",
+    "@mui/material": "^5.14.17",
+    "@types/node": "^20.12.2",
+    "graphql": "^16.8.1",
+    "graphql-tag": "^2.12.6",
+    "immer": "^10.0.4",
+    "react": "^18.2.0",
+    "react-d3-tree": "^3.6.2",
+    "react-dom": "^18.2.0",
+    "react-resize-detector": "^10.0.1",
+    "react-router-dom": "^6.17.0",
+    "uuid": "^9.0.1"
+  },
+  "parcel": {
+    "transformers": {
+      "*.graphql": [
+        "@parcel/transformer-graphql"
+      ]
+    }
+  }
+}
