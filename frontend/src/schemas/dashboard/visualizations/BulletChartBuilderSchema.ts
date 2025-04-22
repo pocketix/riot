@@ -45,7 +45,7 @@ const configSchema = z
   })
 
 export const bulletChartBuilderSchema = z.object({
-  cardTitle: z.string().min(1, { message: 'Title is required' }).optional(),
+  cardTitle: z.string().optional(),
   icon: z.string().optional(),
   rows: z
     .array(

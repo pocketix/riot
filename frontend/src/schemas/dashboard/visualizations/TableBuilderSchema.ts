@@ -1,7 +1,8 @@
 import { z } from 'zod'
 
-export const tableCardSchema = z.object({
-  title: z.string().min(1, { message: 'Title is required' }),
+export const tableCardSchema = z.object({ 
+  title: z.string().optional(),
+  icon: z.string().optional(),
   tableTitle: z.string().min(1, { message: 'Table title is required' }),
   timeFrame: z.string().min(1, { message: 'Time frame must be at least 1' }),
   decimalPlaces: z.number().min(0, { message: 'Decimal places must be a non-negative number' }),
