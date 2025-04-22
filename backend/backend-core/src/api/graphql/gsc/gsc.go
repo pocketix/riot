@@ -91,6 +91,7 @@ type QueryResolver interface {
 	SdCommands(ctx context.Context) ([]graphQLModel.SDCommand, error)
 	SdCommandInvocation(ctx context.Context, id uint32) (graphQLModel.SDCommandInvocation, error)
 	SdCommandInvocations(ctx context.Context) ([]graphQLModel.SDCommandInvocation, error)
+	VplPrograms(ctx context.Context) ([]graphQLModel.VPLProgram, error)
 	VplProgram(ctx context.Context, id uint32) (graphQLModel.VPLProgram, error)
 }
 type SubscriptionResolver interface {
@@ -342,6 +343,7 @@ type SDParameterSnapshot {
   number:      Float
   boolean:     Boolean
   updatedAt:   Date!
+  vplPrograms: [ID!]!
 }
 
 input SDCommandInvocationInput {
@@ -618,13 +620,20 @@ type VPLProgram {
     id: ID!
     name: String!
     data: JSON!
+    lastRun: String
+    enabled: Boolean!
     sdParameterSnapshots: [SDParameterSnapshot!]!
 }
 
 type VPLProgramExecutionResult {
     program: VPLProgram!
-    SDParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
-    SDCommandInvocations: [SDCommandInvocation!]!
+    sdParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
+    SdCommandInvocations: [SDCommandInvocation!]!
+    executionTime: String!
+    enabled: Boolean!
+    success: Boolean!
+    error: String
+    executionReason: String
 }
 
 # ----- Queries, mutations and subscriptions -----
@@ -646,6 +655,7 @@ type Query {
   sdCommands: [SDCommand!]! # Returns all SDCommands
   sdCommandInvocation(id: ID!): SDCommandInvocation! # Returns a specific SDCommandInvocation
   sdCommandInvocations: [SDCommandInvocation!]! # Returns all SDCommandInvocations
+  vplPrograms: [VPLProgram!]! # Returns all VPLPrograms
   vplProgram(id: ID!): VPLProgram! # Returns a specific VPLProgram by its ID
 }
 
@@ -4073,6 +4083,10 @@ func (ec *executionContext) fieldContext_Mutation_createVPLProgram(ctx context.C
 				return ec.fieldContext_VPLProgram_name(ctx, field)
 			case "data":
 				return ec.fieldContext_VPLProgram_data(ctx, field)
+			case "lastRun":
+				return ec.fieldContext_VPLProgram_lastRun(ctx, field)
+			case "enabled":
+				return ec.fieldContext_VPLProgram_enabled(ctx, field)
 			case "sdParameterSnapshots":
 				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
 			}
@@ -4138,6 +4152,10 @@ func (ec *executionContext) fieldContext_Mutation_updateVPLProgram(ctx context.C
 				return ec.fieldContext_VPLProgram_name(ctx, field)
 			case "data":
 				return ec.fieldContext_VPLProgram_data(ctx, field)
+			case "lastRun":
+				return ec.fieldContext_VPLProgram_lastRun(ctx, field)
+			case "enabled":
+				return ec.fieldContext_VPLProgram_enabled(ctx, field)
 			case "sdParameterSnapshots":
 				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
 			}
@@ -4254,10 +4272,20 @@ func (ec *executionContext) fieldContext_Mutation_executeVPLProgram(ctx context.
 			switch field.Name {
 			case "program":
 				return ec.fieldContext_VPLProgramExecutionResult_program(ctx, field)
-			case "SDParameterSnapshotsToUpdate":
-				return ec.fieldContext_VPLProgramExecutionResult_SDParameterSnapshotsToUpdate(ctx, field)
-			case "SDCommandInvocations":
-				return ec.fieldContext_VPLProgramExecutionResult_SDCommandInvocations(ctx, field)
+			case "sdParameterSnapshotsToUpdate":
+				return ec.fieldContext_VPLProgramExecutionResult_sdParameterSnapshotsToUpdate(ctx, field)
+			case "SdCommandInvocations":
+				return ec.fieldContext_VPLProgramExecutionResult_SdCommandInvocations(ctx, field)
+			case "executionTime":
+				return ec.fieldContext_VPLProgramExecutionResult_executionTime(ctx, field)
+			case "enabled":
+				return ec.fieldContext_VPLProgramExecutionResult_enabled(ctx, field)
+			case "success":
+				return ec.fieldContext_VPLProgramExecutionResult_success(ctx, field)
+			case "error":
+				return ec.fieldContext_VPLProgramExecutionResult_error(ctx, field)
+			case "executionReason":
+				return ec.fieldContext_VPLProgramExecutionResult_executionReason(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type VPLProgramExecutionResult", field.Name)
 		},
@@ -6726,6 +6754,64 @@ func (ec *executionContext) fieldContext_Query_sdCommandInvocations(_ context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_vplPrograms(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_vplPrograms(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().VplPrograms(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]graphQLModel.VPLProgram)
+	fc.Result = res
+	return ec.marshalNVPLProgram2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgramᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_vplPrograms(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_VPLProgram_id(ctx, field)
+			case "name":
+				return ec.fieldContext_VPLProgram_name(ctx, field)
+			case "data":
+				return ec.fieldContext_VPLProgram_data(ctx, field)
+			case "lastRun":
+				return ec.fieldContext_VPLProgram_lastRun(ctx, field)
+			case "enabled":
+				return ec.fieldContext_VPLProgram_enabled(ctx, field)
+			case "sdParameterSnapshots":
+				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type VPLProgram", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_vplProgram(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_vplProgram(ctx, field)
 	if err != nil {
@@ -6771,6 +6857,10 @@ func (ec *executionContext) fieldContext_Query_vplProgram(ctx context.Context, f
 				return ec.fieldContext_VPLProgram_name(ctx, field)
 			case "data":
 				return ec.fieldContext_VPLProgram_data(ctx, field)
+			case "lastRun":
+				return ec.fieldContext_VPLProgram_lastRun(ctx, field)
+			case "enabled":
+				return ec.fieldContext_VPLProgram_enabled(ctx, field)
 			case "sdParameterSnapshots":
 				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
 			}
@@ -7641,6 +7731,8 @@ func (ec *executionContext) fieldContext_SDInstance_parameterSnapshots(_ context
 				return ec.fieldContext_SDParameterSnapshot_boolean(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_SDParameterSnapshot_updatedAt(ctx, field)
+			case "vplPrograms":
+				return ec.fieldContext_SDParameterSnapshot_vplPrograms(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDParameterSnapshot", field.Name)
 		},
@@ -8062,6 +8154,8 @@ func (ec *executionContext) fieldContext_SDParameter_parameterSnapshots(_ contex
 				return ec.fieldContext_SDParameterSnapshot_boolean(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_SDParameterSnapshot_updatedAt(ctx, field)
+			case "vplPrograms":
+				return ec.fieldContext_SDParameterSnapshot_vplPrograms(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDParameterSnapshot", field.Name)
 		},
@@ -8319,6 +8413,50 @@ func (ec *executionContext) fieldContext_SDParameterSnapshot_updatedAt(_ context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Date does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SDParameterSnapshot_vplPrograms(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDParameterSnapshot) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDParameterSnapshot_vplPrograms(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.VplPrograms, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]uint32)
+	fc.Result = res
+	return ec.marshalNID2ᚕuint32ᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SDParameterSnapshot_vplPrograms(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SDParameterSnapshot",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9066,6 +9204,8 @@ func (ec *executionContext) fieldContext_Subscription_onSDParameterSnapshotUpdat
 				return ec.fieldContext_SDParameterSnapshot_boolean(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_SDParameterSnapshot_updatedAt(ctx, field)
+			case "vplPrograms":
+				return ec.fieldContext_SDParameterSnapshot_vplPrograms(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDParameterSnapshot", field.Name)
 		},
@@ -9365,6 +9505,91 @@ func (ec *executionContext) fieldContext_VPLProgram_data(_ context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _VPLProgram_lastRun(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgram) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VPLProgram_lastRun(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastRun, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VPLProgram_lastRun(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VPLProgram",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VPLProgram_enabled(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgram) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VPLProgram_enabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Enabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VPLProgram_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VPLProgram",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _VPLProgram_sdParameterSnapshots(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgram) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
 	if err != nil {
@@ -9416,6 +9641,8 @@ func (ec *executionContext) fieldContext_VPLProgram_sdParameterSnapshots(_ conte
 				return ec.fieldContext_SDParameterSnapshot_boolean(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_SDParameterSnapshot_updatedAt(ctx, field)
+			case "vplPrograms":
+				return ec.fieldContext_SDParameterSnapshot_vplPrograms(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDParameterSnapshot", field.Name)
 		},
@@ -9468,6 +9695,10 @@ func (ec *executionContext) fieldContext_VPLProgramExecutionResult_program(_ con
 				return ec.fieldContext_VPLProgram_name(ctx, field)
 			case "data":
 				return ec.fieldContext_VPLProgram_data(ctx, field)
+			case "lastRun":
+				return ec.fieldContext_VPLProgram_lastRun(ctx, field)
+			case "enabled":
+				return ec.fieldContext_VPLProgram_enabled(ctx, field)
 			case "sdParameterSnapshots":
 				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
 			}
@@ -9477,8 +9708,8 @@ func (ec *executionContext) fieldContext_VPLProgramExecutionResult_program(_ con
 	return fc, nil
 }
 
-func (ec *executionContext) _VPLProgramExecutionResult_SDParameterSnapshotsToUpdate(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgramExecutionResult_SDParameterSnapshotsToUpdate(ctx, field)
+func (ec *executionContext) _VPLProgramExecutionResult_sdParameterSnapshotsToUpdate(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VPLProgramExecutionResult_sdParameterSnapshotsToUpdate(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -9491,7 +9722,7 @@ func (ec *executionContext) _VPLProgramExecutionResult_SDParameterSnapshotsToUpd
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.SDParameterSnapshotsToUpdate, nil
+		return obj.SdParameterSnapshotsToUpdate, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9508,7 +9739,7 @@ func (ec *executionContext) _VPLProgramExecutionResult_SDParameterSnapshotsToUpd
 	return ec.marshalNSDParameterSnapshot2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterSnapshotᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VPLProgramExecutionResult_SDParameterSnapshotsToUpdate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VPLProgramExecutionResult_sdParameterSnapshotsToUpdate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VPLProgramExecutionResult",
 		Field:      field,
@@ -9528,6 +9759,8 @@ func (ec *executionContext) fieldContext_VPLProgramExecutionResult_SDParameterSn
 				return ec.fieldContext_SDParameterSnapshot_boolean(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_SDParameterSnapshot_updatedAt(ctx, field)
+			case "vplPrograms":
+				return ec.fieldContext_SDParameterSnapshot_vplPrograms(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDParameterSnapshot", field.Name)
 		},
@@ -9535,8 +9768,8 @@ func (ec *executionContext) fieldContext_VPLProgramExecutionResult_SDParameterSn
 	return fc, nil
 }
 
-func (ec *executionContext) _VPLProgramExecutionResult_SDCommandInvocations(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgramExecutionResult_SDCommandInvocations(ctx, field)
+func (ec *executionContext) _VPLProgramExecutionResult_SdCommandInvocations(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VPLProgramExecutionResult_SdCommandInvocations(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -9549,7 +9782,7 @@ func (ec *executionContext) _VPLProgramExecutionResult_SDCommandInvocations(ctx 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.SDCommandInvocations, nil
+		return obj.SdCommandInvocations, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9566,7 +9799,7 @@ func (ec *executionContext) _VPLProgramExecutionResult_SDCommandInvocations(ctx 
 	return ec.marshalNSDCommandInvocation2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInvocationᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_VPLProgramExecutionResult_SDCommandInvocations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_VPLProgramExecutionResult_SdCommandInvocations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "VPLProgramExecutionResult",
 		Field:      field,
@@ -9588,6 +9821,220 @@ func (ec *executionContext) fieldContext_VPLProgramExecutionResult_SDCommandInvo
 				return ec.fieldContext_SDCommandInvocation_sdInstanceId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDCommandInvocation", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VPLProgramExecutionResult_executionTime(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VPLProgramExecutionResult_executionTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExecutionTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VPLProgramExecutionResult_executionTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VPLProgramExecutionResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VPLProgramExecutionResult_enabled(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VPLProgramExecutionResult_enabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Enabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VPLProgramExecutionResult_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VPLProgramExecutionResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VPLProgramExecutionResult_success(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VPLProgramExecutionResult_success(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Success, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VPLProgramExecutionResult_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VPLProgramExecutionResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VPLProgramExecutionResult_error(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VPLProgramExecutionResult_error(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Error, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VPLProgramExecutionResult_error(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VPLProgramExecutionResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VPLProgramExecutionResult_executionReason(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_VPLProgramExecutionResult_executionReason(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExecutionReason, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_VPLProgramExecutionResult_executionReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "VPLProgramExecutionResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -13529,6 +13976,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "vplPrograms":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_vplPrograms(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "vplProgram":
 			field := field
 
@@ -13900,6 +14369,11 @@ func (ec *executionContext) _SDParameterSnapshot(ctx context.Context, sel ast.Se
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "vplPrograms":
+			out.Values[i] = ec._SDParameterSnapshot_vplPrograms(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14138,6 +14612,13 @@ func (ec *executionContext) _VPLProgram(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "lastRun":
+			out.Values[i] = ec._VPLProgram_lastRun(ctx, field, obj)
+		case "enabled":
+			out.Values[i] = ec._VPLProgram_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "sdParameterSnapshots":
 			out.Values[i] = ec._VPLProgram_sdParameterSnapshots(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -14182,16 +14663,35 @@ func (ec *executionContext) _VPLProgramExecutionResult(ctx context.Context, sel 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "SDParameterSnapshotsToUpdate":
-			out.Values[i] = ec._VPLProgramExecutionResult_SDParameterSnapshotsToUpdate(ctx, field, obj)
+		case "sdParameterSnapshotsToUpdate":
+			out.Values[i] = ec._VPLProgramExecutionResult_sdParameterSnapshotsToUpdate(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "SDCommandInvocations":
-			out.Values[i] = ec._VPLProgramExecutionResult_SDCommandInvocations(ctx, field, obj)
+		case "SdCommandInvocations":
+			out.Values[i] = ec._VPLProgramExecutionResult_SdCommandInvocations(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "executionTime":
+			out.Values[i] = ec._VPLProgramExecutionResult_executionTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "enabled":
+			out.Values[i] = ec._VPLProgramExecutionResult_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "success":
+			out.Values[i] = ec._VPLProgramExecutionResult_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "error":
+			out.Values[i] = ec._VPLProgramExecutionResult_error(ctx, field, obj)
+		case "executionReason":
+			out.Values[i] = ec._VPLProgramExecutionResult_executionReason(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15399,6 +15899,50 @@ func (ec *executionContext) unmarshalNUserConfigInput2githubᚗcomᚋMichalBures
 
 func (ec *executionContext) marshalNVPLProgram2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgram(ctx context.Context, sel ast.SelectionSet, v graphQLModel.VPLProgram) graphql.Marshaler {
 	return ec._VPLProgram(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNVPLProgram2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgramᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.VPLProgram) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNVPLProgram2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgram(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNVPLProgramExecutionResult2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgramExecutionResult(ctx context.Context, sel ast.SelectionSet, v graphQLModel.VPLProgramExecutionResult) graphql.Marshaler {

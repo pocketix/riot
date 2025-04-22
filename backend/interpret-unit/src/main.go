@@ -46,8 +46,11 @@ func performVPLValidityCheckRequest() error {
 			} else {
 				response = sharedModel.VPLInterpretSaveResultOrError{
 					Program: sharedModel.VPLProgram{
-						Data: messagePayload.Data,
-						// ReferencedValues: referencedValueStore.GetReferencedValues(),
+						Data:    messagePayload.Data,
+						Enabled: false,
+						ReferencedValues: utils.ReferencedValue2StringMap(
+							commandHandlingStore.ReferencedValueStore.GetReferencedValues(),
+						),
 					},
 				}
 			}
