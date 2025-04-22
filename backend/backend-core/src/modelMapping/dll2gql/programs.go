@@ -8,13 +8,18 @@ import (
 
 func ToGraphQLModelVPLProgram(vplProgram dllModel.VPLProgram) graphQLModel.VPLProgram {
 	return graphQLModel.VPLProgram{
-		ID:   vplProgram.ID,
-		Name: vplProgram.Name,
-		Data: vplProgram.Data,
-		SdParameterSnapshots: sharedUtils.Map(vplProgram.SDParameterSnapshots, func(snapshot dllModel.SDParameterSnapshot) graphQLModel.SDParameterSnapshot {
+		ID:      vplProgram.ID,
+		Name:    vplProgram.Name,
+		Data:    vplProgram.Data,
+		LastRun: vplProgram.LastRun,
+		Enabled: vplProgram.Enabled,
+		SdParameterSnapshots: sharedUtils.Map(vplProgram.SDParameterSnapshots, func(link dllModel.VPLProgramSDSnapshotLink) graphQLModel.SDParameterSnapshot {
 			return graphQLModel.SDParameterSnapshot{
-				InstanceID:  snapshot.SDInstance,
-				ParameterID: snapshot.SDParameter,
+				InstanceID:  link.InstanceID,
+				ParameterID: link.ParameterID,
+				VplPrograms: sharedUtils.Map(vplProgram.SDParameterSnapshots, func(link dllModel.VPLProgramSDSnapshotLink) uint32 {
+					return link.ProgramID
+				}),
 			}
 		}),
 	}
@@ -23,11 +28,16 @@ func ToGraphQLModelVPLProgram(vplProgram dllModel.VPLProgram) graphQLModel.VPLPr
 func ToGraphQLModelPLProgramExecutionResult(program dllModel.VPLProgramExecutionResult) graphQLModel.VPLProgramExecutionResult {
 	return graphQLModel.VPLProgramExecutionResult{
 		Program: ToGraphQLModelVPLProgram(program.Program),
-		SDParameterSnapshotsToUpdate: sharedUtils.Map(program.SDParameterSnapshotList, func(snapshot dllModel.SDParameterSnapshot) graphQLModel.SDParameterSnapshot {
+		SdParameterSnapshotsToUpdate: sharedUtils.Map(program.SDParameterSnapshotList, func(snapshot dllModel.SDParameterSnapshot) graphQLModel.SDParameterSnapshot {
 			return ToGraphQLModelSdParameterSnapshot(snapshot)
 		}),
-		SDCommandInvocations: sharedUtils.Map(program.SDCommandInvocationList, func(invocation dllModel.SDCommandInvocation) graphQLModel.SDCommandInvocation {
+		SdCommandInvocations: sharedUtils.Map(program.SDCommandInvocationList, func(invocation dllModel.SDCommandInvocation) graphQLModel.SDCommandInvocation {
 			return ToGraphQLModelSDCommandInvocation(invocation)
 		}),
+		ExecutionTime:   program.ExecutionTime,
+		Enabled:         program.Enabled,
+		Success:         program.Success,
+		Error:           program.Error,
+		ExecutionReason: program.ExecutionReasion,
 	}
 }

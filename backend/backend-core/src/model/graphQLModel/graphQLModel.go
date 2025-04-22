@@ -303,6 +303,7 @@ type SDParameterSnapshot struct {
 	Number      *float64 `json:"number,omitempty"`
 	Boolean     *bool    `json:"boolean,omitempty"`
 	UpdatedAt   string   `json:"updatedAt"`
+	VplPrograms []uint32 `json:"vplPrograms"`
 }
 
 type SDType struct {
@@ -403,13 +404,20 @@ type VPLProgram struct {
 	ID                   uint32                `json:"id"`
 	Name                 string                `json:"name"`
 	Data                 string                `json:"data"`
+	LastRun              *string               `json:"lastRun,omitempty"`
+	Enabled              bool                  `json:"enabled"`
 	SdParameterSnapshots []SDParameterSnapshot `json:"sdParameterSnapshots"`
 }
 
 type VPLProgramExecutionResult struct {
 	Program                      VPLProgram            `json:"program"`
-	SDParameterSnapshotsToUpdate []SDParameterSnapshot `json:"SDParameterSnapshotsToUpdate"`
-	SDCommandInvocations         []SDCommandInvocation `json:"SDCommandInvocations"`
+	SdParameterSnapshotsToUpdate []SDParameterSnapshot `json:"sdParameterSnapshotsToUpdate"`
+	SdCommandInvocations         []SDCommandInvocation `json:"SdCommandInvocations"`
+	ExecutionTime                string                `json:"executionTime"`
+	Enabled                      bool                  `json:"enabled"`
+	Success                      bool                  `json:"success"`
+	Error                        *string               `json:"error,omitempty"`
+	ExecutionReason              *string               `json:"executionReason,omitempty"`
 }
 
 type KPINodeType string

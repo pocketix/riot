@@ -39,19 +39,19 @@ input SDTypeInput {
 
 input SDCommandInputWithoutType {
   name: String!
-  payload: String
+  payload: String!
 }
 
 type SDCommand {
   id: ID!
   name: String!
-  payload: String
+  payload: String!
   sdTypeId: ID!
 }
 
 input SDCommandInput {
   name: String!
-  payload: String
+  payload: String!
   sdTypeId: ID!
 }
 
@@ -86,6 +86,7 @@ type SDParameterSnapshot {
   number:      Float
   boolean:     Boolean
   updatedAt:   Date!
+  vplPrograms: [ID!]!
 }
 
 input SDCommandInvocationInput {
@@ -362,13 +363,20 @@ type VPLProgram {
     id: ID!
     name: String!
     data: JSON!
+    lastRun: String
+    enabled: Boolean!
     sdParameterSnapshots: [SDParameterSnapshot!]!
 }
 
 type VPLProgramExecutionResult {
     program: VPLProgram!
-    SDParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
-    SDCommandInvocations: [SDCommandInvocation!]!
+    sdParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
+    SdCommandInvocations: [SDCommandInvocation!]!
+    executionTime: String!
+    enabled: Boolean!
+    success: Boolean!
+    error: String
+    executionReason: String
 }
 
 # ----- VPL Procedures -----
@@ -406,6 +414,7 @@ type Query {
   sdCommands: [SDCommand!]! # Returns all SDCommands
   sdCommandInvocation(id: ID!): SDCommandInvocation! # Returns a specific SDCommandInvocation
   sdCommandInvocations: [SDCommandInvocation!]! # Returns all SDCommandInvocations
+  vplPrograms: [VPLProgram!]! # Returns all VPLPrograms
   vplProgram(id: ID!): VPLProgram! # Returns a specific VPLProgram by its ID
   vplProcedure(id: ID!): VPLProcedure! # Returns a specific VPLProcedure by its ID
   vplProcedures: [VPLProcedure!]! # Returns all VPLProcedures

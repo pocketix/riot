@@ -68,6 +68,7 @@ type RelationalDatabaseClient interface {
 	PersistSDParameterSnapshot(snapshot dllModel.SDParameterSnapshot) sharedUtils.Result[sharedUtils.Pair[uint32, uint32]]
 	PersistVPLProgram(vplProgram dllModel.VPLProgram) sharedUtils.Result[dllModel.VPLProgram]
 	LoadVPLProgram(id uint32) sharedUtils.Result[dllModel.VPLProgram]
+	LoadVPLPrograms() sharedUtils.Result[[]dllModel.VPLProgram]
 	DeleteVPLProgram(id uint32) error
 	PersistVPLProcedure(vplProcedure dllModel.VPLProcedure) sharedUtils.Result[dllModel.VPLProcedure]
 	LoadVPLProcedure(id uint32) sharedUtils.Result[dllModel.VPLProcedure]
@@ -155,6 +156,18 @@ func (r *relationalDatabaseClientImpl) PersistSDCommand(sdCommand dllModel.SDCom
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	entity := dll2db.ToDBModelEntitySDCommand(sdCommand)
+	// Search for an existing command with the same name for the device type
+	var existingEntity dbModel.SDCommandEntity
+	err := r.db.
+		Where("denotation = ? AND sd_type_id = ?", entity.Name, entity.SDTypeID).
+		First(&existingEntity).Error
+	if err == nil {
+		// The record exists - overriding the ID, this makes Save() become UPDATE
+		entity.ID = existingEntity.ID
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return sharedUtils.NewFailureResult[uint32](err)
+	}
+	// Persist (insert or update according to ID settings)
 	if err := dbUtil.PersistEntityIntoDB(r.db, &entity); err != nil {
 		return sharedUtils.NewFailureResult[uint32](err)
 	}
@@ -354,12 +367,61 @@ func (r *relationalDatabaseClientImpl) DeleteKPIDefinition(id uint32) error {
 func (r *relationalDatabaseClientImpl) PersistSDType(sdType dllModel.SDType) sharedUtils.Result[dllModel.SDType] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
+	// DB conversion
 	sdTypeEntity := dll2db.ToDBModelEntitySDType(sdType)
+
+	// Is a specified sdtype exist?
+	var existingEntity dbModel.SDTypeEntity
+	result := r.db.Preload("Commands").Preload("Parameters").Where("denotation = ?", sdTypeEntity.Denotation).First(&existingEntity)
+
+	if result.Error == nil {
+		// If it exists, take the ID and merge Commands + Parameters
+		sdTypeEntity.ID = existingEntity.ID
+
+		// === MERGE COMMANDS ===
+		existingCommands := make(map[string]dbModel.SDCommandEntity)
+		for _, cmd := range existingEntity.Commands {
+			existingCommands[cmd.Name] = cmd
+		}
+
+		mergedCommands := make([]dbModel.SDCommandEntity, 0)
+		for _, newCmd := range sdTypeEntity.Commands {
+			if existingCmd, found := existingCommands[newCmd.Name]; found {
+				newCmd.ID = existingCmd.ID // Update
+			}
+			newCmd.SDTypeID = sdTypeEntity.ID
+			mergedCommands = append(mergedCommands, newCmd)
+		}
+		sdTypeEntity.Commands = mergedCommands
+
+		// === MERGE PARAMETERS ===
+		existingParams := make(map[string]dbModel.SDParameterEntity)
+		for _, param := range existingEntity.Parameters {
+			existingParams[param.Denotation] = param
+		}
+
+		mergedParams := make([]dbModel.SDParameterEntity, 0)
+		for _, newParam := range sdTypeEntity.Parameters {
+			if existingParam, found := existingParams[newParam.Denotation]; found {
+				newParam.ID = existingParam.ID // Update
+			}
+			newParam.SDTypeID = sdTypeEntity.ID
+			mergedParams = append(mergedParams, newParam)
+		}
+		sdTypeEntity.Parameters = mergedParams
+
+	} else if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return sharedUtils.NewFailureResult[dllModel.SDType](result.Error)
+	}
+	
 	if err := dbUtil.PersistEntityIntoDB[dbModel.SDTypeEntity](r.db, &sdTypeEntity); err != nil {
 		return sharedUtils.NewFailureResult[dllModel.SDType](err)
 	}
+
 	return sharedUtils.NewSuccessResult[dllModel.SDType](db2dll.ToDLLModelSDType(sdTypeEntity))
 }
+
 
 func loadSDType(g *gorm.DB, whereClause dbUtil.WhereClause) sharedUtils.Result[dllModel.SDType] {
 	sdTypeEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDTypeEntity](g,
@@ -728,6 +790,19 @@ func (r *relationalDatabaseClientImpl) LoadVPLProgram(id uint32) sharedUtils.Res
 	}
 
 	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProgram(vplProgramEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) LoadVPLPrograms() sharedUtils.Result[[]dllModel.VPLProgram] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	vplProgramEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.VPLProgramsEntity](r.db)
+
+	if vplProgramEntitiesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](vplProgramEntitiesLoadResult.GetError())
+	}
+
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(vplProgramEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelVplProgram))
 }
 
 func (r *relationalDatabaseClientImpl) DeleteVPLProgram(id uint32) error {
