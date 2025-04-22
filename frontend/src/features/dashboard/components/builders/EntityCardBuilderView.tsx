@@ -16,10 +16,12 @@ import { TimeFrameSelector } from './components/time-frame-selector'
 import { Parameter } from '@/context/InstancesContext'
 import { ResponsiveEntityTable } from '../visualizations/ResponsiveEntityTable'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
-import { ChevronDown, ChevronUp, InfoIcon } from 'lucide-react'
+import { ArrowDown, ArrowUp, InfoIcon } from 'lucide-react'
 import { SdParameterType } from '@/generated/graphql'
 import { useRef } from 'react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
+import IconPicker from '@/ui/IconPicker'
 
 export interface EntityCardBuilderViewProps {
   config?: EntityCardConfig
@@ -37,6 +39,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
     resolver: zodResolver(entityCardSchema),
     defaultValues: props.config || {
       title: 'Entity Card',
+      icon: '',
       rows: [
         {
           name: '',
@@ -56,10 +59,16 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
     name: 'rows'
   })
 
+  const iconValue = form.watch('icon') ?? ''
+  const IconComponent = iconValue ? getCustomizableIcon(iconValue) : null
+
   return (
     <div className="w-full">
       <Card className="w-fulloverflow-hidden h-fit p-2 pt-0" ref={tableRef}>
-        {form.watch('title') && <h3 className="text-lg font-semibold">{form.watch('title')}</h3>}
+        <div className="flex items-center gap-2">
+          {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
+          {form.watch('title') && <h3 className="text-lg font-semibold">{form.watch('title')}</h3>}
+        </div>
         <ResponsiveEntityTable config={{ ...form.watch() }} sparklineData={props.sparklineData} />
       </Card>
       <Card className="mt-4 h-fit w-full overflow-hidden p-2 pt-0 shadow-lg">
@@ -75,27 +84,39 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
               }
             }}
           >
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Card Title</FormLabel>
-                  <FormControl>
-                    <Input type="text" {...field} className="w-full" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex items-center gap-2">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Card Title</FormLabel>
+                    <FormControl>
+                      <Input type="text" {...field} className="w-full" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="icon"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Icon</FormLabel>
+                    <FormControl>
+                      <IconPicker icon={field.value ?? ''} setIcon={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <Accordion type="multiple" className="w-full" defaultValue={props.config ? [''] : ['row-0']}>
               {fields.map((field, index) => (
                 <AccordionItem key={`${field.id}-${index}`} value={`row-${index}`}>
                   <AccordionTrigger className="flex w-full items-center justify-between">
                     <div className="flex flex-1 flex-wrap items-center">
-                      <span>{form.watch(`rows.${index}.name`) || `Row ${index + 1}`}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
                       <Button
                         type="button"
                         variant="ghost"
@@ -108,7 +129,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                           move(index, index - 1)
                         }}
                       >
-                        <ChevronUp size={14} />
+                        <ArrowUp size={14} />
                       </Button>
                       <Button
                         type="button"
@@ -122,20 +143,21 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                           move(index, index + 1)
                         }}
                       >
-                        <ChevronDown size={14} />
+                        <ArrowDown size={14} />
                       </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          remove(index)
-                        }}
-                        className="h-6 w-6"
-                      >
-                        <TbTrash size={14} />
-                      </Button>
+                      <span>{form.watch(`rows.${index}.name`) || `Row ${index + 1}`}</span>
                     </div>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        remove(index)
+                      }}
+                      className="mr-2 h-6 w-6"
+                    >
+                      <TbTrash size={14} />
+                    </Button>
                   </AccordionTrigger>
                   <AccordionContent className="w-full">
                     <Card className="grid w-full grid-cols-1 gap-2 px-2 py-2 sm:grid-cols-2 md:grid-cols-3">

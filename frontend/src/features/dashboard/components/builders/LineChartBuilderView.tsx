@@ -25,6 +25,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useDebounce } from 'use-debounce'
 import { Parameter } from '@/context/InstancesContext'
 import { LineChartLegend } from '../visualizations/LineChartLegend'
+import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
+import IconPicker from '@/ui/IconPicker'
 
 export interface LineChartBuilderViewProps {
   chartData: Serie[]
@@ -53,6 +55,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
     resolver: zodResolver(lineChartBuilderSchema),
     defaultValues: props.config || {
       cardTitle: 'Line Chart',
+      icon: '',
       xAxisMarkers: [],
       chartArea: true,
       legend: {
@@ -239,6 +242,9 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
     }
   }, [debouncedDecimalPlaces])
 
+  const iconValue = form.watch('icon') ?? ''
+  const IconComponent = iconValue ? getCustomizableIcon(iconValue) : null
+
   return (
     <div className="relative w-full">
       <h3 className="absolute left-1/2 top-0 -z-10 text-[11px]" ref={leftAxisMarginMockRef}>
@@ -246,7 +252,10 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
       </h3>
       <LineChartLegend data={props.chartData} className="invisible absolute" />
       <Card className="flex h-[230px] w-full flex-col">
-        {form.watch('cardTitle') && <h3 className="text-md ml-2 font-semibold">{form.watch('cardTitle')}</h3>}
+        <div className="flex items-center gap-2 px-2">
+          {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
+          {form.watch('cardTitle') && <h3 className="text-md font-semibold">{form.watch('cardTitle')}</h3>}
+        </div>
         <div className="relative h-full w-full">
           {props.chartData.length === 0 && (
             <div className="absolute z-10 flex h-full w-full items-center justify-center bg-transparent">
@@ -307,26 +316,41 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
             }}
           >
             <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-2 md:grid-cols-3">
-              <FormField
-                control={form.control}
-                name="cardTitle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Card Title</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(e)
-                        }}
-                        value={field.value}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex items-center gap-1">
+                <FormField
+                  control={form.control}
+                  name="cardTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Card Title</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e)
+                          }}
+                          value={field.value}
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="icon"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Icon</FormLabel>
+                      <FormControl>
+                        <IconPicker icon={field.value ?? ''} setIcon={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="pointSize"

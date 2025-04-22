@@ -20,7 +20,7 @@ import { TimeFrameSelector } from './components/time-frame-selector'
 import { AggregateFunctionCombobox } from './components/aggregate-function-combobox'
 import { Label } from '@/components/ui/label'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
-import { ChevronDown, ChevronUp, InfoIcon } from 'lucide-react'
+import { ArrowDown, ArrowUp, InfoIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Parameter } from '@/context/InstancesContext'
 import {
@@ -33,6 +33,8 @@ import {
 } from '@/components/ui/dialog'
 import { BulletRow } from '../cards/components/BulletRow'
 import { SdParameterType } from '@/generated/graphql'
+import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
+import IconPicker from '@/ui/IconPicker'
 
 export interface BulletChartBuilderViewProps {
   chartData: Datum[]
@@ -73,6 +75,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
     resolver: zodResolver(bulletChartBuilderSchema),
     defaultValues: props.config || {
       cardTitle: 'Bullet Charts',
+      icon: '',
       rows: [
         {
           instance: { uid: '' },
@@ -253,6 +256,9 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
     }))
   }
 
+  const iconValue = form.watch('icon') ?? ''
+  const IconComponent = iconValue ? getCustomizableIcon(iconValue) : null
+
   return (
     <div className="w-full">
       <span
@@ -262,7 +268,10 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
         {parameterNameMock.current?.innerText}
       </span>
       <Card className="h-fit w-full">
-        {form.watch('cardTitle') ? <h3 className="ml-2 text-lg font-semibold">{form.watch('cardTitle')}</h3> : null}
+        <div className="flex items-center gap-1 px-2">
+          {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
+          {form.watch('cardTitle') ? <h3 className="text-lg font-semibold">{form.watch('cardTitle')}</h3> : null}
+        </div>
         {fields.map((_, index) => {
           const row = form.watch(`rows.${index}`)
           const key = JSON.stringify(row)
@@ -286,15 +295,28 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
               }
             }}
           >
-            <div className="grid grid-cols-1 pt-2 sm:grid-cols-2">
+            <div className="flex w-full items-center gap-1">
               <FormField
                 control={form.control}
                 name="cardTitle"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full">
                     <FormLabel>Title</FormLabel>
                     <FormControl>
                       <Input type="text" placeholder="Enter title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="icon"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Icon</FormLabel>
+                    <FormControl>
+                      <IconPicker icon={field.value ?? ''} setIcon={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -306,16 +328,6 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                 <AccordionItem key={item.id} value={`instance-${index}`}>
                   <AccordionTrigger className="flex w-full items-center justify-between">
                     <div className="flex flex-1 flex-wrap items-center">
-                      <span>
-                        {props.getInstanceName(form.watch(`rows.${index}.instance.id`)) || `Instance ${index + 1}`}
-                      </span>
-                      {form.watch(`rows.${index}.parameter.denotation`) && (
-                        <Badge variant="outline" className="ml-2">
-                          {form.watch(`rows.${index}.parameter.denotation`)}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
                       <Button
                         type="button"
                         variant="ghost"
@@ -330,7 +342,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                           swapRangesAndTargets(index, index - 1)
                         }}
                       >
-                        <ChevronUp size={14} />
+                        <ArrowUp size={14} />
                       </Button>
                       <Button
                         type="button"
@@ -345,21 +357,29 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                           swapRangesAndTargets(index, index + 1)
                         }}
                       >
-                        <ChevronDown size={14} />
+                        <ArrowDown size={14} />
                       </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation() // prevents other open accordions from closing
-                          props.onRemoveRow(index)
-                          remove(index)
-                        }}
-                        className="h-6 w-6"
-                      >
-                        <TbTrash size={14} />
-                      </Button>
+                      <span>
+                        {props.getInstanceName(form.watch(`rows.${index}.instance.id`)) || `Instance ${index + 1}`}
+                      </span>
+                      {form.watch(`rows.${index}.parameter.denotation`) && (
+                        <Badge variant="outline" className="ml-2">
+                          {form.watch(`rows.${index}.parameter.denotation`)}
+                        </Badge>
+                      )}
                     </div>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation() // prevents other open accordions from closing
+                        props.onRemoveRow(index)
+                        remove(index)
+                      }}
+                      className="mr-2 h-6 w-6"
+                    >
+                      <TbTrash size={14} />
+                    </Button>
                   </AccordionTrigger>
                   <AccordionContent className="w-full">
                     <div key={item.id} className="relative mb-4 rounded-lg border p-4">

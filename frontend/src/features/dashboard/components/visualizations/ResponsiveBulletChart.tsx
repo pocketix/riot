@@ -8,10 +8,12 @@ import { BulletCardConfig } from '@/schemas/dashboard/visualizations/BulletChart
 import { getColorBlindSchemeBullet } from './color-schemes/color-impaired'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { useLongPress } from '@uidotdev/usehooks'
+import { cn } from '@/lib/utils'
 
 export interface ResponsiveBulletProps {
   data: Datum
   rowConfig?: BulletCardConfig['rows'][number]
+  className?: string
   lastUpdated?: Date
   onElementClick?: (data: any, event: MouseEvent) => void
 }
@@ -41,7 +43,7 @@ const bulletMarker = (props: BulletMarkersItemProps) => {
   )
 }
 
-const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: ResponsiveBulletProps) => {
+const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick, className }: ResponsiveBulletProps) => {
   const { isDarkMode } = useDarkMode()
   const { getInstanceById, getParameterByIds } = useInstances()
   const { setDetailsSelectedDevice } = useDeviceDetail()
@@ -143,7 +145,7 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick }: 
     <>
       <div
         ref={chartRef}
-        className="h-full w-full select-none"
+        className={cn('h-full w-full select-none pb-1', className)}
         {...attrs}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}

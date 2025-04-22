@@ -102,7 +102,6 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
 
   const renderVisualization = () => {
     if (props.processedData.length === 0) {
-      console.log('No data available for the selected device and parameter.')
       return (
         <Skeleton className="h-[100px] w-full">
           <div className="flex h-full w-full flex-col items-center justify-center">
