@@ -68,6 +68,7 @@ type RelationalDatabaseClient interface {
 	PersistSDParameterSnapshot(snapshot dllModel.SDParameterSnapshot) sharedUtils.Result[sharedUtils.Pair[uint32, uint32]]
 	PersistVPLProgram(vplProgram dllModel.VPLProgram) sharedUtils.Result[dllModel.VPLProgram]
 	LoadVPLProgram(id uint32) sharedUtils.Result[dllModel.VPLProgram]
+	LoadVPLPrograms() sharedUtils.Result[[]dllModel.VPLProgram]
 	DeleteVPLProgram(id uint32) error
 }
 
@@ -722,6 +723,19 @@ func (r *relationalDatabaseClientImpl) LoadVPLProgram(id uint32) sharedUtils.Res
 	}
 
 	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProgram(vplProgramEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) LoadVPLPrograms() sharedUtils.Result[[]dllModel.VPLProgram] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	vplProgramEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.VPLProgramsEntity](r.db)
+
+	if vplProgramEntitiesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](vplProgramEntitiesLoadResult.GetError())
+	}
+
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(vplProgramEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelVplProgram))
 }
 
 func (r *relationalDatabaseClientImpl) DeleteVPLProgram(id uint32) error {

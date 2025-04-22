@@ -4,6 +4,8 @@ type VPLProgram struct {
 	ID               uint32            `json:"id"`
 	Name             string            `json:"name"`
 	Data             string            `json:"data"`
+	LastRun          *string           `json:"lastRun,omitempty"`
+	Enabled          bool              `json:"enabled"`
 	ReferencedValues map[string]string `json:"referencedValues"`
 }
 

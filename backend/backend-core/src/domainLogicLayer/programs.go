@@ -115,7 +115,7 @@ func PerformVPLValidityCheckRequest(input sharedModel.VPLInterpretSaveRequestBod
 }
 
 func ConvertSharedModelVPLProgramSaveToDLLModel(program sharedModel.VPLProgram) (dllModel.VPLProgram, error) {
-	var SDParameterSnapshotList []dllModel.SDParameterSnapshot
+	var SDParameterSnapshotLinkList []dllModel.VPLProgramSDSnapshotLink
 
 	databaseClient := dbClient.GetRelationalDatabaseClientInstance()
 
@@ -132,17 +132,35 @@ func ConvertSharedModelVPLProgramSaveToDLLModel(program sharedModel.VPLProgram) 
 			return parameter.Denotation == referencedValue
 		})
 
-		SDParameterSnapshotList = append(SDParameterSnapshotList, dllModel.SDParameterSnapshot{
-			SDInstance:  sdInstance.GetPayload().GetPayload().ID.GetPayload(),
-			SDParameter: parameter.GetPayload().ID.GetPayload(),
+		if parameter.IsEmpty() {
+			log.Printf("Save program failed: %s", errors.New("parameter not found"))
+			return dllModel.VPLProgram{}, errors.New("parameter not found")
+		}
+
+		SDParameterSnapshotLinkList = append(SDParameterSnapshotLinkList, dllModel.VPLProgramSDSnapshotLink{
+			ProgramID:   program.ID,
+			InstanceID:  sdInstance.GetPayload().GetPayload().ID.GetPayload(),
+			ParameterID: parameter.GetPayload().ID.GetPayload(),
 		})
+
+		// latestSnapshot := sharedUtils.FindFirst(sdInstance.GetPayload().GetPayload().ParameterSnapshots, func(snapshot dllModel.SDParameterSnapshot) bool {
+		// 	return snapshot.SDInstance == sdInstance.GetPayload().GetPayload().ID.GetPayload() && snapshot.SDParameter == parameter.GetPayload().ID.GetPayload()
+		// })
+
+		// if latestSnapshot.IsEmpty() {
+		// 	log.Printf("Save program failed: %s", errors.New("snapshot not found"))
+		// 	return dllModel.VPLProgram{}, errors.New("snapshot not found")
+		// }
+		// SDParameterSnapshotList = append(SDParameterSnapshotList, latestSnapshot.GetPayload())
 	}
 
 	return dllModel.VPLProgram{
 		ID:                   program.ID,
 		Name:                 program.Name,
 		Data:                 program.Data,
-		SDParameterSnapshots: SDParameterSnapshotList,
+		LastRun:              program.LastRun,
+		Enabled:              program.Enabled,
+		SDParameterSnapshots: SDParameterSnapshotLinkList,
 	}, nil
 }
 
@@ -441,6 +459,14 @@ func GetVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgram] {
 		return sharedUtils.NewFailureResult[graphQLModel.VPLProgram](loadProgramResult.GetError())
 	}
 	return sharedUtils.NewSuccessResult(dll2gql.ToGraphQLModelVPLProgram(loadProgramResult.GetPayload()))
+}
+
+func GetVPLPrograms() sharedUtils.Result[[]graphQLModel.VPLProgram] {
+	loadProgramsResult := dbClient.GetRelationalDatabaseClientInstance().LoadVPLPrograms()
+	if loadProgramsResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]graphQLModel.VPLProgram](loadProgramsResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(loadProgramsResult.GetPayload(), dll2gql.ToGraphQLModelVPLProgram))
 }
 
 func DeleteVPLProgram(id uint32) error {

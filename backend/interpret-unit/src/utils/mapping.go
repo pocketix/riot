@@ -6,6 +6,14 @@ import (
 	"github.com/pocketix/pocketix-go/src/models"
 )
 
+func ReferencedValue2StringMap(referencedValue map[string]models.ReferencedValue) map[string]string {
+	result := make(map[string]string)
+	for _, value := range referencedValue {
+		result[value.DeviceID] = value.ParameterName
+	}
+	return result
+}
+
 func SDParameterSnapshotToInterpretModel(snapshots []sharedModel.SDParameterSnapshotResponse) []models.ReferenceValueResponseFromBackend {
 	result := make([]models.ReferenceValueResponseFromBackend, 0)
 	for _, snapshot := range snapshots {
@@ -14,13 +22,13 @@ func SDParameterSnapshotToInterpretModel(snapshots []sharedModel.SDParameterSnap
 			SDType: models.SDType{
 				SDParameters: sharedUtils.Map(snapshot.SDType.SDParameters, func(sdParameter sharedModel.SDParameter) models.SDParameter {
 					return models.SDParameter{
-						// ParameterID: sdParameter.ParameterID,
+						ParameterID:         sdParameter.ParameterID,
 						ParameterDenotation: sdParameter.ParameterDenotation,
 					}
 				}),
 				SDCommands: sharedUtils.Map(snapshot.SDType.SDCommands, func(sdCommand sharedModel.SDCommand) models.SDCommand {
 					return models.SDCommand{
-						// CommandID: sdCommand.CommandID,
+						CommandID:         sdCommand.CommandID,
 						CommandDenotation: sdCommand.CommandDenotation,
 					}
 				}),

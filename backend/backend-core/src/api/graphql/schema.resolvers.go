@@ -319,6 +319,15 @@ func (r *queryResolver) SdCommandInvocations(ctx context.Context) ([]graphQLMode
 	return getSDCommandInvocationsResult.Unwrap()
 }
 
+func (r *queryResolver) VplPrograms(ctx context.Context) ([]graphQLModel.VPLProgram, error) {
+	getVPLProgramsResult := domainLogicLayer.GetVPLPrograms()
+	if getVPLProgramsResult.IsFailure() {
+		log.Printf("Error occurred (get VPL programs): %s\n", getVPLProgramsResult.GetError().Error())
+		return nil, getVPLProgramsResult.GetError()
+	}
+	return getVPLProgramsResult.Unwrap()
+}
+
 func (r *queryResolver) VplProgram(ctx context.Context, id uint32) (graphQLModel.VPLProgram, error) {
 	getVPLProgramResult := domainLogicLayer.GetVPLProgram(id)
 	if getVPLProgramResult.IsFailure() {

@@ -8,13 +8,16 @@ import (
 
 func ToDBModelEntityVPLProgram(vplProgram dllModel.VPLProgram) dbModel.VPLProgramsEntity {
 	return dbModel.VPLProgramsEntity{
-		ID:   vplProgram.ID,
-		Name: vplProgram.Name,
-		Data: vplProgram.Data,
-		SDParameterSnapshots: sharedUtils.Map(vplProgram.SDParameterSnapshots, func(snapshot dllModel.SDParameterSnapshot) dbModel.SDParameterSnapshotEntity {
-			return dbModel.SDParameterSnapshotEntity{
-				SDInstanceID:  snapshot.SDInstance,
-				SDParameterID: snapshot.SDParameter,
+		ID:      vplProgram.ID,
+		Name:    vplProgram.Name,
+		Data:    vplProgram.Data,
+		LastRun: vplProgram.LastRun,
+		Enabled: vplProgram.Enabled,
+		SDParameterSnapshots: sharedUtils.Map(vplProgram.SDParameterSnapshots, func(link dllModel.VPLProgramSDSnapshotLink) dbModel.VPLProgramSDSnapshotLinkEntity {
+			return dbModel.VPLProgramSDSnapshotLinkEntity{
+				ProgramID:     link.ProgramID,
+				SDInstanceID:  link.InstanceID,
+				SDParameterID: link.ParameterID,
 			}
 		}),
 	}

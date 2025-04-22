@@ -8,13 +8,16 @@ import (
 
 func ToDLLModelVPLProgram(vplProgram graphQLModel.VPLProgram) dllModel.VPLProgram {
 	return dllModel.VPLProgram{
-		ID:   vplProgram.ID,
-		Name: vplProgram.Name,
-		Data: vplProgram.Data,
-		SDParameterSnapshots: sharedUtils.Map(vplProgram.SdParameterSnapshots, func(snapshot graphQLModel.SDParameterSnapshot) dllModel.SDParameterSnapshot {
-			return dllModel.SDParameterSnapshot{
-				SDInstance:  snapshot.InstanceID,
-				SDParameter: snapshot.ParameterID,
+		ID:      vplProgram.ID,
+		Name:    vplProgram.Name,
+		Data:    vplProgram.Data,
+		LastRun: vplProgram.LastRun,
+		Enabled: vplProgram.Enabled,
+		SDParameterSnapshots: sharedUtils.Map(vplProgram.SdParameterSnapshots, func(link graphQLModel.SDParameterSnapshot) dllModel.VPLProgramSDSnapshotLink {
+			return dllModel.VPLProgramSDSnapshotLink{
+				ProgramID:   vplProgram.ID,
+				InstanceID:  link.InstanceID,
+				ParameterID: link.ParameterID,
 			}
 		}),
 	}

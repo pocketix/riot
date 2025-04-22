@@ -79,7 +79,7 @@ type SDParameterSnapshot {
   number:      Float
   boolean:     Boolean
   updatedAt:   Date!
-  vplPrograms: [VPLProgram!]!
+  vplPrograms: [ID!]!
 }
 
 input SDCommandInvocationInput {
@@ -356,18 +356,20 @@ type VPLProgram {
     id: ID!
     name: String!
     data: JSON!
+    lastRun: String
+    enabled: Boolean!
     sdParameterSnapshots: [SDParameterSnapshot!]!
 }
 
 type VPLProgramExecutionResult {
     program: VPLProgram!
-    SDParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
-    SDCommandInvocations: [SDCommandInvocation!]!
-    ExecutionTime: String!
-    Enabled: Boolean!
-    Success: Boolean!
-    Error: String
-    ReasonForExecuting: String
+    sdParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
+    SdCommandInvocations: [SDCommandInvocation!]!
+    executionTime: String!
+    enabled: Boolean!
+    success: Boolean!
+    error: String
+    executionReason: String
 }
 
 # ----- Queries, mutations and subscriptions -----
@@ -389,6 +391,7 @@ type Query {
   sdCommands: [SDCommand!]! # Returns all SDCommands
   sdCommandInvocation(id: ID!): SDCommandInvocation! # Returns a specific SDCommandInvocation
   sdCommandInvocations: [SDCommandInvocation!]! # Returns all SDCommandInvocations
+  vplPrograms: [VPLProgram!]! # Returns all VPLPrograms
   vplProgram(id: ID!): VPLProgram! # Returns a specific VPLProgram by its ID
 }
 
