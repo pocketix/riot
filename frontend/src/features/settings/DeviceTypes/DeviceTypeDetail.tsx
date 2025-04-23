@@ -177,7 +177,7 @@ export default function DeviceTypeDetail() {
     denotation: '',
     icon: '',
     parameters: [] as { denotation: string; type: string; label?: string | null }[],
-    commands: [] as { name: string; payload?: { possibleValues: []; type: string } }[]
+    commands: [] as { name: string; payload?: string | undefined }[]
   })
 
   const {
@@ -199,7 +199,7 @@ export default function DeviceTypeDetail() {
     variables: { sdTypeId: sdTypeId! },
     skip: !sdTypeId || isAddingNew,
     onCompleted: (fetchedData) => {
-      if (fetchedData?.sdType) {
+      if (fetchedData?.sdType.commands) {
         const fetchedValues = {
           label: fetchedData.sdType.label || '',
           denotation: fetchedData.sdType.denotation || '',
@@ -212,10 +212,9 @@ export default function DeviceTypeDetail() {
             })) || [],
           commands: fetchedData.sdType.commands.map((c) => ({
             ...c,
-            payload: c.payload ? JSON.parse(c.payload) : { type: '', possibleValues: [] }
+            payload: c.payload || ''
           }))
         }
-
         setInitialValues(fetchedValues)
         reset(fetchedValues)
       }
@@ -291,7 +290,7 @@ export default function DeviceTypeDetail() {
               })),
               commands: data.commands.map((c: any) => ({
                 name: c.name,
-                payload: JSON.stringify(c.payload)
+                payload: c.payload
               }))
             }
           }
@@ -336,7 +335,7 @@ export default function DeviceTypeDetail() {
   }
 
   const addCommand = () => {
-    setValue('commands', [{ name: '', payload: { type: '', possibleValues: [] } }, ...getValues('commands')])
+    setValue('commands', [{ name: '', payload: '' }, ...getValues('commands')])
   }
 
   if (loading) return <Spinner />
@@ -572,8 +571,7 @@ export default function DeviceTypeDetail() {
               <ParamTable>
                 <ParamHeaderRow>
                   <ParamCell>Name</ParamCell>
-                  <ParamCell>Type</ParamCell>
-                  <ParamCell className="text-nowrap">Possible Values</ParamCell>
+                  <ParamCell>Payload</ParamCell>
                   {editMode && <ParamCell />}
                 </ParamHeaderRow>
 
@@ -581,28 +579,12 @@ export default function DeviceTypeDetail() {
                   editMode ? (
                     <ParamRow key={index}>
                       <ParamCell>
-                        <Input {...register(`commands.${index}.name`, { required: 'Required' })} placeholder="state" />
+                        <Input {...register(`commands.${index}.name`, { required: 'Required' })} placeholder="switch" />
                       </ParamCell>
                       <ParamCell>
                         <Input
-                          {...register(`commands.${index}.payload.type`, { required: 'Required' })}
-                          placeholder="string"
-                          className="w-max"
-                        />
-                      </ParamCell>
-                      <ParamCell>
-                        <Input
-                          {...register(`commands.${index}.payload.possibleValues`, {
-                            required: 'Required',
-                            setValueAs: (value) => {
-                              try {
-                                return JSON.parse(value)
-                              } catch {
-                                return []
-                              }
-                            }
-                          })}
-                          placeholder='["ON", "OFF"]'
+                          {...register(`commands.${index}.payload`, { required: 'Required' })}
+                          placeholder="JSON"
                           className="w-max"
                         />
                       </ParamCell>
@@ -623,8 +605,7 @@ export default function DeviceTypeDetail() {
                   ) : (
                     <ParamRow key={index}>
                       <ParamCell>{command.name}</ParamCell>
-                      <ParamCell>{command.payload?.type}</ParamCell>
-                      <ParamCell>{JSON.stringify(command.payload?.possibleValues)}</ParamCell>
+                      <ParamCell className="whitespace-pre-wrap break-words">{command.payload}</ParamCell>
                     </ParamRow>
                   )
                 )}
