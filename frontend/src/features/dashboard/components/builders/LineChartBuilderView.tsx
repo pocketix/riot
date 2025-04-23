@@ -68,7 +68,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
         yFormat: ' >-.1~f'
       },
       pointSize: 3,
-      instances: [{ uid: '', parameters: [] }],
+      instances: [{ uid: '', id: null, parameters: [] }],
       timeFrame: '24',
       aggregateMinutes: 45,
       decimalPlaces: 1,
@@ -377,8 +377,8 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                 control={form.control}
                 name="axisLeft.legend"
                 render={({ field }) => (
-                  <FormItem className="self-end">
-                    <FormLabel className="flex items-center gap-2">
+                  <FormItem>
+                    <FormLabel className="inline-flex gap-1">
                       Left Axis Legend
                       <Checkbox
                         checked={!!field.value}
@@ -399,8 +399,8 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                 control={form.control}
                 name="axisBottom.legend"
                 render={({ field }) => (
-                  <FormItem className="self-end">
-                    <FormLabel className="flex items-center gap-2">
+                  <FormItem>
+                    <FormLabel className="inline-flex gap-1">
                       Bottom Axis Legend
                       <Checkbox
                         checked={!!field.value}
@@ -441,8 +441,8 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                 control={form.control}
                 name="aggregateMinutes"
                 render={({ field }) => (
-                  <FormItem className="self-end">
-                    <FormLabel className="flex items-center gap-2">
+                  <FormItem>
+                    <FormLabel className="inline-flex gap-1">
                       Aggregated Minutes
                       <ResponsiveTooltip
                         content={

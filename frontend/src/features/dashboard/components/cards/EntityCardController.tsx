@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
 import { entityCardSchema, EntityCardConfig } from '@/schemas/dashboard/visualizations/EntityCardBuilderSchema'
-import { toast } from 'sonner'
 import { StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 import { Serie } from '@nivo/line'
 import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
@@ -36,7 +35,6 @@ export const EntityCardController = (props: EntityCardProps) => {
       } else {
         setError('Failed to parse configuration')
         console.error('Failed to parse configuration', parsedConfig.error)
-        toast.error('Failed to parse configuration')
         setIsLoading(false)
       }
     }

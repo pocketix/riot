@@ -42,6 +42,6 @@ export const MainGrid = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 80vh;
-  gap: 1rem;
+  gap: 0.5rem;
   height: calc(max-content + 100px);
 `

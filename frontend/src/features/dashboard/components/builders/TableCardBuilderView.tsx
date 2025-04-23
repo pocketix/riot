@@ -161,9 +161,9 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                 control={form.control}
                 name="decimalPlaces"
                 render={({ field }) => (
-                  <FormItem className="self-end">
+                  <FormItem>
                     <FormLabel>
-                      <div className="flex items-center gap-2">
+                      <div className="inline-flex gap-1">
                         Number of decimal places
                         <ResponsiveTooltip
                           content={

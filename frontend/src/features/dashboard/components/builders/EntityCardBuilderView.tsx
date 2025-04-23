@@ -5,7 +5,7 @@ import { IoAdd } from 'react-icons/io5'
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import { EntityCardConfig, entityCardSchema } from '@/schemas/dashboard/visualizations/EntityCardBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, FieldErrors } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Serie } from '@nivo/line'
@@ -18,10 +18,11 @@ import { ResponsiveEntityTable } from '../visualizations/ResponsiveEntityTable'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
 import { ArrowDown, ArrowUp, InfoIcon } from 'lucide-react'
 import { SdParameterType } from '@/generated/graphql'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
 import IconPicker from '@/ui/IconPicker'
+import { ValueSymbolPicker } from './components/value-symbol-picker'
 
 export interface EntityCardBuilderViewProps {
   config?: EntityCardConfig
@@ -34,8 +35,23 @@ export interface EntityCardBuilderViewProps {
 
 export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
   const tableRef = useRef<HTMLDivElement>(null)
+  const [openAccordions, setOpenAccordions] = useState<string[]>(props.config ? [''] : ['row-0'])
+
+  const handleSubmit = (values: EntityCardConfig) => {
+    const height = tableRef.current?.getBoundingClientRect().height || 0
+    props.onSubmit(values, height)
+  }
+
+  const handleError = (errors: FieldErrors<z.infer<typeof entityCardSchema>>) => {
+    if (errors.rows && Array.isArray(errors.rows)) {
+      const errorIndices = errors.rows
+        .map((rowError, rowIndex) => (rowError ? `row-${rowIndex}` : null))
+        .filter(Boolean) as string[]
+      setOpenAccordions(errorIndices)
+    }
+  }
+
   const form = useForm<z.infer<typeof entityCardSchema>>({
-    mode: 'onChange',
     resolver: zodResolver(entityCardSchema),
     defaultValues: props.config || {
       title: 'Entity Card',
@@ -74,10 +90,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
       <Card className="mt-4 h-fit w-full overflow-hidden p-2 pt-0 shadow-lg">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((values) => {
-              const height = tableRef.current?.getBoundingClientRect().height || 0
-              props.onSubmit(values, height)
-            })}
+            onSubmit={form.handleSubmit(handleSubmit, handleError)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -112,7 +125,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                 )}
               />
             </div>
-            <Accordion type="multiple" className="w-full" defaultValue={props.config ? [''] : ['row-0']}>
+            <Accordion type="multiple" className="w-full" value={openAccordions} onValueChange={setOpenAccordions}>
               {fields.map((field, index) => (
                 <AccordionItem key={`${field.id}-${index}`} value={`row-${index}`}>
                   <AccordionTrigger className="flex w-full items-center justify-between">
@@ -190,7 +203,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                               <SingleInstanceCombobox
                                 onValueChange={(value) => {
                                   field.onChange({ id: value.id, uid: value.uid })
-                                  form.resetField(`rows.${index}.parameter`)
+                                  form.setValue(`rows.${index}.parameter`, { id: null, denotation: '' })
                                 }}
                                 value={field.value.id}
                               />
@@ -210,7 +223,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                               <Select
                                 onValueChange={(value) => {
                                   field.onChange(value)
-                                  form.resetField(`rows.${index}.parameter`)
+                                  form.setValue(`rows.${index}.parameter`, { id: null, denotation: '' })
                                 }}
                                 value={field.value || ''}
                               >
@@ -291,8 +304,8 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                             control={form.control}
                             name={`rows.${index}.decimalPlaces`}
                             render={({ field }) => (
-                              <FormItem className="self-end">
-                                <FormLabel className="flex items-center gap-1">
+                              <FormItem>
+                                <FormLabel className="inline-flex gap-1">
                                   Decimal Places
                                   <ResponsiveTooltip
                                     content={
@@ -335,8 +348,8 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                           control={form.control}
                           name={`rows.${index}.valueSymbol`}
                           render={({ field }) => (
-                            <FormItem className="self-end">
-                              <FormLabel className="flex items-center gap-1">
+                            <FormItem className="space-y-2">
+                              <FormLabel className="inline-flex gap-1">
                                 Value Symbol
                                 <ResponsiveTooltip
                                   content={
@@ -346,19 +359,11 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                                     </div>
                                   }
                                 >
-                                  <InfoIcon className="h-4 w-4 text-muted-foreground" />
+                                  <InfoIcon className="h-3.5 w-3.5 text-muted-foreground" />
                                 </ResponsiveTooltip>
                               </FormLabel>
                               <FormControl>
-                                <Input
-                                  type="text"
-                                  value={field.value}
-                                  onChange={(value) => {
-                                    field.onChange(value)
-                                  }}
-                                  placeholder="°C"
-                                  className="w-full"
-                                />
+                                <ValueSymbolPicker value={field.value!} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -389,7 +394,13 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
               <IoAdd /> Add Row
             </Button>
 
-            <Button type="submit" className="ml-auto mt-4 flex">
+            <Button
+              type="submit"
+              className="ml-auto mt-4 flex"
+              onClick={() => {
+                console.log('Form errors', form.formState.errors)
+              }}
+            >
               Submit
             </Button>
           </form>

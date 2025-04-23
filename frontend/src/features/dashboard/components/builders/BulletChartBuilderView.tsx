@@ -23,17 +23,10 @@ import { ResponsiveTooltip } from '@/components/responsive-tooltip'
 import { ArrowDown, ArrowUp, InfoIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Parameter } from '@/context/InstancesContext'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
 import { BulletRow } from '../cards/components/BulletRow'
 import { SdParameterType } from '@/generated/graphql'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
+import { ResponsiveDialog } from '../cards/components/ResponsiveDialog'
 import IconPicker from '@/ui/IconPicker'
 
 export interface BulletChartBuilderViewProps {
@@ -78,7 +71,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
       icon: '',
       rows: [
         {
-          instance: { uid: '' },
+          instance: { uid: '', id: null },
           parameter: { denotation: '', id: null },
           config: {
             name: '',
@@ -626,7 +619,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                               name={`rows.${index}.config.reverse`}
                               render={({ field }) => (
                                 <FormItem className="flex h-full flex-col">
-                                  <FormLabel className="flex items-center gap-2">
+                                  <FormLabel className="inline-flex gap-1">
                                     <p>Reverse Chart</p>
                                     <ResponsiveTooltip
                                       content={
@@ -870,40 +863,23 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
           </form>
         </Form>
       </Card>
-
-      <Dialog
-        open={props.smartRangeDialog.open}
-        onOpenChange={(open) =>
+      <ResponsiveDialog
+        externalOpen={props.smartRangeDialog.open}
+        onExternalOpenChange={(open) =>
           props.onSmartRangeDialogChange({
             ...props.smartRangeDialog,
             open
           })
         }
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Generate Ranges and Target</DialogTitle>
-            <DialogDescription>
-              Would you like to automatically generate ranges and targets based on historical data?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => props.onSmartRangeDialogChange({ open: false, rowIndex: null })}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (props.smartRangeDialog.rowIndex !== null) {
-                  handleGenerateRangesAndTarget(props.smartRangeDialog.rowIndex)
-                }
-                props.onSmartRangeDialogChange({ open: false, rowIndex: null })
-              }}
-            >
-              Generate
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title="Generate Ranges and Target"
+        description="Would you like to automatically generate ranges and targets based on historical data? You can always change them later."
+        onSuccess={() => {
+          if (props.smartRangeDialog.rowIndex !== null) {
+            handleGenerateRangesAndTarget(props.smartRangeDialog.rowIndex)
+          }
+          props.onSmartRangeDialogChange({ open: false, rowIndex: null })
+        }}
+      />
     </div>
   )
 }

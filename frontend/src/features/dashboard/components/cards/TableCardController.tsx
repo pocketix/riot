@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
 import { TableCardConfig, tableCardSchema } from '@/schemas/dashboard/visualizations/TableBuilderSchema'
-import { toast } from 'sonner'
 import { SensorField, StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
@@ -36,7 +35,6 @@ export const TableCardController = (props: TableCardProps) => {
         setTableConfig(parsedConfig.data)
       } else {
         setError('Failed to parse configuration')
-        toast.error('Failed to parse configuration')
         setIsLoading(false)
       }
     }
