@@ -4,13 +4,13 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { TbTrash } from 'react-icons/tb'
-import { DeleteAlertDialog } from './cards/components/DeleteAlertDialog'
+import { ResponsiveAlertDialog } from './cards/components/ResponsiveAlertDialog'
 import { AddEditTabDialog } from './AddEditTabDialog'
 import { Tab } from '@/schemas/dashboard/DashboardSchema'
 import { AddTabFormSchemaType } from '@/schemas/dashboard/AddTabSchema'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
 
-interface ResponsiveTabsWithScrollProps {
+interface ResponsiveTabsProps {
   tabs: Tab[]
   activeTabId: number
   editMode: boolean
@@ -20,7 +20,7 @@ interface ResponsiveTabsWithScrollProps {
   onAddTab: (values: AddTabFormSchemaType) => void
 }
 
-export function ResponsiveTabsWithScroll(props: ResponsiveTabsWithScrollProps) {
+export function ResponsiveTabs(props: ResponsiveTabsProps) {
   useEffect(() => {
     if (!props.tabs.some((tab) => tab.id === props.activeTabId)) {
       props.onChangeTab(props.tabs[0].id)
@@ -47,7 +47,7 @@ export function ResponsiveTabsWithScroll(props: ResponsiveTabsWithScrollProps) {
                     {props.editMode && (
                       <div className="ml-1 flex items-center">
                         {props.tabs.length > 1 && (
-                          <DeleteAlertDialog
+                          <ResponsiveAlertDialog
                             onSuccess={() => props.onDeleteTab(tab.id)}
                             content={
                               <p className="text-center font-semibold text-destructive">
@@ -62,7 +62,7 @@ export function ResponsiveTabsWithScroll(props: ResponsiveTabsWithScrollProps) {
                             >
                               <TbTrash className="h-3 w-3" />
                             </Button>
-                          </DeleteAlertDialog>
+                          </ResponsiveAlertDialog>
                         )}
                         <AddEditTabDialog initialTab={tab} onEditTab={props.onEditTab} />
                       </div>

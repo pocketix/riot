@@ -1,12 +1,11 @@
-import { ResponsiveLine } from '@nivo/line'
 import { Card } from '@/components/ui/card'
-import { useDarkMode } from '@/context/DarkModeContext'
-import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
 import { SdParameterType } from '@/generated/graphql'
-import { Switch } from '@/components/ui/switch'
 import { EntityCardConfig } from '@/schemas/dashboard/visualizations/EntityCardBuilderSchema'
 import { ResponsiveLineChart } from '../visualizations/ResponsiveLineChart'
 import { ResponsiveBulletChart } from '../visualizations/ResponsiveBulletChart'
+import { SwitchVisualization } from '../visualizations/SwitchVisualization'
+import { ResponsiveEntityTable } from '../visualizations/ResponsiveEntityTable'
+import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
 
 export interface VisualizationGalleryProps {
   setSelectedVisualization: (Visualization: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard') => void
@@ -14,8 +13,6 @@ export interface VisualizationGalleryProps {
 }
 
 export function VisualizationGallery({ setSelectedVisualization, selectedVisualization }: VisualizationGalleryProps) {
-  const { isDarkMode } = useDarkMode()
-
   const sparkLineData = [
     {
       x: new Date(new Date(new Date().getTime() - 1000 * 60 * 60).toISOString().split('.')[0] + 'Z'),
@@ -176,6 +173,7 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
       }
     ]
   }
+  const IconComponent = getCustomizableIcon('TbBulb')
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-2">
@@ -232,58 +230,33 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
         </table>
       </Card>
       <Card
-        className={`${selectedVisualization === 'entitycard' ? 'border-2 border-blue-500' : 'border-2'} box-border h-fit cursor-pointer p-1`}
+        className={`${selectedVisualization === 'entitycard' ? 'border-2 border-blue-500' : 'border-2'} relative box-border h-fit cursor-pointer p-1`}
         onClick={() => setSelectedVisualization('entitycard')}
       >
-        <table className="m-1 h-fit w-full">
-          <thead className="border-b-[2px]">
-            <tr>
-              <th className="text-md text-left">Area</th>
-              <th className="text-md text-center"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {entityCardConfig.rows.map((row, rowIndex) => (
-              <tr key={rowIndex} className="mt-2 h-[24px]">
-                <td className="text-sm">{row.name}</td>
-                {row.visualization === 'sparkline' && (
-                  <td className="h-[24px] w-[75px] text-center text-sm">
-                    <ResponsiveLine
-                      data={[
-                        {
-                          id: 'temperature',
-                          data: sparkLineData
-                        }
-                      ]}
-                      margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-                      xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%S.%LZ' }}
-                      yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: true, reverse: false }}
-                      animate={false}
-                      pointSize={0}
-                      axisBottom={null}
-                      axisLeft={null}
-                      curve="cardinal"
-                      lineWidth={4}
-                      enableGridX={false}
-                      enableGridY={false}
-                      useMesh={false}
-                      theme={isDarkMode ? darkTheme : lightTheme}
-                    />
-                  </td>
-                )}
-                {row.visualization === 'immediate' && <td className="text-center text-sm">23</td>}
-                {row.visualization === 'switch' && (
-                  <td className="text-center text-sm">
-                    <Switch checked={true} />
-                  </td>
-                )}
-                {row.visualization !== 'sparkline' &&
-                  row.visualization !== 'immediate' &&
-                  row.visualization !== 'switch' && <td className="text-center text-sm">{row.visualization}</td>}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="absolute inset-0 z-10" />
+        <ResponsiveEntityTable
+          config={{
+            ...entityCardConfig,
+            rows: entityCardConfig.rows.map((row) => ({
+              ...row,
+              instance: {
+                uid: row.instance.uid,
+                id: row.instance.id
+              },
+              parameter: {
+                id: row.parameter.id,
+                denotation: row.parameter.denotation
+              }
+            }))
+          }}
+          sparklineData={dataLine}
+        />
+      </Card>
+      <Card
+        className={`${selectedVisualization === 'switch' ? 'border-2 border-blue-500' : 'border-2'} box-border h-fit cursor-pointer p-1`}
+        onClick={() => setSelectedVisualization('switch')}
+      >
+        <SwitchVisualization isOn={true} percentage={50} title="Spotlight" icon={IconComponent} />
       </Card>
     </div>
   )

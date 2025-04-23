@@ -23,14 +23,18 @@ import { Button } from '@/components/ui/button'
 import { useState, useRef, useEffect, ReactNode } from 'react'
 import { useMediaQuery } from '@uidotdev/usehooks'
 
-export interface DeleteAlertDialogProps {
+export interface ResponsiveAlertDialogProps {
   onSuccess: () => void
   children?: ReactNode
   content?: ReactNode
+  externalOpen?: boolean
+  onExternalOpenChange?: (open: boolean) => void
 }
 
-export function DeleteAlertDialog(props: DeleteAlertDialogProps) {
-  const [open, setOpen] = useState(false)
+export function ResponsiveAlertDialog(props: ResponsiveAlertDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = props.externalOpen !== undefined ? props.externalOpen : internalOpen
+  const setOpen = props.onExternalOpenChange ?? setInternalOpen
   const dialogRef = useRef<HTMLDivElement>(null)
   const isDesktop = useMediaQuery('(min-width: 768px)')
 

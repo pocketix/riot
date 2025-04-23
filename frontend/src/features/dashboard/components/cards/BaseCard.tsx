@@ -2,7 +2,7 @@ import { Container, DeleteEditContainer, DragHandle, OverlayContainer } from '@/
 import { AiOutlineDrag } from 'react-icons/ai'
 import styled from 'styled-components'
 import { useEffect, useMemo, useState } from 'react'
-import { DeleteAlertDialog } from './components/DeleteAlertDialog'
+import { ResponsiveAlertDialog } from './components/ResponsiveAlertDialog'
 import { AccessibilityContainer } from './components/AccessibilityContainer'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CardEditDialog } from '../editors/CardEditDialog'
@@ -68,7 +68,7 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
         )}
         {props.editModeEnabled && (
           <DeleteEditContainer>
-            <DeleteAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID, props.breakPoint)} />
+            <ResponsiveAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID, props.breakPoint)} />
           </DeleteEditContainer>
         )}
       </>
@@ -89,13 +89,15 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
             onSave={props.handleSaveEdit}
             visualizationType={props.visualizationType}
           />
-          <DeleteAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID, props.breakPoint)} />
+          <ResponsiveAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID, props.breakPoint)} />
         </DeleteEditContainer>
       )}
-      <div className="flex items-center gap-1">
-        {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
-        {props.cardTitle && <span className="pl-2 pt-2 font-semibold">{props.cardTitle}</span>}
-      </div>
+      {props.cardTitle && (
+        <div className="flex items-center gap-1 px-1 pt-1">
+          {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
+          {props.cardTitle && <span className="font-semibold">{props.cardTitle}</span>}
+        </div>
+      )}
 
       <ChartContainer $editModeEnabled={props.editModeEnabled}>{props.children}</ChartContainer>
 

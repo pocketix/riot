@@ -8,15 +8,13 @@ export function useChartLongPress(
 ) {
   const pressTimer = useRef<NodeJS.Timeout | null>(null)
   const moved = useRef(false)
-  const beginX = useRef(0)
-  const beginY = useRef(0)
+  const begin = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
 
   // nivo needs this style of handlers => PointTouchHandler = (point: Point, event: React.TouchEvent) => void
   const handleTouchStart = (_chartPoint: Point, touchEvent: React.TouchEvent) => {
     moved.current = false // reset
     const touch = touchEvent.touches[0]
-    beginX.current = touch.clientX
-    beginY.current = touch.clientY
+    begin.current = { x: touch.clientX, y: touch.clientY }
 
     // Schedule the long press function immediately
     pressTimer.current = setTimeout(() => {
@@ -28,8 +26,8 @@ export function useChartLongPress(
 
   const handleTouchMove = (_chartPoint: Point, touchEvent: React.TouchEvent) => {
     const touch = touchEvent.touches[0]
-    const dx = Math.abs(touch.clientX - beginX.current)
-    const dy = Math.abs(touch.clientY - beginY.current)
+    const dx = Math.abs(touch.clientX - begin.current.x)
+    const dy = Math.abs(touch.clientY - begin.current.y)
     if (dx > moveThreshold || dy > moveThreshold) {
       // if the user reaches the deltas, cancel
       moved.current = true
