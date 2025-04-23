@@ -20,5 +20,16 @@ func ToDBModelEntitySDType(sdType dllModel.SDType) dbModel.SDTypeEntity {
 				Type:       string(sdParameter.Type),
 			}
 		}),
+		Commands: sharedUtils.Map(sdType.Commands, ToDBModelSDCommand),
+	}
+}
+
+func ToDBModelSDCommand(cmd dllModel.SDCommand) dbModel.SDCommandEntity {
+	return dbModel.SDCommandEntity{
+		ID:       cmd.ID,
+		SDTypeID: cmd.SdTypeID,
+		Name:     cmd.Name,
+		Type:     "default",
+		Payload:  cmd.Payload,
 	}
 }
