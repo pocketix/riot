@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useMutation, useQuery } from '@apollo/client'
+import { useMutation, useQuery, useLazyQuery } from '@apollo/client'
 import {
   CREATE_VPL_PROGRAM,
   UPDATE_VPL_PROGRAM,
   DELETE_VPL_PROGRAM
 } from '@/graphql/automations/Mutations'
-import { GET_VPL_PROGRAMS } from '@/graphql/automations/Queries'
+import { GET_VPL_PROGRAMS, GET_VPL_PROGRAM } from '@/graphql/automations/Queries'
 import { toast } from 'sonner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -31,8 +31,37 @@ export default function AutomationsEditor() {
   // GraphQL query to fetch all VPL programs
   const { data: programsData, loading: programsLoading, refetch: refetchPrograms } = useQuery(GET_VPL_PROGRAMS)
 
-  // State for tracking loading state
-  const [loadingProgram, setLoadingProgram] = useState(false)
+  // GraphQL lazy query for loading a specific program
+  const [getVPLProgram, { loading: loadingProgram }] = useLazyQuery(GET_VPL_PROGRAM, {
+    onCompleted: (data) => {
+      if (data?.vplProgram) {
+        const program = data.vplProgram
+        setProgramName(program.name)
+
+        // Set the program data in the editor using the updateProgram method
+        const editor = editorRef.current as any
+        if (editor && program.data) {
+          try {
+            const programData = JSON.parse(program.data)
+            // For custom lit elements, we need to directly call the method
+            // without any type checking
+            console.log('Attempting to update program with data:', programData)
+
+            // Direct method call - this is the most reliable way to work with custom elements
+            editor.updateProgram(programData)
+            console.log('Program updated successfully')
+            toast.success(`Program "${program.name}" loaded successfully`)
+          } catch (error) {
+            console.error('Error parsing program data:', error)
+            toast.error('Failed to parse program data')
+          }
+        }
+      }
+    },
+    onError: (error) => {
+      toast.error(`Failed to load program: ${error.message}`)
+    }
+  })
 
   // GraphQL mutations
   const [createVPLProgram] = useMutation(CREATE_VPL_PROGRAM)
@@ -50,34 +79,6 @@ export default function AutomationsEditor() {
       document.body.removeChild(script)
     }
   }, [])
-
-  // Initialize the VPL editor when it's mounted
-  useEffect(() => {
-    const editor = editorRef.current as any
-    if (!editor) return
-
-    // Use setTimeout to ensure the element is fully initialized and connected
-    setTimeout(() => {
-      try {
-        // Check if updateProgram method is available (should be attached in connectedCallback)
-        if (typeof editor.updateProgram === 'function') {
-          // Use the exposed updateProgram method
-          editor.updateProgram({})
-          console.log('VPL editor initialized with empty program using updateProgram method')
-        } else if (typeof editor.setProgram === 'function') {
-          // Try the setProgram method as an alternative
-          editor.setProgram({})
-          console.log('VPL editor initialized with empty program using setProgram method')
-        } else {
-          // Fallback to direct property assignment
-          editor.program = {}
-          console.log('VPL editor initialized with empty program using property assignment')
-        }
-      } catch (error) {
-        console.error('Error initializing VPL editor:', error)
-      }
-    }, 1000) // Longer delay to ensure element is fully connected
-  }, [editorRef.current])
 
   // Set up event listener for program changes
   useEffect(() => {
@@ -157,186 +158,30 @@ export default function AutomationsEditor() {
     }
   }
 
-  // Helper function to force update on VPL editor and its internal components
-  const forceVPLEditorUpdate = (editor: any) => {
-    if (!editor) return
-
-    console.log('Forcing update on VPL editor and its internal components')
-
-    // Try to request update on the editor itself
-    if (typeof editor.requestUpdate === 'function') {
-      editor.requestUpdate()
-    }
-
-    // Try to access and update internal components
-    try {
-      // Access the shadow root if available
-      if (editor.shadowRoot) {
-        // Try to find and update the graphical editor
-        const graphicalEditor = editor.shadowRoot.querySelector('graphical-editor')
-        if (graphicalEditor) {
-          if (typeof graphicalEditor.requestUpdate === 'function') {
-            graphicalEditor.requestUpdate()
-            console.log('Requested update on graphical editor')
-          }
-
-          // Try to directly update the program in the graphical editor
-          if (editor.program) {
-            try {
-              graphicalEditor.program = editor.program
-              console.log('Directly set program on graphical editor')
-            } catch (geError) {
-              console.error('Error setting program on graphical editor:', geError)
-            }
-          }
-        }
-
-        // Try to find and update the text editor
-        const textEditor = editor.shadowRoot.querySelector('text-editor')
-        if (textEditor) {
-          if (typeof textEditor.requestUpdate === 'function') {
-            textEditor.requestUpdate()
-            console.log('Requested update on text editor')
-          }
-
-          // Try to directly update the text in the text editor
-          if (editor.program) {
-            try {
-              textEditor.textEditorValue = JSON.stringify(editor.program, null, ' ')
-              console.log('Directly set text on text editor')
-            } catch (teError) {
-              console.error('Error setting text on text editor:', teError)
-            }
-          }
-        }
-
-        // Try to find and update any blocks in the graphical editor
-        const blocks = editor.shadowRoot.querySelectorAll('ge-block')
-        if (blocks && blocks.length > 0) {
-          console.log(`Found ${blocks.length} blocks to update`)
-          blocks.forEach((block: any) => {
-            if (typeof block.requestUpdate === 'function') {
-              block.requestUpdate()
-            }
-          })
-        }
-      }
-    } catch (error) {
-      console.error('Error updating internal components:', error)
-    }
-  }
-
-  // Load a program directly from the programs list
+  // Load a program by ID
   const handleLoadProgram = () => {
     if (!selectedProgram) {
       toast.error('Please select a program to load')
       return
     }
 
-    // Set loading state
-    setLoadingProgram(true)
-
-    // Find the selected program in the list
+    // Find the selected program in the list to get its ID
     const selectedProgramData = programsData?.vplPrograms?.find(
       (program: VPLProgram) => program.name === selectedProgram
     )
 
     if (!selectedProgramData) {
       toast.error(`Program "${selectedProgram}" not found`)
-      setLoadingProgram(false)
       return
     }
     console.log('Selected program data:', selectedProgramData)
 
-    // Set the program name
-    setProgramName(selectedProgramData.name)
-
-    // Get the editor reference
-    const editor = editorRef.current as any
-    if (editor && selectedProgramData.data) {
-      try {
-        // Parse the program data
-        const programData = JSON.parse(selectedProgramData.data)
-        console.log('Attempting to load program with data:', programData)
-
-        // Use setTimeout to ensure the element is fully initialized
-        setTimeout(() => {
-          try {
-            // Try to use the updateProgram method first
-            if (typeof editor.updateProgram === 'function') {
-              editor.updateProgram(programData)
-              console.log('Program loaded successfully using updateProgram method')
-            } else if (typeof editor.setProgram === 'function') {
-              editor.setProgram(programData)
-              console.log('Program loaded successfully using setProgram method')
-            } else {
-              // Fallback to direct property assignment
-              editor.program = programData
-              console.log('Program loaded successfully using property assignment')
-
-              // Try to force a render update
-              if (typeof editor.requestUpdate === 'function') {
-                editor.requestUpdate()
-                console.log('Requested update on VPL editor')
-              }
-            }
-
-            // Dispatch a custom event to notify the editor that the program has changed
-            // This might trigger internal updates in the VPL editor
-            try {
-              const changeEvent = new CustomEvent('change', {
-                detail: programData,
-                bubbles: true,
-                composed: true
-              })
-              editor.dispatchEvent(changeEvent)
-              console.log('Dispatched change event to VPL editor')
-            } catch (eventError) {
-              console.error('Error dispatching change event:', eventError)
-            }
-
-            // Force update on the VPL editor and its internal components
-            forceVPLEditorUpdate(editor)
-
-            // Try to simulate a view change to trigger internal updates
-            try {
-              // First switch to text editor view
-              const teEvent = new CustomEvent('editor-view-changed', {
-                detail: { newView: 'te' },
-                bubbles: true,
-                composed: true
-              })
-              editor.dispatchEvent(teEvent)
-
-              // Then switch back to graphical editor or split view after a short delay
-              setTimeout(() => {
-                const geEvent = new CustomEvent('editor-view-changed', {
-                  detail: { newView: 'split' },
-                  bubbles: true,
-                  composed: true
-                })
-                editor.dispatchEvent(geEvent)
-                console.log('Simulated view change to refresh editor')
-              }, 100)
-            } catch (viewError) {
-              console.error('Error simulating view change:', viewError)
-            }
-            toast.success(`Program "${selectedProgramData.name}" loaded successfully`)
-          } catch (error) {
-            console.error('Error setting program property:', error)
-            toast.error('Failed to load program')
-          } finally {
-            setLoadingProgram(false)
-          }
-        }, 100) // Small delay to ensure the element is ready
-      } catch (error) {
-        console.error('Error parsing program data:', error)
-        toast.error('Failed to parse program data')
-        setLoadingProgram(false)
+    // Load the program by ID
+    getVPLProgram({
+      variables: {
+        id: selectedProgramData.id
       }
-    } else {
-      setLoadingProgram(false)
-    }
+    })
   }
 
   // Update the current program
@@ -433,29 +278,13 @@ export default function AutomationsEditor() {
         // Clear the editor
         const editor = editorRef.current as any
         if (editor) {
-          // For custom lit elements, we need to directly set the property
+          // For custom lit elements, we need to directly call the method
+          // without any type checking
           console.log('Attempting to clear program')
 
-          // Use setTimeout to ensure the element is fully initialized
-          setTimeout(() => {
-            try {
-              // Try to use the updateProgram method first
-              if (typeof editor.updateProgram === 'function') {
-                editor.updateProgram(null)
-                console.log('Program cleared successfully using updateProgram method')
-              } else if (typeof editor.setProgram === 'function') {
-                editor.setProgram(null)
-                console.log('Program cleared successfully using setProgram method')
-              } else {
-                // Fallback to direct property assignment
-                editor.program = null
-                console.log('Program cleared successfully using property assignment')
-              }
-            } catch (error) {
-              console.error('Error clearing program:', error)
-              toast.error('Failed to clear program')
-            }
-          }, 100) // Small delay to ensure the element is ready
+          // Direct method call - this is the most reliable way to work with custom elements
+          editor.updateProgram(null)
+          console.log('Program cleared successfully')
         }
 
         // Refresh the programs list
