@@ -65,17 +65,10 @@ type MutationResolver interface {
 	UpdateUserConfig(ctx context.Context, userID uint32, input graphQLModel.UserConfigInput) (graphQLModel.UserConfig, error)
 	DeleteUserConfig(ctx context.Context, userID uint32) (bool, error)
 	CreateSDCommand(ctx context.Context, input graphQLModel.SDCommandInput) (graphQLModel.SDCommand, error)
-	UpdateSDCommand(ctx context.Context, id uint32, name *string, payload *string) (graphQLModel.SDCommand, error)
+	UpdateSDCommand(ctx context.Context, id uint32, name *string, description *string) (graphQLModel.SDCommand, error)
 	DeleteSDCommand(ctx context.Context, id uint32) (bool, error)
 	CreateSDCommandInvocation(ctx context.Context, input graphQLModel.SDCommandInvocationInput) (graphQLModel.SDCommandInvocation, error)
 	InvokeSDCommand(ctx context.Context, id uint32) (bool, error)
-	CreateVPLProgram(ctx context.Context, name string, data string) (graphQLModel.VPLProgram, error)
-	UpdateVPLProgram(ctx context.Context, id uint32, name string, data string) (graphQLModel.VPLProgram, error)
-	DeleteVPLProgram(ctx context.Context, id uint32) (bool, error)
-	ExecuteVPLProgram(ctx context.Context, id uint32) (graphQLModel.VPLProgramExecutionResult, error)
-	CreateVPLProcedure(ctx context.Context, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error)
-	UpdateVPLProcedure(ctx context.Context, id uint32, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error)
-	DeleteVPLProcedure(ctx context.Context, id uint32) (bool, error)
 }
 type QueryResolver interface {
 	SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error)
@@ -94,10 +87,6 @@ type QueryResolver interface {
 	SdCommands(ctx context.Context) ([]graphQLModel.SDCommand, error)
 	SdCommandInvocation(ctx context.Context, id uint32) (graphQLModel.SDCommandInvocation, error)
 	SdCommandInvocations(ctx context.Context) ([]graphQLModel.SDCommandInvocation, error)
-	VplPrograms(ctx context.Context) ([]graphQLModel.VPLProgram, error)
-	VplProgram(ctx context.Context, id uint32) (graphQLModel.VPLProgram, error)
-	VplProcedure(ctx context.Context, id uint32) (graphQLModel.VPLProcedure, error)
-	VplProcedures(ctx context.Context) ([]graphQLModel.VPLProcedure, error)
 }
 type SubscriptionResolver interface {
 	OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error)
@@ -135,7 +124,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputKPIDefinitionInput,
 		ec.unmarshalInputKPINodeInput,
 		ec.unmarshalInputSDCommandInput,
-		ec.unmarshalInputSDCommandInputWithoutType,
 		ec.unmarshalInputSDCommandInvocationInput,
 		ec.unmarshalInputSDInstanceGroupInput,
 		ec.unmarshalInputSDInstanceUpdateInput,
@@ -146,7 +134,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSimpleSensors,
 		ec.unmarshalInputStatisticsInput,
 		ec.unmarshalInputUserConfigInput,
-		ec.unmarshalInputVPLProcedureInput,
 	)
 	first := true
 
@@ -283,7 +270,6 @@ type SDType {
   label: String
   icon: String
   parameters: [SDParameter!]!
-  commands: [SDCommand!]!
 }
 
 input SDParameterInput {
@@ -297,24 +283,18 @@ input SDTypeInput {
   label: String
   icon: String
   parameters: [SDParameterInput!]!
-  commands: [SDCommandInputWithoutType!]
-}
-
-input SDCommandInputWithoutType {
-  name: String!
-  payload: String
 }
 
 type SDCommand {
   id: ID!
   name: String!
-  payload: String
+  description: String
   sdTypeId: ID!
 }
 
 input SDCommandInput {
   name: String!
-  payload: String
+  description: String
   sdTypeId: ID!
 }
 
@@ -349,7 +329,6 @@ type SDParameterSnapshot {
   number:      Float
   boolean:     Boolean
   updatedAt:   Date!
-  vplPrograms: [ID!]!
 }
 
 input SDCommandInvocationInput {
@@ -620,44 +599,6 @@ input UserConfigInput {
   config: JSON!
 }
 
-# ----- VPL Programs -----
-
-type VPLProgram {
-    id: ID!
-    name: String!
-    data: JSON!
-    lastRun: String
-    enabled: Boolean!
-    sdParameterSnapshots: [SDParameterSnapshot!]!
-}
-
-type VPLProgramExecutionResult {
-    program: VPLProgram!
-    sdParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
-    SdCommandInvocations: [SDCommandInvocation!]!
-    executionTime: String!
-    enabled: Boolean!
-    success: Boolean!
-    error: String
-    executionReason: String
-}
-
-# ----- VPL Procedures -----
-
-type VPLProcedure {
-
-    id: ID!
-    name: String!
-    data: JSON!
-    createdAt: Date!
-    updatedAt: Date!
-}
-
-input VPLProcedureInput {
-    name: String!
-    data: JSON!
-}
-
 # ----- Queries, mutations and subscriptions -----
 
 type Query {
@@ -677,10 +618,6 @@ type Query {
   sdCommands: [SDCommand!]! # Returns all SDCommands
   sdCommandInvocation(id: ID!): SDCommandInvocation! # Returns a specific SDCommandInvocation
   sdCommandInvocations: [SDCommandInvocation!]! # Returns all SDCommandInvocations
-  vplPrograms: [VPLProgram!]! # Returns all VPLPrograms
-  vplProgram(id: ID!): VPLProgram! # Returns a specific VPLProgram by its ID
-  vplProcedure(id: ID!): VPLProcedure! # Returns a specific VPLProcedure by its ID
-  vplProcedures: [VPLProcedure!]! # Returns all VPLProcedures
 }
 
 type Mutation {
@@ -698,17 +635,10 @@ type Mutation {
   updateUserConfig(userId: ID!, input: UserConfigInput!): UserConfig!
   deleteUserConfig(userId: ID!): Boolean!
   createSDCommand(input: SDCommandInput!): SDCommand! # Creating a command
-  updateSDCommand(id: ID!, name: String, payload: String): SDCommand! # Updating a command
+  updateSDCommand(id: ID!, name: String, description: String): SDCommand! # Updating a command
   deleteSDCommand(id: ID!): Boolean! # Deleting a command
   createSDCommandInvocation(input: SDCommandInvocationInput!): SDCommandInvocation! # Creating an invocation
   invokeSDCommand(id: ID!): Boolean! # Starting an existing invocation
-  createVPLProgram(name: String!, data: JSON!): VPLProgram!
-  updateVPLProgram(id: ID!, name: String!, data: JSON!): VPLProgram!
-  deleteVPLProgram(id: ID!): Boolean!
-  executeVPLProgram(id: ID!): VPLProgramExecutionResult!
-  createVPLProcedure(input: VPLProcedureInput!): VPLProcedure! # Creating a procedure
-  updateVPLProcedure(id: ID!, input: VPLProcedureInput!): VPLProcedure! # Updating a procedure
-  deleteVPLProcedure(id: ID!): Boolean! # Deleting a procedure
 }
 
 type Subscription {
@@ -865,85 +795,6 @@ func (ec *executionContext) field_Mutation_createSDType_argsInput(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_createVPLProcedure_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_createVPLProcedure_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_createVPLProcedure_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (graphQLModel.VPLProcedureInput, error) {
-	if _, ok := rawArgs["input"]; !ok {
-		var zeroVal graphQLModel.VPLProcedureInput
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNVPLProcedureInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProcedureInput(ctx, tmp)
-	}
-
-	var zeroVal graphQLModel.VPLProcedureInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_createVPLProgram_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_createVPLProgram_argsName(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["name"] = arg0
-	arg1, err := ec.field_Mutation_createVPLProgram_argsData(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["data"] = arg1
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_createVPLProgram_argsName(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["name"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-	if tmp, ok := rawArgs["name"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_createVPLProgram_argsData(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["data"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("data"))
-	if tmp, ok := rawArgs["data"]; ok {
-		return ec.unmarshalNJSON2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Mutation_deleteKPIDefinition_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1084,90 +935,6 @@ func (ec *executionContext) field_Mutation_deleteUserConfig_argsUserID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteVPLProcedure_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_deleteVPLProcedure_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_deleteVPLProcedure_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (uint32, error) {
-	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal uint32
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2uint32(ctx, tmp)
-	}
-
-	var zeroVal uint32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteVPLProgram_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_deleteVPLProgram_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_deleteVPLProgram_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (uint32, error) {
-	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal uint32
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2uint32(ctx, tmp)
-	}
-
-	var zeroVal uint32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_executeVPLProgram_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_executeVPLProgram_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_executeVPLProgram_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (uint32, error) {
-	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal uint32
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2uint32(ctx, tmp)
-	}
-
-	var zeroVal uint32
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Mutation_invokeSDCommand_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1288,11 +1055,11 @@ func (ec *executionContext) field_Mutation_updateSDCommand_args(ctx context.Cont
 		return nil, err
 	}
 	args["name"] = arg1
-	arg2, err := ec.field_Mutation_updateSDCommand_argsPayload(ctx, rawArgs)
+	arg2, err := ec.field_Mutation_updateSDCommand_argsDescription(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["payload"] = arg2
+	args["description"] = arg2
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_updateSDCommand_argsID(
@@ -1331,17 +1098,17 @@ func (ec *executionContext) field_Mutation_updateSDCommand_argsName(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_updateSDCommand_argsPayload(
+func (ec *executionContext) field_Mutation_updateSDCommand_argsDescription(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*string, error) {
-	if _, ok := rawArgs["payload"]; !ok {
+	if _, ok := rawArgs["description"]; !ok {
 		var zeroVal *string
 		return zeroVal, nil
 	}
 
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("payload"))
-	if tmp, ok := rawArgs["payload"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+	if tmp, ok := rawArgs["description"]; ok {
 		return ec.unmarshalOString2ᚖstring(ctx, tmp)
 	}
 
@@ -1550,131 +1317,6 @@ func (ec *executionContext) field_Mutation_updateUserConfig_argsInput(
 	}
 
 	var zeroVal graphQLModel.UserConfigInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateVPLProcedure_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_updateVPLProcedure_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	arg1, err := ec.field_Mutation_updateVPLProcedure_argsInput(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["input"] = arg1
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_updateVPLProcedure_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (uint32, error) {
-	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal uint32
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2uint32(ctx, tmp)
-	}
-
-	var zeroVal uint32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateVPLProcedure_argsInput(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (graphQLModel.VPLProcedureInput, error) {
-	if _, ok := rawArgs["input"]; !ok {
-		var zeroVal graphQLModel.VPLProcedureInput
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNVPLProcedureInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProcedureInput(ctx, tmp)
-	}
-
-	var zeroVal graphQLModel.VPLProcedureInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateVPLProgram_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_updateVPLProgram_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	arg1, err := ec.field_Mutation_updateVPLProgram_argsName(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["name"] = arg1
-	arg2, err := ec.field_Mutation_updateVPLProgram_argsData(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["data"] = arg2
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_updateVPLProgram_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (uint32, error) {
-	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal uint32
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2uint32(ctx, tmp)
-	}
-
-	var zeroVal uint32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateVPLProgram_argsName(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["name"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-	if tmp, ok := rawArgs["name"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateVPLProgram_argsData(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["data"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("data"))
-	if tmp, ok := rawArgs["data"]; ok {
-		return ec.unmarshalNJSON2string(ctx, tmp)
-	}
-
-	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -1959,62 +1601,6 @@ func (ec *executionContext) field_Query_userConfig_args(ctx context.Context, raw
 	return args, nil
 }
 func (ec *executionContext) field_Query_userConfig_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (uint32, error) {
-	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal uint32
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2uint32(ctx, tmp)
-	}
-
-	var zeroVal uint32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_vplProcedure_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Query_vplProcedure_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Query_vplProcedure_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (uint32, error) {
-	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal uint32
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalNID2uint32(ctx, tmp)
-	}
-
-	var zeroVal uint32
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_vplProgram_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Query_vplProgram_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Query_vplProgram_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (uint32, error) {
@@ -3127,8 +2713,6 @@ func (ec *executionContext) fieldContext_Mutation_createSDType(ctx context.Conte
 				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
-			case "commands":
-				return ec.fieldContext_SDType_commands(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
@@ -3251,8 +2835,6 @@ func (ec *executionContext) fieldContext_Mutation_updateSDType(ctx context.Conte
 				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
-			case "commands":
-				return ec.fieldContext_SDType_commands(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
@@ -3934,8 +3516,8 @@ func (ec *executionContext) fieldContext_Mutation_createSDCommand(ctx context.Co
 				return ec.fieldContext_SDCommand_id(ctx, field)
 			case "name":
 				return ec.fieldContext_SDCommand_name(ctx, field)
-			case "payload":
-				return ec.fieldContext_SDCommand_payload(ctx, field)
+			case "description":
+				return ec.fieldContext_SDCommand_description(ctx, field)
 			case "sdTypeId":
 				return ec.fieldContext_SDCommand_sdTypeId(ctx, field)
 			}
@@ -3970,7 +3552,7 @@ func (ec *executionContext) _Mutation_updateSDCommand(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateSDCommand(rctx, fc.Args["id"].(uint32), fc.Args["name"].(*string), fc.Args["payload"].(*string))
+		return ec.resolvers.Mutation().UpdateSDCommand(rctx, fc.Args["id"].(uint32), fc.Args["name"].(*string), fc.Args["description"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3999,8 +3581,8 @@ func (ec *executionContext) fieldContext_Mutation_updateSDCommand(ctx context.Co
 				return ec.fieldContext_SDCommand_id(ctx, field)
 			case "name":
 				return ec.fieldContext_SDCommand_name(ctx, field)
-			case "payload":
-				return ec.fieldContext_SDCommand_payload(ctx, field)
+			case "description":
+				return ec.fieldContext_SDCommand_description(ctx, field)
 			case "sdTypeId":
 				return ec.fieldContext_SDCommand_sdTypeId(ctx, field)
 			}
@@ -4194,461 +3776,6 @@ func (ec *executionContext) fieldContext_Mutation_invokeSDCommand(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_invokeSDCommand_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createVPLProgram(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createVPLProgram(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateVPLProgram(rctx, fc.Args["name"].(string), fc.Args["data"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(graphQLModel.VPLProgram)
-	fc.Result = res
-	return ec.marshalNVPLProgram2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgram(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createVPLProgram(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_VPLProgram_id(ctx, field)
-			case "name":
-				return ec.fieldContext_VPLProgram_name(ctx, field)
-			case "data":
-				return ec.fieldContext_VPLProgram_data(ctx, field)
-			case "lastRun":
-				return ec.fieldContext_VPLProgram_lastRun(ctx, field)
-			case "enabled":
-				return ec.fieldContext_VPLProgram_enabled(ctx, field)
-			case "sdParameterSnapshots":
-				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VPLProgram", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createVPLProgram_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateVPLProgram(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateVPLProgram(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateVPLProgram(rctx, fc.Args["id"].(uint32), fc.Args["name"].(string), fc.Args["data"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(graphQLModel.VPLProgram)
-	fc.Result = res
-	return ec.marshalNVPLProgram2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgram(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updateVPLProgram(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_VPLProgram_id(ctx, field)
-			case "name":
-				return ec.fieldContext_VPLProgram_name(ctx, field)
-			case "data":
-				return ec.fieldContext_VPLProgram_data(ctx, field)
-			case "lastRun":
-				return ec.fieldContext_VPLProgram_lastRun(ctx, field)
-			case "enabled":
-				return ec.fieldContext_VPLProgram_enabled(ctx, field)
-			case "sdParameterSnapshots":
-				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VPLProgram", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateVPLProgram_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_deleteVPLProgram(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteVPLProgram(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteVPLProgram(rctx, fc.Args["id"].(uint32))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_deleteVPLProgram(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteVPLProgram_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_executeVPLProgram(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_executeVPLProgram(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ExecuteVPLProgram(rctx, fc.Args["id"].(uint32))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(graphQLModel.VPLProgramExecutionResult)
-	fc.Result = res
-	return ec.marshalNVPLProgramExecutionResult2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgramExecutionResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_executeVPLProgram(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "program":
-				return ec.fieldContext_VPLProgramExecutionResult_program(ctx, field)
-			case "sdParameterSnapshotsToUpdate":
-				return ec.fieldContext_VPLProgramExecutionResult_sdParameterSnapshotsToUpdate(ctx, field)
-			case "SdCommandInvocations":
-				return ec.fieldContext_VPLProgramExecutionResult_SdCommandInvocations(ctx, field)
-			case "executionTime":
-				return ec.fieldContext_VPLProgramExecutionResult_executionTime(ctx, field)
-			case "enabled":
-				return ec.fieldContext_VPLProgramExecutionResult_enabled(ctx, field)
-			case "success":
-				return ec.fieldContext_VPLProgramExecutionResult_success(ctx, field)
-			case "error":
-				return ec.fieldContext_VPLProgramExecutionResult_error(ctx, field)
-			case "executionReason":
-				return ec.fieldContext_VPLProgramExecutionResult_executionReason(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VPLProgramExecutionResult", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_executeVPLProgram_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_createVPLProcedure(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createVPLProcedure(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateVPLProcedure(rctx, fc.Args["input"].(graphQLModel.VPLProcedureInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(graphQLModel.VPLProcedure)
-	fc.Result = res
-	return ec.marshalNVPLProcedure2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProcedure(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_createVPLProcedure(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_VPLProcedure_id(ctx, field)
-			case "name":
-				return ec.fieldContext_VPLProcedure_name(ctx, field)
-			case "data":
-				return ec.fieldContext_VPLProcedure_data(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_VPLProcedure_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_VPLProcedure_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VPLProcedure", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createVPLProcedure_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateVPLProcedure(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateVPLProcedure(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateVPLProcedure(rctx, fc.Args["id"].(uint32), fc.Args["input"].(graphQLModel.VPLProcedureInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(graphQLModel.VPLProcedure)
-	fc.Result = res
-	return ec.marshalNVPLProcedure2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProcedure(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updateVPLProcedure(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_VPLProcedure_id(ctx, field)
-			case "name":
-				return ec.fieldContext_VPLProcedure_name(ctx, field)
-			case "data":
-				return ec.fieldContext_VPLProcedure_data(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_VPLProcedure_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_VPLProcedure_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VPLProcedure", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateVPLProcedure_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_deleteVPLProcedure(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteVPLProcedure(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteVPLProcedure(rctx, fc.Args["id"].(uint32))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_deleteVPLProcedure(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteVPLProcedure_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -6182,8 +5309,6 @@ func (ec *executionContext) fieldContext_Query_sdType(ctx context.Context, field
 				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
-			case "commands":
-				return ec.fieldContext_SDType_commands(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
@@ -6251,8 +5376,6 @@ func (ec *executionContext) fieldContext_Query_sdTypes(_ context.Context, field 
 				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
-			case "commands":
-				return ec.fieldContext_SDType_commands(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
@@ -6902,8 +6025,8 @@ func (ec *executionContext) fieldContext_Query_sdCommand(ctx context.Context, fi
 				return ec.fieldContext_SDCommand_id(ctx, field)
 			case "name":
 				return ec.fieldContext_SDCommand_name(ctx, field)
-			case "payload":
-				return ec.fieldContext_SDCommand_payload(ctx, field)
+			case "description":
+				return ec.fieldContext_SDCommand_description(ctx, field)
 			case "sdTypeId":
 				return ec.fieldContext_SDCommand_sdTypeId(ctx, field)
 			}
@@ -6967,8 +6090,8 @@ func (ec *executionContext) fieldContext_Query_sdCommands(_ context.Context, fie
 				return ec.fieldContext_SDCommand_id(ctx, field)
 			case "name":
 				return ec.fieldContext_SDCommand_name(ctx, field)
-			case "payload":
-				return ec.fieldContext_SDCommand_payload(ctx, field)
+			case "description":
+				return ec.fieldContext_SDCommand_description(ctx, field)
 			case "sdTypeId":
 				return ec.fieldContext_SDCommand_sdTypeId(ctx, field)
 			}
@@ -7100,256 +6223,6 @@ func (ec *executionContext) fieldContext_Query_sdCommandInvocations(_ context.Co
 				return ec.fieldContext_SDCommandInvocation_sdInstanceId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDCommandInvocation", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_vplPrograms(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_vplPrograms(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().VplPrograms(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]graphQLModel.VPLProgram)
-	fc.Result = res
-	return ec.marshalNVPLProgram2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgramᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_vplPrograms(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_VPLProgram_id(ctx, field)
-			case "name":
-				return ec.fieldContext_VPLProgram_name(ctx, field)
-			case "data":
-				return ec.fieldContext_VPLProgram_data(ctx, field)
-			case "lastRun":
-				return ec.fieldContext_VPLProgram_lastRun(ctx, field)
-			case "enabled":
-				return ec.fieldContext_VPLProgram_enabled(ctx, field)
-			case "sdParameterSnapshots":
-				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VPLProgram", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_vplProgram(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_vplProgram(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().VplProgram(rctx, fc.Args["id"].(uint32))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(graphQLModel.VPLProgram)
-	fc.Result = res
-	return ec.marshalNVPLProgram2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgram(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_vplProgram(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_VPLProgram_id(ctx, field)
-			case "name":
-				return ec.fieldContext_VPLProgram_name(ctx, field)
-			case "data":
-				return ec.fieldContext_VPLProgram_data(ctx, field)
-			case "lastRun":
-				return ec.fieldContext_VPLProgram_lastRun(ctx, field)
-			case "enabled":
-				return ec.fieldContext_VPLProgram_enabled(ctx, field)
-			case "sdParameterSnapshots":
-				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VPLProgram", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_vplProgram_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_vplProcedure(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_vplProcedure(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().VplProcedure(rctx, fc.Args["id"].(uint32))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(graphQLModel.VPLProcedure)
-	fc.Result = res
-	return ec.marshalNVPLProcedure2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProcedure(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_vplProcedure(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_VPLProcedure_id(ctx, field)
-			case "name":
-				return ec.fieldContext_VPLProcedure_name(ctx, field)
-			case "data":
-				return ec.fieldContext_VPLProcedure_data(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_VPLProcedure_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_VPLProcedure_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VPLProcedure", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_vplProcedure_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_vplProcedures(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_vplProcedures(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().VplProcedures(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]graphQLModel.VPLProcedure)
-	fc.Result = res
-	return ec.marshalNVPLProcedure2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProcedureᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_vplProcedures(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_VPLProcedure_id(ctx, field)
-			case "name":
-				return ec.fieldContext_VPLProcedure_name(ctx, field)
-			case "data":
-				return ec.fieldContext_VPLProcedure_data(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_VPLProcedure_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_VPLProcedure_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VPLProcedure", field.Name)
 		},
 	}
 	return fc, nil
@@ -7574,8 +6447,8 @@ func (ec *executionContext) fieldContext_SDCommand_name(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _SDCommand_payload(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDCommand) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SDCommand_payload(ctx, field)
+func (ec *executionContext) _SDCommand_description(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDCommand) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SDCommand_description(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7588,7 +6461,7 @@ func (ec *executionContext) _SDCommand_payload(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Payload, nil
+		return obj.Description, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7602,7 +6475,7 @@ func (ec *executionContext) _SDCommand_payload(ctx context.Context, field graphq
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SDCommand_payload(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SDCommand_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SDCommand",
 		Field:      field,
@@ -8148,8 +7021,6 @@ func (ec *executionContext) fieldContext_SDInstance_type(_ context.Context, fiel
 				return ec.fieldContext_SDType_icon(ctx, field)
 			case "parameters":
 				return ec.fieldContext_SDType_parameters(ctx, field)
-			case "commands":
-				return ec.fieldContext_SDType_commands(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDType", field.Name)
 		},
@@ -8205,8 +7076,6 @@ func (ec *executionContext) fieldContext_SDInstance_parameterSnapshots(_ context
 				return ec.fieldContext_SDParameterSnapshot_boolean(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_SDParameterSnapshot_updatedAt(ctx, field)
-			case "vplPrograms":
-				return ec.fieldContext_SDParameterSnapshot_vplPrograms(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDParameterSnapshot", field.Name)
 		},
@@ -8628,8 +7497,6 @@ func (ec *executionContext) fieldContext_SDParameter_parameterSnapshots(_ contex
 				return ec.fieldContext_SDParameterSnapshot_boolean(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_SDParameterSnapshot_updatedAt(ctx, field)
-			case "vplPrograms":
-				return ec.fieldContext_SDParameterSnapshot_vplPrograms(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDParameterSnapshot", field.Name)
 		},
@@ -8892,50 +7759,6 @@ func (ec *executionContext) fieldContext_SDParameterSnapshot_updatedAt(_ context
 	return fc, nil
 }
 
-func (ec *executionContext) _SDParameterSnapshot_vplPrograms(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDParameterSnapshot) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SDParameterSnapshot_vplPrograms(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.VplPrograms, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]uint32)
-	fc.Result = res
-	return ec.marshalNID2ᚕuint32ᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SDParameterSnapshot_vplPrograms(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SDParameterSnapshot",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _SDType_id(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SDType_id(ctx, field)
 	if err != nil {
@@ -9157,60 +7980,6 @@ func (ec *executionContext) fieldContext_SDType_parameters(_ context.Context, fi
 				return ec.fieldContext_SDParameter_parameterSnapshots(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDParameter", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SDType_commands(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.SDType) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SDType_commands(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Commands, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]graphQLModel.SDCommand)
-	fc.Result = res
-	return ec.marshalNSDCommand2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SDType_commands(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SDType",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_SDCommand_id(ctx, field)
-			case "name":
-				return ec.fieldContext_SDCommand_name(ctx, field)
-			case "payload":
-				return ec.fieldContext_SDCommand_payload(ctx, field)
-			case "sdTypeId":
-				return ec.fieldContext_SDCommand_sdTypeId(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SDCommand", field.Name)
 		},
 	}
 	return fc, nil
@@ -9678,8 +8447,6 @@ func (ec *executionContext) fieldContext_Subscription_onSDParameterSnapshotUpdat
 				return ec.fieldContext_SDParameterSnapshot_boolean(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_SDParameterSnapshot_updatedAt(ctx, field)
-			case "vplPrograms":
-				return ec.fieldContext_SDParameterSnapshot_vplPrograms(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDParameterSnapshot", field.Name)
 		},
@@ -9842,893 +8609,6 @@ func (ec *executionContext) fieldContext_UserConfig_config(_ context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type JSON does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProcedure_id(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProcedure) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProcedure_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(uint32)
-	fc.Result = res
-	return ec.marshalNID2uint32(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProcedure_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProcedure",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProcedure_name(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProcedure) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProcedure_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProcedure_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProcedure",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProcedure_data(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProcedure) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProcedure_data(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Data, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNJSON2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProcedure_data(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProcedure",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type JSON does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProcedure_createdAt(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProcedure) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProcedure_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNDate2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProcedure_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProcedure",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Date does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProcedure_updatedAt(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProcedure) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProcedure_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNDate2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProcedure_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProcedure",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Date does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgram_id(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgram) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgram_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(uint32)
-	fc.Result = res
-	return ec.marshalNID2uint32(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgram_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgram",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgram_name(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgram) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgram_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgram_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgram",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgram_data(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgram) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgram_data(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Data, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNJSON2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgram_data(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgram",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type JSON does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgram_lastRun(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgram) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgram_lastRun(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LastRun, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgram_lastRun(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgram",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgram_enabled(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgram) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgram_enabled(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Enabled, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgram_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgram",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgram_sdParameterSnapshots(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgram) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SdParameterSnapshots, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]graphQLModel.SDParameterSnapshot)
-	fc.Result = res
-	return ec.marshalNSDParameterSnapshot2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterSnapshotᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgram_sdParameterSnapshots(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgram",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "instanceId":
-				return ec.fieldContext_SDParameterSnapshot_instanceId(ctx, field)
-			case "parameterId":
-				return ec.fieldContext_SDParameterSnapshot_parameterId(ctx, field)
-			case "string":
-				return ec.fieldContext_SDParameterSnapshot_string(ctx, field)
-			case "number":
-				return ec.fieldContext_SDParameterSnapshot_number(ctx, field)
-			case "boolean":
-				return ec.fieldContext_SDParameterSnapshot_boolean(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_SDParameterSnapshot_updatedAt(ctx, field)
-			case "vplPrograms":
-				return ec.fieldContext_SDParameterSnapshot_vplPrograms(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SDParameterSnapshot", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgramExecutionResult_program(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgramExecutionResult_program(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Program, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(graphQLModel.VPLProgram)
-	fc.Result = res
-	return ec.marshalNVPLProgram2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgram(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgramExecutionResult_program(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgramExecutionResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_VPLProgram_id(ctx, field)
-			case "name":
-				return ec.fieldContext_VPLProgram_name(ctx, field)
-			case "data":
-				return ec.fieldContext_VPLProgram_data(ctx, field)
-			case "lastRun":
-				return ec.fieldContext_VPLProgram_lastRun(ctx, field)
-			case "enabled":
-				return ec.fieldContext_VPLProgram_enabled(ctx, field)
-			case "sdParameterSnapshots":
-				return ec.fieldContext_VPLProgram_sdParameterSnapshots(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type VPLProgram", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgramExecutionResult_sdParameterSnapshotsToUpdate(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgramExecutionResult_sdParameterSnapshotsToUpdate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SdParameterSnapshotsToUpdate, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]graphQLModel.SDParameterSnapshot)
-	fc.Result = res
-	return ec.marshalNSDParameterSnapshot2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterSnapshotᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgramExecutionResult_sdParameterSnapshotsToUpdate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgramExecutionResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "instanceId":
-				return ec.fieldContext_SDParameterSnapshot_instanceId(ctx, field)
-			case "parameterId":
-				return ec.fieldContext_SDParameterSnapshot_parameterId(ctx, field)
-			case "string":
-				return ec.fieldContext_SDParameterSnapshot_string(ctx, field)
-			case "number":
-				return ec.fieldContext_SDParameterSnapshot_number(ctx, field)
-			case "boolean":
-				return ec.fieldContext_SDParameterSnapshot_boolean(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_SDParameterSnapshot_updatedAt(ctx, field)
-			case "vplPrograms":
-				return ec.fieldContext_SDParameterSnapshot_vplPrograms(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SDParameterSnapshot", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgramExecutionResult_SdCommandInvocations(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgramExecutionResult_SdCommandInvocations(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SdCommandInvocations, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]graphQLModel.SDCommandInvocation)
-	fc.Result = res
-	return ec.marshalNSDCommandInvocation2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInvocationᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgramExecutionResult_SdCommandInvocations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgramExecutionResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_SDCommandInvocation_id(ctx, field)
-			case "invocationTime":
-				return ec.fieldContext_SDCommandInvocation_invocationTime(ctx, field)
-			case "payload":
-				return ec.fieldContext_SDCommandInvocation_payload(ctx, field)
-			case "userId":
-				return ec.fieldContext_SDCommandInvocation_userId(ctx, field)
-			case "commandId":
-				return ec.fieldContext_SDCommandInvocation_commandId(ctx, field)
-			case "sdInstanceId":
-				return ec.fieldContext_SDCommandInvocation_sdInstanceId(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type SDCommandInvocation", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgramExecutionResult_executionTime(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgramExecutionResult_executionTime(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ExecutionTime, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgramExecutionResult_executionTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgramExecutionResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgramExecutionResult_enabled(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgramExecutionResult_enabled(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Enabled, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgramExecutionResult_enabled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgramExecutionResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgramExecutionResult_success(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgramExecutionResult_success(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Success, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgramExecutionResult_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgramExecutionResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgramExecutionResult_error(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgramExecutionResult_error(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Error, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgramExecutionResult_error(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgramExecutionResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _VPLProgramExecutionResult_executionReason(ctx context.Context, field graphql.CollectedField, obj *graphQLModel.VPLProgramExecutionResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_VPLProgramExecutionResult_executionReason(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ExecutionReason, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_VPLProgramExecutionResult_executionReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "VPLProgramExecutionResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -12885,7 +10765,7 @@ func (ec *executionContext) unmarshalInputSDCommandInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "payload", "sdTypeId"}
+	fieldsInOrder := [...]string{"name", "description", "sdTypeId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -12899,13 +10779,13 @@ func (ec *executionContext) unmarshalInputSDCommandInput(ctx context.Context, ob
 				return it, err
 			}
 			it.Name = data
-		case "payload":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payload"))
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Payload = data
+			it.Description = data
 		case "sdTypeId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sdTypeId"))
 			data, err := ec.unmarshalNID2uint32(ctx, v)
@@ -12913,40 +10793,6 @@ func (ec *executionContext) unmarshalInputSDCommandInput(ctx context.Context, ob
 				return it, err
 			}
 			it.SdTypeID = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputSDCommandInputWithoutType(ctx context.Context, obj any) (graphQLModel.SDCommandInputWithoutType, error) {
-	var it graphQLModel.SDCommandInputWithoutType
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name", "payload"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "payload":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("payload"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Payload = data
 		}
 	}
 
@@ -13124,7 +10970,7 @@ func (ec *executionContext) unmarshalInputSDTypeInput(ctx context.Context, obj a
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"denotation", "label", "icon", "parameters", "commands"}
+	fieldsInOrder := [...]string{"denotation", "label", "icon", "parameters"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -13159,13 +11005,6 @@ func (ec *executionContext) unmarshalInputSDTypeInput(ctx context.Context, obj a
 				return it, err
 			}
 			it.Parameters = data
-		case "commands":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commands"))
-			data, err := ec.unmarshalOSDCommandInputWithoutType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutTypeᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Commands = data
 		}
 	}
 
@@ -13336,40 +11175,6 @@ func (ec *executionContext) unmarshalInputUserConfigInput(ctx context.Context, o
 				return it, err
 			}
 			it.Config = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputVPLProcedureInput(ctx context.Context, obj any) (graphQLModel.VPLProcedureInput, error) {
-	var it graphQLModel.VPLProcedureInput
-	asMap := map[string]any{}
-	for k, v := range obj.(map[string]any) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name", "data"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "data":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("data"))
-			data, err := ec.unmarshalNJSON2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Data = data
 		}
 	}
 
@@ -13922,55 +11727,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "invokeSDCommand":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_invokeSDCommand(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "createVPLProgram":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createVPLProgram(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "updateVPLProgram":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateVPLProgram(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "deleteVPLProgram":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteVPLProgram(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "executeVPLProgram":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_executeVPLProgram(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "createVPLProcedure":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createVPLProcedure(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "updateVPLProcedure":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateVPLProcedure(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "deleteVPLProcedure":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteVPLProcedure(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -14725,94 +12481,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "vplPrograms":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_vplPrograms(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "vplProgram":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_vplProgram(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "vplProcedure":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_vplProcedure(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "vplProcedures":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_vplProcedures(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -14865,8 +12533,8 @@ func (ec *executionContext) _SDCommand(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "payload":
-			out.Values[i] = ec._SDCommand_payload(ctx, field, obj)
+		case "description":
+			out.Values[i] = ec._SDCommand_description(ctx, field, obj)
 		case "sdTypeId":
 			out.Values[i] = ec._SDCommand_sdTypeId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -15162,11 +12830,6 @@ func (ec *executionContext) _SDParameterSnapshot(ctx context.Context, sel ast.Se
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "vplPrograms":
-			out.Values[i] = ec._SDParameterSnapshot_vplPrograms(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15217,11 +12880,6 @@ func (ec *executionContext) _SDType(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._SDType_icon(ctx, field, obj)
 		case "parameters":
 			out.Values[i] = ec._SDType_parameters(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "commands":
-			out.Values[i] = ec._SDType_commands(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -15356,194 +13014,6 @@ func (ec *executionContext) _UserConfig(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var vPLProcedureImplementors = []string{"VPLProcedure"}
-
-func (ec *executionContext) _VPLProcedure(ctx context.Context, sel ast.SelectionSet, obj *graphQLModel.VPLProcedure) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, vPLProcedureImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("VPLProcedure")
-		case "id":
-			out.Values[i] = ec._VPLProcedure_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "name":
-			out.Values[i] = ec._VPLProcedure_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "data":
-			out.Values[i] = ec._VPLProcedure_data(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "createdAt":
-			out.Values[i] = ec._VPLProcedure_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "updatedAt":
-			out.Values[i] = ec._VPLProcedure_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var vPLProgramImplementors = []string{"VPLProgram"}
-
-func (ec *executionContext) _VPLProgram(ctx context.Context, sel ast.SelectionSet, obj *graphQLModel.VPLProgram) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, vPLProgramImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("VPLProgram")
-		case "id":
-			out.Values[i] = ec._VPLProgram_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "name":
-			out.Values[i] = ec._VPLProgram_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "data":
-			out.Values[i] = ec._VPLProgram_data(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "lastRun":
-			out.Values[i] = ec._VPLProgram_lastRun(ctx, field, obj)
-		case "enabled":
-			out.Values[i] = ec._VPLProgram_enabled(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "sdParameterSnapshots":
-			out.Values[i] = ec._VPLProgram_sdParameterSnapshots(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var vPLProgramExecutionResultImplementors = []string{"VPLProgramExecutionResult"}
-
-func (ec *executionContext) _VPLProgramExecutionResult(ctx context.Context, sel ast.SelectionSet, obj *graphQLModel.VPLProgramExecutionResult) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, vPLProgramExecutionResultImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("VPLProgramExecutionResult")
-		case "program":
-			out.Values[i] = ec._VPLProgramExecutionResult_program(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "sdParameterSnapshotsToUpdate":
-			out.Values[i] = ec._VPLProgramExecutionResult_sdParameterSnapshotsToUpdate(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "SdCommandInvocations":
-			out.Values[i] = ec._VPLProgramExecutionResult_SdCommandInvocations(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "executionTime":
-			out.Values[i] = ec._VPLProgramExecutionResult_executionTime(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "enabled":
-			out.Values[i] = ec._VPLProgramExecutionResult_enabled(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "success":
-			out.Values[i] = ec._VPLProgramExecutionResult_success(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "error":
-			out.Values[i] = ec._VPLProgramExecutionResult_error(ctx, field, obj)
-		case "executionReason":
-			out.Values[i] = ec._VPLProgramExecutionResult_executionReason(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16312,11 +13782,6 @@ func (ec *executionContext) unmarshalNSDCommandInput2githubᚗcomᚋMichalBures�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNSDCommandInputWithoutType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutType(ctx context.Context, v any) (graphQLModel.SDCommandInputWithoutType, error) {
-	res, err := ec.unmarshalInputSDCommandInputWithoutType(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) marshalNSDCommandInvocation2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInvocation(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDCommandInvocation) graphql.Marshaler {
 	return ec._SDCommandInvocation(ctx, sel, &v)
 }
@@ -16749,111 +14214,6 @@ func (ec *executionContext) unmarshalNUserConfigInput2githubᚗcomᚋMichalBures
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNVPLProcedure2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProcedure(ctx context.Context, sel ast.SelectionSet, v graphQLModel.VPLProcedure) graphql.Marshaler {
-	return ec._VPLProcedure(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNVPLProcedure2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProcedureᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.VPLProcedure) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNVPLProcedure2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProcedure(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) unmarshalNVPLProcedureInput2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProcedureInput(ctx context.Context, v any) (graphQLModel.VPLProcedureInput, error) {
-	res, err := ec.unmarshalInputVPLProcedureInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNVPLProgram2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgram(ctx context.Context, sel ast.SelectionSet, v graphQLModel.VPLProgram) graphql.Marshaler {
-	return ec._VPLProgram(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNVPLProgram2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgramᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.VPLProgram) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNVPLProgram2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgram(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNVPLProgramExecutionResult2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐVPLProgramExecutionResult(ctx context.Context, sel ast.SelectionSet, v graphQLModel.VPLProgramExecutionResult) graphql.Marshaler {
-	return ec._VPLProgramExecutionResult(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
 	return ec.___Directive(ctx, sel, &v)
 }
@@ -17209,24 +14569,6 @@ func (ec *executionContext) marshalOLogicalOperationType2ᚖgithubᚗcomᚋMicha
 		return graphql.Null
 	}
 	return v
-}
-
-func (ec *executionContext) unmarshalOSDCommandInputWithoutType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutTypeᚄ(ctx context.Context, v any) ([]graphQLModel.SDCommandInputWithoutType, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []any
-	vSlice = graphql.CoerceList(v)
-	var err error
-	res := make([]graphQLModel.SDCommandInputWithoutType, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNSDCommandInputWithoutType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutType(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
 }
 
 func (ec *executionContext) marshalOSDParameterSnapshot2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterSnapshotᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDParameterSnapshot) graphql.Marshaler {

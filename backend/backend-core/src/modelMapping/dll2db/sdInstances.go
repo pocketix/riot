@@ -48,10 +48,9 @@ func ToDBModelEntitySDCommandInvocation(command dllModel.SDCommandInvocation) db
 
 func ToDBModelEntitySDCommand(command dllModel.SDCommand) dbModel.SDCommandEntity {
 	return dbModel.SDCommandEntity{
-		ID:       command.ID,
-		Name:     command.Name,
-		Payload:  command.Payload,
-		Type:     "default",
-		SDTypeID: command.SdTypeID,
+		ID:          command.ID,
+		Name:        command.Name,
+		Description: command.Description,
+		SDTypeID:    command.SdTypeID,
 	}
 }

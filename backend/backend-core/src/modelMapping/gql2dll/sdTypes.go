@@ -2,7 +2,6 @@ package gql2dll
 
 import (
 	"fmt"
-
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
@@ -32,20 +31,5 @@ func ToDLLModelSDType(sdTypeInput graphQLModel.SDTypeInput) dllModel.SDType {
 				}(sdParameterInput.Type),
 			}
 		}),
-		Commands: sharedUtils.Map(sdTypeInput.Commands, func(cmd graphQLModel.SDCommandInputWithoutType) dllModel.SDCommand {
-			return dllModel.SDCommand{
-				ID:       0,
-				Name:     cmd.Name,
-				Payload:  DereferenceOrDefault(cmd.Payload, ""),
-				SdTypeID: 0,
-			}
-		}),
 	}
-}
-
-func DereferenceOrDefault[T any](ptr *T, def T) T {
-	if ptr != nil {
-		return *ptr
-	}
-	return def
 }

@@ -15,7 +15,6 @@ const KPIPageController: React.FC = () => {
     error: kpiDefinitionsQueryError,
     refetch: kpiDefinitionsQueryRefetch
   } = useQuery<KpiDefinitionsQuery, KpiDefinitionsQueryVariables>(gql(qKPIDefinitions))
-  
   const [deleteKPIDefinitionMutation, { loading: deleteKPIDefinitionLoading, error: deleteKPIDefinitionError }] = useMutation<DeleteKpiDefinitionMutation, DeleteKpiDefinitionMutationVariables>(
     gql(mDeleteKPIDefinition)
   )

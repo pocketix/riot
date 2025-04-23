@@ -12,10 +12,4 @@ const (
 	TimeSeriesReadRequestQueueName                        = "time-series-read-request"
 	TimeSeriesReadRequestBackendCoreResponseQueueName     = "time-series-read-request-backend-core-response"
 	SDCurrentSnapshotsInfoQueueName                       = "device-current-snapshots-info"
-	VPLInterpretSaveProgramRequestQueueName               = "vpl-interpret-save-program-request"
-	VPLInterpretSaveProgramResponseQueueName              = "vpl-interpret-save-program-response"
-	VPLInterpretExecuteProgramRequestQueueName            = "vpl-interpret-execute-program-request"
-	VPLInterpretExecuteProgramResponseQueueName           = "vpl-interpret-execute-program-response"
-	VPLInterpretGetSnapshotsRequestQueueName              = "vpl-interpret-get-snapshots-request"
-	VPLInterpretGetSnapshotsResponseQueueName             = "vpl-interpret-get-snapshots-response"
 )

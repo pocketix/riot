@@ -65,7 +65,7 @@ func CreateSDCommand(input graphQLModel.SDCommandInput) sharedUtils.Result[graph
 	return sharedUtils.NewSuccessResult[graphQLModel.SDCommand](dll2gql.ToGraphQLModelSDCommand(loadResult.GetPayload()))
 }
 
-func UpdateSDCommand(id uint32, name *string, payload *string) sharedUtils.Result[graphQLModel.SDCommand] {
+func UpdateSDCommand(id uint32, name *string, description *string) sharedUtils.Result[graphQLModel.SDCommand] {
 	loadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDCommand(id)
 	if loadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[graphQLModel.SDCommand](loadResult.GetError())
@@ -75,8 +75,8 @@ func UpdateSDCommand(id uint32, name *string, payload *string) sharedUtils.Resul
 	if name != nil {
 		command.Name = *name
 	}
-	if payload != nil {
-		command.Payload = *payload
+	if description != nil {
+		command.Description = *description
 	}
 
 	persistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDCommand(command)

@@ -22,8 +22,8 @@ type SDCommandInvocation struct {
 }
 
 type SDCommand struct {
-	ID       uint32
-	Name     string
-	Payload  string
-	SdTypeID uint32
+	ID          uint32
+	Name        string
+	Description string
+	SdTypeID    uint32
 }

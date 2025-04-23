@@ -1,9 +1,8 @@
 package dllModel
 
 import (
-	"time"
-
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"time"
 )
 
 type SDParameterSnapshot struct {
@@ -13,5 +12,4 @@ type SDParameterSnapshot struct {
 	Number      sharedUtils.Optional[float64]
 	Boolean     sharedUtils.Optional[bool]
 	UpdatedAt   time.Time
-	VPLPrograms []VPLProgramSDSnapshotLink
 }

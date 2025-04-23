@@ -14,12 +14,5 @@ func ToDLLModelSDParameterSnapshot(parameterSnapshot dbModel.SDParameterSnapshot
 		Number:      sharedUtils.NewOptionalFromPointer(parameterSnapshot.Number),
 		Boolean:     sharedUtils.NewOptionalFromPointer(parameterSnapshot.Boolean),
 		UpdatedAt:   parameterSnapshot.UpdatedAt,
-		VPLPrograms: sharedUtils.Map(parameterSnapshot.VPLPrograms, func(link dbModel.VPLProgramSDSnapshotLinkEntity) dllModel.VPLProgramSDSnapshotLink {
-			return dllModel.VPLProgramSDSnapshotLink{
-				ProgramID:   link.ProgramID,
-				InstanceID:  link.SDInstanceID,
-				ParameterID: link.SDParameterID,
-			}
-		}),
 	}
 }

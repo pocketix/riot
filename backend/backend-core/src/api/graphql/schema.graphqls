@@ -20,7 +20,6 @@ type SDType {
   label: String
   icon: String
   parameters: [SDParameter!]!
-  commands: [SDCommand!]!
 }
 
 input SDParameterInput {
@@ -34,24 +33,18 @@ input SDTypeInput {
   label: String
   icon: String
   parameters: [SDParameterInput!]!
-  commands: [SDCommandInputWithoutType!]
-}
-
-input SDCommandInputWithoutType {
-  name: String!
-  payload: String!
 }
 
 type SDCommand {
   id: ID!
   name: String!
-  payload: String!
+  description: String
   sdTypeId: ID!
 }
 
 input SDCommandInput {
   name: String!
-  payload: String!
+  description: String
   sdTypeId: ID!
 }
 
@@ -86,7 +79,6 @@ type SDParameterSnapshot {
   number:      Float
   boolean:     Boolean
   updatedAt:   Date!
-  vplPrograms: [ID!]!
 }
 
 input SDCommandInvocationInput {
@@ -357,44 +349,6 @@ input UserConfigInput {
   config: JSON!
 }
 
-# ----- VPL Programs -----
-
-type VPLProgram {
-    id: ID!
-    name: String!
-    data: JSON!
-    lastRun: String
-    enabled: Boolean!
-    sdParameterSnapshots: [SDParameterSnapshot!]!
-}
-
-type VPLProgramExecutionResult {
-    program: VPLProgram!
-    sdParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
-    SdCommandInvocations: [SDCommandInvocation!]!
-    executionTime: String!
-    enabled: Boolean!
-    success: Boolean!
-    error: String
-    executionReason: String
-}
-
-# ----- VPL Procedures -----
-
-type VPLProcedure {
-
-    id: ID!
-    name: String!
-    data: JSON!
-    createdAt: Date!
-    updatedAt: Date!
-}
-
-input VPLProcedureInput {
-    name: String!
-    data: JSON!
-}
-
 # ----- Queries, mutations and subscriptions -----
 
 type Query {
@@ -414,11 +368,6 @@ type Query {
   sdCommands: [SDCommand!]! # Returns all SDCommands
   sdCommandInvocation(id: ID!): SDCommandInvocation! # Returns a specific SDCommandInvocation
   sdCommandInvocations: [SDCommandInvocation!]! # Returns all SDCommandInvocations
-  vplPrograms: [VPLProgram!]! # Returns all VPLPrograms
-  vplProgram(id: ID!): VPLProgram! # Returns a specific VPLProgram by its ID
-  vplProgramByName(name: String!): VPLProgram! # Returns a specific VPLProgram by its name
-  vplProcedure(id: ID!): VPLProcedure! # Returns a specific VPLProcedure by its ID
-  vplProcedures: [VPLProcedure!]! # Returns all VPLProcedures
 }
 
 type Mutation {
@@ -436,19 +385,10 @@ type Mutation {
   updateUserConfig(userId: ID!, input: UserConfigInput!): UserConfig!
   deleteUserConfig(userId: ID!): Boolean!
   createSDCommand(input: SDCommandInput!): SDCommand! # Creating a command
-  updateSDCommand(id: ID!, name: String, payload: String): SDCommand! # Updating a command
+  updateSDCommand(id: ID!, name: String, description: String): SDCommand! # Updating a command
   deleteSDCommand(id: ID!): Boolean! # Deleting a command
   createSDCommandInvocation(input: SDCommandInvocationInput!): SDCommandInvocation! # Creating an invocation
   invokeSDCommand(id: ID!): Boolean! # Starting an existing invocation
-  createVPLProgram(name: String!, data: JSON!): VPLProgram!
-  updateVPLProgram(id: ID!, name: String!, data: JSON!): VPLProgram!
-  updateVPLProgramByName(name: String!, newName: String!, data: JSON!): VPLProgram!
-  deleteVPLProgram(id: ID!): Boolean!
-  deleteVPLProgramByName(name: String!): Boolean!
-  executeVPLProgram(id: ID!): VPLProgramExecutionResult!
-  createVPLProcedure(input: VPLProcedureInput!): VPLProcedure! # Creating a procedure
-  updateVPLProcedure(id: ID!, input: VPLProcedureInput!): VPLProcedure! # Updating a procedure
-  deleteVPLProcedure(id: ID!): Boolean! # Deleting a procedure
 }
 
 type Subscription {

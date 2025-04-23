@@ -1,5 +1,5 @@
 {
-  "printWidth": 120,
+  "printWidth": 200,
   "tabWidth": 2,
   "useTabs": false,
   "semi": false,
@@ -10,6 +10,5 @@
   "requirePragma": false,
   "insertPragma": false,
   "proseWrap": "never",
-  "endOfLine": "lf",
   "plugins": ["prettier-plugin-tailwindcss"]
 }

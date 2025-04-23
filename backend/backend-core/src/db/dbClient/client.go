@@ -66,16 +66,6 @@ type RelationalDatabaseClient interface {
 	DeleteSDCommand(id uint32) error
 	LoadSDCommands() sharedUtils.Result[[]dllModel.SDCommand]
 	PersistSDParameterSnapshot(snapshot dllModel.SDParameterSnapshot) sharedUtils.Result[sharedUtils.Pair[uint32, uint32]]
-	PersistVPLProgram(vplProgram dllModel.VPLProgram) sharedUtils.Result[dllModel.VPLProgram]
-	LoadVPLProgram(id uint32) sharedUtils.Result[dllModel.VPLProgram]
-	LoadVPLProgramByName(name string) sharedUtils.Result[dllModel.VPLProgram]
-	LoadVPLPrograms() sharedUtils.Result[[]dllModel.VPLProgram]
-	DeleteVPLProgram(id uint32) error
-	DeleteVPLProgramByName(name string) error
-	PersistVPLProcedure(vplProcedure dllModel.VPLProcedure) sharedUtils.Result[dllModel.VPLProcedure]
-	LoadVPLProcedure(id uint32) sharedUtils.Result[dllModel.VPLProcedure]
-	LoadVPLProcedures() sharedUtils.Result[[]dllModel.VPLProcedure]
-	DeleteVPLProcedure(id uint32) error
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -158,18 +148,6 @@ func (r *relationalDatabaseClientImpl) PersistSDCommand(sdCommand dllModel.SDCom
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	entity := dll2db.ToDBModelEntitySDCommand(sdCommand)
-	// Search for an existing command with the same name for the device type
-	var existingEntity dbModel.SDCommandEntity
-	err := r.db.
-		Where("denotation = ? AND sd_type_id = ?", entity.Name, entity.SDTypeID).
-		First(&existingEntity).Error
-	if err == nil {
-		// The record exists - overriding the ID, this makes Save() become UPDATE
-		entity.ID = existingEntity.ID
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return sharedUtils.NewFailureResult[uint32](err)
-	}
-	// Persist (insert or update according to ID settings)
 	if err := dbUtil.PersistEntityIntoDB(r.db, &entity); err != nil {
 		return sharedUtils.NewFailureResult[uint32](err)
 	}
@@ -227,10 +205,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.UserEntity),
 		new(dbModel.UserSessionEntity),
 		new(dbModel.UserConfigEntity),
-		new(dbModel.VPLProgramsEntity),
 		new(dbModel.SDParameterSnapshotEntity),
-		new(dbModel.VPLProgramsEntity),
-		new(dbModel.VPLProceduresEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
 
@@ -369,58 +344,10 @@ func (r *relationalDatabaseClientImpl) DeleteKPIDefinition(id uint32) error {
 func (r *relationalDatabaseClientImpl) PersistSDType(sdType dllModel.SDType) sharedUtils.Result[dllModel.SDType] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-
-	// DB conversion
 	sdTypeEntity := dll2db.ToDBModelEntitySDType(sdType)
-
-	// Is a specified sdtype exist?
-	var existingEntity dbModel.SDTypeEntity
-	result := r.db.Preload("Commands").Preload("Parameters").Where("denotation = ?", sdTypeEntity.Denotation).First(&existingEntity)
-
-	if result.Error == nil {
-		// If it exists, take the ID and merge Commands + Parameters
-		sdTypeEntity.ID = existingEntity.ID
-
-		// === MERGE COMMANDS ===
-		existingCommands := make(map[string]dbModel.SDCommandEntity)
-		for _, cmd := range existingEntity.Commands {
-			existingCommands[cmd.Name] = cmd
-		}
-
-		mergedCommands := make([]dbModel.SDCommandEntity, 0)
-		for _, newCmd := range sdTypeEntity.Commands {
-			if existingCmd, found := existingCommands[newCmd.Name]; found {
-				newCmd.ID = existingCmd.ID // Update
-			}
-			newCmd.SDTypeID = sdTypeEntity.ID
-			mergedCommands = append(mergedCommands, newCmd)
-		}
-		sdTypeEntity.Commands = mergedCommands
-
-		// === MERGE PARAMETERS ===
-		existingParams := make(map[string]dbModel.SDParameterEntity)
-		for _, param := range existingEntity.Parameters {
-			existingParams[param.Denotation] = param
-		}
-
-		mergedParams := make([]dbModel.SDParameterEntity, 0)
-		for _, newParam := range sdTypeEntity.Parameters {
-			if existingParam, found := existingParams[newParam.Denotation]; found {
-				newParam.ID = existingParam.ID // Update
-			}
-			newParam.SDTypeID = sdTypeEntity.ID
-			mergedParams = append(mergedParams, newParam)
-		}
-		sdTypeEntity.Parameters = mergedParams
-
-	} else if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return sharedUtils.NewFailureResult[dllModel.SDType](result.Error)
-	}
-
 	if err := dbUtil.PersistEntityIntoDB[dbModel.SDTypeEntity](r.db, &sdTypeEntity); err != nil {
 		return sharedUtils.NewFailureResult[dllModel.SDType](err)
 	}
-
 	return sharedUtils.NewSuccessResult[dllModel.SDType](db2dll.ToDLLModelSDType(sdTypeEntity))
 }
 
@@ -765,139 +692,4 @@ func (r *relationalDatabaseClientImpl) PersistSDParameterSnapshot(snapshot dllMo
 	}
 
 	return sharedUtils.NewSuccessResult[sharedUtils.Pair[uint32, uint32]](sharedUtils.NewPairOf(snapshotEntity.SDParameterID, snapshotEntity.SDInstanceID))
-}
-
-func (r *relationalDatabaseClientImpl) PersistVPLProgram(vplProgram dllModel.VPLProgram) sharedUtils.Result[dllModel.VPLProgram] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	vplProgramEntity := dll2db.ToDBModelEntityVPLProgram(vplProgram)
-
-	if err := dbUtil.PersistEntityIntoDB(r.db, &vplProgramEntity); err != nil {
-		return sharedUtils.NewFailureResult[dllModel.VPLProgram](err)
-	}
-
-	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProgram(vplProgramEntity))
-}
-
-func (r *relationalDatabaseClientImpl) LoadVPLProgram(id uint32) sharedUtils.Result[dllModel.VPLProgram] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	vplProgramEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.VPLProgramsEntity](r.db, dbUtil.Where("id = ?", id))
-
-	if vplProgramEntityLoadResult.IsFailure() {
-		return sharedUtils.NewFailureResult[dllModel.VPLProgram](vplProgramEntityLoadResult.GetError())
-	}
-
-	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProgram(vplProgramEntityLoadResult.GetPayload()))
-}
-
-func (r *relationalDatabaseClientImpl) LoadVPLProgramByName(name string) sharedUtils.Result[dllModel.VPLProgram] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	vplProgramEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.VPLProgramsEntity](r.db, dbUtil.Where("name = ?", name))
-
-	if vplProgramEntityLoadResult.IsFailure() {
-		return sharedUtils.NewFailureResult[dllModel.VPLProgram](vplProgramEntityLoadResult.GetError())
-	}
-
-	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProgram(vplProgramEntityLoadResult.GetPayload()))
-}
-
-func (r *relationalDatabaseClientImpl) LoadVPLPrograms() sharedUtils.Result[[]dllModel.VPLProgram] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	vplProgramEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.VPLProgramsEntity](r.db)
-
-	if vplProgramEntitiesLoadResult.IsFailure() {
-		return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](vplProgramEntitiesLoadResult.GetError())
-	}
-
-	return sharedUtils.NewSuccessResult(sharedUtils.Map(vplProgramEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelVplProgram))
-}
-
-func (r *relationalDatabaseClientImpl) DeleteVPLProgram(id uint32) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.VPLProgramsEntity](r.db, id)
-}
-
-func (r *relationalDatabaseClientImpl) DeleteVPLProgramByName(name string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	log.Printf("DB Client: Deleting VPL program with name: %s", name)
-
-	// First check if the program exists
-	var program dbModel.VPLProgramsEntity
-	findResult := r.db.Where("name = ?", name).First(&program)
-	if findResult.Error != nil {
-		if errors.Is(findResult.Error, gorm.ErrRecordNotFound) {
-			log.Printf("DB Client: Program with name %s not found", name)
-			return gorm.ErrRecordNotFound
-		}
-		log.Printf("DB Client: Error finding program with name %s: %v", name, findResult.Error)
-		return findResult.Error
-	}
-
-	// Now delete the program
-	log.Printf("DB Client: Found program with name %s (ID: %d), deleting...", name, program.ID)
-	result := r.db.Delete(&program)
-	if result.Error != nil {
-		log.Printf("DB Client: Error deleting program with name %s: %v", name, result.Error)
-		return result.Error
-	}
-
-	log.Printf("DB Client: Successfully deleted program with name %s, rows affected: %d", name, result.RowsAffected)
-	return nil
-}
-
-func (r *relationalDatabaseClientImpl) PersistVPLProcedure(vplProcedure dllModel.VPLProcedure) sharedUtils.Result[dllModel.VPLProcedure] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	vplProcedureEntity := dll2db.ToDBModelEntityVPLProcedure(vplProcedure)
-
-	if err := dbUtil.PersistEntityIntoDB(r.db, &vplProcedureEntity); err != nil {
-		return sharedUtils.NewFailureResult[dllModel.VPLProcedure](err)
-	}
-
-	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProcedure(vplProcedureEntity))
-}
-
-func (r *relationalDatabaseClientImpl) LoadVPLProcedure(id uint32) sharedUtils.Result[dllModel.VPLProcedure] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	vplProcedureEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.VPLProceduresEntity](r.db, dbUtil.Where("id = ?", id))
-
-	if vplProcedureEntityLoadResult.IsFailure() {
-		return sharedUtils.NewFailureResult[dllModel.VPLProcedure](vplProcedureEntityLoadResult.GetError())
-	}
-
-	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProcedure(vplProcedureEntityLoadResult.GetPayload()))
-}
-
-func (r *relationalDatabaseClientImpl) LoadVPLProcedures() sharedUtils.Result[[]dllModel.VPLProcedure] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	vplProcedureEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.VPLProceduresEntity](r.db)
-
-	if vplProcedureEntitiesLoadResult.IsFailure() {
-		return sharedUtils.NewFailureResult[[]dllModel.VPLProcedure](vplProcedureEntitiesLoadResult.GetError())
-	}
-
-	return sharedUtils.NewSuccessResult(sharedUtils.Map(vplProcedureEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelVplProcedure))
-}
-
-func (r *relationalDatabaseClientImpl) DeleteVPLProcedure(id uint32) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.VPLProceduresEntity](r.db, id)
 }

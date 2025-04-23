@@ -2,7 +2,6 @@ package dll2gql
 
 import (
 	"fmt"
-
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
@@ -36,6 +35,5 @@ func ToGraphQLModelSDType(sdType dllModel.SDType) graphQLModel.SDType {
 				ParameterSnapshots: sharedUtils.Map(sdParameter.SDParameterSnapshots, ToGraphQLModelSdParameterSnapshot),
 			}
 		}),
-		Commands: sharedUtils.Map(sdType.Commands, ToGraphQLModelSDCommand),
 	}
 }
