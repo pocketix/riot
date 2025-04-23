@@ -169,3 +169,15 @@ export const GET_REST_OF_KPI_DEFINITION_DETAIL_PAGE_DATA = gql`
     }
   }
 `
+
+export const GET_PROGRMS = gql`
+  query VplPrograms {
+    vplPrograms {
+      data
+      id
+      enabled
+      lastRun
+      name
+    }
+  }
+`
