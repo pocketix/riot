@@ -629,7 +629,7 @@ export type CreateSdTypeMutationVariables = Exact<{
 }>;
 
 
-export type CreateSdTypeMutation = { __typename?: 'Mutation', createSDType: { __typename?: 'SDType', denotation: string, icon?: string | null, id: number, label?: string | null, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, label?: string | null, type: SdParameterType }> } };
+export type CreateSdTypeMutation = { __typename?: 'Mutation', createSDType: { __typename?: 'SDType', denotation: string, icon?: string | null, id: number, label?: string | null, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, label?: string | null, type: SdParameterType }>, commands: Array<{ __typename?: 'SDCommand', id: number, name: string, payload?: string | null, sdTypeId: number }> } };
 
 export type CreateKpiDefinitionMutationVariables = Exact<{
   input: KpiDefinitionInput;
@@ -682,7 +682,7 @@ export type UpdateSdTypeMutationVariables = Exact<{
 }>;
 
 
-export type UpdateSdTypeMutation = { __typename?: 'Mutation', updateSDType: { __typename?: 'SDType', denotation: string, icon?: string | null, id: number, label?: string | null, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, label?: string | null, type: SdParameterType }> } };
+export type UpdateSdTypeMutation = { __typename?: 'Mutation', updateSDType: { __typename?: 'SDType', denotation: string, icon?: string | null, id: number, label?: string | null, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, label?: string | null, type: SdParameterType }>, commands: Array<{ __typename?: 'SDCommand', id: number, name: string, payload?: string | null, sdTypeId: number }> } };
 
 export type CreateSdInstanceGroupMutationVariables = Exact<{
   input: SdInstanceGroupInput;
@@ -701,7 +701,7 @@ export type SdTypeQueryVariables = Exact<{
 }>;
 
 
-export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }> } };
+export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }>, commands: Array<{ __typename?: 'SDCommand', id: number, name: string, payload?: string | null, sdTypeId: number }> } };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -735,7 +735,7 @@ export type RestOfKpiDefinitionDetailPageDataQuery = { __typename?: 'Query', sdT
 export type VplProgramsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type VplProgramsQuery = { __typename?: 'Query', vplPrograms: Array<{ __typename?: 'VPLProgram', data: any, id: number, enabled: boolean, lastRun?: string | null, name: string, sdParameterSnapshots: Array<{ __typename?: 'SDParameterSnapshot', instanceId: number }> }> };
+export type VplProgramsQuery = { __typename?: 'Query', vplPrograms: Array<{ __typename?: 'VPLProgram', data: any, id: number, enabled: boolean, lastRun?: string | null, name: string }> };
 
 export type OnSdInstanceRegisteredSubscriptionVariables = Exact<{ [key: string]: never; }>;
 
@@ -848,6 +848,12 @@ export const CreateSdTypeDocument = gql`
       id
       label
       type
+    }
+    commands {
+      id
+      name
+      payload
+      sdTypeId
     }
   }
 }
@@ -1115,6 +1121,12 @@ export const UpdateSdTypeDocument = gql`
       label
       type
     }
+    commands {
+      id
+      name
+      payload
+      sdTypeId
+    }
   }
 }
     `;
@@ -1239,6 +1251,12 @@ export const SdTypeDocument = gql`
       label
       denotation
       type
+    }
+    commands {
+      id
+      name
+      payload
+      sdTypeId
     }
   }
 }
@@ -1580,9 +1598,6 @@ export const VplProgramsDocument = gql`
     enabled
     lastRun
     name
-    sdParameterSnapshots {
-      instanceId
-    }
   }
 }
     `;

@@ -176,7 +176,8 @@ export default function DeviceTypeDetail() {
     label: '',
     denotation: '',
     icon: '',
-    parameters: [] as { denotation: string; type: string; label?: string | null }[]
+    parameters: [] as { denotation: string; type: string; label?: string | null }[],
+    commands: [] as { name: string; payload?: { possibleValues: []; type: string } }[]
   })
 
   const {
@@ -208,7 +209,11 @@ export default function DeviceTypeDetail() {
               denotation: param.denotation,
               type: param.type,
               label: param.label
-            })) || []
+            })) || [],
+          commands: fetchedData.sdType.commands.map((c) => ({
+            ...c,
+            payload: c.payload ? JSON.parse(c.payload) : { type: '', possibleValues: [] }
+          }))
         }
 
         setInitialValues(fetchedValues)
@@ -257,6 +262,10 @@ export default function DeviceTypeDetail() {
                 denotation: p.denotation,
                 type: p.type as SdParameterType,
                 label: p.label
+              })),
+              commands: data.commands.map((c: any) => ({
+                name: c.name,
+                payload: JSON.stringify(c.payload)
               }))
             }
           }
@@ -268,7 +277,6 @@ export default function DeviceTypeDetail() {
           navigate(`/settings/device-types/${newId}`)
         }
       } else {
-        console.log('Updating device type:', data)
         await updateSDTypeMutation({
           variables: {
             updateSdTypeId: Number(id),
@@ -280,6 +288,10 @@ export default function DeviceTypeDetail() {
                 denotation: p.denotation,
                 type: p.type as SdParameterType,
                 label: p.label
+              })),
+              commands: data.commands.map((c: any) => ({
+                name: c.name,
+                payload: JSON.stringify(c.payload)
               }))
             }
           }
@@ -321,6 +333,10 @@ export default function DeviceTypeDetail() {
 
   const addParameter = () => {
     setValue('parameters', [{ denotation: '', type: 'NUMBER', label: '' }, ...getValues('parameters')])
+  }
+
+  const addCommand = () => {
+    setValue('commands', [{ name: '', payload: { type: '', possibleValues: [] } }, ...getValues('commands')])
   }
 
   if (loading) return <Spinner />
@@ -536,41 +552,85 @@ export default function DeviceTypeDetail() {
 
           {/* Command Configuration (TODO: Wait for backend support and connect) */}
           <TableItem>
-            <strong>Commands </strong>(0):
+            <strong>Commands </strong>({watch('commands').length}):
           </TableItem>
 
-          <Button className="mb-4 ml-4 mr-4" disabled>
-            <TbPlus /> Add command
-          </Button>
+          {editMode && (
+            <Button
+              onClick={(e) => {
+                e.preventDefault()
+                addCommand()
+              }}
+              className="mb-4 ml-4 mr-4"
+            >
+              <TbPlus /> Add command
+            </Button>
+          )}
 
-          <ParametersContainer>
-            <ParamTable>
-              <ParamHeaderRow>
-                <ParamCell>Name</ParamCell>
-                <ParamCell>Type</ParamCell>
-                <ParamCell className="whitespace-nowrap">Possible values</ParamCell>
-              </ParamHeaderRow>
+          {watch('commands').length > 0 && (
+            <ParametersContainer>
+              <ParamTable>
+                <ParamHeaderRow>
+                  <ParamCell>Name</ParamCell>
+                  <ParamCell>Type</ParamCell>
+                  <ParamCell className="text-nowrap">Possible Values</ParamCell>
+                  {editMode && <ParamCell />}
+                </ParamHeaderRow>
 
-              <ParamRow>
-                <ParamCell>
-                  <Input placeholder="state" disabled />
-                </ParamCell>
-                <ParamCell>
-                  <Input className="w-max" placeholder="string" disabled />
-                </ParamCell>
-                <div>
-                  <ParamCell>
-                    <Input className="w-max" placeholder='["ON", "OFF"]' disabled />
-                  </ParamCell>
-                  <ParamCell>
-                    <Button variant="destructive" disabled>
-                      <TbTrash />
-                    </Button>
-                  </ParamCell>
-                </div>
-              </ParamRow>
-            </ParamTable>
-          </ParametersContainer>
+                {watch('commands').map((command, index) =>
+                  editMode ? (
+                    <ParamRow key={index}>
+                      <ParamCell>
+                        <Input {...register(`commands.${index}.name`, { required: 'Required' })} placeholder="state" />
+                      </ParamCell>
+                      <ParamCell>
+                        <Input
+                          {...register(`commands.${index}.payload.type`, { required: 'Required' })}
+                          placeholder="string"
+                          className="w-max"
+                        />
+                      </ParamCell>
+                      <ParamCell>
+                        <Input
+                          {...register(`commands.${index}.payload.possibleValues`, {
+                            required: 'Required',
+                            setValueAs: (value) => {
+                              try {
+                                return JSON.parse(value)
+                              } catch {
+                                return []
+                              }
+                            }
+                          })}
+                          placeholder='["ON", "OFF"]'
+                          className="w-max"
+                        />
+                      </ParamCell>
+                      <ParamCell>
+                        <Button
+                          variant="destructive"
+                          onClick={() =>
+                            setValue(
+                              'commands',
+                              watch('commands').filter((_, i) => i !== index)
+                            )
+                          }
+                        >
+                          <TbTrash />
+                        </Button>
+                      </ParamCell>
+                    </ParamRow>
+                  ) : (
+                    <ParamRow key={index}>
+                      <ParamCell>{command.name}</ParamCell>
+                      <ParamCell>{command.payload?.type}</ParamCell>
+                      <ParamCell>{JSON.stringify(command.payload?.possibleValues)}</ParamCell>
+                    </ParamRow>
+                  )
+                )}
+              </ParamTable>
+            </ParametersContainer>
+          )}
         </PageContainer>
       </div>
     </PageWrapper>

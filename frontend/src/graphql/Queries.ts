@@ -29,6 +29,12 @@ export const GET_PARAMETERS = gql`
         denotation
         type
       }
+      commands {
+        id
+        name
+        payload
+        sdTypeId
+      }
     }
   }
 `
