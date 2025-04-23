@@ -113,7 +113,7 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
                     fontSize: isDarkMode ? darkTheme.axis.ticks.text.fontSize : lightTheme.axis.ticks.text.fontSize,
                     textAnchor: 'middle',
                     fill: isDarkMode ? darkTheme.axis.ticks.text.fill : lightTheme.axis.ticks.text.fill,
-                    fontWeight: date.getDate() === 1 ? 'bold' : 'normal',
+                    fontWeight: date.getDate() === 1 ? '800' : '600',
                     fontFamily: 'sans-serif'
                   }}
                   y={height + 16}
