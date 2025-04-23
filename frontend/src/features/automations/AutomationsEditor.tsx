@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useMutation, useQuery, useLazyQuery } from '@apollo/client'
+import { useMutation, useQuery } from '@apollo/client'
 import {
   CREATE_VPL_PROGRAM,
   UPDATE_VPL_PROGRAM,
   DELETE_VPL_PROGRAM
 } from '@/graphql/automations/Mutations'
-import { GET_VPL_PROGRAMS, GET_VPL_PROGRAM } from '@/graphql/automations/Queries'
+import { GET_VPL_PROGRAMS } from '@/graphql/automations/Queries'
 import { toast } from 'sonner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -20,48 +20,27 @@ interface VPLProgram {
   enabled: boolean
 }
 
+// Extend the Window interface to include our custom property
+declare global {
+  interface Window {
+    currentEditor?: any
+  }
+}
+
 export default function AutomationsEditor() {
-  const editorRef = useRef<HTMLElement>(null)
   const [programName, setProgramName] = useState('')
   const [selectedProgram, setSelectedProgram] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [editorKey, setEditorKey] = useState(0) // Used to force re-render of the editor
+  const [currentProgramData, setCurrentProgramData] = useState<any>(null) // Store the current program data
 
   // GraphQL query to fetch all VPL programs
   const { data: programsData, loading: programsLoading, refetch: refetchPrograms } = useQuery(GET_VPL_PROGRAMS)
 
-  // GraphQL lazy query for loading a specific program
-  const [getVPLProgram, { loading: loadingProgram }] = useLazyQuery(GET_VPL_PROGRAM, {
-    onCompleted: (data) => {
-      if (data?.vplProgram) {
-        const program = data.vplProgram
-        setProgramName(program.name)
-
-        // Set the program data in the editor using the updateProgram method
-        const editor = editorRef.current as any
-        if (editor && program.data) {
-          try {
-            const programData = JSON.parse(program.data)
-            // For custom lit elements, we need to directly call the method
-            // without any type checking
-            console.log('Attempting to update program with data:', programData)
-
-            // Direct method call - this is the most reliable way to work with custom elements
-            editor.updateProgram(programData)
-            console.log('Program updated successfully')
-            toast.success(`Program "${program.name}" loaded successfully`)
-          } catch (error) {
-            console.error('Error parsing program data:', error)
-            toast.error('Failed to parse program data')
-          }
-        }
-      }
-    },
-    onError: (error) => {
-      toast.error(`Failed to load program: ${error.message}`)
-    }
-  })
+  // State for tracking if a program is loading
+  const [loadingProgram, setLoadingProgram] = useState(false)
 
   // GraphQL mutations
   const [createVPLProgram] = useMutation(CREATE_VPL_PROGRAM)
@@ -80,37 +59,22 @@ export default function AutomationsEditor() {
     }
   }, [])
 
-  // Set up event listener for program changes
+  // Load the VPL editor component from the CDN
   useEffect(() => {
-    const editor = editorRef.current
-    if (!editor) return
+    // Define the currentEditor property on the window object
+    if (!(window as any).currentEditor) {
+      Object.defineProperty(window, 'currentEditor', {
+        value: null,
+        writable: true,
+        configurable: true
+      })
+    }
 
-    // For custom elements, we need to ensure they're properly initialized
-    // before attaching event listeners
-    setTimeout(() => {
-      try {
-        const handleProgramChange = (e: CustomEvent) => {
-          // Log program changes to console
-          console.log('Program changed:', e.detail)
-        }
-
-        // Add event listener for the 'change' event
-        editor.addEventListener('change', handleProgramChange as EventListener)
-        console.log('Successfully attached change event listener to vpl-editor')
-
-        // Return cleanup function
-        return () => {
-          try {
-            editor.removeEventListener('change', handleProgramChange as EventListener)
-          } catch (error) {
-            console.error('Error removing event listener:', error)
-          }
-        }
-      } catch (error) {
-        console.error('Error setting up event listener:', error)
-      }
-    }, 100) // Small delay to ensure the element is fully initialized
-  }, [editorRef.current])
+    // Clean up when component unmounts
+    return () => {
+      (window as any).currentEditor = null
+    }
+  }, [])
 
   const handleSaveProgram = () => {
     if (!programName.trim()) {
@@ -118,7 +82,8 @@ export default function AutomationsEditor() {
       return
     }
 
-    const editor = editorRef.current as any
+    // Access the editor through the window object
+    const editor = (window as any).currentEditor
     if (editor) {
       // Get the program from the editor
       // For custom lit elements, we need to access properties directly
@@ -155,6 +120,8 @@ export default function AutomationsEditor() {
       .finally(() => {
         setIsSaving(false)
       })
+    } else {
+      toast.error('Editor not initialized')
     }
   }
 
@@ -165,6 +132,8 @@ export default function AutomationsEditor() {
       return
     }
 
+    setLoadingProgram(true)
+
     // Find the selected program in the list to get its ID
     const selectedProgramData = programsData?.vplPrograms?.find(
       (program: VPLProgram) => program.name === selectedProgram
@@ -172,16 +141,32 @@ export default function AutomationsEditor() {
 
     if (!selectedProgramData) {
       toast.error(`Program "${selectedProgram}" not found`)
+      setLoadingProgram(false)
       return
     }
     console.log('Selected program data:', selectedProgramData)
 
-    // Load the program by ID
-    getVPLProgram({
-      variables: {
-        id: selectedProgramData.id
-      }
-    })
+    try {
+      // Parse the program data
+      const programData = JSON.parse(selectedProgramData.data)
+      console.log('Parsed program data:', programData)
+
+      // Update the program name
+      setProgramName(selectedProgramData.name)
+
+      // Store the program data in state
+      setCurrentProgramData(programData)
+
+      // Increment the key to force a re-render of the editor
+      setEditorKey(prevKey => prevKey + 1)
+
+      toast.success(`Program "${selectedProgramData.name}" loaded successfully`)
+    } catch (error) {
+      console.error('Error parsing program data:', error)
+      toast.error('Failed to parse program data')
+    } finally {
+      setLoadingProgram(false)
+    }
   }
 
   // Update the current program
@@ -196,7 +181,8 @@ export default function AutomationsEditor() {
       return
     }
 
-    const editor = editorRef.current as any
+    // Access the editor through the window object
+    const editor = (window as any).currentEditor
     if (editor) {
       // Get the program from the editor
       // For custom lit elements, we need to access properties directly
@@ -240,6 +226,8 @@ export default function AutomationsEditor() {
       .finally(() => {
         setIsUpdating(false)
       })
+    } else {
+      toast.error('Editor not initialized')
     }
   }
 
@@ -275,17 +263,13 @@ export default function AutomationsEditor() {
         setProgramName('') // Clear the name field after successful delete
         setSelectedProgram('') // Clear the selected program
 
-        // Clear the editor
-        const editor = editorRef.current as any
-        if (editor) {
-          // For custom lit elements, we need to directly call the method
-          // without any type checking
-          console.log('Attempting to clear program')
+        // Clear the editor by resetting the program data
+        setCurrentProgramData(null)
 
-          // Direct method call - this is the most reliable way to work with custom elements
-          editor.updateProgram(null)
-          console.log('Program cleared successfully')
-        }
+        // Increment the key to force a re-render of the editor
+        setEditorKey(prevKey => prevKey + 1)
+
+        console.log('Editor reset to empty state')
 
         // Refresh the programs list
         refetchPrograms()
@@ -396,8 +380,40 @@ export default function AutomationsEditor() {
         </div>
       </div>
 
-      {/* @ts-ignore */}
-      <vpl-editor ref={editorRef}></vpl-editor>
+      {/* VPL Editor */}
+      <div className="vpl-editor-container">
+        {/* @ts-ignore */}
+        <vpl-editor
+          key={editorKey}
+          ref={(el: any) => {
+          if (el) {
+            // Store the element in the window object for later use
+            (window as any).currentEditor = el;
+
+            // If we have program data, set it after a short delay
+            if (currentProgramData) {
+              setTimeout(() => {
+                try {
+                  const typedEditor = el as any;
+                  if (typeof typedEditor.updateProgram === 'function') {
+                    typedEditor.updateProgram(currentProgramData);
+                    console.log('Program set using updateProgram');
+                  } else if (typeof typedEditor.setProgram === 'function') {
+                    typedEditor.setProgram(currentProgramData);
+                    console.log('Program set using setProgram');
+                  } else {
+                    console.log('Using direct property assignment');
+                    typedEditor.program = currentProgramData;
+                  }
+                } catch (error) {
+                  console.error('Error setting program data:', error);
+                }
+              }, 100);
+            }
+          }
+        }}
+      ></vpl-editor>
+      </div>
     </div>
   )
 }
