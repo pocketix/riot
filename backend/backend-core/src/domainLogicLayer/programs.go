@@ -461,6 +461,14 @@ func GetVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgram] {
 	return sharedUtils.NewSuccessResult(dll2gql.ToGraphQLModelVPLProgram(loadProgramResult.GetPayload()))
 }
 
+func GetVPLProgramByName(name string) sharedUtils.Result[graphQLModel.VPLProgram] {
+	loadProgramResult := dbClient.GetRelationalDatabaseClientInstance().LoadVPLProgramByName(name)
+	if loadProgramResult.IsFailure() {
+		return sharedUtils.NewFailureResult[graphQLModel.VPLProgram](loadProgramResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(dll2gql.ToGraphQLModelVPLProgram(loadProgramResult.GetPayload()))
+}
+
 func GetVPLPrograms() sharedUtils.Result[[]graphQLModel.VPLProgram] {
 	loadProgramsResult := dbClient.GetRelationalDatabaseClientInstance().LoadVPLPrograms()
 	if loadProgramsResult.IsFailure() {
@@ -471,4 +479,47 @@ func GetVPLPrograms() sharedUtils.Result[[]graphQLModel.VPLProgram] {
 
 func DeleteVPLProgram(id uint32) error {
 	return dbClient.GetRelationalDatabaseClientInstance().DeleteVPLProgram(id)
+}
+
+func DeleteVPLProgramByName(name string) error {
+	log.Printf("Domain layer: Deleting VPL program with name: %s", name)
+	err := dbClient.GetRelationalDatabaseClientInstance().DeleteVPLProgramByName(name)
+	if err != nil {
+		log.Printf("Domain layer: Error deleting VPL program with name %s: %v", name, err)
+	}
+	return err
+}
+
+func UpdateVPLProgramByName(name string, newName string, data string) sharedUtils.Result[graphQLModel.VPLProgram] {
+	// First, load the program by name
+	loadProgramResult := dbClient.GetRelationalDatabaseClientInstance().LoadVPLProgramByName(name)
+	if loadProgramResult.IsFailure() {
+		log.Printf("Update program by name failed: %s", loadProgramResult.GetError())
+		return sharedUtils.NewFailureResult[graphQLModel.VPLProgram](loadProgramResult.GetError())
+	}
+
+	// Now update it with the new data
+	program := loadProgramResult.GetPayload()
+
+	// Validate the new data
+	result, err := PerformVPLValidityCheckRequest(sharedModel.VPLInterpretSaveRequestBody{
+		Data: data,
+	})
+	if err != nil {
+		log.Printf("Update program by name failed: %s", err)
+		return sharedUtils.NewFailureResult[graphQLModel.VPLProgram](err)
+	}
+
+	// Update the program with the new values
+	result.ID = program.ID
+	result.Name = newName
+
+	// Save the updated program
+	dbResult := dbClient.GetRelationalDatabaseClientInstance().PersistVPLProgram(result)
+	if dbResult.IsFailure() {
+		log.Printf("Update program by name failed: %s", dbResult.GetError())
+		return sharedUtils.NewFailureResult[graphQLModel.VPLProgram](dbResult.GetError())
+	}
+
+	return sharedUtils.NewSuccessResult(dll2gql.ToGraphQLModelVPLProgram(result))
 }

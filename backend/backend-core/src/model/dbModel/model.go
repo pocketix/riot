@@ -219,7 +219,7 @@ func (SDCommandInvocationEntity) TableName() string {
 
 type VPLProgramsEntity struct {
 	ID                   uint32                           `gorm:"column:id;primaryKey;not null"`
-	Name                 string                           `gorm:"column:name;not null"`
+	Name                 string                           `gorm:"column:name;not null;uniqueIndex"`
 	Data                 string                           `gorm:"column:data;type:jsonb;not null"`
 	LastRun              *string                          `gorm:"column:last_run"`
 	Enabled              bool                             `gorm:"column:enabled;not null"`
@@ -231,7 +231,7 @@ func (VPLProgramsEntity) TableName() string {
 }
 
 type VPLProceduresEntity struct {
-	gorm.Model  
+	gorm.Model
 	Name string `gorm:"column:name;not null;uniqueIndex"`
 	Data string `gorm:"column:data;type:jsonb;not null"`
 }
@@ -239,6 +239,7 @@ type VPLProceduresEntity struct {
 func (VPLProceduresEntity) TableName() string {
 	return "vpl_procedures"
 }
+
 type VPLProgramSDSnapshotLinkEntity struct {
 	ProgramID     uint32 `gorm:"column:program_id;primaryKey;not null"`
 	SDInstanceID  uint32 `gorm:"column:sd_instance_id;primaryKey;not null"`

@@ -23,3 +23,15 @@ export const GET_VPL_PROGRAM = gql`
     }
   }
 `
+
+export const GET_VPL_PROGRAM_BY_NAME = gql`
+  query VplProgramByName($name: String!) {
+    vplProgramByName(name: $name) {
+      id
+      name
+      data
+      lastRun
+      enabled
+    }
+  }
+`

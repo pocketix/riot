@@ -416,6 +416,7 @@ type Query {
   sdCommandInvocations: [SDCommandInvocation!]! # Returns all SDCommandInvocations
   vplPrograms: [VPLProgram!]! # Returns all VPLPrograms
   vplProgram(id: ID!): VPLProgram! # Returns a specific VPLProgram by its ID
+  vplProgramByName(name: String!): VPLProgram! # Returns a specific VPLProgram by its name
   vplProcedure(id: ID!): VPLProcedure! # Returns a specific VPLProcedure by its ID
   vplProcedures: [VPLProcedure!]! # Returns all VPLProcedures
 }
@@ -441,7 +442,9 @@ type Mutation {
   invokeSDCommand(id: ID!): Boolean! # Starting an existing invocation
   createVPLProgram(name: String!, data: JSON!): VPLProgram!
   updateVPLProgram(id: ID!, name: String!, data: JSON!): VPLProgram!
+  updateVPLProgramByName(name: String!, newName: String!, data: JSON!): VPLProgram!
   deleteVPLProgram(id: ID!): Boolean!
+  deleteVPLProgramByName(name: String!): Boolean!
   executeVPLProgram(id: ID!): VPLProgramExecutionResult!
   createVPLProcedure(input: VPLProcedureInput!): VPLProcedure! # Creating a procedure
   updateVPLProcedure(id: ID!, input: VPLProcedureInput!): VPLProcedure! # Updating a procedure

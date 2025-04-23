@@ -24,8 +24,26 @@ export const UPDATE_VPL_PROGRAM = gql`
   }
 `
 
+export const UPDATE_VPL_PROGRAM_BY_NAME = gql`
+  mutation UpdateVPLProgramByName($name: String!, $newName: String!, $data: JSON!) {
+    updateVPLProgramByName(name: $name, newName: $newName, data: $data) {
+      id
+      name
+      data
+      lastRun
+      enabled
+    }
+  }
+`
+
 export const DELETE_VPL_PROGRAM = gql`
   mutation DeleteVPLProgram($id: ID!) {
     deleteVPLProgram(id: $id)
+  }
+`
+
+export const DELETE_VPL_PROGRAM_BY_NAME = gql`
+  mutation DeleteVPLProgramByName($name: String!) {
+    deleteVPLProgramByName(name: $name)
   }
 `
