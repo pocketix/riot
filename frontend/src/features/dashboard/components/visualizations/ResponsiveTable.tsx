@@ -72,7 +72,7 @@ const ResponsiveTableBase = ({ className, columnData, config, onRowClick, height
 
   return (
     <div className={className || ''} style={containerStyle}>
-      <table className="h-fit w-full">
+      <table className="h-full w-full">
         <thead className="border-b-[2px]">
           <tr>
             <th className="text-md text-left">{config.tableTitle}</th>

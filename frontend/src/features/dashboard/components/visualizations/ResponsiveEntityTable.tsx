@@ -42,7 +42,7 @@ const ResponsiveEntityTableBase = ({ config, sparklineData, className, height }:
 
   return (
     <div className={className || ''} style={containerStyle}>
-      <table className="h-fit w-full">
+      <table className="h-full w-full">
         <thead className="border-b-[2px]">
           <tr>
             <th className="text-md text-left">Name</th>
@@ -53,6 +53,7 @@ const ResponsiveEntityTableBase = ({ config, sparklineData, className, height }:
             <EntityRow
               key={rowIndex}
               row={row}
+              rowCount={config.rows.length}
               sparklineData={sparklineData[rowIndex]}
               onRowClick={() => setDetailsSelectedDevice(row.instance.id!, row.parameter.id)}
             />
@@ -66,10 +67,11 @@ const ResponsiveEntityTableBase = ({ config, sparklineData, className, height }:
 interface EntityRowProps {
   row: EntityCardConfig['rows'][number]
   sparklineData?: Serie
+  rowCount: number
   onRowClick: () => void
 }
 
-const EntityRow = memo(({ row, sparklineData, onRowClick }: EntityRowProps) => {
+const EntityRow = memo(({ row, sparklineData, rowCount, onRowClick }: EntityRowProps) => {
   const { value } = useParameterSnapshot(row.instance?.id!, row.parameter?.id!)
   const { getParameterByIds } = useInstances()
 
@@ -84,7 +86,7 @@ const EntityRow = memo(({ row, sparklineData, onRowClick }: EntityRowProps) => {
 
   if (!hasData) {
     return (
-      <tr onClick={onRowClick} className="cursor-pointer hover:bg-muted/50">
+      <tr onClick={onRowClick} className="cursor-pointer hover:bg-muted/50" style={{ height: `calc(100% / ${rowCount})` }}>
         <td className="text-sm">{row.name}</td>
         <td className="h-[24px] w-[75px] text-center text-sm">
           <Skeleton className="h-full w-full" disableAnimation>
@@ -108,7 +110,7 @@ const EntityRow = memo(({ row, sparklineData, onRowClick }: EntityRowProps) => {
   }
 
   return (
-    <tr onClick={onRowClick} className="cursor-pointer hover:bg-muted/50">
+    <tr onClick={onRowClick} className="cursor-pointer hover:bg-muted/50" style={{ height: `calc(100% / ${rowCount})` }}>
       <td className="text-sm">{row.name}</td>
 
       {row.visualization === 'sparkline' && (

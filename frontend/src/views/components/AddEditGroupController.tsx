@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 interface AddEditGroupDialogControllerProps {
   initial?: { userIdentifier?: string; sdInstanceIDs?: number[]; groupID?: number }
   children?: ReactNode
+  onDelete?: () => void
 }
 
 export const AddEditGroupDialogController = (props: AddEditGroupDialogControllerProps) => {
@@ -41,6 +42,9 @@ export const AddEditGroupDialogController = (props: AddEditGroupDialogController
   const [deleteGroup] = useDeleteSdInstanceGroupMutation({
     onCompleted: () => {
       toast.success('Group deleted successfully')
+      if (props.onDelete) {
+        props.onDelete()
+      }
     },
     onError: (error) => {
       toast.error(`Failed to delete group: ${error.message}`)

@@ -1,7 +1,8 @@
 import { z } from 'zod'
 
 export const lineChartBuilderSchema = z.object({
-  cardTitle: z.string().min(1, { message: 'Card title is required' }),
+  cardTitle: z.string().optional(),
+  icon: z.string().optional(),
   toolTip: z.object({
     x: z.string().min(1, { message: 'X-Axis tooltip name is required' }),
     y: z.string().min(1, { message: 'Y-Axis tooltip name is required' }),
@@ -64,7 +65,21 @@ export const lineChartBuilderSchema = z.object({
   xAxisMarkers: z
     .array(
       z.object({
-        value: z.number(),
+        value: z
+          .number()
+          .nullable()
+          .superRefine((data, ctx) => {
+            if (data === null) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.invalid_type,
+                expected: 'number',
+                received: 'null',
+                message: 'Value is required'
+              })
+              return z.NEVER
+            }
+            return data
+          }),
         color: z.enum(['#ef4444', '#eab308', '#22c55e', '#6b7280', '#3b82f6']),
         style: z.enum(['solid', 'dashed', 'dotted']),
         legend: z.string().optional(),

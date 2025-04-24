@@ -2,17 +2,17 @@ import { Container, DeleteEditContainer, DragHandle, OverlayContainer } from '@/
 import { AiOutlineDrag } from 'react-icons/ai'
 import styled from 'styled-components'
 import { useEffect, useMemo, useState } from 'react'
-import { DeleteAlertDialog } from './components/DeleteAlertDialog'
+import { ResponsiveAlertDialog } from './components/ResponsiveAlertDialog'
 import { AccessibilityContainer } from './components/AccessibilityContainer'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CardEditDialog } from '../editors/CardEditDialog'
 import { AllConfigTypes } from '@/types/dashboard/gridItem'
 import { BaseCardProps } from '@/types/dashboard/cards/cardGeneral'
+import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
 
 export const ChartContainer = styled.div<{ $editModeEnabled?: boolean }>`
   position: relative;
   margin: 0;
-  padding: 2px 2px 2px 0;
   width: 100%;
   height: 100%;
   display: flex;
@@ -55,6 +55,8 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
     if (highlight) props.setHighlightedCardID(props.cardID)
   }, [props.cardID, highlight, props.setHighlightedCardID])
 
+  const IconComponent = props.cardIcon ? getCustomizableIcon(props.cardIcon) : null
+
   if (props.isLoading || props.beingResized || props.error) {
     return (
       <>
@@ -66,7 +68,7 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
         )}
         {props.editModeEnabled && (
           <DeleteEditContainer>
-            <DeleteAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID, props.breakPoint)} />
+            <ResponsiveAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID, props.breakPoint)} />
           </DeleteEditContainer>
         )}
       </>
@@ -77,7 +79,7 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
     <Container key={props.cardID} className={`${props.cardID}`}>
       {props.editModeEnabled && (
         <DragHandle>
-          <AiOutlineDrag className="drag-handle h-[40px] w-[40px] rounded-lg border-2 p-1" />
+          <AiOutlineDrag className="drag-handle h-8 w-8 rounded-lg border-2 p-1" />
         </DragHandle>
       )}
       {props.editModeEnabled && (
@@ -87,11 +89,15 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
             onSave={props.handleSaveEdit}
             visualizationType={props.visualizationType}
           />
-          <DeleteAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID, props.breakPoint)} />
+          <ResponsiveAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID, props.breakPoint)} />
         </DeleteEditContainer>
       )}
-
-      {props.cardTitle && <span className="pl-2 pt-2 font-semibold">{props.cardTitle}</span>}
+      {props.cardTitle && (
+        <div className="flex items-center gap-1 px-1 pt-1">
+          {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
+          {props.cardTitle && <span className="font-semibold">{props.cardTitle}</span>}
+        </div>
+      )}
 
       <ChartContainer $editModeEnabled={props.editModeEnabled}>{props.children}</ChartContainer>
 
