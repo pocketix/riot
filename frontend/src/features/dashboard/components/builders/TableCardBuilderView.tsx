@@ -5,7 +5,7 @@ import { IoAdd } from 'react-icons/io5'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { tableCardSchema, TableCardConfig } from '@/schemas/dashboard/visualizations/TableBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { FieldErrors, useFieldArray, useForm } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
@@ -19,7 +19,7 @@ import { ResponsiveTooltip } from '@/components/responsive-tooltip'
 import { ArrowDown, ArrowUp, InfoIcon } from 'lucide-react'
 import { Parameter } from '@/context/InstancesContext'
 import { ResponsiveTable } from '../visualizations/ResponsiveTable'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { TableColumnData } from '../cards/TableCardController'
 import IconPicker from '@/ui/IconPicker'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
@@ -39,6 +39,7 @@ export interface TableCardBuilderViewProps {
 }
 
 export function TableCardBuilderView(props: TableCardBuilderViewProps) {
+  const [openAccordions, setOpenAccordions] = useState<string[]>([])
   const tableRef = useRef<HTMLDivElement>(null)
   const form = useForm<z.infer<typeof tableCardSchema>>({
     resolver: zodResolver(tableCardSchema),
@@ -84,6 +85,15 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
     name: 'rows'
   })
 
+  const handleError = (errors: FieldErrors<z.infer<typeof tableCardSchema>>) => {
+    const accordionsToOpen: string[] = []
+
+    if (errors.columns) accordionsToOpen.push('columns')
+    if (errors.rows) accordionsToOpen.push('rows')
+
+    setOpenAccordions(accordionsToOpen)
+  }
+
   const iconValue = form.watch('icon') ?? ''
   const IconComponent = iconValue ? getCustomizableIcon(iconValue) : null
 
@@ -108,7 +118,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
             onSubmit={form.handleSubmit((values) => {
               const height = tableRef.current?.getBoundingClientRect().height || 0
               props.onSubmit(values, height)
-            })}
+            }, handleError)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -214,7 +224,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                 )}
               />
             </div>
-            <Accordion type="single" collapsible className="mt-4 w-full">
+            <Accordion type="multiple" className="mt-4 w-full" value={openAccordions} onValueChange={setOpenAccordions}>
               <AccordionItem value="columns">
                 <AccordionTrigger>Columns</AccordionTrigger>
                 <AccordionContent className="mt-2 flex w-full flex-col rounded-md border p-2 px-1">

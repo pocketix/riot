@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { SwitchCardConfig, switchCardSchema } from '@/schemas/dashboard/visualizations/SwitchBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { FieldErrors, useForm } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
@@ -35,8 +35,29 @@ export interface SwitchBuilderViewProps {
 
 export function SwitchBuilderView(props: SwitchBuilderViewProps) {
   const [boundsDialogOpen, setBoundsDialogOpen] = useState(false)
+  const [openAccordion, setOpenAccordion] = useState<string[]>(['state'])
+
+  // Handles the optional object in schema as upon opening the accordion, it is initialized and perceived as semi-filled
+  function percentualSettingsEmpty(percentualSettings?: SwitchCardConfig['percentualSettings']) {
+    if (!percentualSettings) return true
+    return (
+      percentualSettings.instanceID === undefined &&
+      percentualSettings.parameter?.id === undefined &&
+      percentualSettings.lowerBound === undefined &&
+      percentualSettings.upperBound === undefined
+    )
+  }
+
+  const resolver = async (values: any, context: any, options: any) => {
+    const cleaned = { ...values }
+    if (percentualSettingsEmpty(cleaned.percentualSettings)) {
+      delete cleaned.percentualSettings
+    }
+    return zodResolver(switchCardSchema)(cleaned, context, options)
+  }
+
   const form = useForm<SwitchCardConfig>({
-    resolver: zodResolver(switchCardSchema),
+    resolver,
     defaultValues: props.config || {
       title: 'Switch Status',
       icon: 'TbBulb',
@@ -54,8 +75,15 @@ export function SwitchBuilderView(props: SwitchBuilderViewProps) {
 
   const handleGetAutomaticBounds = async (instanceID: number, parameterID: number) => {
     const { min, max } = await props.getBounds(instanceID, parameterID)
-    form.setValue('percentualSettings.lowerBound', min)
-    form.setValue('percentualSettings.upperBound', max)
+    form.setValue('percentualSettings.lowerBound', min, { shouldValidate: true })
+    form.setValue('percentualSettings.upperBound', max, { shouldValidate: true })
+  }
+
+  const handleError = (errors: FieldErrors<SwitchCardConfig>) => {
+    const open: string[] = []
+    if (errors.booleanSettings) open.push('state')
+    if (errors.percentualSettings) open.push('percentage')
+    setOpenAccordion(open)
   }
 
   return (
@@ -78,7 +106,7 @@ export function SwitchBuilderView(props: SwitchBuilderViewProps) {
       <Card className="p-2">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(props.onSubmit)}
+            onSubmit={form.handleSubmit(props.onSubmit, handleError)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -115,7 +143,7 @@ export function SwitchBuilderView(props: SwitchBuilderViewProps) {
               />
             </div>
 
-            <Accordion type="single" collapsible defaultValue="state" className="mt-4">
+            <Accordion type="multiple" className="mt-4" value={openAccordion} onValueChange={setOpenAccordion}>
               <AccordionItem value="state">
                 <AccordionTrigger>State Configuration</AccordionTrigger>
                 <AccordionContent>
@@ -211,9 +239,21 @@ export function SwitchBuilderView(props: SwitchBuilderViewProps) {
                           <FormLabel>Percentage Instance</FormLabel>
                           <FormControl>
                             <SingleInstanceCombobox
+                              allowClear={true}
                               onValueChange={(instance) => {
-                                field.onChange(instance?.id)
-                                form.setValue('percentualSettings.parameter', { id: -1, denotation: '' })
+                                console.log('instance', instance)
+                                if (instance) {
+                                  form.setValue('percentualSettings', {
+                                    instanceID: instance.id,
+                                    parameter: { id: -1, denotation: '' },
+                                    lowerBound: null,
+                                    upperBound: null
+                                  })
+                                  field.onChange(instance?.id)
+                                } else {
+                                  field.onChange(null)
+                                  form.setValue('percentualSettings', undefined)
+                                }
                               }}
                               value={field.value!}
                               filter={SdParameterType.Number}
@@ -286,7 +326,7 @@ export function SwitchBuilderView(props: SwitchBuilderViewProps) {
                             <Input
                               type="number"
                               placeholder="Lower bound"
-                              {...field}
+                              value={field.value ?? ''}
                               onChange={(e) => {
                                 props.onPercentageParameterChange(
                                   form.getValues('percentualSettings.instanceID')!,
@@ -294,7 +334,7 @@ export function SwitchBuilderView(props: SwitchBuilderViewProps) {
                                   parseFloat(e.target.value),
                                   form.getValues('percentualSettings.upperBound')!
                                 )
-                                field.onChange(e.target.value)
+                                field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))
                               }}
                             />
                           </FormControl>
@@ -327,7 +367,7 @@ export function SwitchBuilderView(props: SwitchBuilderViewProps) {
                             <Input
                               type="number"
                               placeholder="Upper bound"
-                              {...field}
+                              value={field.value ?? ''}
                               onChange={(e) => {
                                 props.onPercentageParameterChange(
                                   form.getValues('percentualSettings.instanceID')!,
@@ -335,7 +375,7 @@ export function SwitchBuilderView(props: SwitchBuilderViewProps) {
                                   form.getValues('percentualSettings.lowerBound')!,
                                   parseFloat(e.target.value)
                                 )
-                                field.onChange(e.target.value)
+                                field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))
                               }}
                             />
                           </FormControl>

@@ -202,7 +202,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                             <FormControl>
                               <SingleInstanceCombobox
                                 onValueChange={(value) => {
-                                  field.onChange({ id: value.id, uid: value.uid })
+                                  field.onChange({ id: value?.id, uid: value?.uid })
                                   form.setValue(`rows.${index}.parameter`, { id: null, denotation: '' })
                                 }}
                                 value={field.value.id}

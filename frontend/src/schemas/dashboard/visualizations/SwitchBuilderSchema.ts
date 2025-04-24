@@ -24,15 +24,54 @@ export const switchCardSchema = z.object({
   }),
   percentualSettings: z
     .object({
-      instanceID: z.coerce.number(),
-      parameter: z.object({
-        id: z.coerce.number(),
-        denotation: z.string()
-      }),
-      lowerBound: z.coerce.number(),
-      upperBound: z.coerce.number()
+      instanceID: z.coerce.number().min(0, { message: 'Instance is required' }),
+      parameter: z
+        .object({
+          id: z.coerce.number().min(0),
+          denotation: z.string().min(1)
+        })
+        .superRefine((data, ctx) => {
+          if (data.id <= 0) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Parameter is required',
+              path: []
+            })
+            return NEVER
+          }
+          return data
+        }),
+      lowerBound: z
+        .number()
+        .nullable()
+        .superRefine((data, ctx) => {
+          if (data === null) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.invalid_type,
+              expected: 'number',
+              received: 'null',
+              message: 'Value is required'
+            })
+            return NEVER
+          }
+          return data
+        }),
+      upperBound: z
+        .number()
+        .nullable()
+        .superRefine((data, ctx) => {
+          if (data === null) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.invalid_type,
+              expected: 'number',
+              received: 'null',
+              message: 'Value is required'
+            })
+            return NEVER
+          }
+          return data
+        })
     })
-    .partial()
     .optional()
     .refine(
       (data) => {
@@ -41,11 +80,13 @@ export const switchCardSchema = z.object({
           data.instanceID === undefined ||
           data.parameter?.id === undefined ||
           data.lowerBound === undefined ||
-          data.upperBound === undefined
+          data.lowerBound === null ||
+          data.upperBound === undefined ||
+          data.upperBound === null
         ) {
           return true
         }
-        return data.upperBound > data.lowerBound
+        return data.upperBound! > data.lowerBound!
       },
       {
         message: 'Upper bound must be greater than lower bound',

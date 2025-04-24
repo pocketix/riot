@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Check, ChevronsUpDown } from 'lucide-react'
+import { Check, ChevronsUpDown, XIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
@@ -9,10 +9,11 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { useInstances } from '@/context/InstancesContext'
 
 interface SingleInstanceComboboxProps {
-  onValueChange: (value: SdInstancesWithParamsQuery['sdInstances'][number]) => void
+  onValueChange: (value: SdInstancesWithParamsQuery['sdInstances'][number] | null) => void
   value: number | null
   disabled?: boolean
   className?: string
+  allowClear?: boolean
   // Filters out instances that do not have any parameter of the type passed
   filter?: SdParameterType
 }
@@ -29,6 +30,7 @@ export function SingleInstanceCombobox({
   value,
   disabled = false,
   className,
+  allowClear = false,
   filter
 }: SingleInstanceComboboxProps) {
   const [open, setOpen] = useState(false)
@@ -95,14 +97,27 @@ export function SingleInstanceCombobox({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            'flex w-full items-center px-2 text-left font-semibold',
+            'relative flex w-full items-center px-2 text-left font-semibold',
             !value && 'font-normal text-muted-foreground',
+            allowClear && value && 'pl-8',
             className
           )}
         >
           <span className="flex-1 truncate">
             {selectedInstance ? selectedInstance.userIdentifier : 'Select instance...'}
           </span>
+          {allowClear && value && (
+            <span
+              className="absolute left-2 cursor-pointer text-muted-foreground hover:text-destructive"
+              onClick={(e) => {
+                e.stopPropagation()
+                onValueChange(null)
+                setOpen(false)
+              }}
+            >
+              <XIcon className="h-4 w-4" />
+            </span>
+          )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -121,7 +136,9 @@ export function SingleInstanceCombobox({
                         value={instance.userIdentifier}
                         onSelect={() => {
                           if (value === instance.id) {
+                            if (allowClear) onValueChange(null)
                             setOpen(false)
+                            return
                           }
                           onValueChange(instance)
                           setOpen(false)

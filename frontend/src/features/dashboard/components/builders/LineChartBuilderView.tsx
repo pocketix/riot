@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { FieldErrors, useFieldArray, useForm } from 'react-hook-form'
 import { format, scaleLinear } from 'd3'
 import { z } from 'zod'
 import { AxisLegendPosition } from '@nivo/axes'
@@ -50,6 +50,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
   const [dataMaxValue, setDataMaxValue] = useState<number | null>(null)
   const [_dataMinValue, setDataMinValue] = useState<number | null>(null)
   const isFirstRender = useRef(true)
+  const [openAccordions, setOpenAccordions] = useState<string[]>(['row-0'])
 
   const form = useForm<z.infer<typeof lineChartBuilderSchema>>({
     resolver: zodResolver(lineChartBuilderSchema),
@@ -242,6 +243,26 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
     }
   }, [debouncedDecimalPlaces])
 
+  const handleError = (errors: FieldErrors<z.infer<typeof lineChartBuilderSchema>>) => {
+    const accordionsToOpen: string[] = []
+
+    if (errors.xAxisMarkers) accordionsToOpen.push('markers-options')
+    if (errors.toolTip) accordionsToOpen.push('tooltip-options')
+    if (errors.legend) accordionsToOpen.push('legend')
+    if (
+      errors.margin ||
+      errors.axisLeft ||
+      errors.yScale ||
+      errors.enableGridX ||
+      errors.enableGridY ||
+      errors.chartArea
+    ) {
+      accordionsToOpen.push('advanced-options')
+    }
+
+    setOpenAccordions(accordionsToOpen)
+  }
+
   const iconValue = form.watch('icon') ?? ''
   const IconComponent = iconValue ? getCustomizableIcon(iconValue) : null
 
@@ -308,7 +329,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
       <Card className="mt-4 h-fit w-full overflow-hidden p-2 pt-0 shadow-lg">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(props.handleSubmit)}
+            onSubmit={form.handleSubmit(props.handleSubmit, handleError)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -505,7 +526,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                           value={field.value.id}
                           onValueChange={(selectedInstance) => {
                             props.onInstanceSelectionChange(index, field.value)
-                            field.onChange({ id: selectedInstance.id, uid: selectedInstance.uid, parameters: [] })
+                            field.onChange({ id: selectedInstance?.id, uid: selectedInstance?.uid, parameters: [] })
                             form.setValue(`instances.${index}.parameters`, [])
                           }}
                         />
@@ -561,7 +582,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
               Add Instance
             </Button>
 
-            <Accordion type="single" collapsible className="mt-4 w-full">
+            <Accordion type="multiple" className="mt-4 w-full" value={openAccordions} onValueChange={setOpenAccordions}>
               <AccordionItem value="markers-options">
                 <AccordionTrigger>Y-Axis Markers</AccordionTrigger>
                 <AccordionContent>
@@ -586,10 +607,13 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                                   <Input
                                     type="number"
                                     placeholder="Enter value"
-                                    {...field}
-                                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                    value={field.value ?? ''}
+                                    onChange={(e) =>
+                                      field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))
+                                    }
                                   />
                                 </FormControl>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
@@ -721,7 +745,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                       size="sm"
                       onClick={() =>
                         appendMarker({
-                          value: 0,
+                          value: null,
                           color: '#ef4444',
                           style: 'solid',
                           legend: '',
@@ -736,9 +760,6 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                   </div>
                 </AccordionContent>
               </AccordionItem>
-            </Accordion>
-
-            <Accordion type="single" collapsible className="mt-4 w-full">
               <AccordionItem value="tooltip-options">
                 <AccordionTrigger>Tooltip options</AccordionTrigger>
                 <AccordionContent className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
@@ -785,9 +806,6 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                   />
                 </AccordionContent>
               </AccordionItem>
-            </Accordion>
-
-            <Accordion type="single" collapsible className="mt-4 w-full">
               <AccordionItem value="legend">
                 <AccordionTrigger>Legend options</AccordionTrigger>
                 <AccordionContent className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
@@ -831,9 +849,6 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                   />
                 </AccordionContent>
               </AccordionItem>
-            </Accordion>
-
-            <Accordion type="single" collapsible className="mt-4 w-full">
               <AccordionItem value="advanced-options">
                 <AccordionTrigger>Advanced options</AccordionTrigger>
                 <AccordionContent className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">

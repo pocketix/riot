@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { z } from 'zod'
 import { BulletCardConfig, bulletChartBuilderSchema } from '@/schemas/dashboard/visualizations/BulletChartBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, FieldErrors } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import { TbTrash } from 'react-icons/tb'
@@ -61,10 +61,12 @@ export interface BulletChartBuilderViewProps {
 
 export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
   const parameterNameMock = useRef<HTMLSpanElement | null>(null)
+  const [openAccordions, setOpenAccordions] = useState<string[]>(props.config ? [''] : ['instance-0'])
   const [rangeInputs, setRangeInputs] = useState<Record<number, string>>({})
   const [markerInputs, setMarkerInputs] = useState<Record<number, string>>({})
 
   const form = useForm<z.infer<typeof bulletChartBuilderSchema>>({
+    mode: 'onChange',
     resolver: zodResolver(bulletChartBuilderSchema),
     defaultValues: props.config || {
       cardTitle: 'Bullet Charts',
@@ -249,6 +251,36 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
     }))
   }
 
+  const handleError = (errors: FieldErrors<z.infer<typeof bulletChartBuilderSchema>>) => {
+    const accrodionsToOpen: string[] = []
+
+    if (errors.rows && Array.isArray(errors.rows)) {
+      errors.rows.forEach((rowError, rowIndex) => {
+        if (rowError) {
+          accrodionsToOpen.push(`instance-${rowIndex}`)
+
+          if (rowError.config) {
+            if (rowError.config.ranges) accrodionsToOpen.push(`ranges-${rowIndex}`)
+            if (rowError.config.markers) accrodionsToOpen.push(`markers-${rowIndex}`)
+            if (
+              rowError.config.colorScheme ||
+              rowError.config.reverse ||
+              rowError.config.measureSize ||
+              rowError.config.titleOffsetX ||
+              rowError.config.minValue ||
+              rowError.config.maxValue ||
+              rowError.config.margin
+            ) {
+              accrodionsToOpen.push(`advanced-${rowIndex}`)
+            }
+          }
+        }
+      })
+    }
+
+    setOpenAccordions(accrodionsToOpen)
+  }
+
   const iconValue = form.watch('icon') ?? ''
   const IconComponent = iconValue ? getCustomizableIcon(iconValue) : null
 
@@ -281,7 +313,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
       <Card className="mt-4 h-fit w-full overflow-hidden p-2 pt-0 shadow-lg">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(props.onSubmit)}
+            onSubmit={form.handleSubmit(props.onSubmit, handleError)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -316,7 +348,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                 )}
               />
             </div>
-            <Accordion type="multiple" className="w-full" defaultValue={props.config ? [''] : ['instance-0']}>
+            <Accordion type="multiple" className="w-full" value={openAccordions} onValueChange={setOpenAccordions}>
               {fields.map((item, index) => (
                 <AccordionItem key={item.id} value={`instance-${index}`}>
                   <AccordionTrigger className="flex w-full items-center justify-between">
@@ -523,8 +555,13 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                           )}
                         />
                       </div>
-                      <Accordion type="single" collapsible className="mt-4 w-full">
-                        <AccordionItem value="ranges">
+                      <Accordion
+                        type="multiple"
+                        className="mt-4 w-full"
+                        value={openAccordions}
+                        onValueChange={setOpenAccordions}
+                      >
+                        <AccordionItem value={`ranges-${index}`}>
                           <AccordionTrigger>Ranges</AccordionTrigger>
                           <AccordionContent className="w-full">
                             <FormField
@@ -557,7 +594,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                         {form.formState.errors?.rows?.[index]?.config?.ranges && (
                           <FormMessage>{form.formState.errors.rows[index].config.ranges.message}</FormMessage>
                         )}
-                        <AccordionItem value="markers">
+                        <AccordionItem value={`markers-${index}`}>
                           <AccordionTrigger>Targets</AccordionTrigger>
                           <AccordionContent className="w-full">
                             <FormField
@@ -590,7 +627,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                         {form.formState.errors?.rows?.[index]?.config?.markers && (
                           <FormMessage>{form.formState.errors.rows[index].config.markers.message}</FormMessage>
                         )}
-                        <AccordionItem value="advanced">
+                        <AccordionItem value={`advanced-${index}`}>
                           <AccordionTrigger>Advanced Options</AccordionTrigger>
                           <AccordionContent className="grid w-full grid-cols-1 gap-4 p-1 sm:grid-cols-2">
                             <FormField
