@@ -47,17 +47,7 @@ export default function AutomationsEditor() {
   const [updateVPLProgram] = useMutation(UPDATE_VPL_PROGRAM)
   const [deleteVPLProgram] = useMutation(DELETE_VPL_PROGRAM)
 
-  // Load the VPL editor component from the CDN
-  useEffect(() => {
-    const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/gh/pocketix/vpl-for-things@main/dist/vpl-editor.js'
-    script.async = true
-    document.body.appendChild(script)
 
-    return () => {
-      document.body.removeChild(script)
-    }
-  }, [])
 
   // Load the VPL editor component from the CDN
   useEffect(() => {
@@ -76,32 +66,74 @@ export default function AutomationsEditor() {
     }
   }, [])
 
-  const handleSaveProgram = () => {
-    if (!programName.trim()) {
-      toast.error('Please enter a program name')
+  // Function to check if a program with the given name already exists
+  const checkProgramExists = (name: string): VPLProgram | undefined => {
+    if (!programsData?.vplPrograms) return undefined
+    return programsData.vplPrograms.find(
+      (program: VPLProgram) => program.name.toLowerCase() === name.toLowerCase()
+    )
+  }
+
+  // Function to generate a unique name by adding or incrementing a number in parentheses
+  const generateUniqueName = (baseName: string): string => {
+    // Check if the base name already exists
+    if (!checkProgramExists(baseName)) return baseName
+
+    // Try adding numbers in parentheses until we find a unique name
+    let counter = 1
+    let newName = `${baseName}(${counter})`
+
+    while (checkProgramExists(newName)) {
+      counter++
+      newName = `${baseName}(${counter})`
+    }
+
+    return newName
+  }
+
+  // Function to save a program with the given name
+  const saveProgram = (name: string, overwriteId?: string) => {
+    const editor = (window as any).currentEditor
+    if (!editor) {
+      toast.error('Editor not initialized')
       return
     }
 
-    // Access the editor through the window object
-    const editor = (window as any).currentEditor
-    if (editor) {
-      // Get the program from the editor
-      // For custom lit elements, we need to access properties directly
-      const program = editor.program
-      console.log('Retrieved program:', program)
+    const program = editor.program
+    if (!program) {
+      toast.error('No program data available')
+      return
+    }
 
-      if (!program) {
-        toast.error('No program data available')
-        return
-      }
+    console.log('Saving program:', program)
+    setIsSaving(true)
 
-      // Log the raw program object to the console
-      console.log('Saving program:', program)
-
-      setIsSaving(true)
+    // If we're overwriting an existing program
+    if (overwriteId) {
+      updateVPLProgram({
+        variables: {
+          id: overwriteId,
+          name: name,
+          data: JSON.stringify(program)
+        }
+      })
+      .then(() => {
+        toast.success(`Program "${name}" updated successfully`)
+        setProgramName('') // Clear the name field after successful save
+        refetchPrograms()
+      })
+      .catch(error => {
+        console.error('Update operation error:', error)
+        toast.error(`Failed to update program: ${error.message}`)
+      })
+      .finally(() => {
+        setIsSaving(false)
+      })
+    } else {
+      // Creating a new program
       createVPLProgram({
         variables: {
-          name: programName,
+          name: name,
           data: JSON.stringify(program)
         }
       })
@@ -109,8 +141,6 @@ export default function AutomationsEditor() {
         const savedProgram = result.data.createVPLProgram
         toast.success(`Program "${savedProgram.name}" saved successfully`)
         setProgramName('') // Clear the name field after successful save
-
-        // Refresh the programs list
         refetchPrograms()
       })
       .catch(error => {
@@ -120,8 +150,33 @@ export default function AutomationsEditor() {
       .finally(() => {
         setIsSaving(false)
       })
+    }
+  }
+
+  const handleSaveProgram = () => {
+    if (!programName.trim()) {
+      toast.error('Please enter a program name')
+      return
+    }
+
+    // Check if a program with this name already exists
+    const existingProgram = checkProgramExists(programName)
+
+    if (existingProgram) {
+      // Program with the same name exists, ask user what to do
+      if (confirm(`A program named "${programName}" already exists. Do you want to:\n\n` +
+                 `• Click OK to overwrite the existing program\n` +
+                 `• Click Cancel to save as "${generateUniqueName(programName)}"`)) {
+        // User chose to overwrite
+        saveProgram(programName, existingProgram.id)
+      } else {
+        // User chose to save as a new name
+        const uniqueName = generateUniqueName(programName)
+        saveProgram(uniqueName)
+      }
     } else {
-      toast.error('Editor not initialized')
+      // No duplicate, proceed with normal save
+      saveProgram(programName)
     }
   }
 
@@ -147,7 +202,6 @@ export default function AutomationsEditor() {
     console.log('Selected program data:', selectedProgramData)
 
     try {
-      // Parse the program data
       const programData = JSON.parse(selectedProgramData.data)
       console.log('Parsed program data:', programData)
 
@@ -380,8 +434,8 @@ export default function AutomationsEditor() {
         </div>
       </div>
 
-      {/* VPL Editor */}
-      <div className="vpl-editor-container">
+        {/* VPL Editor */}
+        <div className="vpl-editor-container">
         {/* @ts-ignore */}
         <vpl-editor
           key={editorKey}
@@ -398,12 +452,13 @@ export default function AutomationsEditor() {
                   if (typeof typedEditor.updateProgram === 'function') {
                     typedEditor.updateProgram(currentProgramData);
                     console.log('Program set using updateProgram');
-                  } else if (typeof typedEditor.setProgram === 'function') {
+                  }
+                  else if (typeof typedEditor.setProgram === 'function') {
                     typedEditor.setProgram(currentProgramData);
                     console.log('Program set using setProgram');
-                  } else {
-                    console.log('Using direct property assignment');
-                    typedEditor.program = currentProgramData;
+                  }
+                  else {
+                    console.error('No setProgram or updateProgram function found');
                   }
                 } catch (error) {
                   console.error('Error setting program data:', error);

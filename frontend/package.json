@@ -20,7 +20,7 @@
     "@nivo/core": "^0.88.0",
     "@nivo/line": "^0.88.0",
     "@nivo/scales": "^0.88.0",
-    "@pocketix/vpl-for-things": "github:pocketix/vpl-for-things",
+    "@pocketix/vpl-for-things": "github:pocketix/vpl-for-things#feature/custom-user-procedures",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-checkbox": "^1.1.4",
