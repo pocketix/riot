@@ -236,7 +236,7 @@ const DashboardView = (props: DashboardViewProps) => {
             isDroppable={editMode}
             onResizeStart={handleResizeStart}
             onResizeStop={handleResizeStop}
-            useCSSTransforms={false}
+            useCSSTransforms={false} // TODO: check the inView, this broke it before
             containerPadding={[10, 0]}
             compactType={'vertical'}
             verticalCompact={true}
@@ -267,7 +267,7 @@ const DashboardView = (props: DashboardViewProps) => {
                 breakPoint: currentBreakpoint,
                 cols: props.cols,
                 handleDeleteItem: props.onDeleteItem,
-                height: props.rowHeight * item.h,
+                height: props.rowHeight,
                 width,
                 setHighlightedCardID,
                 configuration: props.details[itemId],
