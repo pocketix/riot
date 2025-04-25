@@ -183,26 +183,6 @@ func (r *mutationResolver) DeleteVPLProgram(ctx context.Context, id uint32) (boo
 	return true, nil
 }
 
-func (r *mutationResolver) UpdateVPLProgramByName(ctx context.Context, name string, newName string, data string) (graphQLModel.VPLProgram, error) {
-	updateVPLProgramResult := domainLogicLayer.UpdateVPLProgramByName(name, newName, data)
-	if updateVPLProgramResult.IsFailure() {
-		log.Printf("Error occurred (update VPL program by name): %s\n", updateVPLProgramResult.GetError().Error())
-		return graphQLModel.VPLProgram{}, updateVPLProgramResult.GetError()
-	}
-
-	return updateVPLProgramResult.Unwrap()
-}
-
-func (r *mutationResolver) DeleteVPLProgramByName(ctx context.Context, name string) (bool, error) {
-	log.Printf("Attempting to delete VPL program with name: %s\n", name)
-	if err := domainLogicLayer.DeleteVPLProgramByName(name); err != nil {
-		log.Printf("Error occurred (delete VPL program by name): %s\n", err.Error())
-		return false, err
-	}
-	log.Printf("Successfully deleted VPL program with name: %s\n", name)
-	return true, nil
-}
-
 func (r *mutationResolver) ExecuteVPLProgram(ctx context.Context, id uint32) (graphQLModel.VPLProgramExecutionResult, error) {
 	panic(fmt.Errorf("not implemented: ExecuteVPLProgram - executeVPLProgram"))
 }
@@ -364,15 +344,6 @@ func (r *queryResolver) VplProgram(ctx context.Context, id uint32) (graphQLModel
 	getVPLProgramResult := domainLogicLayer.GetVPLProgram(id)
 	if getVPLProgramResult.IsFailure() {
 		log.Printf("Error occurred (get VPL program): %s\n", getVPLProgramResult.GetError().Error())
-		return graphQLModel.VPLProgram{}, getVPLProgramResult.GetError()
-	}
-	return getVPLProgramResult.Unwrap()
-}
-
-func (r *queryResolver) VplProgramByName(ctx context.Context, name string) (graphQLModel.VPLProgram, error) {
-	getVPLProgramResult := domainLogicLayer.GetVPLProgramByName(name)
-	if getVPLProgramResult.IsFailure() {
-		log.Printf("Error occurred (get VPL program by name): %s\n", getVPLProgramResult.GetError().Error())
 		return graphQLModel.VPLProgram{}, getVPLProgramResult.GetError()
 	}
 	return getVPLProgramResult.Unwrap()

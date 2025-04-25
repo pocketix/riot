@@ -231,9 +231,9 @@ func (VPLProgramsEntity) TableName() string {
 }
 
 type VPLProceduresEntity struct {
-	gorm.Model
-	Name string `gorm:"column:name;not null;uniqueIndex"`
-	Data string `gorm:"column:data;type:jsonb;not null"`
+	ID                   uint32                           `gorm:"column:id;primaryKey;not null"`
+	Name 				 string 						  `gorm:"column:name;not null;uniqueIndex"`
+	Data 				 string 						  `gorm:"column:data;type:jsonb;not null"`
 }
 
 func (VPLProceduresEntity) TableName() string {
@@ -241,9 +241,9 @@ func (VPLProceduresEntity) TableName() string {
 }
 
 type VPLProgramSDSnapshotLinkEntity struct {
-	ProgramID     uint32 `gorm:"column:program_id;primaryKey;not null"`
-	SDInstanceID  uint32 `gorm:"column:sd_instance_id;primaryKey;not null"`
-	SDParameterID uint32 `gorm:"column:sd_parameter_id;primaryKey;not null"`
+	ProgramID     		 uint32 		 				  `gorm:"column:program_id;primaryKey;not null"`
+	SDInstanceID  		 uint32 						  `gorm:"column:sd_instance_id;primaryKey;not null"`
+	SDParameterID 		 uint32 						 `gorm:"column:sd_parameter_id;primaryKey;not null"`
 }
 
 func (VPLProgramSDSnapshotLinkEntity) TableName() string {

@@ -7,6 +7,7 @@ import (
 
 func ToDBModelEntityVPLProcedure(vplProcedure dllModel.VPLProcedure) dbModel.VPLProceduresEntity {
 	return dbModel.VPLProceduresEntity{
+		ID:   vplProcedure.ID,
 		Name: vplProcedure.Name,
 		Data: vplProcedure.Data,
 	}

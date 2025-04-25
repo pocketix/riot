@@ -47,3 +47,29 @@ export const DELETE_VPL_PROGRAM_BY_NAME = gql`
     deleteVPLProgramByName(name: $name)
   }
 `
+
+export const CREATE_VPL_PROCEDURE = gql`
+  mutation CreateVPLProcedure($input: VPLProcedureInput!) {
+    createVPLProcedure(input: $input) {
+      id
+      name
+      data
+    }
+  }
+`
+
+export const UPDATE_VPL_PROCEDURE = gql`
+  mutation UpdateVPLProcedure($id: ID!, $input: VPLProcedureInput!) {
+    updateVPLProcedure(id: $id, input: $input) {
+      id
+      name
+      data
+    }
+  }
+`
+
+export const DELETE_VPL_PROCEDURE = gql`
+  mutation DeleteVPLProcedure($id: ID!) {
+    deleteVPLProcedure(id: $id)
+  }
+`

@@ -35,3 +35,23 @@ export const GET_VPL_PROGRAM_BY_NAME = gql`
     }
   }
 `
+
+export const GET_VPL_PROCEDURES = gql`
+  query VplProcedures {
+    vplProcedures {
+      id
+      name
+      data
+    }
+  }
+`
+
+export const GET_VPL_PROCEDURE = gql`
+  query VplProcedure($id: ID!) {
+    vplProcedure(id: $id) {
+      id
+      name
+      data
+    }
+  }
+`
