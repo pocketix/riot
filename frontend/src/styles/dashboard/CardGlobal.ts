@@ -18,7 +18,7 @@ export const DragHandle = styled.div`
   top: 20%;
   left: 50%;
   transform: translateX(-50%) translateY(-50%);
-  z-index: 2;
+  z-index: 3;
   background-color: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   border: 1px solid hsl(var(--border));
@@ -28,11 +28,11 @@ export const DragHandle = styled.div`
 
 export const ArrowContainer = styled.div`
   position: absolute;
-  bottom: 10px;
+  bottom: 0px;
   left: 50%;
   transform: translateX(-50%);
   background-color: hsl(var(--background));
-  padding: 8px;
+  padding: 2px;
   border-radius: 4px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border: 1px solid hsl(var(--border));
@@ -40,7 +40,6 @@ export const ArrowContainer = styled.div`
   display: flex;
   flex-direction: row;
   gap: 8px;
-  margin-top: 8px;
 `
 
 export const Arrow = styled.button<{ disabled?: boolean; $red?: boolean; $green?: boolean }>`
@@ -72,14 +71,14 @@ export const DeleteEditContainer = styled.div`
   display: flex;
   flex-direction: row;
   gap: 10px;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
+  top: 0px;
+  right: 0px;
+  z-index: 3;
   background-color: hsl(var(--primary));
   border: 1px solid hsl(var(--border));
-  padding: 8px;
+  padding: 6px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
+  border-radius: 10px;
 `
 
 export const OverlayContainer = styled.div`

@@ -3,7 +3,16 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowDownIcon, ArrowUpIcon, SearchIcon, CheckCircleIcon, XCircleIcon, X } from 'lucide-react'
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  SearchIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  X,
+  PlusIcon,
+  Pencil
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent } from '@/components/ui/card'
@@ -11,6 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { TbDeviceTablet } from 'react-icons/tb'
 import { WholeKPIGroupDetails } from '@/controllers/GroupPageController'
 import { useNavigate } from 'react-router-dom'
+import { AddEditGroupDialogController } from './components/AddEditGroupController'
 
 interface GroupPageViewProps {
   groups: WholeKPIGroupDetails[]
@@ -81,18 +91,28 @@ export const GroupPageView = ({
         </div>
       </div>
 
-      <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'issues')}>
-        <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
-          <TabsTrigger value="all" className="flex items-center gap-2">
-            All Groups
-            <Badge variant="outline">{groups.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="issues" className="flex items-center gap-2">
-            With Issues
-            <Badge variant="outline">{groups.filter((g) => g.kpiStats.notFulfilled > 0).length}</Badge>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-between">
+        <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'issues')}>
+          <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
+            <TabsTrigger value="all" className="flex items-center gap-2">
+              All Groups
+              <Badge variant="outline">{groups.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="issues" className="flex items-center gap-2">
+              With Issues
+              <Badge variant="outline">{groups.filter((g) => g.kpiStats.notFulfilled > 0).length}</Badge>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <div className="hidden sm:block">
+          <AddEditGroupDialogController>
+            <Button>
+              <PlusIcon className="mr-2 h-4 w-4" />
+              Create Group
+            </Button>
+          </AddEditGroupDialogController>
+        </div>
+      </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -108,6 +128,14 @@ export const GroupPageView = ({
           {displayedGroups.map((group) => (
             <GroupCard key={group.groupID} group={group} />
           ))}
+          <div className="block w-full sm:hidden">
+            <AddEditGroupDialogController>
+              <Button className="mx-auto flex">
+                <PlusIcon className="mr-2 h-4 w-4" />
+                Create Group
+              </Button>
+            </AddEditGroupDialogController>
+          </div>
         </div>
       ) : (
         <div className="py-12 text-center">
@@ -139,28 +167,43 @@ const GroupCard = ({ group }: GroupCardProps) => {
 
   return (
     <Card
-      className={`relative h-full cursor-pointer overflow-hidden transition-all hover:shadow-md ${
+      className={`relative h-full overflow-hidden transition-all hover:shadow-md ${
         hasIssues ? 'border-red-500' : 'border-green-500'
       }`}
-      onClick={() => navigate(`/group/${group.groupID}`)}
     >
       <div
         className={`absolute inset-0 right-auto z-0 ${hasIssues ? 'bg-destructive/30' : 'bg-destructive/50'}`}
         style={{ width: `${100 - fulfillmentPercentage}%` }}
       />
 
-      <CardContent className="z-2 relative flex h-full flex-col p-4">
-        <div className="mb-3 flex flex-col justify-between sm:flex-row">
-          <h3 className="truncate pr-2 text-lg font-semibold">{group.userIdentifier}</h3>
-          {hasIssues && (
-            <Badge variant="destructive" className="w-fit whitespace-nowrap sm:ml-2">
-              {group.kpiStats.notFulfilled} Issue
-              {group.kpiStats.notFulfilled !== 1 ? 's' : ''}
-            </Badge>
-          )}
+      <CardContent className="z-2 relative flex h-full flex-col px-2 pb-1 pt-2">
+        <div className="mb-3 flex flex-col items-center justify-between sm:flex-row">
+          <Button
+            variant="link"
+            onClick={() => navigate(`/group/${group.groupID}`)}
+            className="truncate p-0 text-lg font-semibold"
+          >
+            {group.userIdentifier}
+          </Button>
+          <div className="flex items-center gap-1">
+            {hasIssues && (
+              <Badge variant="destructive" className="w-fit whitespace-nowrap sm:ml-2">
+                {group.kpiStats.notFulfilled} Issue
+                {group.kpiStats.notFulfilled !== 1 ? 's' : ''}
+              </Badge>
+            )}
+
+            <AddEditGroupDialogController
+              initial={{ userIdentifier: group.userIdentifier, sdInstanceIDs: group.instances.map((i) => i.id) , groupID: group.groupID }}
+            >
+              <Button type="button" size="icon" variant="ghost" className="m-0 p-0">
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </AddEditGroupDialogController>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 px-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Devices:</span>
             <span className="font-medium">{group.instances.length}</span>

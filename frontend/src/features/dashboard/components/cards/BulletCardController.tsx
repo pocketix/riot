@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
+import { bulletChartBuilderSchema, BulletCardConfig } from '@/schemas/dashboard/visualizations/BulletChartBuilderSchema'
 import { StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
 import { BulletCardView } from './BulletCardView'

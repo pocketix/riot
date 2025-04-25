@@ -1,7 +1,6 @@
 import { AllConfigTypes } from './gridItem'
 
-export type DBItemDetails<ConfigType extends AllConfigTypes> = {
-  layoutID?: string
+export type SpecificDBItemDetails<ConfigType extends AllConfigTypes> = {
   visualization: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard'
   visualizationConfig: ConfigType
 }

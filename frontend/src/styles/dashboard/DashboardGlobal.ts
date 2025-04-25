@@ -22,9 +22,7 @@ export const DashboardRoot = styled.div`
 
 export const Navbar = styled.div`
   box-sizing: border-box;
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   z-index: 0;
   width: 100%;
   display: flex;
@@ -43,7 +41,7 @@ export const Navbar = styled.div`
 export const MainGrid = styled.div`
   display: flex;
   flex-direction: column;
-  margin-top: 60px; /* Height of the top navbar */
-  min-height: 90vh;
+  min-height: 80vh;
+  gap: 0.5rem;
   height: calc(max-content + 100px);
 `

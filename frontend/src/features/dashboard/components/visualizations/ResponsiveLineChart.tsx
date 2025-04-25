@@ -7,12 +7,13 @@ import { ChartToolTip } from '@/features/dashboard/components/cards/tooltips/Lin
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { ScaleSpec } from '@nivo/scales'
 import { useInstances } from '@/context/InstancesContext'
-import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { ChartCardConfig } from '@/schemas/dashboard/visualizations/LineChartBuilderSchema'
 import { getColorBlindSchemeWithBW } from './color-schemes/color-impaired'
 import { CartesianMarkerProps } from '@nivo/core'
 import { LineChartLegend } from './LineChartLegend'
 import { toast } from 'sonner'
 import { useChartLongPress } from '@/hooks/useLineChartLongPress'
+import { cn } from '@/lib/utils'
 
 export interface ResponsiveLineChartProps {
   className?: string
@@ -51,7 +52,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
         setScreenLocked(true)
         toast.info('Screen locked, let go to unlock')
       },
-      (point : Point) => {
+      (point: Point) => {
         handleSetDetailsSelectedDevice(point)
       },
       { threshold: 250, moveThreshold: 10 }
@@ -173,7 +174,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
 
     if (useSparklineMode) {
       return (
-        <div className={className || ''} style={{ height: '100%', width: '100%' }} ref={containerRef}>
+        <div className={className} style={{ height: '100%', width: '100%' }} ref={containerRef}>
           <ResponsiveLine
             data={data}
             margin={{ top: 2, right: 2, bottom: 3, left: 2 }}
@@ -206,7 +207,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
       setDetailsSelectedDevice(Number(instanceID), Number(parameterID))
     }
 
-    const handlePointClick = (point: Point, event: React.MouseEvent ) => {
+    const handlePointClick = (point: Point, event: React.MouseEvent) => {
       // override
       if (onClick) {
         onClick(point, event)
@@ -230,7 +231,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
 
     return (
       <div
-        className={`${className} flex w-full min-w-0 select-none flex-col overflow-hidden`}
+        className={cn('flex w-full min-w-0 select-none flex-col overflow-hidden pb-1', className)}
         style={containerStyle}
         ref={containerRef}
       >

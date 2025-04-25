@@ -1,21 +1,20 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { 
+import {
   Drawer,
   DrawerClose,
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerDescription 
+  DrawerDescription
 } from '@/components/ui/drawer'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
-import { CiEdit } from 'react-icons/ci'
 import { useState } from 'react'
-import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
-import { EntityCardConfig } from '@/schemas/dashboard/EntityCardBuilderSchema'
-import { TableCardConfig } from '@/schemas/dashboard/TableBuilderSchema'
-import { BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
+import { ChartCardConfig } from '@/schemas/dashboard/visualizations/LineChartBuilderSchema'
+import { EntityCardConfig } from '@/schemas/dashboard/visualizations/EntityCardBuilderSchema'
+import { TableCardConfig } from '@/schemas/dashboard/visualizations/TableBuilderSchema'
+import { BulletCardConfig } from '@/schemas/dashboard/visualizations/BulletChartBuilderSchema'
 import { toast } from 'sonner'
 import { DialogDescription } from '@radix-ui/react-dialog'
 import { AllConfigTypes, BuilderResult } from '@/types/dashboard/gridItem'
@@ -24,6 +23,9 @@ import { BulletChartBuilderController } from '../builders/BulletChartBuilderCont
 import { EntityCardBuilderController } from '../builders/EntityCardBuilderController'
 import { TableCardBuilderController } from '../builders/TableCardBuilderController'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { Pencil } from 'lucide-react'
+import { SwitchCardBuilderController } from '../builders/SwitchCardBuilderController'
+import { SwitchCardConfig } from '@/schemas/dashboard/visualizations/SwitchBuilderSchema'
 
 export interface CardEditDialogProps<ConfigType extends AllConfigTypes> {
   config?: ConfigType
@@ -58,8 +60,12 @@ export function CardEditDialog<ConfigType extends AllConfigTypes>({
           />
         )
       case 'switch':
-        // TODO: Add Switch builder
-        return <div>Switch</div>
+        return (
+          <SwitchCardBuilderController
+            config={config as SwitchCardConfig}
+            onDataSubmit={(data: BuilderResult<SwitchCardConfig>) => handleSave(data as BuilderResult<ConfigType>)}
+          />
+        )
       case 'table':
         return (
           <TableCardBuilderController
@@ -90,7 +96,7 @@ export function CardEditDialog<ConfigType extends AllConfigTypes>({
   const trigger = (
     <DialogTrigger asChild>
       <button>
-        <CiEdit className="text-secondary" />
+        <Pencil className="h-4 w-4 text-secondary" />
       </button>
     </DialogTrigger>
   )
@@ -131,9 +137,7 @@ export function CardEditDialog<ConfigType extends AllConfigTypes>({
       {trigger}
       <DrawerContent>
         <ScrollArea>
-          <div className="h-fit max-h-[calc(95vh-2rem)] sm:p-4">
-            {modalContent}
-          </div>
+          <div className="h-fit max-h-[calc(95vh-2rem)] sm:p-4">{modalContent}</div>
         </ScrollArea>
       </DrawerContent>
     </Drawer>

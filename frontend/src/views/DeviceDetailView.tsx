@@ -14,6 +14,7 @@ import { ResponsiveLineChart } from '@/features/dashboard/components/visualizati
 import { InstanceWithKPIs } from '@/context/stores/kpiStore'
 import { Label } from '@/components/ui/label'
 import { Serie } from '@nivo/line'
+import { EditableUserIdentifier } from './components/EditableUserIdentifier'
 
 export interface DeviceDetailPageProps {
   instance: InstanceWithKPIs | null
@@ -24,6 +25,8 @@ export interface DeviceDetailPageProps {
   currentParameter: SdTypeParametersQuery['sdType']['parameters'][0] | null
 
   chartData: Serie[]
+
+  onUserIdentifierChange: (value: string) => void
 
   selectedParameter: string | null
   setSelectedParameter: (value: string | null) => void
@@ -44,6 +47,7 @@ export const DeviceDetailPageView = ({
   currentParameter,
 
   chartData,
+  onUserIdentifierChange,
 
   setSelectedParameter,
   timeFrame,
@@ -110,7 +114,7 @@ export const DeviceDetailPageView = ({
                 <IconComponent />
               </div>
             )}
-            <h1 className="text-center text-3xl font-bold tracking-tight">{instance.userIdentifier}</h1>
+            <EditableUserIdentifier onSave={onUserIdentifierChange} value={instance.userIdentifier} className="text-center text-3xl font-bold tracking-tight" />
           </div>
           <div className="flex items-center text-sm text-muted-foreground">
             <span className="ml-2 mr-1">Last updated:</span>

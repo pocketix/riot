@@ -2,7 +2,7 @@
 import '@/../node_modules/react-grid-layout/css/styles.css'
 import '@/../node_modules/react-resizable/css/styles.css'
 
-import { Responsive, Layout, WidthProvider, Layouts } from 'react-grid-layout'
+import { Responsive, Layout, WidthProvider } from 'react-grid-layout'
 import { useMemo, useState, useLayoutEffect, useCallback } from 'react'
 import { DashboardRoot, Navbar, MainGrid } from '@/styles/dashboard/DashboardGlobal'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,6 @@ import { RestoreLayoutDialog } from './components/RestoreLayoutDialog'
 import { DashboardGroupCardsController } from './components/groups/DashboardGroupCardsController'
 import { InView } from 'react-intersection-observer'
 import { AllConfigTypes, BuilderResult, GridItem } from '@/types/dashboard/gridItem'
-import { DBItemDetails } from '@/types/dashboard/dbItem'
 import { MyHandle } from './components/cards/components/DragHandle'
 import { Instance } from '@/context/InstancesContext'
 import { toast } from 'sonner'
@@ -23,23 +22,39 @@ import { BulletCardController } from './components/cards/BulletCardController'
 import { ChartCardController } from './components/cards/ChartCardController'
 import { TableCardController } from './components/cards/TableCardController'
 import { EntityCardController } from './components/cards/EntityCardController'
+import { DBItemDetails, Tab } from '@/schemas/dashboard/DashboardSchema'
+import { AddTabFormSchemaType } from '@/schemas/dashboard/AddTabSchema'
+import { ResponsiveTabs } from './components/ResponsiveTabs'
+import { useSwipeable } from 'react-swipeable'
+import { SwitchCardController } from './components/cards/SwitchCardController'
 
 interface DashboardViewProps {
   layouts: { [key: string]: Layout[] }
-  details: { [key: string]: DBItemDetails<AllConfigTypes> }
+  details: { [key: string]: DBItemDetails }
   instances: Instance[]
   mounted: boolean
-  cols: { lg: number; md: number; sm: number; xs: number; xxs: number }
+  cols: { lg: number; md: number; xs: number; xxs: number }
   rowHeight: number
   highlightedCardIDInitial?: string | null
-  onLayoutChange: (layout: Layout[], layouts: { [key: string]: Layout[] }) => void
-  onDeleteItem: (id: string) => void
-  onRestoreLayout: (layouts: Layouts) => boolean
+  onLayoutChange: (layout: Layout[], layouts: { [key: string]: Layout[] }, currentBreakpoint: string) => void
+  onDeleteItem: (id: string, breakpoint: string) => void
+  onRestoreAllTabs: (savedTabsState: Tab[]) => boolean
   onAddItem: <ConfigType extends AllConfigTypes>(item: GridItem<ConfigType>) => void
   onSaveConfig: <ConfigType extends AllConfigTypes>(
-    config: BuilderResult<ConfigType>,
-    dbItemDetails: DBItemDetails<ConfigType>
+    builderResult: BuilderResult<ConfigType>,
+    dbItemDetails: DBItemDetails,
+    detailsIndex: string
   ) => void
+
+  // TABS
+  tabs: Tab[]
+  activeTabId: number
+  onAddTab: (values: AddTabFormSchemaType) => void
+  onChangeTab: (tabId: number) => void
+  onDeleteTab: (tabId: number) => void
+  onEditTab: (tabId: number, values: AddTabFormSchemaType) => void
+  getNextTabId: () => number
+  getPreviousTabId: () => number
 }
 
 const DashboardView = (props: DashboardViewProps) => {
@@ -49,7 +64,7 @@ const DashboardView = (props: DashboardViewProps) => {
   const [width, setWidth] = useState<number>(0)
   const [editMode, setEditMode] = useState<boolean>(false)
   const [highlightedCardID, setHighlightedCardID] = useState<string | null>(props.highlightedCardIDInitial || null)
-  const [savedLayout, setSavedLayout] = useState<Layouts>({})
+  const [savedTabsState, setSavedTabsState] = useState<Tab[]>([])
   const [showAddDialog, setShowAddDialog] = useState(false)
 
   const handleBreakpointChanged = (breakpoint: string) => {
@@ -66,10 +81,10 @@ const DashboardView = (props: DashboardViewProps) => {
 
   const handleSetEditMode = () => {
     if (!editMode) {
-      setSavedLayout(props.layouts)
-      toast.info('You are now in edit mode. Your current layout has been saved.')
+      setSavedTabsState([...props.tabs])
+      toast.info('Your current dashboard settings have been saved.')
     } else {
-      toast.success('You have exited edit mode.')
+      toast.success('You have exited the edit mode.')
     }
 
     const newEditMode = !editMode
@@ -78,11 +93,12 @@ const DashboardView = (props: DashboardViewProps) => {
   }
 
   const handleRestoreLayout = () => {
-    const result = props.onRestoreLayout(savedLayout)
+    toast.loading('Restoring dashboard...', { id: 'restore-dashboard' })
+    const result = props.onRestoreAllTabs(savedTabsState)
     if (result) {
-      toast.success('Layout restored successfully.')
+      toast.success('Dashboard restored successfully.', { id: 'restore-dashboard' })
     } else {
-      toast.error('Failed to restore layout.')
+      toast.error('Failed to restore dashboard.', { id: 'restore-dashboard' })
     }
   }
 
@@ -134,6 +150,22 @@ const DashboardView = (props: DashboardViewProps) => {
     }
   }, [props.mounted, currentBreakpoint, props.layouts, debouncedCalculateWidth])
 
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (props.tabs.length > 1) {
+        props.onChangeTab(props.getNextTabId())
+      }
+    },
+    onSwipedRight: () => {
+      if (props.tabs.length > 1) {
+        props.onChangeTab(props.getPreviousTabId())
+      }
+    },
+    // TODO: maybe adjust?
+    swipeDuration: 500,
+    delta: 80
+  })
+
   if (!props.mounted || !props.layouts || !props.details || !props.instances || !ResponsiveGridLayout) {
     return (
       <div className="grid grid-cols-2 gap-4 overflow-hidden p-4">
@@ -160,15 +192,24 @@ const DashboardView = (props: DashboardViewProps) => {
           </Button>
         </div>
       </Navbar>
-      <MainGrid>
+      <MainGrid {...swipeHandlers}>
         <DashboardGroupCardsController />
+        <ResponsiveTabs
+          tabs={props.tabs}
+          activeTabId={props.activeTabId}
+          onChangeTab={props.onChangeTab}
+          onDeleteTab={props.onDeleteTab}
+          onEditTab={props.onEditTab}
+          onAddTab={props.onAddTab}
+          editMode={editMode}
+        />
         {!props.layouts || props.layouts[currentBreakpoint]?.length === 0 || !props.layouts[currentBreakpoint] ? (
           <Card className="mx-auto my-auto flex h-full w-2/3 flex-col items-center justify-center gap-2 self-center rounded-lg border border-dashed border-gray-300 p-4 text-center">
             <div className="rounded-full bg-gray-100 p-4 shadow-lg">
               <FaPlus className="h-8 w-8 text-black" />
             </div>
             <div>
-              <h3 className="text-lg font-medium">Your dashboard is empty</h3>
+              <h3 className="text-lg font-medium">Your dashboard in this tab is empty</h3>
               <p className="mt-1 text-sm text-gray-500">
                 Click the <b>plus button</b> in the bottom-right corner or the button below to add your first item.
               </p>
@@ -179,8 +220,12 @@ const DashboardView = (props: DashboardViewProps) => {
           </Card>
         ) : (
           <ResponsiveGridLayout
+            key={currentBreakpoint}
             className="layout"
             layouts={props.layouts}
+            onLayoutChange={(currentLayout, allLayouts) =>
+              props.onLayoutChange(currentLayout, allLayouts, currentBreakpoint)
+            }
             onBreakpointChange={handleBreakpointChanged}
             breakpoints={{ lg: 1200, md: 996, xs: 480, xxs: 0 }}
             cols={props.cols}
@@ -191,12 +236,11 @@ const DashboardView = (props: DashboardViewProps) => {
             isDroppable={editMode}
             onResizeStart={handleResizeStart}
             onResizeStop={handleResizeStop}
-            useCSSTransforms={false}
-            containerPadding={[10, 10]}
+            useCSSTransforms={false} // TODO: check the inView, this broke it before
+            containerPadding={[10, 0]}
             compactType={'vertical'}
             verticalCompact={true}
             resizeHandle={<MyHandle $editMode={editMode} />}
-            onLayoutChange={props.onLayoutChange}
           >
             {props.layouts[currentBreakpoint]?.map((item: Layout) => {
               const itemId = item.i
@@ -217,7 +261,7 @@ const DashboardView = (props: DashboardViewProps) => {
                     ...props.layouts,
                     [currentBreakpoint]: newLayout
                   }
-                  props.onLayoutChange(newLayout, updatedLayouts)
+                  props.onLayoutChange(newLayout, updatedLayouts, currentBreakpoint)
                 },
                 editModeEnabled: editMode,
                 breakPoint: currentBreakpoint,
@@ -229,7 +273,7 @@ const DashboardView = (props: DashboardViewProps) => {
                 configuration: props.details[itemId],
                 beingResized: resizeCardID === itemId,
                 handleSaveEdit: (config: BuilderResult<AllConfigTypes>) =>
-                  props.onSaveConfig(config, props.details[itemId])
+                  props.onSaveConfig(config, props.details[itemId], itemId)
               }
 
               const renderVisualization = () => {
@@ -239,7 +283,7 @@ const DashboardView = (props: DashboardViewProps) => {
                       <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
                         {({ inView, ref }) => (
                           <div ref={ref} className="h-full w-full">
-                            <TableCardController key={itemId} {...visualizationProps} isVisible={inView} />
+                            <TableCardController {...visualizationProps} isVisible={inView} />
                           </div>
                         )}
                       </InView>
@@ -249,7 +293,7 @@ const DashboardView = (props: DashboardViewProps) => {
                       <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
                         {({ inView, ref }) => (
                           <div ref={ref} className="h-full w-full">
-                            <BulletCardController key={itemId} {...visualizationProps} isVisible={inView} />
+                            <BulletCardController {...visualizationProps} isVisible={inView} />
                           </div>
                         )}
                       </InView>
@@ -259,7 +303,7 @@ const DashboardView = (props: DashboardViewProps) => {
                       <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
                         {({ inView, ref }) => (
                           <div ref={ref} className="h-full w-full">
-                            <ChartCardController key={itemId} {...visualizationProps} isVisible={inView} />
+                            <ChartCardController {...visualizationProps} isVisible={inView} />
                           </div>
                         )}
                       </InView>
@@ -269,7 +313,17 @@ const DashboardView = (props: DashboardViewProps) => {
                       <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
                         {({ inView, ref }) => (
                           <div ref={ref} className="h-full w-full">
-                            <EntityCardController key={itemId} {...visualizationProps} isVisible={inView} />
+                            <EntityCardController {...visualizationProps} isVisible={inView} />
+                          </div>
+                        )}
+                      </InView>
+                    )
+                  case 'switch':
+                    return (
+                      <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
+                        {({ inView, ref }) => (
+                          <div ref={ref} className="h-full w-full">
+                            <SwitchCardController {...visualizationProps} isVisible={inView} />
                           </div>
                         )}
                       </InView>

@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { TableCardConfig, tableCardSchema } from '@/schemas/dashboard/TableBuilderSchema'
-import { toast } from 'sonner'
+import { TableCardConfig, tableCardSchema } from '@/schemas/dashboard/visualizations/TableBuilderSchema'
 import { SensorField, StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
@@ -36,7 +35,6 @@ export const TableCardController = (props: TableCardProps) => {
         setTableConfig(parsedConfig.data)
       } else {
         setError('Failed to parse configuration')
-        toast.error('Failed to parse configuration')
         setIsLoading(false)
       }
     }
@@ -117,10 +115,12 @@ export const TableCardController = (props: TableCardProps) => {
     setIsLoading(true)
     const aggregatedColumns = tableConfig.columns.filter((column) => column.function !== 'last')
     if (aggregatedColumns.length === 0) {
-      setColumnData(tableConfig.columns.map((col) => ({
-        function: col.function,
-        values: tableConfig.rows.map(() => undefined)
-      })))
+      setColumnData(
+        tableConfig.columns.map((col) => ({
+          function: col.function,
+          values: tableConfig.rows.map(() => undefined)
+        }))
+      )
       setIsLoading(false)
       return
     }
@@ -141,24 +141,24 @@ export const TableCardController = (props: TableCardProps) => {
 
   useEffect(() => {
     if (!tableConfig || !props.isVisible) return
-  
+
     columnPollingMap.current.forEach((info) => {
       if (info.intervalId) clearInterval(info.intervalId)
     })
     columnPollingMap.current.clear()
-    
+
     tableConfig.columns.forEach((column, columnIndex) => {
       if (column.function === 'last') return
 
       const timeFrameMs = Number(tableConfig.timeFrame) * 60 * 1000
       const pollInterval = timeFrameMs / FETCHES_PER_TIMEFRAME
-      
+
       const intervalId = setInterval(() => {
         if (props.isVisible && isMounted.current) {
           fetchSingleColumnData(column, columnIndex)
         }
       }, pollInterval)
-      
+
       columnPollingMap.current.set(columnIndex, {
         intervalId,
         lastUpdatedAt: new Date()
@@ -166,7 +166,7 @@ export const TableCardController = (props: TableCardProps) => {
     })
 
     fetchAllData()
-    
+
     return () => {
       columnPollingMap.current.forEach((info) => {
         if (info.intervalId) clearInterval(info.intervalId)

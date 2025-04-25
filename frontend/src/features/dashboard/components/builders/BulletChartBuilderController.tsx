@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { StatisticsOperation, useStatisticsQuerySensorsWithFieldsLazyQuery } from '@/generated/graphql'
-import { BulletCardConfig } from '@/schemas/dashboard/BulletChartBuilderSchema'
+import { BulletCardConfig } from '@/schemas/dashboard/visualizations/BulletChartBuilderSchema'
 import { BuilderResult } from '@/types/dashboard/gridItem'
 import { useInstances } from '@/context/InstancesContext'
 import { Datum } from '@nivo/bullet'

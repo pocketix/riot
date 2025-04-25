@@ -691,6 +691,21 @@ export type CreateSdInstanceGroupMutationVariables = Exact<{
 
 export type CreateSdInstanceGroupMutation = { __typename?: 'Mutation', createSDInstanceGroup: { __typename?: 'SDInstanceGroup', id: number, userIdentifier: string, sdInstanceIDs: Array<number> } };
 
+export type UpdateSdInstanceGroupMutationVariables = Exact<{
+  updateSdInstanceGroupId: Scalars['ID']['input'];
+  input: SdInstanceGroupInput;
+}>;
+
+
+export type UpdateSdInstanceGroupMutation = { __typename?: 'Mutation', updateSDInstanceGroup: { __typename?: 'SDInstanceGroup', id: number, userIdentifier: string, sdInstanceIDs: Array<number> } };
+
+export type DeleteSdInstanceGroupMutationVariables = Exact<{
+  deleteSdInstanceGroupId: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteSdInstanceGroupMutation = { __typename?: 'Mutation', deleteSDInstanceGroup: boolean };
+
 export type SdInstancesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1192,6 +1207,73 @@ export function useCreateSdInstanceGroupMutation(baseOptions?: Apollo.MutationHo
 export type CreateSdInstanceGroupMutationHookResult = ReturnType<typeof useCreateSdInstanceGroupMutation>;
 export type CreateSdInstanceGroupMutationResult = Apollo.MutationResult<CreateSdInstanceGroupMutation>;
 export type CreateSdInstanceGroupMutationOptions = Apollo.BaseMutationOptions<CreateSdInstanceGroupMutation, CreateSdInstanceGroupMutationVariables>;
+export const UpdateSdInstanceGroupDocument = gql`
+    mutation UpdateSDInstanceGroup($updateSdInstanceGroupId: ID!, $input: SDInstanceGroupInput!) {
+  updateSDInstanceGroup(id: $updateSdInstanceGroupId, input: $input) {
+    id
+    userIdentifier
+    sdInstanceIDs
+  }
+}
+    `;
+export type UpdateSdInstanceGroupMutationFn = Apollo.MutationFunction<UpdateSdInstanceGroupMutation, UpdateSdInstanceGroupMutationVariables>;
+
+/**
+ * __useUpdateSdInstanceGroupMutation__
+ *
+ * To run a mutation, you first call `useUpdateSdInstanceGroupMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateSdInstanceGroupMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateSdInstanceGroupMutation, { data, loading, error }] = useUpdateSdInstanceGroupMutation({
+ *   variables: {
+ *      updateSdInstanceGroupId: // value for 'updateSdInstanceGroupId'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateSdInstanceGroupMutation(baseOptions?: Apollo.MutationHookOptions<UpdateSdInstanceGroupMutation, UpdateSdInstanceGroupMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateSdInstanceGroupMutation, UpdateSdInstanceGroupMutationVariables>(UpdateSdInstanceGroupDocument, options);
+      }
+export type UpdateSdInstanceGroupMutationHookResult = ReturnType<typeof useUpdateSdInstanceGroupMutation>;
+export type UpdateSdInstanceGroupMutationResult = Apollo.MutationResult<UpdateSdInstanceGroupMutation>;
+export type UpdateSdInstanceGroupMutationOptions = Apollo.BaseMutationOptions<UpdateSdInstanceGroupMutation, UpdateSdInstanceGroupMutationVariables>;
+export const DeleteSdInstanceGroupDocument = gql`
+    mutation DeleteSDInstanceGroup($deleteSdInstanceGroupId: ID!) {
+  deleteSDInstanceGroup(id: $deleteSdInstanceGroupId)
+}
+    `;
+export type DeleteSdInstanceGroupMutationFn = Apollo.MutationFunction<DeleteSdInstanceGroupMutation, DeleteSdInstanceGroupMutationVariables>;
+
+/**
+ * __useDeleteSdInstanceGroupMutation__
+ *
+ * To run a mutation, you first call `useDeleteSdInstanceGroupMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteSdInstanceGroupMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteSdInstanceGroupMutation, { data, loading, error }] = useDeleteSdInstanceGroupMutation({
+ *   variables: {
+ *      deleteSdInstanceGroupId: // value for 'deleteSdInstanceGroupId'
+ *   },
+ * });
+ */
+export function useDeleteSdInstanceGroupMutation(baseOptions?: Apollo.MutationHookOptions<DeleteSdInstanceGroupMutation, DeleteSdInstanceGroupMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteSdInstanceGroupMutation, DeleteSdInstanceGroupMutationVariables>(DeleteSdInstanceGroupDocument, options);
+      }
+export type DeleteSdInstanceGroupMutationHookResult = ReturnType<typeof useDeleteSdInstanceGroupMutation>;
+export type DeleteSdInstanceGroupMutationResult = Apollo.MutationResult<DeleteSdInstanceGroupMutation>;
+export type DeleteSdInstanceGroupMutationOptions = Apollo.BaseMutationOptions<DeleteSdInstanceGroupMutation, DeleteSdInstanceGroupMutationVariables>;
 export const SdInstancesDocument = gql`
     query SdInstances {
   sdInstances {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useStatisticsQuerySensorsWithFieldsLazyQuery, SdParameterType, StatisticsOperation } from '@/generated/graphql'
-import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { ChartCardConfig } from '@/schemas/dashboard/visualizations/LineChartBuilderSchema'
 import { BuilderResult } from '@/types/dashboard/gridItem'
 import { LineChartBuilderView } from './LineChartBuilderView'
 import { SelectedParameters } from './components/multi-select-parameter'

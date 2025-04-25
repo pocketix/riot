@@ -15,16 +15,31 @@ const SmallGroupCardContainer = styled.div<{ $hasFailingKPIs: boolean }>`
   border: ${({ $hasFailingKPIs }) => ($hasFailingKPIs ? '2px' : '1px')} solid
     ${({ $hasFailingKPIs }) => ($hasFailingKPIs ? 'red' : 'green')};
   border-radius: 8px;
+  min-width: 80px;
   max-width: 200px;
   padding: 4px 8px;
   display: flex;
   flex-direction: column-reverse;
   align-items: center;
   justify-items: center;
+  cursor: pointer;
   flex-wrap: wrap;
+  overflow: hidden;
 
   @media (max-width: 768px) {
     flex-direction: row;
+    width: fit-content;
+  }
+`
+const UserIdentifierContainer = styled.div`
+  width: 100%;
+  overflow: hidden;
+  text-align: center;
+
+  @media (max-width: 768px) {
+    text-align: start;
+    flex: 1;
+    min-width: 0;
   }
 `
 
@@ -66,7 +81,11 @@ export const SmallGroupCard = ({ group }: SmallGroupCardProps) => {
             <Separator className="hidden md:block" orientation="horizontal" />
           </>
         )}
-        <span className="text-sm">{group.userIdentifier}</span>
+        <UserIdentifierContainer>
+          <span className="block truncate text-sm" title={group.userIdentifier}>
+            {group.userIdentifier}
+          </span>
+        </UserIdentifierContainer>
       </SmallGroupCardContainer>
       <GroupModalDetailView group={group} open={detailsOpen} setOpen={setDetailsOpen} />
     </>

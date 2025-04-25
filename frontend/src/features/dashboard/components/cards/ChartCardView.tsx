@@ -1,6 +1,6 @@
 import { Serie } from '@nivo/line'
 import { RefObject } from 'react'
-import { ChartCardConfig } from '@/schemas/dashboard/LineChartBuilderSchema'
+import { ChartCardConfig } from '@/schemas/dashboard/visualizations/LineChartBuilderSchema'
 import { ResponsiveLineChart } from '../visualizations/ResponsiveLineChart'
 import { BaseCard } from './BaseCard'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -24,6 +24,7 @@ export const ChartCardView = (props: ChartCardViewProps) => {
       error={props.error}
       visualizationType="line"
       cardTitle={props.chartConfig?.cardTitle}
+      cardIcon={props.chartConfig?.icon}
       configuration={props.chartConfig!}
     >
       <>

@@ -15,11 +15,11 @@ export interface BaseVisualizationCardProps<ConfigType extends AllConfigTypes> {
   cardID: string
   layout: Layout[]
   breakPoint: string
-  cols: { lg: number; md: number; sm: number; xs: number; xxs: number }
+  cols: { lg: number; md: number; xs: number; xxs: number }
   height: number
   width: number
   setLayout: (layout: Layout[]) => void
-  handleDeleteItem: (id: string) => void
+  handleDeleteItem: (id: string, breakPoint: string) => void
   setHighlightedCardID: (id: string) => void
   editModeEnabled: boolean
   beingResized: boolean
@@ -31,7 +31,8 @@ export interface BaseVisualizationCardProps<ConfigType extends AllConfigTypes> {
 export interface BaseCardProps<ConfigType extends AllConfigTypes> extends BaseVisualizationCardProps<ConfigType> {
   isLoading: boolean
   error: string | null
-  visualizationType: 'table' | 'bullet' | 'line' | 'entitycard'
+  visualizationType: 'table' | 'bullet' | 'line' | 'entitycard' | 'switch'
   cardTitle?: string
+  cardIcon?: string
   children: ReactNode
 }
