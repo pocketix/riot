@@ -99,57 +99,103 @@ export default function AutomationsEditor() {
       return
     }
 
-    const program = editor.program
+    // Make sure the editor is fully initialized
+    if (!editor.isReady) {
+      toast.error('Editor is not fully initialized yet. Please try again in a moment.')
+      return
+    }
+
+    // Get the program from the editor
+    let program = editor.program
     if (!program) {
       toast.error('No program data available')
       return
     }
 
-    console.log('Saving program:', program)
-    setIsSaving(true)
+    // Validate program structure
+    try {
+      // Check if program has required properties
+      if (!program.block || !Array.isArray(program.block)) {
+        toast.error('Invalid program structure: missing block array')
+        return
+      }
 
-    // If we're overwriting an existing program
-    if (overwriteId) {
-      updateVPLProgram({
-        variables: {
-          id: overwriteId,
-          name: name,
-          data: JSON.stringify(program)
-        }
-      })
-      .then(() => {
-        toast.success(`Program "${name}" updated successfully`)
-        setProgramName('') // Clear the name field after successful save
-        refetchPrograms()
-      })
-      .catch(error => {
-        console.error('Update operation error:', error)
-        toast.error(`Failed to update program: ${error.message}`)
-      })
-      .finally(() => {
-        setIsSaving(false)
-      })
-    } else {
-      // Creating a new program
-      createVPLProgram({
-        variables: {
-          name: name,
-          data: JSON.stringify(program)
-        }
-      })
-      .then((result) => {
-        const savedProgram = result.data.createVPLProgram
-        toast.success(`Program "${savedProgram.name}" saved successfully`)
-        setProgramName('') // Clear the name field after successful save
-        refetchPrograms()
-      })
-      .catch(error => {
-        console.error('Save operation error:', error)
-        toast.error(`Failed to save program: ${error.message}`)
-      })
-      .finally(() => {
-        setIsSaving(false)
-      })
+      // Log detailed program structure for debugging
+      console.log('Saving program structure:', JSON.stringify(program, null, 2))
+
+      // Create a sanitized copy of the program to avoid reference issues
+      const programCopy = JSON.parse(JSON.stringify(program))
+
+      // Set isSaving state
+      setIsSaving(true)
+
+      // If we're overwriting an existing program
+      if (overwriteId) {
+        updateVPLProgram({
+          variables: {
+            id: overwriteId,
+            name: name,
+            data: JSON.stringify(programCopy)
+          }
+        })
+        .then(() => {
+          toast.success(`Program "${name}" updated successfully`)
+          setProgramName('') // Clear the name field after successful save
+          refetchPrograms()
+        })
+        .catch(error => {
+          console.error('Update operation error:', error)
+          // Provide more detailed error message
+          const errorMessage = error.message || 'Unknown error'
+          toast.error(`Failed to update program: ${errorMessage}`)
+
+          // Log additional details if available
+          if (error.graphQLErrors) {
+            console.error('GraphQL errors:', error.graphQLErrors)
+          }
+          if (error.networkError) {
+            console.error('Network error:', error.networkError)
+          }
+        })
+        .finally(() => {
+          setIsSaving(false)
+        })
+      } else {
+        // Creating a new program
+        createVPLProgram({
+          variables: {
+            name: name,
+            data: JSON.stringify(programCopy)
+          }
+        })
+        .then((result) => {
+          const savedProgram = result.data.createVPLProgram
+          toast.success(`Program "${savedProgram.name}" saved successfully`)
+          setProgramName('') // Clear the name field after successful save
+          refetchPrograms()
+        })
+        .catch(error => {
+          console.error('Save operation error:', error)
+          // Provide more detailed error message
+          const errorMessage = error.message || 'Unknown error'
+          toast.error(`Failed to save program: ${errorMessage}`)
+
+          // Log additional details if available
+          if (error.graphQLErrors) {
+            console.error('GraphQL errors:', error.graphQLErrors)
+          }
+          if (error.networkError) {
+            console.error('Network error:', error.networkError)
+          }
+        })
+        .finally(() => {
+          setIsSaving(false)
+        })
+      }
+    } catch (error) {
+      console.error('Error processing program data:', error)
+      toast.error(`Error processing program data: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setIsSaving(false)
     }
   }
 
@@ -444,9 +490,13 @@ export default function AutomationsEditor() {
             // Store the element in the window object for later use
             (window as any).currentEditor = el;
 
-            // If we have program data, set it after a short delay
-            if (currentProgramData) {
-              setTimeout(() => {
+            // Set a flag to track when the editor is ready
+            el.addEventListener('ready', () => {
+              console.log('VPL Editor is ready');
+              (window as any).currentEditor.isReady = true;
+
+              // If we have program data, set it now that the editor is ready
+              if (currentProgramData) {
                 try {
                   const typedEditor = el as any;
                   if (typeof typedEditor.updateProgram === 'function') {
@@ -463,8 +513,36 @@ export default function AutomationsEditor() {
                 } catch (error) {
                   console.error('Error setting program data:', error);
                 }
-              }, 100);
-            }
+              }
+            });
+
+            // Set a timeout to initialize the editor if the ready event doesn't fire
+            setTimeout(() => {
+              if (!(window as any).currentEditor.isReady) {
+                console.log('Setting editor ready flag via timeout');
+                (window as any).currentEditor.isReady = true;
+
+                // If we have program data and the editor is not yet initialized, try to set it
+                if (currentProgramData && el === (window as any).currentEditor) {
+                  try {
+                    const typedEditor = el as any;
+                    if (typeof typedEditor.updateProgram === 'function') {
+                      typedEditor.updateProgram(currentProgramData);
+                      console.log('Program set using updateProgram (via timeout)');
+                    }
+                    else if (typeof typedEditor.setProgram === 'function') {
+                      typedEditor.setProgram(currentProgramData);
+                      console.log('Program set using setProgram (via timeout)');
+                    }
+                    else {
+                      console.error('No setProgram or updateProgram function found');
+                    }
+                  } catch (error) {
+                    console.error('Error setting program data (via timeout):', error);
+                  }
+                }
+              }
+            },420);
           }
         }}
       ></vpl-editor>
