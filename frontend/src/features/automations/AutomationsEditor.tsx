@@ -8,7 +8,7 @@ import {
   UPDATE_VPL_PROGRAM,
   DELETE_VPL_PROGRAM
 } from '@/graphql/automations/Mutations'
-import { GET_VPL_PROGRAMS } from '@/graphql/automations/Queries'
+import { GET_VPL_PROGRAMS, GET_VPL_PROCEDURES } from '@/graphql/automations/Queries'
 import { toast } from 'sonner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -18,6 +18,12 @@ interface VPLProgram {
   data: string
   lastRun?: string
   enabled: boolean
+}
+
+interface VPLProcedure {
+  id: string
+  name: string
+  data: string
 }
 
 // Extend the Window interface to include our custom property
@@ -39,6 +45,9 @@ export default function AutomationsEditor() {
   // GraphQL query to fetch all VPL programs
   const { data: programsData, loading: programsLoading, refetch: refetchPrograms } = useQuery(GET_VPL_PROGRAMS)
 
+  // GraphQL query to fetch all VPL procedures
+  const { data: proceduresData, loading: proceduresLoading } = useQuery(GET_VPL_PROCEDURES)
+
   // State for tracking if a program is loading
   const [loadingProgram, setLoadingProgram] = useState(false)
 
@@ -48,8 +57,6 @@ export default function AutomationsEditor() {
   const [deleteVPLProgram] = useMutation(DELETE_VPL_PROGRAM)
 
 
-
-  // Load the VPL editor component from the CDN
   useEffect(() => {
     // Define the currentEditor property on the window object
     if (!(window as any).currentEditor) {
@@ -404,6 +411,28 @@ export default function AutomationsEditor() {
     }
   }
 
+  // Load procedures and display them in console
+  const handleListProcedures = () => {
+    if (proceduresLoading) {
+      toast.info('Procedures are still loading...')
+      return
+    }
+
+    const procedures = proceduresData?.vplProcedures || []
+    console.log('Available procedures:', procedures)
+    toast.success(`Loaded ${procedures.length} procedures`)
+
+    // Log the procedure data for debugging
+    if (procedures.length > 0) {
+      procedures.forEach((procedure: VPLProcedure) => {
+        console.log(`Procedure ID: ${procedure.id}, Name: ${procedure.name}`)
+        console.log('Procedure Data:', procedure.data)
+      })
+    } else {
+      console.log('No procedures found')
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-4 mb-4">
@@ -470,6 +499,13 @@ export default function AutomationsEditor() {
             disabled={programsLoading}
           >
             {programsLoading ? 'Loading...' : 'List Programs'}
+          </Button>
+          <Button
+            className="bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80"
+            onClick={handleListProcedures}
+            disabled={proceduresLoading}
+          >
+            {proceduresLoading ? 'Loading...' : 'List Procedures'}
           </Button>
           <Button
             onClick={handleSaveProgram}

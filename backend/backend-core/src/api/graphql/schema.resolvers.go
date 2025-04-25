@@ -188,15 +188,32 @@ func (r *mutationResolver) ExecuteVPLProgram(ctx context.Context, id uint32) (gr
 }
 
 func (r *mutationResolver) CreateVPLProcedure(ctx context.Context, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error) {
-	panic(fmt.Errorf("not implemented: CreateVPLProcedure - createVPLProcedure"))
+	createVPLProcedureResult := domainLogicLayer.CreateVPLProcedure(input)
+	if createVPLProcedureResult.IsFailure() {
+		log.Printf("Error occurred (create VPL procedure): %s\n", createVPLProcedureResult.GetError().Error())
+		return graphQLModel.VPLProcedure{}, createVPLProcedureResult.GetError()
+	}
+
+	return createVPLProcedureResult.Unwrap()
 }
 
 func (r *mutationResolver) UpdateVPLProcedure(ctx context.Context, id uint32, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error) {
-	panic(fmt.Errorf("not implemented: UpdateVPLProcedure - updateVPLProcedure"))
+	updateVPLProcedureResult := domainLogicLayer.UpdateVPLProcedure(id, input)
+	if updateVPLProcedureResult.IsFailure() {
+		log.Printf("Error occurred (update VPL procedure): %s\n", updateVPLProcedureResult.GetError().Error())
+		return graphQLModel.VPLProcedure{}, updateVPLProcedureResult.GetError()
+	}
+
+	return updateVPLProcedureResult.Unwrap()
 }
 
 func (r *mutationResolver) DeleteVPLProcedure(ctx context.Context, id uint32) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteVPLProcedure - deleteVPLProcedure"))
+	err := domainLogicLayer.DeleteVPLProcedure(id)
+	if err != nil {
+		log.Printf("Error occurred (delete VPL procedure): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
@@ -350,11 +367,21 @@ func (r *queryResolver) VplProgram(ctx context.Context, id uint32) (graphQLModel
 }
 
 func (r *queryResolver) VplProcedure(ctx context.Context, id uint32) (graphQLModel.VPLProcedure, error) {
-	panic(fmt.Errorf("not implemented: VplProcedure - vplProcedure"))
+	getVPLProcedureResult := domainLogicLayer.GetVPLProcedure(id)
+	if getVPLProcedureResult.IsFailure() {
+		log.Printf("Error occurred (get VPL procedure): %s\n", getVPLProcedureResult.GetError().Error())
+		return graphQLModel.VPLProcedure{}, getVPLProcedureResult.GetError()
+	}
+	return getVPLProcedureResult.Unwrap()
 }
 
 func (r *queryResolver) VplProcedures(ctx context.Context) ([]graphQLModel.VPLProcedure, error) {
-	panic(fmt.Errorf("not implemented: VplProcedures - vplProcedures"))
+	getVPLProceduresResult := domainLogicLayer.GetVPLProcedures()
+	if getVPLProceduresResult.IsFailure() {
+		log.Printf("Error occurred (get VPL procedures): %s\n", getVPLProceduresResult.GetError().Error())
+		return nil, getVPLProceduresResult.GetError()
+	}
+	return getVPLProceduresResult.Unwrap()
 }
 
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {

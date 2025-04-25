@@ -28,6 +28,12 @@ func CreateVPLProgram(name string, data string) sharedUtils.Result[graphQLModel.
 	}
 	result.Name = name
 
+	// Extract and save user procedures from the program data
+	if err := ExtractAndSaveUserProcedures(data); err != nil {
+		log.Printf("Warning: Failed to extract and save user procedures: %s", err)
+		// Continue with saving the program even if procedure extraction fails
+	}
+
 	dbResult := dbClient.GetRelationalDatabaseClientInstance().PersistVPLProgram(result)
 	if dbResult.IsFailure() {
 		log.Printf("Save program failed: %s", dbResult.GetError())
@@ -48,6 +54,12 @@ func UpdateVPLProgram(id uint32, name string, data string) sharedUtils.Result[gr
 
 	result.ID = id
 	result.Name = name
+
+	// Extract and save user procedures from the program data
+	if err := ExtractAndSaveUserProcedures(data); err != nil {
+		log.Printf("Warning: Failed to extract and save user procedures: %s", err)
+		// Continue with saving the program even if procedure extraction fails
+	}
 
 	dbResult := dbClient.GetRelationalDatabaseClientInstance().PersistVPLProgram(result)
 	if dbResult.IsFailure() {
