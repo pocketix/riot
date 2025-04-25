@@ -770,7 +770,7 @@ func (r *relationalDatabaseClientImpl) PersistVPLProgram(vplProgram dllModel.VPL
 		return sharedUtils.NewFailureResult[dllModel.VPLProgram](err)
 	}
 
-	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProgram(vplProgramEntity))
+	return sharedUtils.NewSuccessResult[dllModel.VPLProgram](db2dll.ToDLLModelVplProgram(vplProgramEntity))
 }
 
 func (r *relationalDatabaseClientImpl) LoadVPLProgram(id uint32) sharedUtils.Result[dllModel.VPLProgram] {

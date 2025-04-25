@@ -221,7 +221,7 @@ type VPLProgramsEntity struct {
 	ID                   uint32                           `gorm:"column:id;primaryKey;not null"`
 	Name                 string                           `gorm:"column:name;not null"`
 	Data                 string                           `gorm:"column:data;type:jsonb;not null"`
-	LastRun              *string                          `gorm:"column:last_run"`
+	LastRun              *time.Time                       `gorm:"column:last_run"`
 	Enabled              bool                             `gorm:"column:enabled;not null"`
 	SDParameterSnapshots []VPLProgramSDSnapshotLinkEntity `gorm:"many2many:link;joinForeignKey:ProgramID;joinReferences:SDInstanceID,SDParameterID"`
 }

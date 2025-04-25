@@ -142,26 +142,27 @@ func ConvertSharedModelVPLProgramSaveToDLLModel(program sharedModel.VPLProgram) 
 			InstanceID:  sdInstance.GetPayload().GetPayload().ID.GetPayload(),
 			ParameterID: parameter.GetPayload().ID.GetPayload(),
 		})
-
-		// latestSnapshot := sharedUtils.FindFirst(sdInstance.GetPayload().GetPayload().ParameterSnapshots, func(snapshot dllModel.SDParameterSnapshot) bool {
-		// 	return snapshot.SDInstance == sdInstance.GetPayload().GetPayload().ID.GetPayload() && snapshot.SDParameter == parameter.GetPayload().ID.GetPayload()
-		// })
-
-		// if latestSnapshot.IsEmpty() {
-		// 	log.Printf("Save program failed: %s", errors.New("snapshot not found"))
-		// 	return dllModel.VPLProgram{}, errors.New("snapshot not found")
-		// }
-		// SDParameterSnapshotList = append(SDParameterSnapshotList, latestSnapshot.GetPayload())
 	}
 
 	return dllModel.VPLProgram{
 		ID:                   program.ID,
 		Name:                 program.Name,
 		Data:                 program.Data,
-		LastRun:              program.LastRun,
+		LastRun:              str2Time(program.LastRun),
 		Enabled:              program.Enabled,
 		SDParameterSnapshots: SDParameterSnapshotLinkList,
 	}, nil
+}
+
+func str2Time(str *string) *time.Time {
+	if str != nil {
+		t, err := time.Parse(time.RFC3339, *str)
+		if err != nil {
+			return nil
+		}
+		return &t
+	}
+	return nil
 }
 
 func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExecutionResult] {
