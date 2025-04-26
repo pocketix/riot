@@ -11,8 +11,8 @@ interface SwitchCardViewProps extends BaseVisualizationCardProps<SwitchCardConfi
   isLoading: boolean
   error: string | null
   errorInfo?: {
-    instanceId: number
-    parameterId: number
+    instanceName: string
+    parameterName: string
   }
   onPercentualChange: (value: number) => void
   onStateChange: (value: boolean) => void
