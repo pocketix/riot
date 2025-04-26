@@ -222,21 +222,21 @@ type Query struct {
 }
 
 type SDCommand struct {
-	ID       uint32  `json:"id"`
-	Name     string  `json:"name"`
-	Payload  *string `json:"payload,omitempty"`
-	SdTypeID uint32  `json:"sdTypeId"`
+	ID       uint32 `json:"id"`
+	Name     string `json:"name"`
+	Payload  string `json:"payload"`
+	SdTypeID uint32 `json:"sdTypeId"`
 }
 
 type SDCommandInput struct {
-	Name     string  `json:"name"`
-	Payload  *string `json:"payload,omitempty"`
-	SdTypeID uint32  `json:"sdTypeId"`
+	Name     string `json:"name"`
+	Payload  string `json:"payload"`
+	SdTypeID uint32 `json:"sdTypeId"`
 }
 
 type SDCommandInputWithoutType struct {
-	Name    string  `json:"name"`
-	Payload *string `json:"payload,omitempty"`
+	Name    string `json:"name"`
+	Payload string `json:"payload"`
 }
 
 type SDCommandInvocation struct {
@@ -319,7 +319,7 @@ type SDTypeInput struct {
 	Label      *string                     `json:"label,omitempty"`
 	Icon       *string                     `json:"icon,omitempty"`
 	Parameters []SDParameterInput          `json:"parameters"`
-	Commands   []SDCommandInputWithoutType `json:"commands,omitempty"`
+	Commands   []SDCommandInputWithoutType `json:"commands"`
 }
 
 type SensorField struct {
