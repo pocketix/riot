@@ -108,10 +108,16 @@ export function EntityCardBuilderController({ onDataSubmit, config }: EntityCard
   }
 
   const handleRowMove = (fromIndex: number, toIndex: number) => {
-    // If the row was a sparkline, we need to move the data as well
     setSparklineData((prevData) => {
       const newData = [...prevData]
-      const movedRow = newData.splice(fromIndex, 1)[0]
+
+      while (newData.length <= Math.max(fromIndex, toIndex)) {
+        newData.push({ id: '', data: [] })
+      }
+
+      if (typeof newData[fromIndex] === 'undefined') return newData
+
+      const [movedRow] = newData.splice(fromIndex, 1)
       newData.splice(toIndex, 0, movedRow)
       return newData
     })

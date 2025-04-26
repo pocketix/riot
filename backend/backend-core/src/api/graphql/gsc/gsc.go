@@ -626,7 +626,7 @@ type VPLProgram {
     id: ID!
     name: String!
     data: JSON!
-    lastRun: String
+    lastRun: Date
     enabled: Boolean!
     sdParameterSnapshots: [SDParameterSnapshot!]!
 }
@@ -635,7 +635,7 @@ type VPLProgramExecutionResult {
     program: VPLProgram!
     sdParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
     SdCommandInvocations: [SDCommandInvocation!]!
-    executionTime: String!
+    executionTime: Date!
     enabled: Boolean!
     success: Boolean!
     error: String
@@ -10227,7 +10227,7 @@ func (ec *executionContext) _VPLProgram_lastRun(ctx context.Context, field graph
 	}
 	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalODate2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_VPLProgram_lastRun(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10237,7 +10237,7 @@ func (ec *executionContext) fieldContext_VPLProgram_lastRun(_ context.Context, f
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Date does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10551,7 +10551,7 @@ func (ec *executionContext) _VPLProgramExecutionResult_executionTime(ctx context
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_VPLProgramExecutionResult_executionTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10561,7 +10561,7 @@ func (ec *executionContext) fieldContext_VPLProgramExecutionResult_executionTime
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Date does not have child fields")
 		},
 	}
 	return fc, nil

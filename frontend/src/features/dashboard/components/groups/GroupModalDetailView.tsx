@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/drawer'
 import { RiAlertFill } from 'react-icons/ri'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
@@ -124,30 +124,23 @@ const GroupContent = (props: { failingInstances: InstanceWithKPIs[]; groupID: nu
       </h3>
 
       {props.failingInstances.length > 0 ? (
-        <div className="grid gap-2 sm:grid-cols-1">
+        <div className="grid gap-1 sm:grid-cols-1">
           {props.failingInstances.map((device) => (
             <Card key={device.userIdentifier} className="border border-muted p-1">
-              <CardHeader className="p-1">
-                <CardTitle className="text-base">
-                  <Button
-                    variant={'link'}
-                    className="p-1 pb-0"
-                    onClick={() => setDetailsSelectedDevice(device.id, null)}
-                  >
+              <CardContent className="flex flex-wrap items-center gap-1 p-0 px-1">
+                <CardTitle className="flex items-center text-base">
+                  <Button variant={'link'} className="p-0" onClick={() => setDetailsSelectedDevice(device.id, null)}>
                     {device.userIdentifier}
                   </Button>
+                  <Separator orientation="vertical" className="mx-2 h-4" />
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="p-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  {device.kpis
-                    .filter((kpi) => !kpi.fulfilled)
-                    .map((kpi) => (
-                      <Badge key={kpi.id} variant="destructive" className="flex items-center gap-1.5">
-                        <span>{kpi.userIdentifier}</span>
-                      </Badge>
-                    ))}
-                </div>
+                {device.kpis
+                  .filter((kpi) => !kpi.fulfilled)
+                  .map((kpi) => (
+                    <Badge key={kpi.id} variant="destructive" className="flex items-center gap-1.5">
+                      <span>{kpi.userIdentifier}</span>
+                    </Badge>
+                  ))}
               </CardContent>
             </Card>
           ))}

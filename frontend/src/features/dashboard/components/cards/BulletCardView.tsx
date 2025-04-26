@@ -19,6 +19,7 @@ export const BulletCardView = (props: BulletCardViewProps) => {
       error={props.error}
       visualizationType="bullet"
       cardTitle={props.chartConfig?.cardTitle}
+      cardIcon={props.chartConfig?.icon}
       configuration={props.chartConfig!}
     >
       <div className="flex h-full w-full flex-col justify-evenly gap-1">

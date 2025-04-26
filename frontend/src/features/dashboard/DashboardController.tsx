@@ -38,7 +38,7 @@ const DashboardController = () => {
   const details = useMemo(() => activeTab?.details || {}, [activeTab])
 
   // CONSTANTS
-  const COLS_CONST = { lg: 6, md: 4, xs: 2, xxs: 1 }
+  const COLS_CONST = { lg: 6, md: 4, xs: 3, xxs: 2 }
   const ROW_HEIGHT = 10
 
   const handleSaveToDB = useCallback(
@@ -62,28 +62,25 @@ const DashboardController = () => {
   )
 
   const layoutChanged = useCallback(
-    (_layout: Layout[], newLayouts: { [key: string]: Layout[] }) => {
+    (_layout: Layout[], newLayouts: { [key: string]: Layout[] }, currentBreakpoint: string) => {
       if (!newLayouts) return
 
       // Normalize layouts before comparing
       const normalizeLayouts = (layouts: { [key: string]: Layout[] }) => {
         const normalized = { ...layouts }
-        for (const breakpoint in normalized) {
-          normalized[breakpoint] = normalized[breakpoint].map((item) => ({
-            w: item.w,
-            h: item.h,
-            x: item.x,
-            y: item.y,
-            i: item.i,
-            minW: item.minW || 0,
-            minH: item.minH || 0,
-            maxW: item.maxW,
-            maxH: item.maxH,
-            moved: item.moved || false,
-            static: item.static || false
-          }))
-        }
-        return normalized
+        return (normalized[currentBreakpoint] = normalized[currentBreakpoint].map((item) => ({
+          w: item.w,
+          h: item.h,
+          x: item.x,
+          y: item.y,
+          i: item.i,
+          minW: item.minW || 0,
+          minH: item.minH || 0,
+          maxW: item.maxW,
+          maxH: item.maxH,
+          moved: item.moved || false,
+          static: item.static || false
+        })))
       }
 
       const normalizedOldLayouts = normalizeLayouts(layouts ?? {})
@@ -135,39 +132,6 @@ const DashboardController = () => {
   }
 
   const handleChangeTab = (tabId: number) => setActiveTabID(tabId)
-
-  const handleResize = (_layout: Layout[], _oldItem: Layout, newItem: Layout, currentBreakpoint: string) => {
-    if (!activeTabID || !activeTab) return
-
-    const newLayouts = { ...activeTab.layout }
-
-    // Only update the current breakpoint's layout
-    if (newLayouts[currentBreakpoint]) {
-      newLayouts[currentBreakpoint] = newLayouts[currentBreakpoint].map((item) => {
-        if (item.i === newItem.i) {
-          return {
-            ...item,
-            w: newItem.w,
-            h: newItem.h
-          }
-        }
-        return item
-      })
-    }
-
-    const updatedTabs = tabs.map((tab) => {
-      if (tab.id === activeTabID) {
-        return {
-          ...tab,
-          layout: newLayouts
-        }
-      }
-      return tab
-    })
-
-    setTabs(updatedTabs)
-    handleSaveToDB(updatedTabs)
-  }
 
   const handleDeleteItem = useCallback(
     (id: string, breakpoint: string) => {
@@ -382,9 +346,52 @@ const DashboardController = () => {
   )
 
   useEffect(() => {
+    const getDefaultTab = () => {
+      const defaultLayouts: Layouts = {}
+      Object.keys(COLS_CONST).forEach((key) => {
+        defaultLayouts[key] = []
+      })
+
+      return {
+        id: 1,
+        userIdentifier: 'General',
+        icon: '',
+        layout: defaultLayouts,
+        details: {}
+      }
+    }
+
     if (fetchedConfigError) {
-      toast.error('Failed to fetch from database', { id: 'dashboard-config-load' })
-      console.error('Failed to fetch from database:', fetchedConfigError)
+      // I came across this error, when the deleteUserConfig mutation was called
+      // this should be rechecked whether new users are created with empty config or '{}'
+      // TODO
+      const isNewUserError = fetchedConfigError.message.includes('record not found')
+
+      if (isNewUserError) {
+        toast.loading('Creating a new dashboard...', { id: 'dashboard-config-load' })
+        console.log('First time user detected, creating default dashboard.')
+
+        const defaultTab = getDefaultTab()
+
+        setTabs([defaultTab])
+        setActiveTabID(1)
+        setMounted(true)
+
+        handleSaveToDB([defaultTab])
+
+        toast.dismiss('dashboard-config-load')
+        toast.success('Welcome! Your dashboard is ready.')
+      } else {
+        toast.error('Failed to fetch from database', { id: 'dashboard-config-load' })
+        console.error('Failed to fetch from database:', fetchedConfigError)
+
+        const defaultTab = getDefaultTab()
+        setTabs([defaultTab])
+        setActiveTabID(1)
+        setMounted(true)
+      }
+
+      return
     }
 
     if (fetchedConfigLoading) {
@@ -407,14 +414,7 @@ const DashboardController = () => {
             defaultLayouts[key] = []
           })
 
-          const defaultTab: Tab = {
-            id: 1,
-            userIdentifier: 'Dashboard',
-            icon: '',
-            layout: defaultLayouts,
-            details: {}
-          }
-
+          const defaultTab = getDefaultTab()
           setTabs([defaultTab])
           setActiveTabID(1)
           setMounted(true)
@@ -432,14 +432,7 @@ const DashboardController = () => {
             defaultLayouts[key] = []
           })
 
-          const defaultTab: Tab = {
-            id: 1,
-            userIdentifier: 'General',
-            icon: '',
-            layout: defaultLayouts,
-            details: {}
-          }
-
+          const defaultTab = getDefaultTab()
           setTabs([defaultTab])
           setActiveTabID(1)
           handleSaveToDB([defaultTab])
@@ -498,6 +491,18 @@ const DashboardController = () => {
     })
   }
 
+  const getNextTabId = () => {
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTabID)
+    const nextIndex = (currentIndex + 1) % tabs.length
+    return tabs[nextIndex].id
+  }
+
+  const getPreviousTabId = () => {
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTabID)
+    const previousIndex = (currentIndex - 1 + tabs.length) % tabs.length
+    return tabs[previousIndex].id
+  }
+
   useEffect(() => {
     if (saveConfigLoading) {
       toast.loading('Saving changes...', { id: 'dashboard-config-save' })
@@ -523,7 +528,6 @@ const DashboardController = () => {
       cols={COLS_CONST}
       rowHeight={ROW_HEIGHT}
       onLayoutChange={layoutChanged}
-      handleResize={handleResize}
       onDeleteItem={handleDeleteItem}
       onRestoreAllTabs={handleRestoreAllTabs}
       onAddItem={handleAddItem}
@@ -534,6 +538,8 @@ const DashboardController = () => {
       onEditTab={handleEditTab}
       tabs={tabs}
       activeTabId={activeTabID}
+      getNextTabId={getNextTabId}
+      getPreviousTabId={getPreviousTabId}
     />
   )
 }

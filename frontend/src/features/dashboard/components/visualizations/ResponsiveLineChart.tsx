@@ -13,6 +13,7 @@ import { CartesianMarkerProps } from '@nivo/core'
 import { LineChartLegend } from './LineChartLegend'
 import { toast } from 'sonner'
 import { useChartLongPress } from '@/hooks/useLineChartLongPress'
+import { cn } from '@/lib/utils'
 
 export interface ResponsiveLineChartProps {
   className?: string
@@ -173,7 +174,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
 
     if (useSparklineMode) {
       return (
-        <div className={className || ''} style={{ height: '100%', width: '100%' }} ref={containerRef}>
+        <div className={className} style={{ height: '100%', width: '100%' }} ref={containerRef}>
           <ResponsiveLine
             data={data}
             margin={{ top: 2, right: 2, bottom: 3, left: 2 }}
@@ -230,7 +231,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
 
     return (
       <div
-        className={`${className} flex w-full min-w-0 select-none flex-col overflow-hidden`}
+        className={cn('flex w-full min-w-0 select-none flex-col overflow-hidden pb-1', className)}
         style={containerStyle}
         ref={containerRef}
       >

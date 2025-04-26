@@ -8,10 +8,16 @@ import (
 
 func ToGraphQLModelVPLProgram(vplProgram dllModel.VPLProgram) graphQLModel.VPLProgram {
 	return graphQLModel.VPLProgram{
-		ID:      vplProgram.ID,
-		Name:    vplProgram.Name,
-		Data:    vplProgram.Data,
-		LastRun: vplProgram.LastRun,
+		ID:   vplProgram.ID,
+		Name: vplProgram.Name,
+		Data: vplProgram.Data,
+		LastRun: func() *string {
+			if vplProgram.LastRun != nil {
+				lastRunStr := vplProgram.LastRun.String()
+				return &lastRunStr
+			}
+			return nil
+		}(),
 		Enabled: vplProgram.Enabled,
 		SdParameterSnapshots: sharedUtils.Map(vplProgram.SDParameterSnapshots, func(link dllModel.VPLProgramSDSnapshotLink) graphQLModel.SDParameterSnapshot {
 			return graphQLModel.SDParameterSnapshot{

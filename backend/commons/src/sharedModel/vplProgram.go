@@ -1,5 +1,7 @@
 package sharedModel
 
+import "time"
+
 type VPLProgram struct {
 	ID               uint32            `json:"id"`
 	Name             string            `json:"name"`
@@ -28,6 +30,7 @@ type VPLInterpretExecuteResultOrError struct {
 	Program                      VPLProgram                    `json:"program"`
 	SDParameterSnapshotsToUpdate []SDParameterSnapshotToUpdate `json:"snapshots,omitempty"`
 	SDCommandInvocations         []SDCommandToInvoke           `json:"commands,omitempty"`
+	ExecutionTime                *time.Time                    `json:"executionTime,omitempty"`
 	Error                        string                        `json:"error,omitempty"`
 }
 

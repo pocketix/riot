@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { z } from 'zod'
 import { BulletCardConfig, bulletChartBuilderSchema } from '@/schemas/dashboard/visualizations/BulletChartBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, FieldErrors } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select'
 import { TbTrash } from 'react-icons/tb'
@@ -20,19 +20,14 @@ import { TimeFrameSelector } from './components/time-frame-selector'
 import { AggregateFunctionCombobox } from './components/aggregate-function-combobox'
 import { Label } from '@/components/ui/label'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
-import { ChevronDown, ChevronUp, InfoIcon } from 'lucide-react'
+import { ArrowDown, ArrowUp, InfoIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Parameter } from '@/context/InstancesContext'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
 import { BulletRow } from '../cards/components/BulletRow'
 import { SdParameterType } from '@/generated/graphql'
+import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
+import { ResponsiveDialog } from '../cards/components/ResponsiveDialog'
+import IconPicker from '@/ui/IconPicker'
 
 export interface BulletChartBuilderViewProps {
   chartData: Datum[]
@@ -66,16 +61,19 @@ export interface BulletChartBuilderViewProps {
 
 export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
   const parameterNameMock = useRef<HTMLSpanElement | null>(null)
+  const [openAccordions, setOpenAccordions] = useState<string[]>(props.config ? [''] : ['instance-0'])
   const [rangeInputs, setRangeInputs] = useState<Record<number, string>>({})
   const [markerInputs, setMarkerInputs] = useState<Record<number, string>>({})
 
   const form = useForm<z.infer<typeof bulletChartBuilderSchema>>({
+    mode: 'onChange',
     resolver: zodResolver(bulletChartBuilderSchema),
     defaultValues: props.config || {
       cardTitle: 'Bullet Charts',
+      icon: '',
       rows: [
         {
-          instance: { uid: '' },
+          instance: { uid: '', id: null },
           parameter: { denotation: '', id: null },
           config: {
             name: '',
@@ -253,6 +251,39 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
     }))
   }
 
+  const handleError = (errors: FieldErrors<z.infer<typeof bulletChartBuilderSchema>>) => {
+    const accrodionsToOpen: string[] = []
+
+    if (errors.rows && Array.isArray(errors.rows)) {
+      errors.rows.forEach((rowError, rowIndex) => {
+        if (rowError) {
+          accrodionsToOpen.push(`instance-${rowIndex}`)
+
+          if (rowError.config) {
+            if (rowError.config.ranges) accrodionsToOpen.push(`ranges-${rowIndex}`)
+            if (rowError.config.markers) accrodionsToOpen.push(`markers-${rowIndex}`)
+            if (
+              rowError.config.colorScheme ||
+              rowError.config.reverse ||
+              rowError.config.measureSize ||
+              rowError.config.titleOffsetX ||
+              rowError.config.minValue ||
+              rowError.config.maxValue ||
+              rowError.config.margin
+            ) {
+              accrodionsToOpen.push(`advanced-${rowIndex}`)
+            }
+          }
+        }
+      })
+    }
+
+    setOpenAccordions(accrodionsToOpen)
+  }
+
+  const iconValue = form.watch('icon') ?? ''
+  const IconComponent = iconValue ? getCustomizableIcon(iconValue) : null
+
   return (
     <div className="w-full">
       <span
@@ -262,7 +293,10 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
         {parameterNameMock.current?.innerText}
       </span>
       <Card className="h-fit w-full">
-        {form.watch('cardTitle') ? <h3 className="ml-2 text-lg font-semibold">{form.watch('cardTitle')}</h3> : null}
+        <div className="flex items-center gap-1 px-2">
+          {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
+          {form.watch('cardTitle') ? <h3 className="text-lg font-semibold">{form.watch('cardTitle')}</h3> : null}
+        </div>
         {fields.map((_, index) => {
           const row = form.watch(`rows.${index}`)
           const key = JSON.stringify(row)
@@ -279,19 +313,19 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
       <Card className="mt-4 h-fit w-full overflow-hidden p-2 pt-0 shadow-lg">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(props.onSubmit)}
+            onSubmit={form.handleSubmit(props.onSubmit, handleError)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
               }
             }}
           >
-            <div className="grid grid-cols-1 pt-2 sm:grid-cols-2">
+            <div className="flex w-full items-center gap-1">
               <FormField
                 control={form.control}
                 name="cardTitle"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full">
                     <FormLabel>Title</FormLabel>
                     <FormControl>
                       <Input type="text" placeholder="Enter title" {...field} />
@@ -300,22 +334,25 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="icon"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Icon</FormLabel>
+                    <FormControl>
+                      <IconPicker icon={field.value ?? ''} setIcon={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <Accordion type="multiple" className="w-full" defaultValue={props.config ? [''] : ['instance-0']}>
+            <Accordion type="multiple" className="w-full" value={openAccordions} onValueChange={setOpenAccordions}>
               {fields.map((item, index) => (
                 <AccordionItem key={item.id} value={`instance-${index}`}>
                   <AccordionTrigger className="flex w-full items-center justify-between">
                     <div className="flex flex-1 flex-wrap items-center">
-                      <span>
-                        {props.getInstanceName(form.watch(`rows.${index}.instance.id`)) || `Instance ${index + 1}`}
-                      </span>
-                      {form.watch(`rows.${index}.parameter.denotation`) && (
-                        <Badge variant="outline" className="ml-2">
-                          {form.watch(`rows.${index}.parameter.denotation`)}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
                       <Button
                         type="button"
                         variant="ghost"
@@ -330,7 +367,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                           swapRangesAndTargets(index, index - 1)
                         }}
                       >
-                        <ChevronUp size={14} />
+                        <ArrowUp size={14} />
                       </Button>
                       <Button
                         type="button"
@@ -345,21 +382,29 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                           swapRangesAndTargets(index, index + 1)
                         }}
                       >
-                        <ChevronDown size={14} />
+                        <ArrowDown size={14} />
                       </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation() // prevents other open accordions from closing
-                          props.onRemoveRow(index)
-                          remove(index)
-                        }}
-                        className="h-6 w-6"
-                      >
-                        <TbTrash size={14} />
-                      </Button>
+                      <span>
+                        {props.getInstanceName(form.watch(`rows.${index}.instance.id`)) || `Instance ${index + 1}`}
+                      </span>
+                      {form.watch(`rows.${index}.parameter.denotation`) && (
+                        <Badge variant="outline" className="ml-2">
+                          {form.watch(`rows.${index}.parameter.denotation`)}
+                        </Badge>
+                      )}
                     </div>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation() // prevents other open accordions from closing
+                        props.onRemoveRow(index)
+                        remove(index)
+                      }}
+                      className="mr-2 h-6 w-6"
+                    >
+                      <TbTrash size={14} />
+                    </Button>
                   </AccordionTrigger>
                   <AccordionContent className="w-full">
                     <div key={item.id} className="relative mb-4 rounded-lg border p-4">
@@ -510,8 +555,13 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                           )}
                         />
                       </div>
-                      <Accordion type="single" collapsible className="mt-4 w-full">
-                        <AccordionItem value="ranges">
+                      <Accordion
+                        type="multiple"
+                        className="mt-4 w-full"
+                        value={openAccordions}
+                        onValueChange={setOpenAccordions}
+                      >
+                        <AccordionItem value={`ranges-${index}`}>
                           <AccordionTrigger>Ranges</AccordionTrigger>
                           <AccordionContent className="w-full">
                             <FormField
@@ -544,7 +594,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                         {form.formState.errors?.rows?.[index]?.config?.ranges && (
                           <FormMessage>{form.formState.errors.rows[index].config.ranges.message}</FormMessage>
                         )}
-                        <AccordionItem value="markers">
+                        <AccordionItem value={`markers-${index}`}>
                           <AccordionTrigger>Targets</AccordionTrigger>
                           <AccordionContent className="w-full">
                             <FormField
@@ -577,7 +627,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                         {form.formState.errors?.rows?.[index]?.config?.markers && (
                           <FormMessage>{form.formState.errors.rows[index].config.markers.message}</FormMessage>
                         )}
-                        <AccordionItem value="advanced">
+                        <AccordionItem value={`advanced-${index}`}>
                           <AccordionTrigger>Advanced Options</AccordionTrigger>
                           <AccordionContent className="grid w-full grid-cols-1 gap-4 p-1 sm:grid-cols-2">
                             <FormField
@@ -606,7 +656,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                               name={`rows.${index}.config.reverse`}
                               render={({ field }) => (
                                 <FormItem className="flex h-full flex-col">
-                                  <FormLabel className="flex items-center gap-2">
+                                  <FormLabel className="inline-flex gap-1">
                                     <p>Reverse Chart</p>
                                     <ResponsiveTooltip
                                       content={
@@ -850,40 +900,23 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
           </form>
         </Form>
       </Card>
-
-      <Dialog
-        open={props.smartRangeDialog.open}
-        onOpenChange={(open) =>
+      <ResponsiveDialog
+        externalOpen={props.smartRangeDialog.open}
+        onExternalOpenChange={(open) =>
           props.onSmartRangeDialogChange({
             ...props.smartRangeDialog,
             open
           })
         }
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Generate Ranges and Target</DialogTitle>
-            <DialogDescription>
-              Would you like to automatically generate ranges and targets based on historical data?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => props.onSmartRangeDialogChange({ open: false, rowIndex: null })}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (props.smartRangeDialog.rowIndex !== null) {
-                  handleGenerateRangesAndTarget(props.smartRangeDialog.rowIndex)
-                }
-                props.onSmartRangeDialogChange({ open: false, rowIndex: null })
-              }}
-            >
-              Generate
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title="Generate Ranges and Target"
+        description="Would you like to automatically generate ranges and targets based on historical data? You can always change them later."
+        onSuccess={() => {
+          if (props.smartRangeDialog.rowIndex !== null) {
+            handleGenerateRangesAndTarget(props.smartRangeDialog.rowIndex)
+          }
+          props.onSmartRangeDialogChange({ open: false, rowIndex: null })
+        }}
+      />
     </div>
   )
 }

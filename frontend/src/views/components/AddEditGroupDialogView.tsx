@@ -31,7 +31,7 @@ import { InstanceWithKPIs } from '@/context/stores/kpiStore'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { GroupSchema, groupSchema } from '@/schemas/GroupSchema'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
-import { DeleteAlertDialog } from '@/features/dashboard/components/cards/components/DeleteAlertDialog'
+import { ResponsiveAlertDialog } from '@/features/dashboard/components/cards/components/ResponsiveAlertDialog'
 
 interface AddEditGroupDialogViewProps {
   open: boolean
@@ -165,11 +165,11 @@ export const AddEditGroupDialogView = (props: AddEditGroupDialogViewProps) => {
         {formContent}
         <DialogFooter className="flex w-full justify-between sm:justify-between">
           {props.initial && (
-            <DeleteAlertDialog onSuccess={props.onDelete}>
+            <ResponsiveAlertDialog onSuccess={props.onDelete}>
               <Button variant="destructive" type="button" disabled={props.isLoading}>
                 Delete Group
               </Button>
-            </DeleteAlertDialog>
+            </ResponsiveAlertDialog>
           )}
           <div className="ml-auto flex">
             <Button type="button" variant="ghost" onClick={() => props.setOpen(false)} disabled={props.isLoading}>
@@ -198,11 +198,11 @@ export const AddEditGroupDialogView = (props: AddEditGroupDialogViewProps) => {
             {formContent}
             <DrawerFooter className="pt-4">
               {props.initial && (
-                <DeleteAlertDialog onSuccess={props.onDelete}>
+                <ResponsiveAlertDialog onSuccess={props.onDelete}>
                   <Button variant="destructive" type="button" disabled={props.isLoading}>
                     Delete Group
                   </Button>
-                </DeleteAlertDialog>
+                </ResponsiveAlertDialog>
               )}
               <DrawerClose asChild>
                 <Button type="button" variant="ghost" className="w-full" disabled={props.isLoading}>

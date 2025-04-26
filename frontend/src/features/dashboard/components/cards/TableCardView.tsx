@@ -20,6 +20,7 @@ export const TableCardView = (props: TableCardViewProps) => {
       error={props.error}
       visualizationType="table"
       cardTitle={props.tableConfig?.title}
+      cardIcon={props.tableConfig?.icon}
       configuration={props.tableConfig!}
     >
       <ResponsiveTable

@@ -23,6 +23,7 @@ func SetupRabbitMQInfrastructureForISC(rabbitMQClient rabbitmq.Client) {
 		sharedConstants.TimeSeriesReadRequestQueueName,
 		sharedConstants.TimeSeriesReadRequestBackendCoreResponseQueueName,
 		sharedConstants.VPLInterpretSaveProgramRequestQueueName,
+		sharedConstants.SDCurrentSnapshotsInfoQueueName,
 		sharedConstants.VPLInterpretSaveProgramResponseQueueName,
 		sharedConstants.VPLInterpretExecuteProgramRequestQueueName,
 		sharedConstants.VPLInterpretExecuteProgramResponseQueueName,
