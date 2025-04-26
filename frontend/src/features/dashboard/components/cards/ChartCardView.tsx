@@ -33,14 +33,12 @@ export const ChartCardView = (props: ChartCardViewProps) => {
             <Skeleton className="h-full w-fit p-1 pt-0" disableAnimation>
               <ResponsiveTooltip
                 content={
-                  <div className="flex max-w-28 flex-col">
-                    <span className="text-center font-bold text-destructive">No data available</span>
+                  <div className="flex flex-col">
+                    <span className="text-center font-bold text-destructive">Some data unavailable</span>
                     {props.unavailableData?.map((row) => (
                       <div key={row.device + row.parameter} className="flex w-full flex-col">
-                        <span className="break-words text-center text-xs text-gray-500">Device: {row.device}</span>
-                        <span className="break-words text-center text-xs text-gray-500">
-                          Parameter: {row.parameter}
-                        </span>
+                        <span className="break-words text-center text-xs">Device: {row.device}</span>
+                        <span className="break-words text-center text-xs">Parameter: {row.parameter}</span>
                       </div>
                     ))}
                   </div>

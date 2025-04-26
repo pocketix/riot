@@ -1,7 +1,8 @@
 import { useInstances } from '@/context/InstancesContext'
 import { Serie } from '@nivo/line'
-import { getColorBlindScheme } from './color-schemes/color-impaired'
+import { getColorBlindSchemeWithBW } from './color-schemes/color-impaired'
 import { forwardRef } from 'react'
+import { useDarkMode } from '@/context/DarkModeContext'
 
 interface LineChartLegendProps {
   data: Serie[]
@@ -10,8 +11,9 @@ interface LineChartLegendProps {
 
 export const LineChartLegend = forwardRef<HTMLDivElement, LineChartLegendProps>(
   ({ data, className }: LineChartLegendProps, ref) => {
+    const { isDarkMode } = useDarkMode()
     const { getInstanceById, getParameterByIds } = useInstances()
-    const colors = getColorBlindScheme()
+    const colors = getColorBlindSchemeWithBW(isDarkMode)
 
     const parsedLegends = data.map((serie, index) => {
       const [parameterID, instanceID] = String(serie.id).split(' ')

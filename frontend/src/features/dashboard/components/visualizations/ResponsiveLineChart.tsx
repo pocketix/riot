@@ -124,7 +124,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
             yName: (config as ChartCardConfig).toolTip.y,
             yFormat: (config as ChartCardConfig).toolTip?.yFormat
           },
-          markers: (config as ChartCardConfig).xAxisMarkers?.map((marker) => ({
+          markers: (config as ChartCardConfig).yAxisMarkers?.map((marker) => ({
             axis: 'y',
             value: marker.value,
             lineStyle: {
@@ -260,7 +260,7 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
             yScale={
               {
                 ...mergedConfig.yScale,
-                min: 'auto',
+                min: mergedConfig.yScale.min,
                 max: mergedConfig.yScale.max === 'auto' ? getMaxValue(data) * 1.01 : Number(mergedConfig.yScale.max),
                 nice: true,
                 clamp: true
