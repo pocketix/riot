@@ -13,7 +13,7 @@ type ColumnFetchInfo = {
 
 export type TableColumnData = {
   function: string
-  values: (number | undefined)[]
+  values: (number | null)[]
 }
 
 export const TableCardController = (props: TableCardProps) => {
@@ -95,7 +95,7 @@ export const TableCardController = (props: TableCardProps) => {
       // Build values array for this column
       const values = tableConfig.rows.map((row) => {
         const deviceParsed = deviceDataMap[row.instance.uid]
-        return deviceParsed ? deviceParsed[row.parameter.denotation] : undefined
+        return deviceParsed ? deviceParsed[row.parameter.denotation] : null
       })
 
       setColumnData((prev) => {
@@ -118,7 +118,7 @@ export const TableCardController = (props: TableCardProps) => {
       setColumnData(
         tableConfig.columns.map((col) => ({
           function: col.function,
-          values: tableConfig.rows.map(() => undefined)
+          values: tableConfig.rows.map(() => null)
         }))
       )
       setIsLoading(false)
