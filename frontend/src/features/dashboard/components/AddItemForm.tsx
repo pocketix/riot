@@ -13,11 +13,13 @@ export interface AddItemFormProps {
 
 export function AddItemForm({ setDialogOpen, onAddItem }: AddItemFormProps) {
   const [selectedVisualization, setSelectedVisualization] = useState<
-    'line' | 'switch' | 'table' | 'bullet' | 'entitycard' | null
+    'line' | 'switch' | 'table' | 'bullet' | 'entitycard' | 'seqstates' | null
   >(null)
   const [activeTab, setActiveTab] = useState('visualization')
 
-  const handleVisualizationSelect = (visualization: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard') => {
+  const handleVisualizationSelect = (
+    visualization: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard' | 'seqstates'
+  ) => {
     setSelectedVisualization(visualization)
   }
 

@@ -5,6 +5,7 @@ import { BulletChartBuilderController } from './builders/BulletChartBuilderContr
 import { EntityCardBuilderController } from './builders/EntityCardBuilderController'
 import { TableCardBuilderController } from './builders/TableCardBuilderController'
 import { SwitchCardBuilderController } from './builders/SwitchCardBuilderController'
+import { SequentialStatesBuilderController } from './builders/SequentialStatesBuilderController'
 
 export const VisualizationBuilderContainer = styled.div`
   display: flex;
@@ -35,6 +36,7 @@ export function VisualizationBuilder({
       {selectedVisualization === 'table' && <TableCardBuilderController onDataSubmit={handleDataSubmit} />}
       {selectedVisualization === 'entitycard' && <EntityCardBuilderController onDataSubmit={handleDataSubmit} />}
       {selectedVisualization === 'switch' &&  <SwitchCardBuilderController onDataSubmit={handleDataSubmit} />}
+      {selectedVisualization === 'seqstates' && <SequentialStatesBuilderController onDataSubmit={handleDataSubmit} />}
     </VisualizationBuilderContainer>
   )
 }

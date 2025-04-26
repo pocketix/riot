@@ -382,6 +382,8 @@ const DashboardController = () => {
         toast.dismiss('dashboard-config-load')
         toast.success('Welcome! Your dashboard is ready.')
       } else {
+        // TODO: Handle failed to fetch error ? backend down
+        console.log('Error : ', fetchedConfigError.message)
         toast.error('Failed to fetch from database', { id: 'dashboard-config-load' })
         console.error('Failed to fetch from database:', fetchedConfigError)
 

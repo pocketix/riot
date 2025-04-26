@@ -31,7 +31,7 @@ export interface BaseVisualizationCardProps<ConfigType extends AllConfigTypes> {
 export interface BaseCardProps<ConfigType extends AllConfigTypes> extends BaseVisualizationCardProps<ConfigType> {
   isLoading: boolean
   error: string | null
-  visualizationType: 'table' | 'bullet' | 'line' | 'entitycard' | 'switch'
+  visualizationType: 'table' | 'bullet' | 'line' | 'entitycard' | 'switch' | 'seqstates'
   cardTitle?: string
   cardIcon?: string
   children: ReactNode
