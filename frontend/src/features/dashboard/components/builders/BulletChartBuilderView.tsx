@@ -30,7 +30,7 @@ import { ResponsiveDialog } from '../cards/components/ResponsiveDialog'
 import IconPicker from '@/ui/IconPicker'
 
 export interface BulletChartBuilderViewProps {
-  chartData: Datum[]
+  chartData: (Datum | null)[]
   config?: BulletCardConfig
   onSubmit: (values: BulletCardConfig) => void
   onCheckRowAndFetch: (rowIndex: number, rowData: any) => Promise<boolean>
@@ -87,7 +87,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
             markers: [],
             margin: { top: 0, right: 10, bottom: 20, left: 30 },
             titleOffsetX: -5,
-            colorScheme: 'nivo'
+            colorScheme: 'greys'
           }
         }
       ]
@@ -300,7 +300,6 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
         {fields.map((_, index) => {
           const row = form.watch(`rows.${index}`)
           const key = JSON.stringify(row)
-          if (!props.chartData[index]) return null
           return (
             <div className="relative mb-2 box-border h-[65px] w-full" key={index}>
               <div className="absolute inset-0">
@@ -350,7 +349,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
             </div>
             <Accordion type="multiple" className="w-full" value={openAccordions} onValueChange={setOpenAccordions}>
               {fields.map((item, index) => (
-                <AccordionItem key={item.id} value={`instance-${index}`}>
+                <AccordionItem key={`${item.id}-${index}`} value={`instance-${index}`}>
                   <AccordionTrigger className="flex w-full items-center justify-between">
                     <div className="flex flex-1 flex-wrap items-center">
                       <Button
@@ -884,6 +883,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                       maxValue: 'auto',
                       timeFrame: '24',
                       measureSize: 0.2,
+                      colorScheme: 'greys',
                       markers: []
                     }
                   })
