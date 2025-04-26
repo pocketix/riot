@@ -73,7 +73,7 @@ interface EntityRowProps {
 
 const EntityRow = memo(({ row, sparklineData, rowCount, onRowClick }: EntityRowProps) => {
   const { value } = useParameterSnapshot(row.instance?.id!, row.parameter?.id!)
-  const { getParameterByIds } = useInstances()
+  const { getParameterByIds, getInstanceById } = useInstances()
 
   const wholeParameter = getParameterByIds(row.instance?.id!, row.parameter?.id!)
 
@@ -81,20 +81,26 @@ const EntityRow = memo(({ row, sparklineData, rowCount, onRowClick }: EntityRowP
     if (row.visualization === 'sparkline') {
       return sparklineData && sparklineData.data && sparklineData.data.length > 0
     }
-    return value !== undefined
+    return value !== null
   }, [row.visualization, sparklineData, value])
 
   if (!hasData) {
     return (
-      <tr onClick={onRowClick} className="cursor-pointer hover:bg-muted/50" style={{ height: `calc(100% / ${rowCount})` }}>
+      <tr
+        onClick={onRowClick}
+        className="cursor-pointer hover:bg-muted/50"
+        style={{ height: `calc(100% / ${rowCount})` }}
+      >
         <td className="text-sm">{row.name}</td>
         <td className="h-[24px] w-[75px] text-center text-sm">
-          <Skeleton className="h-full w-full" disableAnimation>
+          <Skeleton className="flex h-full w-full items-center justify-center" disableAnimation>
             <ResponsiveTooltip
               content={
-                <div className="flex max-w-28 flex-col">
+                <div className="flex flex-col items-center justify-center">
                   <span className="font-semibold text-destructive">No data available</span>
-                  <span className="break-words text-xs">Device: {row.instance?.uid!}</span>
+                  <span className="break-all text-xs">
+                    Device: {getInstanceById(row.instance?.id!)?.userIdentifier || row.instance?.uid!}
+                  </span>
                   <span className="break-words text-xs">
                     Parameter: {wholeParameter?.label || wholeParameter?.denotation || 'Unknown'}
                   </span>
@@ -110,7 +116,11 @@ const EntityRow = memo(({ row, sparklineData, rowCount, onRowClick }: EntityRowP
   }
 
   return (
-    <tr onClick={onRowClick} className="cursor-pointer hover:bg-muted/50" style={{ height: `calc(100% / ${rowCount})` }}>
+    <tr
+      onClick={onRowClick}
+      className="cursor-pointer hover:bg-muted/50"
+      style={{ height: `calc(100% / ${rowCount})` }}
+    >
       <td className="text-sm">{row.name}</td>
 
       {row.visualization === 'sparkline' && (
@@ -130,11 +140,9 @@ const EntityRow = memo(({ row, sparklineData, rowCount, onRowClick }: EntityRowP
           {/* command invocation on onCheckedChange - not setup */}
           <ResponsiveTooltip
             content={
-              <div className="flex max-w-28 flex-col">
-                <span className="font-semibold text-destructive">Command actions not yet available</span>
-                <span className="break-words text-xs text-muted-foreground">
-                  This button only displays the current state
-                </span>
+              <div className="flex flex-col">
+                <span className="break-words font-semibold text-destructive">Command actions not yet available</span>
+                <span className="break-words text-xs">This button only displays the current state</span>
               </div>
             }
           >
