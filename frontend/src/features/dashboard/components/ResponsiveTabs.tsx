@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { Button } from '@/components/ui/button'
 import { TbTrash } from 'react-icons/tb'
 import { ResponsiveAlertDialog } from './cards/components/ResponsiveAlertDialog'
 import { AddEditTabDialog } from './AddEditTabDialog'
@@ -55,13 +54,12 @@ export function ResponsiveTabs(props: ResponsiveTabsProps) {
                               </p>
                             }
                           >
-                            <Button
-                              variant="ghost"
-                              size="icon"
+                            <span
                               className="flex h-4 items-center justify-center text-destructive"
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <TbTrash className="h-3 w-3" />
-                            </Button>
+                              <TbTrash className="h-4 w-4" />
+                            </span>
                           </ResponsiveAlertDialog>
                         )}
                         <AddEditTabDialog initialTab={tab} onEditTab={props.onEditTab} />

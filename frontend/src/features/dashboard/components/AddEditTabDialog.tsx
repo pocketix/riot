@@ -1,19 +1,11 @@
 import { useEffect, useState } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
   DrawerDescription,
-  DrawerTrigger,
   DrawerFooter
 } from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
@@ -124,12 +116,12 @@ export function AddEditTabDialog(props: AddEditTabDialogProps) {
   )
 
   const TriggerButton = props.initialTab ? (
-    <Button size="icon" variant="ghost" disabled={props.disabled} className="h-6 w-6 p-0">
-      <Pencil className="h-3.5 w-3.5" />
-    </Button>
+    <span className="ml-2 flex h-4 items-center justify-center" onClick={() => setOpen(true)}>
+      <Pencil className="h-4 w-4" />
+    </span>
   ) : (
-    <Button size="icon" variant="default" disabled={props.disabled} className="ml-2 flex w-fit items-center px-2">
-      <LucidePlus className="mr-1 h-3.5 w-3.5" />
+    <Button className="ml-2 flex w-fit items-center break-keep px-2" onClick={() => setOpen(true)}>
+      <LucidePlus className="mr-1 h-4 w-4" />
       Add Tab
     </Button>
   )
@@ -137,7 +129,7 @@ export function AddEditTabDialog(props: AddEditTabDialogProps) {
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>{TriggerButton}</DialogTrigger>
+        {TriggerButton}
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{props.initialTab ? 'Edit Tab' : 'Create New Tab'}</DialogTitle>
@@ -156,7 +148,7 @@ export function AddEditTabDialog(props: AddEditTabDialogProps) {
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
+      {TriggerButton}
       <DrawerContent className="px-4">
         <DrawerHeader className="px-0">
           <DrawerTitle>{props.initialTab ? 'Edit Tab' : 'Create New Tab'}</DrawerTitle>

@@ -26,14 +26,6 @@ export interface SwitchVisualizationProps {
 const SwitchVisualizationBase = (props: SwitchVisualizationProps) => {
   const [dialogOpen, setDialogOpen] = useState(false)
 
-  if (props.isError) {
-    return (
-      <div className={cn('flex h-full w-full items-center justify-center', props.className)}>
-        <span className="text-sm font-semibold text-destructive">Unavailable</span>
-      </div>
-    )
-  }
-
   const longPressAttrs = useLongPress(
     () => {
       setDialogOpen(true)
@@ -44,6 +36,14 @@ const SwitchVisualizationBase = (props: SwitchVisualizationProps) => {
     },
     { threshold: 300, moveThreshold: 10 }
   )
+
+  if (props.isError) {
+    return (
+      <div className={cn('flex h-full w-full items-center justify-center', props.className)}>
+        <span className="text-sm font-semibold text-destructive">Unavailable</span>
+      </div>
+    )
+  }
 
   return (
     <>
