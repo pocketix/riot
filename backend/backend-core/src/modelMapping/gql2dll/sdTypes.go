@@ -36,16 +36,9 @@ func ToDLLModelSDType(sdTypeInput graphQLModel.SDTypeInput) dllModel.SDType {
 			return dllModel.SDCommand{
 				ID:       0,
 				Name:     cmd.Name,
-				Payload:  DereferenceOrDefault(cmd.Payload, ""),
+				Payload:  cmd.Payload,
 				SdTypeID: 0,
 			}
 		}),
 	}
-}
-
-func DereferenceOrDefault[T any](ptr *T, def T) T {
-	if ptr != nil {
-		return *ptr
-	}
-	return def
 }
