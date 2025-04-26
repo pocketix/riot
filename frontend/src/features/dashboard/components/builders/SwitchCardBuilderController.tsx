@@ -183,7 +183,7 @@ export function SwitchCardBuilderController(props: SwitchCardBuilderControllerPr
       sizing: {
         minH: 3,
         h: 3,
-        w: 1
+        ...(props.config ? {} : { w: 1 })
       }
     }
 

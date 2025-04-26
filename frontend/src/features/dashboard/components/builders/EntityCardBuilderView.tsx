@@ -80,7 +80,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
 
   return (
     <div className="w-full">
-      <Card className="w-fulloverflow-hidden h-fit p-2 pt-0" ref={tableRef}>
+      <Card className="w-full overflow-hidden h-fit p-2 pt-0" ref={tableRef}>
         <div className="flex items-center gap-2">
           {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
           {form.watch('title') && <h3 className="text-lg font-semibold">{form.watch('title')}</h3>}

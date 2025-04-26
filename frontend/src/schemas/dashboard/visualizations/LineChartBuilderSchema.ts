@@ -62,7 +62,7 @@ export const lineChartBuilderSchema = z.object({
   }),
   enableGridX: z.boolean().optional(),
   enableGridY: z.boolean().optional(),
-  xAxisMarkers: z
+  yAxisMarkers: z
     .array(
       z.object({
         value: z

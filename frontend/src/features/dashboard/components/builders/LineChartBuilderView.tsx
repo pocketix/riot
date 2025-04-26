@@ -57,7 +57,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
     defaultValues: props.config || {
       cardTitle: 'Line Chart',
       icon: '',
-      xAxisMarkers: [],
+      yAxisMarkers: [],
       chartArea: true,
       legend: {
         enabled: false,
@@ -112,7 +112,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
     remove: removeMarker
   } = useFieldArray({
     control: form.control,
-    name: 'xAxisMarkers'
+    name: 'yAxisMarkers'
   })
 
   const [debouncedDecimalPlaces] = useDebounce(form.watch('decimalPlaces'), 1000)
@@ -246,7 +246,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
   const handleError = (errors: FieldErrors<z.infer<typeof lineChartBuilderSchema>>) => {
     const accordionsToOpen: string[] = []
 
-    if (errors.xAxisMarkers) accordionsToOpen.push('markers-options')
+    if (errors.yAxisMarkers) accordionsToOpen.push('markers-options')
     if (errors.toolTip) accordionsToOpen.push('tooltip-options')
     if (errors.legend) accordionsToOpen.push('legend')
     if (
@@ -299,7 +299,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                   enableGridX: form.watch('enableGridX'),
                   enableGridY: form.watch('enableGridY'),
                   chartArea: form.watch('chartArea'),
-                  xAxisMarkers: form.watch('xAxisMarkers') || [],
+                  yAxisMarkers: form.watch('yAxisMarkers') || [],
                   axisBottom: {
                     ...form.watch('axisBottom'),
                     tickValues: 0
@@ -599,7 +599,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                           <FormField
                             control={form.control}
-                            name={`xAxisMarkers.${index}.value`}
+                            name={`yAxisMarkers.${index}.value`}
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Value</FormLabel>
@@ -620,7 +620,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
 
                           <FormField
                             control={form.control}
-                            name={`xAxisMarkers.${index}.color`}
+                            name={`yAxisMarkers.${index}.color`}
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Color</FormLabel>
@@ -669,7 +669,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
 
                           <FormField
                             control={form.control}
-                            name={`xAxisMarkers.${index}.style`}
+                            name={`yAxisMarkers.${index}.style`}
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Style</FormLabel>
@@ -693,7 +693,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                         <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
                           <FormField
                             control={form.control}
-                            name={`xAxisMarkers.${index}.legend`}
+                            name={`yAxisMarkers.${index}.legend`}
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Legend Text</FormLabel>
@@ -712,7 +712,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
 
                           <FormField
                             control={form.control}
-                            name={`xAxisMarkers.${index}.legendPosition`}
+                            name={`yAxisMarkers.${index}.legendPosition`}
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Position</FormLabel>
