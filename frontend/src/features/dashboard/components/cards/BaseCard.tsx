@@ -27,6 +27,10 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
   const [highlight, setHighlight] = useState<'width' | 'height' | null>(null)
   const item = useMemo(() => props.layout.find((item) => item.i === props.cardID), [props.layout, props.cardID])
 
+  useEffect(() => {
+    setHighlight(null)
+  }, [props.editModeEnabled])
+
   let isAtRightEdge = false
   let isAtLeftEdge = false
   let isAtTopEdge = false
@@ -45,7 +49,6 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
       return item?.y === 0
     }, [item])
 
-    // Check if there are any items below
     isBottom = useMemo(() => {
       return props.layout.some((l) => l.y === item.y + item.h && l.x < item.x + item.w && l.x + l.w > item.x)
     }, [props.layout, item])
@@ -57,19 +60,60 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
 
   const IconComponent = props.cardIcon ? getCustomizableIcon(props.cardIcon) : null
 
-  if (props.isLoading || props.beingResized || props.error) {
+  if (props.isLoading || props.beingResized) {
     return (
       <>
         <Skeleton className="h-full w-full" />
-        {props.error && (
-          <div className="absolute left-0 top-0 flex h-full w-full items-center justify-center rounded-lg bg-destructive text-primary">
-            <span className="text-sm font-semibold">{props.error}</span>
-          </div>
-        )}
         {props.editModeEnabled && (
           <DeleteEditContainer>
             <ResponsiveAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID, props.breakPoint)} />
           </DeleteEditContainer>
+        )}
+        {props.editModeEnabled && (
+          <AccessibilityContainer
+            cols={props.cols}
+            layout={props.layout}
+            setLayout={props.setLayout}
+            breakPoint={props.breakPoint}
+            cardID={props.cardID}
+            setHighlight={setHighlight}
+            isAtRightEdge={isAtRightEdge}
+            isAtLeftEdge={isAtLeftEdge}
+            isAtTopEdge={isAtTopEdge}
+            isBottom={isBottom}
+          />
+        )}
+        {highlight === 'width' && (
+          <>
+            {!isAtRightEdge && item?.w !== item?.maxW && (
+              <div
+                style={{ width: `${props.width}px` }}
+                className={`absolute left-full top-0 h-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-r-lg bg-green-400 transition-opacity duration-200`}
+              />
+            )}
+            {item?.w !== 1 && item?.w !== item?.minW && (
+              <div
+                style={{ width: `${props.width}px` }}
+                className={`absolute right-0 top-0 h-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-r-lg bg-red-400 transition-opacity duration-200`}
+              />
+            )}
+          </>
+        )}
+        {highlight === 'height' && (
+          <>
+            {item?.h !== item?.maxH && (
+              <div
+                style={{ height: `${props.height}px` }}
+                className={`absolute left-0 top-full w-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-b-lg bg-green-400 transition-opacity duration-200`}
+              />
+            )}
+            {item?.h !== item?.minH && item?.h !== 1 && (
+              <div
+                style={{ height: `${props.height}px` }}
+                className={`absolute bottom-0 left-0 w-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-b-lg bg-red-400 transition-opacity duration-200`}
+              />
+            )}
+          </>
         )}
       </>
     )
@@ -99,7 +143,14 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
         </div>
       )}
 
-      <ChartContainer $editModeEnabled={props.editModeEnabled}>{props.children}</ChartContainer>
+      <ChartContainer $editModeEnabled={props.editModeEnabled}>
+        {props.children}
+        {props.error && (
+          <div className="absolute left-0 top-0 z-10 flex h-full w-full items-center justify-center rounded-lg bg-destructive text-primary">
+            <span className="text-sm font-semibold">{props.error}</span>
+          </div>
+        )}
+      </ChartContainer>
 
       {props.editModeEnabled && <OverlayContainer />}
       {props.editModeEnabled && (
@@ -128,7 +179,7 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
           {item?.w !== 1 && item?.w !== item?.minW && (
             <div
               style={{ width: `${props.width}px` }}
-              className={`absolute right-0 top-0 h-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-r-lg bg-red-400 transition-opacity duration-200`}
+              className={`absolute right-0 top-0 h-full ${highlight ? 'opacity-50' : 'opacity-0'} bg-red-400 transition-opacity duration-200`}
             />
           )}
         </>
@@ -145,7 +196,7 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
           {item?.h !== item?.minH && item?.h !== 1 && (
             <div
               style={{ height: `${props.height}px` }}
-              className={`absolute bottom-0 left-0 w-full ${highlight ? 'opacity-50' : 'opacity-0'} rounded-b-lg bg-red-400 transition-opacity duration-200`}
+              className={`absolute bottom-0 left-0 w-full ${highlight ? 'opacity-50' : 'opacity-0'} bg-red-400 transition-opacity duration-200`}
             />
           )}
         </>
