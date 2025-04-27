@@ -6,7 +6,9 @@ import { useMutation, useQuery } from '@apollo/client'
 import {
   CREATE_VPL_PROGRAM,
   UPDATE_VPL_PROGRAM,
-  DELETE_VPL_PROGRAM
+  DELETE_VPL_PROGRAM,
+  UPDATE_VPL_PROCEDURE,
+  CREATE_VPL_PROCEDURE
 } from '@/graphql/automations/Mutations'
 import { GET_VPL_PROGRAMS, GET_VPL_PROCEDURES } from '@/graphql/automations/Queries'
 import { toast } from 'sonner'
@@ -39,6 +41,7 @@ export default function AutomationsEditor() {
   const [isSaving, setIsSaving] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isRefetchingProcedures, setIsRefetchingProcedures] = useState(false)
   const [editorKey, setEditorKey] = useState(0) // Used to force re-render of the editor
   const [currentProgramData, setCurrentProgramData] = useState<any>(null) // Store the current program data
 
@@ -46,7 +49,7 @@ export default function AutomationsEditor() {
   const { data: programsData, loading: programsLoading, refetch: refetchPrograms } = useQuery(GET_VPL_PROGRAMS)
 
   // GraphQL query to fetch all VPL procedures
-  const { data: proceduresData, loading: proceduresLoading } = useQuery(GET_VPL_PROCEDURES)
+  const { data: proceduresData, loading: proceduresLoading, refetch: refetchProcedures } = useQuery(GET_VPL_PROCEDURES)
 
   // State for tracking if a program is loading
   const [loadingProgram, setLoadingProgram] = useState(false)
@@ -55,6 +58,8 @@ export default function AutomationsEditor() {
   const [createVPLProgram] = useMutation(CREATE_VPL_PROGRAM)
   const [updateVPLProgram] = useMutation(UPDATE_VPL_PROGRAM)
   const [deleteVPLProgram] = useMutation(DELETE_VPL_PROGRAM)
+  const [updateVPLProcedure] = useMutation(UPDATE_VPL_PROCEDURE)
+  const [createVPLProcedure] = useMutation(CREATE_VPL_PROCEDURE)
 
 
   useEffect(() => {
@@ -98,6 +103,94 @@ export default function AutomationsEditor() {
     return newName
   }
 
+  const proceduresParsingForSave = (program: any) => {
+    // access the header.userProcedures as json and parse each entry making it into new db entry. if the procedure already exists, update it but only if the data changed and warn the user via toast that existing procedure was updated and it might break functionality if it was used in other programs
+    if (!program.header || !program.header.userProcedures) {
+      console.log('No user procedures found in program:', program)
+      return
+    }
+
+    console.log('Processing user procedures:', program.header.userProcedures)
+
+    // Check if userProcedures is already an object or a JSON string
+    const userProcedures = typeof program.header.userProcedures === 'string'
+      ? JSON.parse(program.header.userProcedures)
+      : program.header.userProcedures
+
+    console.log('Parsed user procedures:', userProcedures)
+
+    // Get all procedures from the database
+    const allProceduresFromDB = proceduresData?.vplProcedures || []
+    console.log('All procedures from DB:', allProceduresFromDB)
+
+    for (const procedureName in userProcedures) {
+      const procedureData = userProcedures[procedureName]
+      console.log(`Processing procedure "${procedureName}":`, procedureData)
+
+      // Check if the procedure already exists in the database
+      const existingProcedure = allProceduresFromDB.find(
+        (procedure: VPLProcedure) => procedure.name === procedureName
+      )
+
+      console.log(`Existing procedure check for "${procedureName}":`, existingProcedure)
+
+      if (existingProcedure) {
+        // Procedure exists, check if the data has changed
+        const procedureDataString = JSON.stringify(procedureData)
+        console.log(`Comparing data for "${procedureName}":`, {
+          existing: existingProcedure.data,
+          new: procedureDataString
+        })
+
+        if (existingProcedure.data !== procedureDataString) {
+          // Data has changed, update the procedure
+          console.log(`Updating procedure "${procedureName}" with ID ${existingProcedure.id}`)
+          updateVPLProcedure({
+            variables: {
+              id: existingProcedure.id,
+              input: {
+                name: procedureName,
+                data: procedureDataString
+              }
+            }
+          })
+          .then(() => {
+            toast.warning(`Procedure "${procedureName}" updated. It might break other programs if implementation logic was changed.`)
+            // Refresh the procedures list to show the updated data
+            refetchProcedures()
+          })
+          .catch(error => {
+            console.error('Error updating procedure:', error)
+            toast.error(`Failed to update procedure "${procedureName}": ${error.message || 'Unknown error'}`)
+          })
+        } else {
+          console.log(`Procedure "${procedureName}" data hasn't changed, skipping update`)
+        }
+      } else {
+        // Procedure doesn't exist, create a new one
+        console.log(`Creating new procedure "${procedureName}"`)
+        createVPLProcedure({
+          variables: {
+            input: {
+              name: procedureName,
+              data: JSON.stringify(procedureData)
+            }
+          }
+        })
+        .then(() => {
+          toast.success(`New procedure "${procedureName}" created`)
+          // Refresh the procedures list to show the updated data
+          refetchProcedures()
+        })
+        .catch(error => {
+          console.error('Error creating procedure:', error)
+          toast.error(`Failed to create procedure "${procedureName}": ${error.message || 'Unknown error'}`)
+        })
+      }
+    }
+  }
+
+
   // Function to save a program with the given name
   const saveProgram = (name: string, overwriteId?: string) => {
     const editor = (window as any).currentEditor
@@ -119,6 +212,9 @@ export default function AutomationsEditor() {
       return
     }
 
+    // Process procedures before validating the program structure
+    proceduresParsingForSave(program)
+
     // Validate program structure
     try {
       // Check if program has required properties
@@ -132,7 +228,6 @@ export default function AutomationsEditor() {
 
       // Create a sanitized copy of the program to avoid reference issues
       const programCopy = JSON.parse(JSON.stringify(program))
-
       // Set isSaving state
       setIsSaving(true)
 
@@ -218,8 +313,8 @@ export default function AutomationsEditor() {
     if (existingProgram) {
       // Program with the same name exists, ask user what to do
       if (confirm(`A program named "${programName}" already exists. Do you want to:\n\n` +
-                 `• Click OK to overwrite the existing program\n` +
-                 `• Click Cancel to save as "${generateUniqueName(programName)}"`)) {
+                  `• Click OK to overwrite the existing program\n` +
+                  `• Click Cancel to save as "${generateUniqueName(programName)}"`)) {
         // User chose to overwrite
         saveProgram(programName, existingProgram.id)
       } else {
@@ -418,19 +513,31 @@ export default function AutomationsEditor() {
       return
     }
 
-    const procedures = proceduresData?.vplProcedures || []
-    console.log('Available procedures:', procedures)
-    toast.success(`Loaded ${procedures.length} procedures`)
+    // First refetch to get the latest data
+    setIsRefetchingProcedures(true)
+    refetchProcedures()
+      .then(() => {
+        const procedures = proceduresData?.vplProcedures || []
+        console.log('Available procedures:', procedures)
+        toast.success(`Loaded ${procedures.length} procedures`)
 
-    // Log the procedure data for debugging
-    if (procedures.length > 0) {
-      procedures.forEach((procedure: VPLProcedure) => {
-        console.log(`Procedure ID: ${procedure.id}, Name: ${procedure.name}`)
-        console.log('Procedure Data:', procedure.data)
+        // Log the procedure data for debugging
+        if (procedures.length > 0) {
+          procedures.forEach((procedure: VPLProcedure) => {
+            console.log(`Procedure ID: ${procedure.id}, Name: ${procedure.name}`)
+            console.log('Procedure Data:', procedure.data)
+          })
+        } else {
+          console.log('No procedures found')
+        }
       })
-    } else {
-      console.log('No procedures found')
-    }
+      .catch(error => {
+        console.error('Error fetching procedures:', error)
+        toast.error('Failed to fetch procedures')
+      })
+      .finally(() => {
+        setIsRefetchingProcedures(false)
+      })
   }
 
   return (
@@ -503,9 +610,9 @@ export default function AutomationsEditor() {
           <Button
             className="bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80"
             onClick={handleListProcedures}
-            disabled={proceduresLoading}
+            disabled={proceduresLoading || isRefetchingProcedures}
           >
-            {proceduresLoading ? 'Loading...' : 'List Procedures'}
+            {proceduresLoading || isRefetchingProcedures ? 'Loading...' : 'List Procedures'}
           </Button>
           <Button
             onClick={handleSaveProgram}
