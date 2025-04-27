@@ -21,6 +21,8 @@ interface TableRowData {
     function: string
     value?: number | null
   }>
+  decimalPlaces: number
+  valueSymbol?: string
 }
 
 export interface ResponsiveTableProps {
@@ -76,8 +78,8 @@ const ResponsiveTableBase = ({ className, columnData, config, onRowClick, height
       <table className="h-full w-full">
         <thead className="border-b-[2px]">
           <tr>
-            <th className="text-md text-left">{config.tableTitle}</th>
-            {config.columns.map((column, index) => (
+            <th className="text-md text-left">{config?.tableTitle!}</th>
+            {config?.columns?.map((column, index) => (
               <th key={index} className="text-center text-xs">
                 {column.header}
               </th>
@@ -86,13 +88,7 @@ const ResponsiveTableBase = ({ className, columnData, config, onRowClick, height
         </thead>
         <tbody>
           {rows.map((row, rowIndex) => (
-            <TableRow
-              key={rowIndex}
-              row={row}
-              config={config}
-              onRowClick={handleRowClick}
-              columnsConfig={config.columns}
-            />
+            <TableRow key={rowIndex} row={row} onRowClick={handleRowClick} columnsConfig={config.columns} />
           ))}
         </tbody>
       </table>
@@ -102,23 +98,16 @@ const ResponsiveTableBase = ({ className, columnData, config, onRowClick, height
 
 interface TableRowProps {
   row: TableRowData
-  config: TableCardConfig
   onRowClick: (instanceId: number | null, parameterId: number | null) => void
   columnsConfig: TableCardConfig['columns']
 }
 
-const TableRow = memo(({ row, config, onRowClick, columnsConfig }: TableRowProps) => {
+const TableRow = memo(({ row, onRowClick, columnsConfig }: TableRowProps) => {
   return (
     <tr onClick={() => onRowClick(row.instance?.id, row.parameter.id)} className="cursor-pointer hover:bg-muted/50">
       <td className="text-sm">{row.name}</td>
       {columnsConfig.map((column, columnIndex) => (
-        <TableCell
-          key={columnIndex}
-          column={column}
-          row={row}
-          columnIndex={columnIndex}
-          decimalPlaces={config.decimalPlaces}
-        />
+        <TableCell key={columnIndex} column={column} row={row} columnIndex={columnIndex} />
       ))}
     </tr>
   )
@@ -128,11 +117,10 @@ interface TableCellProps {
   column: TableCardConfig['columns'][number]
   row: TableRowData
   columnIndex: number
-  decimalPlaces: number
 }
 
 // Has to be a separate component in order to use the snapshot hooks
-const TableCell = memo(({ column, row, columnIndex, decimalPlaces }: TableCellProps) => {
+const TableCell = memo(({ column, row, columnIndex }: TableCellProps) => {
   // real-time parameter snapshots for "last" function
   const { getInstanceById } = useInstances()
   const useRealTimeData = column.function === 'last'
@@ -174,7 +162,12 @@ const TableCell = memo(({ column, row, columnIndex, decimalPlaces }: TableCellPr
     )
   }
 
-  return <td className="text-center text-sm">{parseFloat(cellValue?.toFixed(decimalPlaces ?? 2)!)}</td>
+  return (
+    <td className="text-center text-sm">
+      <span>{typeof cellValue === 'number' ? Number(cellValue.toFixed(row.decimalPlaces)) : String(cellValue)}</span>
+      <span className="align-top text-[10px] leading-none">{row.valueSymbol}</span>
+    </td>
+  )
 })
 
 export const ResponsiveTable = memo(ResponsiveTableBase)

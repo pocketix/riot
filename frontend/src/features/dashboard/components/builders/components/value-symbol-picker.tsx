@@ -38,13 +38,14 @@ interface ValueSymbolPickerProps {
   value: string
   disabled?: boolean
   onChange: (val: string) => void
+  className?: string
 }
 
 export function ValueSymbolPicker(props: ValueSymbolPickerProps) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="flex gap-2">
+    <div className={cn('flex gap-2', props.className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -101,7 +102,12 @@ export function ValueSymbolPicker(props: ValueSymbolPickerProps) {
           </Command>
         </PopoverContent>
       </Popover>
-      <Input className="w-24" placeholder="Custom" value={props.value} onChange={(e) => props.onChange(e.target.value)} />
+      <Input
+        className="w-24"
+        placeholder="Custom"
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value)}
+      />
     </div>
   )
 }

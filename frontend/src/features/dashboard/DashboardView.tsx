@@ -204,7 +204,7 @@ const DashboardView = (props: DashboardViewProps) => {
           onAddTab={props.onAddTab}
           editMode={editMode}
         />
-        <div {...swipeHandlers} className="min-h-[80vh] w-full overflow-hidden">
+        <div {...swipeHandlers} className="min-h-[80vh] w-full overflow-hidden pb-10">
           {!props.layouts || props.layouts[currentBreakpoint]?.length === 0 || !props.layouts[currentBreakpoint] ? (
             <Card className="mx-auto my-auto flex h-full w-2/3 flex-col items-center justify-center gap-2 self-center rounded-lg border border-dashed border-gray-300 p-4 text-center">
               <div className="rounded-full bg-gray-100 p-4 shadow-lg">
@@ -330,7 +330,7 @@ const DashboardView = (props: DashboardViewProps) => {
                           )}
                         </InView>
                       )
-                      case 'seqstates':
+                    case 'seqstates':
                       return (
                         <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
                           {({ inView, ref }) => (

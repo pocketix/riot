@@ -21,7 +21,7 @@ export const TableCardView = (props: TableCardViewProps) => {
       visualizationType="table"
       cardTitle={props.tableConfig?.title}
       cardIcon={props.tableConfig?.icon}
-      configuration={props.tableConfig!}
+      configuration={props.tableConfig! || props.configuration.visualizationConfig}
     >
       <ResponsiveTable
         columnData={props.columnData}
