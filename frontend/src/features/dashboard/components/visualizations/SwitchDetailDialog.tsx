@@ -8,6 +8,7 @@ import { useMediaQuery } from '@uidotdev/usehooks'
 import { useDebouncedCallback } from 'use-debounce'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
 import { GoLinkExternal } from 'react-icons/go'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface SwitchDetailDialogProps {
   open: boolean
@@ -83,21 +84,29 @@ export function SwitchDetailDialog(props: SwitchDetailDialogProps) {
   return isDesktop ? (
     <Dialog open={props.open} onOpenChange={props.setOpen}>
       <DialogContent>
-        <DialogTitle className="text-center">Switch Detail</DialogTitle>
-        <DialogDescription className="text-center text-sm">
-          Adjust the slider to set the switch percentage.
-        </DialogDescription>
-        {content}
+        <ScrollArea>
+          <div className="max-h-[90vh]">
+            <DialogTitle className="text-center">Switch Detail</DialogTitle>
+            <DialogDescription className="text-center text-sm">
+              Adjust the slider to set the switch percentage.
+            </DialogDescription>
+            {content}
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   ) : (
     <Drawer open={props.open} onOpenChange={props.setOpen}>
       <DrawerContent>
-        <DrawerTitle className="text-center">Switch Detail</DrawerTitle>
-        <DrawerDescription className="text-center text-sm">
-          Adjust the slider to set the switch percentage.
-        </DrawerDescription>
-        {content}
+        <ScrollArea>
+          <div className="max-h-[90vh]">
+            <DrawerTitle className="text-center">Switch Detail</DrawerTitle>
+            <DrawerDescription className="text-center text-sm">
+              Adjust the slider to set the switch percentage.
+            </DrawerDescription>
+            {content}
+          </div>
+        </ScrollArea>
       </DrawerContent>
     </Drawer>
   )
