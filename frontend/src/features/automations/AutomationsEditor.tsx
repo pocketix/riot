@@ -863,7 +863,7 @@ export default function AutomationsEditor() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 min-w-[564px]">
       <div className="flex flex-col gap-4 mb-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -896,6 +896,7 @@ export default function AutomationsEditor() {
         </div>
       </div>
 
+      {/* Main action buttons */}
       <div className="flex justify-between gap-2">
         <div className="flex gap-2">
           <Button
@@ -923,27 +924,14 @@ export default function AutomationsEditor() {
 
         <div className="flex gap-2">
           <Button
-            className="bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80"
-            onClick={handleLoadPrograms}
-            disabled={programsLoading}
-          >
-            {programsLoading ? 'Loading...' : 'List Programs'}
-          </Button>
-          <Button
-            className="bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80"
-            onClick={handleListProcedures}
-            disabled={proceduresLoading || isRefetchingProcedures}
-          >
-            {proceduresLoading || isRefetchingProcedures ? 'Loading...' : 'List Procedures'}
-          </Button>
-          <Button
+            className="bg-green-500 text-white hover:bg-green-600"
             onClick={handleSaveProgram}
             disabled={isSaving || !programName.trim()}
           >
-            {isSaving ? 'Saving...' : 'Save New'}
+            {isSaving ? 'Saving...' : 'Save Program'}
           </Button>
           <Button
-            className="bg-green-500 text-white hover:bg-green-600"
+            className="bg-blue-500 text-white hover:bg-blue-600"
             onClick={handleUpdateProcedures}
             disabled={isSaving || isUpdatingProcedures}
           >
@@ -952,8 +940,26 @@ export default function AutomationsEditor() {
         </div>
       </div>
 
+      {/* Debug buttons - can be removed for production */}
+      <div className="flex gap-2 mt-2 debug-buttons">
+        <Button
+          className="bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80"
+          onClick={handleLoadPrograms}
+          disabled={programsLoading}
+        >
+          {programsLoading ? 'Loading...' : 'Debug: List Programs'}
+        </Button>
+        <Button
+          className="bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80"
+          onClick={handleListProcedures}
+          disabled={proceduresLoading || isRefetchingProcedures}
+        >
+          {proceduresLoading || isRefetchingProcedures ? 'Loading...' : 'Debug: List Procedures'}
+        </Button>
+      </div>
+
         {/* VPL Editor */}
-        <div className="vpl-editor-container">
+        <div className="vpl-editor-container min-w-[564px]">
         {/* @ts-ignore */}
         <vpl-editor
           key={editorKey}
