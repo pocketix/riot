@@ -82,9 +82,12 @@ export default function AutomationsEditor() {
       block: []
     }
 
-    // Get all procedures from the database
+    // First, ensure we have the latest procedures data
+    console.log('Creating empty program with procedures')
+
+    // Get all procedures from the database - use the latest data
     const allProceduresFromDB = proceduresData?.vplProcedures || []
-    console.log('Creating empty program with procedures:', allProceduresFromDB)
+    console.log('Using procedures from DB:', allProceduresFromDB)
 
     // Add each procedure to the program's header.userProcedures
     if (allProceduresFromDB.length > 0) {
@@ -154,11 +157,8 @@ export default function AutomationsEditor() {
       if (typeof editor.updateProgram === 'function') {
         editor.updateProgram(emptyProgramWithProcedures)
         console.log('Editor initialized with procedures using updateProgram')
-      } else if (typeof editor.setProgram === 'function') {
-        editor.setProgram(emptyProgramWithProcedures)
-        console.log('Editor initialized with procedures using setProgram')
       } else {
-        console.error('No setProgram or updateProgram function found')
+        console.error('No updateProgram function found')
       }
     } catch (error) {
       console.error('Error initializing editor with procedures:', error)
@@ -534,9 +534,12 @@ export default function AutomationsEditor() {
       program.header.userProcedures = {}
     }
 
-    // Get all procedures from the database
+    // Get all procedures from the database - ensure we're using the latest data
     const allProceduresFromDB = proceduresData?.vplProcedures || []
     console.log('Loading procedures from DB:', allProceduresFromDB)
+
+    // Clear existing procedures before adding the latest ones
+    program.header.userProcedures = {}
 
     // Add each procedure to the program's header.userProcedures
     if (allProceduresFromDB.length > 0) {
@@ -577,62 +580,74 @@ export default function AutomationsEditor() {
 
     setLoadingProgram(true)
 
-    // Find the selected program in the list to get its ID
-    const selectedProgramData = programsData?.vplPrograms?.find(
-      (program: VPLProgram) => program.name === selectedProgram
-    )
+    // First, refresh the procedures to ensure we have the latest data
+    setIsRefetchingProcedures(true)
+    refetchProcedures()
+      .then(() => {
+        console.log('Procedures refreshed before loading program')
 
-    if (!selectedProgramData) {
-      toast.error(`Program "${selectedProgram}" not found`)
-      setLoadingProgram(false)
-      return
-    }
-    try {
-      const programData = JSON.parse(selectedProgramData.data)
+        // Find the selected program in the list to get its ID
+        const selectedProgramData = programsData?.vplPrograms?.find(
+          (program: VPLProgram) => program.name === selectedProgram
+        )
 
-      // Update the program name
-      setProgramName(selectedProgramData.name)
+        if (!selectedProgramData) {
+          toast.error(`Program "${selectedProgram}" not found`)
+          setLoadingProgram(false)
+          return
+        }
 
-      //i need to create a function that will parse the vplproceures db and add each entry as a valid userpocedure entry in the header.userProcedures
-      proceduresParsingForLoad(programData)
-
-      // Set the current program data
-      setCurrentProgramData(programData)
-
-      // Directly update the editor with the loaded program
-      const editor = (window as any).currentEditor
-      if (editor && editor.isReady) {
-        console.log('Directly updating editor with loaded program:', programData)
         try {
-          if (typeof editor.updateProgram === 'function') {
-            editor.updateProgram(programData)
-            console.log('Program loaded into editor using updateProgram')
-          } else if (typeof editor.setProgram === 'function') {
-            editor.setProgram(programData)
-            console.log('Program loaded into editor using setProgram')
+          const programData = JSON.parse(selectedProgramData.data)
+
+          // Update the program name
+          setProgramName(selectedProgramData.name)
+
+          // Parse the procedures db and add each entry as a valid userProcedure entry
+          proceduresParsingForLoad(programData)
+
+          // Set the current program data
+          setCurrentProgramData(programData)
+
+          // Directly update the editor with the loaded program
+          const editor = (window as any).currentEditor
+          if (editor && editor.isReady) {
+            console.log('Directly updating editor with loaded program:', programData)
+            try {
+              if (typeof editor.updateProgram === 'function') {
+                editor.updateProgram(programData)
+                console.log('Program loaded into editor using updateProgram')
+              } else {
+                console.error('No updateProgram function found on editor')
+                // If direct update fails, force re-render as fallback
+                setEditorKey(prevKey => prevKey + 1)
+              }
+            } catch (error) {
+              console.error('Error updating editor with loaded program:', error)
+              // If direct update fails, force re-render as fallback
+              setEditorKey(prevKey => prevKey + 1)
+            }
           } else {
-            console.error('No updateProgram or setProgram function found on editor')
-            // If direct update fails, force re-render as fallback
+            console.log('Editor not ready, using key re-render method')
+            // If editor is not ready, use the key re-render method
             setEditorKey(prevKey => prevKey + 1)
           }
-        } catch (error) {
-          console.error('Error updating editor with loaded program:', error)
-          // If direct update fails, force re-render as fallback
-          setEditorKey(prevKey => prevKey + 1)
-        }
-      } else {
-        console.log('Editor not ready, using key re-render method')
-        // If editor is not ready, use the key re-render method
-        setEditorKey(prevKey => prevKey + 1)
-      }
 
-      toast.success(`Program "${selectedProgramData.name}" loaded successfully`)
-    } catch (error) {
-      console.error('Error parsing program data:', error)
-      toast.error('Failed to parse program data')
-    } finally {
-      setLoadingProgram(false)
-    }
+          toast.success(`Program "${selectedProgramData.name}" loaded successfully`)
+        } catch (error) {
+          console.error('Error parsing program data:', error)
+          toast.error('Failed to parse program data')
+        } finally {
+          setLoadingProgram(false)
+          setIsRefetchingProcedures(false)
+        }
+      })
+      .catch(error => {
+        console.error('Error refreshing procedures:', error)
+        toast.error('Failed to refresh procedures before loading program')
+        setLoadingProgram(false)
+        setIsRefetchingProcedures(false)
+      })
   }
 
   // Update the current program
@@ -959,11 +974,8 @@ export default function AutomationsEditor() {
                   if (typeof typedEditor.updateProgram === 'function') {
                     typedEditor.updateProgram(currentProgramData);
                   }
-                  else if (typeof typedEditor.setProgram === 'function') {
-                    typedEditor.setProgram(currentProgramData);
-                  }
                   else {
-                    console.error('No setProgram or updateProgram function found');
+                    console.error('No updateProgram function found');
                   }
                 } catch (error) {
                   console.error('Error setting program data:', error);
@@ -989,11 +1001,8 @@ export default function AutomationsEditor() {
                     if (typeof typedEditor.updateProgram === 'function') {
                       typedEditor.updateProgram(currentProgramData);
                     }
-                    else if (typeof typedEditor.setProgram === 'function') {
-                      typedEditor.setProgram(currentProgramData);
-                    }
                     else {
-                      console.error('No setProgram or updateProgram function found');
+                      console.error('No updateProgram function found');
                     }
                   } catch (error) {
                     console.error('Error setting program data (via timeout):', error);
