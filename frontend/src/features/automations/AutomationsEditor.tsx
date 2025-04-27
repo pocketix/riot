@@ -42,6 +42,7 @@ export default function AutomationsEditor() {
   const [isSaving, setIsSaving] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isUpdatingProcedures, setIsUpdatingProcedures] = useState(false)
   const [isRefetchingProcedures, setIsRefetchingProcedures] = useState(false)
   const [editorKey, setEditorKey] = useState(0) // Used to force re-render of the editor
   const [currentProgramData, setCurrentProgramData] = useState<any>(null) // Store the current program data
@@ -65,6 +66,106 @@ export default function AutomationsEditor() {
   const [deleteVPLProcedure] = useMutation(DELETE_VPL_PROCEDURE)
 
 
+  // Function to create an empty program with procedures
+  const createEmptyProgramWithProcedures = () => {
+    const emptyProgram: {
+      header: {
+        userVariables: Record<string, any>;
+        userProcedures: Record<string, any>;
+      };
+      block: any[];
+    } = {
+      header: {
+        userVariables: {},
+        userProcedures: {}
+      },
+      block: []
+    }
+
+    // Get all procedures from the database
+    const allProceduresFromDB = proceduresData?.vplProcedures || []
+    console.log('Creating empty program with procedures:', allProceduresFromDB)
+
+    // Add each procedure to the program's header.userProcedures
+    if (allProceduresFromDB.length > 0) {
+      allProceduresFromDB.forEach((procedure: VPLProcedure) => {
+        try {
+          // Parse the procedure data from JSON string to object
+          const procedureData = JSON.parse(procedure.data)
+
+          // Add the procedure to the program's header.userProcedures
+          // The name in the table is the key, and the data is the value
+          emptyProgram.header.userProcedures[procedure.name] = procedureData
+
+          console.log(`Added procedure "${procedure.name}" to empty program:`, procedureData)
+        } catch (error) {
+          console.error(`Error parsing procedure data for "${procedure.name}":`, error)
+        }
+      })
+
+      console.log('Created empty program with procedures:', emptyProgram)
+
+      // Save the original procedures for comparison when saving
+      setOriginalProcedures({...emptyProgram.header.userProcedures})
+    } else {
+      console.log('No procedures found to add to empty program')
+    }
+
+    return emptyProgram
+  }
+
+  // Initialize editor with procedures
+  const initializeEditorWithProcedures = () => {
+    console.log('Attempting to initialize editor with procedures')
+    const editor = (window as any).currentEditor
+
+    if (!editor) {
+      console.error('Editor not found')
+      return
+    }
+
+    if (!editor.isReady) {
+      console.error('Editor not ready')
+      return
+    }
+
+    if (currentProgramData) {
+      console.log('Editor already has program data, skipping initialization with procedures')
+      return
+    }
+
+    if (proceduresLoading) {
+      console.log('Procedures still loading, waiting to initialize editor')
+      return
+    }
+
+    if (!proceduresData?.vplProcedures) {
+      console.log('No procedures data available')
+      return
+    }
+
+    try {
+      // Create an empty program with all procedures
+      const emptyProgramWithProcedures = createEmptyProgramWithProcedures()
+
+      console.log('Setting program with procedures in editor:', emptyProgramWithProcedures)
+
+      // Set the program in the editor
+      if (typeof editor.updateProgram === 'function') {
+        editor.updateProgram(emptyProgramWithProcedures)
+        console.log('Editor initialized with procedures using updateProgram')
+      } else if (typeof editor.setProgram === 'function') {
+        editor.setProgram(emptyProgramWithProcedures)
+        console.log('Editor initialized with procedures using setProgram')
+      } else {
+        console.error('No setProgram or updateProgram function found')
+      }
+    } catch (error) {
+      console.error('Error initializing editor with procedures:', error)
+    }
+  }
+
+  // First useEffect to set up the window.currentEditor property
   useEffect(() => {
     // Define the currentEditor property on the window object
     if (!(window as any).currentEditor) {
@@ -80,6 +181,24 @@ export default function AutomationsEditor() {
       (window as any).currentEditor = null
     }
   }, [])
+
+  // Track editor ready state
+  const [isEditorReady, setIsEditorReady] = useState(false)
+
+  // Effect to fetch procedures when the component mounts
+  useEffect(() => {
+    if (!proceduresLoading && proceduresData?.vplProcedures) {
+      console.log('Procedures loaded, ready to initialize editor:', proceduresData.vplProcedures)
+    }
+  }, [proceduresLoading, proceduresData])
+
+  // Effect to initialize editor when both editor is ready and procedures are loaded
+  useEffect(() => {
+    if (isEditorReady && !proceduresLoading && proceduresData?.vplProcedures && !currentProgramData) {
+      console.log('Both editor ready and procedures loaded, initializing editor')
+      initializeEditorWithProcedures()
+    }
+  }, [isEditorReady, proceduresLoading, proceduresData, currentProgramData])
 
   // Function to check if a program with the given name already exists
   const checkProgramExists = (name: string): VPLProgram | undefined => {
@@ -623,6 +742,52 @@ export default function AutomationsEditor() {
     }
   }
 
+  // Update procedures without saving the program
+  const handleUpdateProcedures = () => {
+    // Access the editor through the window object
+    const editor = (window as any).currentEditor
+    if (!editor) {
+      toast.error('Editor not initialized')
+      return
+    }
+
+    // Make sure the editor is fully initialized
+    if (!editor.isReady) {
+      toast.error('Editor is not fully initialized yet. Please try again in a moment.')
+      return
+    }
+
+    // Get the program from the editor
+    let program = editor.program
+    if (!program) {
+      toast.error('No program data available')
+      return
+    }
+
+    // Check if the program has userProcedures
+    if (!program.header || !program.header.userProcedures) {
+      toast.info('No procedures to update')
+      return
+    }
+
+    // Set the updating state
+    setIsUpdatingProcedures(true)
+
+    // Process procedures without saving the program
+    toast.info('Updating procedures...')
+
+    try {
+      proceduresParsingForSave(program)
+      toast.success('Procedures updated successfully')
+    } catch (error) {
+      console.error('Error updating procedures:', error)
+      toast.error(`Failed to update procedures: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      // Reset the updating state
+      setIsUpdatingProcedures(false)
+    }
+  }
+
   // Load procedures and display them in console
   const handleListProcedures = () => {
     if (proceduresLoading) {
@@ -737,6 +902,13 @@ export default function AutomationsEditor() {
           >
             {isSaving ? 'Saving...' : 'Save New'}
           </Button>
+          <Button
+            className="bg-green-500 text-white hover:bg-green-600"
+            onClick={handleUpdateProcedures}
+            disabled={isSaving || isUpdatingProcedures}
+          >
+            {isUpdatingProcedures ? 'Updating...' : 'Update Procedures'}
+          </Button>
         </div>
       </div>
 
@@ -753,6 +925,7 @@ export default function AutomationsEditor() {
             // Set a flag to track when the editor is ready
             el.addEventListener('ready', () => {
               (window as any).currentEditor.isReady = true;
+              setIsEditorReady(true);
 
               // If we have program data, set it now that the editor is ready
               if (currentProgramData) {
@@ -770,6 +943,11 @@ export default function AutomationsEditor() {
                 } catch (error) {
                   console.error('Error setting program data:', error);
                 }
+              } else if (!proceduresLoading && proceduresData?.vplProcedures) {
+                // If no program data but procedures are loaded, initialize with procedures
+                initializeEditorWithProcedures();
+              } else {
+                console.log('Waiting for procedures to load before initializing editor');
               }
             });
 
@@ -777,6 +955,7 @@ export default function AutomationsEditor() {
             setTimeout(() => {
               if (!(window as any).currentEditor.isReady) {
                 (window as any).currentEditor.isReady = true;
+                setIsEditorReady(true);
 
                 // If we have program data and the editor is not yet initialized, try to set it
                 if (currentProgramData && el === (window as any).currentEditor) {
@@ -794,6 +973,11 @@ export default function AutomationsEditor() {
                   } catch (error) {
                     console.error('Error setting program data (via timeout):', error);
                   }
+                } else if (el === (window as any).currentEditor && !proceduresLoading && proceduresData?.vplProcedures) {
+                  // If no program data but procedures are loaded, initialize with procedures
+                  initializeEditorWithProcedures();
+                } else if (el === (window as any).currentEditor) {
+                  console.log('Waiting for procedures to load before initializing editor (timeout)');
                 }
               }
             },420);
