@@ -142,7 +142,31 @@ export default function AutomationsEditor() {
           new: procedureDataString
         })
 
-        if (existingProcedure.data !== procedureDataString) {
+        // Parse both strings to objects for a proper comparison
+        let hasChanged = false;
+        try {
+          // Parse both strings to objects
+          const existingData = JSON.parse(existingProcedure.data);
+          const newData = procedureData; // Already an object
+
+          // Convert both to JSON strings with the same formatting
+          const normalizedExisting = JSON.stringify(existingData);
+          const normalizedNew = JSON.stringify(newData);
+
+          console.log(`Normalized comparison for "${procedureName}":`, {
+            existing: normalizedExisting,
+            new: normalizedNew
+          });
+
+          // Compare the normalized strings
+          hasChanged = normalizedExisting !== normalizedNew;
+        } catch (error) {
+          console.error(`Error comparing procedure data for "${procedureName}":`, error);
+          // If there's an error in parsing, assume the data has changed
+          hasChanged = true;
+        }
+
+        if (hasChanged) {
           // Data has changed, update the procedure
           console.log(`Updating procedure "${procedureName}" with ID ${existingProcedure.id}`)
           updateVPLProcedure({
@@ -169,11 +193,13 @@ export default function AutomationsEditor() {
       } else {
         // Procedure doesn't exist, create a new one
         console.log(`Creating new procedure "${procedureName}"`)
+        // Ensure consistent JSON formatting
+        const procedureDataString = JSON.stringify(procedureData)
         createVPLProcedure({
           variables: {
             input: {
               name: procedureName,
-              data: JSON.stringify(procedureData)
+              data: procedureDataString
             }
           }
         })
