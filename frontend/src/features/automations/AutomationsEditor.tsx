@@ -8,7 +8,8 @@ import {
   UPDATE_VPL_PROGRAM,
   DELETE_VPL_PROGRAM,
   UPDATE_VPL_PROCEDURE,
-  CREATE_VPL_PROCEDURE
+  CREATE_VPL_PROCEDURE,
+  DELETE_VPL_PROCEDURE
 } from '@/graphql/automations/Mutations'
 import { GET_VPL_PROGRAMS, GET_VPL_PROCEDURES } from '@/graphql/automations/Queries'
 import { toast } from 'sonner'
@@ -44,6 +45,7 @@ export default function AutomationsEditor() {
   const [isRefetchingProcedures, setIsRefetchingProcedures] = useState(false)
   const [editorKey, setEditorKey] = useState(0) // Used to force re-render of the editor
   const [currentProgramData, setCurrentProgramData] = useState<any>(null) // Store the current program data
+  const [originalProcedures, setOriginalProcedures] = useState<Record<string, any>>({}) // Store the original procedures for comparison
 
   // GraphQL query to fetch all VPL programs
   const { data: programsData, loading: programsLoading, refetch: refetchPrograms } = useQuery(GET_VPL_PROGRAMS)
@@ -60,6 +62,7 @@ export default function AutomationsEditor() {
   const [deleteVPLProgram] = useMutation(DELETE_VPL_PROGRAM)
   const [updateVPLProcedure] = useMutation(UPDATE_VPL_PROCEDURE)
   const [createVPLProcedure] = useMutation(CREATE_VPL_PROCEDURE)
+  const [deleteVPLProcedure] = useMutation(DELETE_VPL_PROCEDURE)
 
 
   useEffect(() => {
@@ -216,6 +219,43 @@ export default function AutomationsEditor() {
         })
       }
     }
+
+    // Check for deleted procedures by comparing with originalProcedures
+    for (const originalProcedureName in originalProcedures) {
+      // If the procedure is not in the current userProcedures, it was deleted
+      if (!userProcedures[originalProcedureName]) {
+        console.log(`Procedure "${originalProcedureName}" was deleted`)
+
+        // Find the procedure in the database
+        const deletedProcedure = allProceduresFromDB.find(
+          (procedure: VPLProcedure) => procedure.name === originalProcedureName
+        )
+
+        if (deletedProcedure) {
+          // Delete the procedure from the database without asking
+          deleteVPLProcedure({
+            variables: {
+              id: deletedProcedure.id
+            }
+          })
+          .then(() => {
+            // Show a warning toast about the deletion
+            toast.warning(`⚠️ IMPORTANT: Procedure "${originalProcedureName}" was deleted from the database. If it was used in other programs, this might cause issues.`, {
+              duration: 8000 // 8 seconds
+            })
+            // Refresh the procedures list to show the updated data
+            refetchProcedures()
+          })
+          .catch(error => {
+            console.error('Error deleting procedure:', error)
+            toast.error(`Failed to delete procedure "${originalProcedureName}": ${error.message || 'Unknown error'}`)
+          })
+        }
+      }
+    }
+
+    // Update the originalProcedures state with the current procedures
+    setOriginalProcedures({...userProcedures})
   }
 
 
@@ -404,6 +444,9 @@ export default function AutomationsEditor() {
     // Ensure the program header only contains userVariables and userProcedures
     const { userVariables, userProcedures } = program.header
     program.header = { userVariables, userProcedures }
+
+    // Save the original procedures for comparison when saving
+    setOriginalProcedures({...program.header.userProcedures})
   }
 
   // Load a program by ID
