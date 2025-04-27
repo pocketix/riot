@@ -62,13 +62,15 @@ const SwitchVisualizationBase = (props: SwitchVisualizationProps) => {
         />
         <div className="z-[1] flex h-full w-full items-center gap-2 px-4 py-2">
           {props.icon && (
-            <props.icon
-              className={`h-full w-6 ${props.isOn ? 'text-yellow-700' : 'text-muted-foreground'} transition-all duration-300 ease-in-out`}
-            />
+            <span className="flex h-full w-6 flex-shrink-0 items-center justify-center">
+              <props.icon
+                className={`h-6 w-6 ${props.isOn ? 'text-yellow-700' : 'text-muted-foreground'} transition-all duration-300 ease-in-out`}
+              />
+            </span>
           )}
-          <div className="flex flex-col justify-center leading-tight">
-            <span className="text-sm font-bold text-muted-foreground">{props.title}</span>
-            <span className="text-xs text-muted-foreground">
+          <div className="flex min-w-0 flex-1 flex-col justify-center leading-tight">
+            <span className="truncate whitespace-nowrap text-sm font-bold text-muted-foreground">{props.title}</span>
+            <span className="truncate text-xs text-muted-foreground">
               {props.isOn ? 'ON' : 'OFF'} {props.percentage && props.isOn ? `| ${props.percentage}%` : ''}
             </span>
           </div>
