@@ -181,7 +181,8 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
           id: 1,
           denotation: 'temperature'
         },
-        visualization: 'immediate'
+        visualization: 'immediate',
+        valueSymbol: '°C'
       },
       {
         name: 'Sensor1',
@@ -273,6 +274,7 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
               }
             }))
           }}
+          mock={true}
           sparklineData={dataLine}
         />
       </Card>

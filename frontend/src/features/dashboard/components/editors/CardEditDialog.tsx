@@ -93,7 +93,9 @@ export function CardEditDialog<ConfigType extends AllConfigTypes>({
         return (
           <SequentialStatesBuilderController
             config={config as SequentialStatesCardConfig}
-            onDataSubmit={(data: BuilderResult<SequentialStatesCardConfig>) => handleSave(data as BuilderResult<ConfigType>)}
+            onDataSubmit={(data: BuilderResult<SequentialStatesCardConfig>) =>
+              handleSave(data as BuilderResult<ConfigType>)
+            }
           />
         )
       default:
