@@ -81,6 +81,7 @@ export default function AutomationsEditor() {
   // Function to check if a program with the given name already exists
   const checkProgramExists = (name: string): VPLProgram | undefined => {
     if (!programsData?.vplPrograms) return undefined
+
     return programsData.vplPrograms.find(
       (program: VPLProgram) => program.name.toLowerCase() === name.toLowerCase()
     )
@@ -93,11 +94,11 @@ export default function AutomationsEditor() {
 
     // Try adding numbers in parentheses until we find a unique name
     let counter = 1
-    let newName = `${baseName}(${counter})`
+    let newName = `${baseName} (${counter})` // Added space before parenthesis for better readability
 
     while (checkProgramExists(newName)) {
       counter++
-      newName = `${baseName}(${counter})`
+      newName = `${baseName} (${counter})` // Added space before parenthesis for better readability
     }
 
     return newName
@@ -168,7 +169,6 @@ export default function AutomationsEditor() {
 
         if (hasChanged) {
           // Data has changed, update the procedure
-          console.log(`Updating procedure "${procedureName}" with ID ${existingProcedure.id}`)
           updateVPLProcedure({
             variables: {
               id: existingProcedure.id,
@@ -179,7 +179,10 @@ export default function AutomationsEditor() {
             }
           })
           .then(() => {
-            toast.warning(`Procedure "${procedureName}" updated. It might break other programs if implementation logic was changed.`)
+            // Use a longer duration for warnings (8 seconds)
+            toast.warning(`⚠️ IMPORTANT: Procedure "${procedureName}" updated. It might break other programs if implementation logic was changed.`, {
+              duration: 5000
+            })
             // Refresh the procedures list to show the updated data
             refetchProcedures()
           })
@@ -187,12 +190,9 @@ export default function AutomationsEditor() {
             console.error('Error updating procedure:', error)
             toast.error(`Failed to update procedure "${procedureName}": ${error.message || 'Unknown error'}`)
           })
-        } else {
-          console.log(`Procedure "${procedureName}" data hasn't changed, skipping update`)
         }
       } else {
         // Procedure doesn't exist, create a new one
-        console.log(`Creating new procedure "${procedureName}"`)
         // Ensure consistent JSON formatting
         const procedureDataString = JSON.stringify(procedureData)
         createVPLProcedure({
@@ -204,7 +204,9 @@ export default function AutomationsEditor() {
           }
         })
         .then(() => {
-          toast.success(`New procedure "${procedureName}" created`)
+          // Use a longer duration for success messages (5 seconds)
+          toast.success(`New procedure "${procedureName}" created`, {
+          })
           // Refresh the procedures list to show the updated data
           refetchProcedures()
         })
@@ -248,9 +250,6 @@ export default function AutomationsEditor() {
         toast.error('Invalid program structure: missing block array')
         return
       }
-
-      // Log detailed program structure for debugging
-      console.log('Saving program structure:', JSON.stringify(program, null, 2))
 
       // Create a sanitized copy of the program to avoid reference issues
       const programCopy = JSON.parse(JSON.stringify(program))
@@ -337,21 +336,74 @@ export default function AutomationsEditor() {
     const existingProgram = checkProgramExists(programName)
 
     if (existingProgram) {
+      // Generate the unique name before showing the confirm dialog
+      const uniqueName = generateUniqueName(programName)
+
       // Program with the same name exists, ask user what to do
       if (confirm(`A program named "${programName}" already exists. Do you want to:\n\n` +
                   `• Click OK to overwrite the existing program\n` +
-                  `• Click Cancel to save as "${generateUniqueName(programName)}"`)) {
+                  `• Click Cancel to save as "${uniqueName}"`)) {
         // User chose to overwrite
         saveProgram(programName, existingProgram.id)
       } else {
         // User chose to save as a new name
-        const uniqueName = generateUniqueName(programName)
         saveProgram(uniqueName)
+        // Update the program name field to show the new name
+        setProgramName(uniqueName)
       }
     } else {
       // No duplicate, proceed with normal save
       saveProgram(programName)
     }
+  }
+
+  // Function to parse procedures when loading a program
+  const proceduresParsingForLoad = (program: any) => {
+    //create json object that will get filled with json object of user procedure entries
+
+    // Ensure the program has a header and userProcedures property
+    if (!program.header) {
+      program.header = {}
+    }
+
+    if (program.header.userVariables === undefined) {
+      program.header.userVariables = {}
+    }
+
+    // Initialize userProcedures if it doesn't exist
+    if (!program.header.userProcedures) {
+      program.header.userProcedures = {}
+    }
+
+    // Get all procedures from the database
+    const allProceduresFromDB = proceduresData?.vplProcedures || []
+    console.log('Loading procedures from DB:', allProceduresFromDB)
+
+    // Add each procedure to the program's header.userProcedures
+    if (allProceduresFromDB.length > 0) {
+      allProceduresFromDB.forEach((procedure: VPLProcedure) => {
+        try {
+          // Parse the procedure data from JSON string to object
+          const procedureData = JSON.parse(procedure.data)
+
+          // Add the procedure to the program's header.userProcedures
+          // The name in the table is the key, and the data is the value
+          program.header.userProcedures[procedure.name] = procedureData
+
+          console.log(`Added procedure "${procedure.name}" to program:`, procedureData)
+        } catch (error) {
+          console.error(`Error parsing procedure data for "${procedure.name}":`, error)
+        }
+      })
+
+      console.log('Updated program with all procedures:', program)
+    } else {
+      console.log('No procedures found in the database')
+    }
+
+    // Ensure the program header only contains userVariables and userProcedures
+    const { userVariables, userProcedures } = program.header
+    program.header = { userVariables, userProcedures }
   }
 
   // Load a program by ID
@@ -373,16 +425,15 @@ export default function AutomationsEditor() {
       setLoadingProgram(false)
       return
     }
-    console.log('Selected program data:', selectedProgramData)
-
     try {
       const programData = JSON.parse(selectedProgramData.data)
-      console.log('Parsed program data:', programData)
 
       // Update the program name
       setProgramName(selectedProgramData.name)
 
-      // Store the program data in state
+      //i need to create a function that will parse the vplproceures db and add each entry as a valid userpocedure entry in the header.userProcedures
+      proceduresParsingForLoad(programData)
+
       setCurrentProgramData(programData)
 
       // Increment the key to force a re-render of the editor
@@ -415,7 +466,6 @@ export default function AutomationsEditor() {
       // Get the program from the editor
       // For custom lit elements, we need to access properties directly
       const program = editor.program
-      console.log('Retrieved program:', program)
 
       if (!program) {
         toast.error('No program data available')
@@ -496,8 +546,6 @@ export default function AutomationsEditor() {
 
         // Increment the key to force a re-render of the editor
         setEditorKey(prevKey => prevKey + 1)
-
-        console.log('Editor reset to empty state')
 
         // Refresh the programs list
         refetchPrograms()
@@ -661,7 +709,6 @@ export default function AutomationsEditor() {
 
             // Set a flag to track when the editor is ready
             el.addEventListener('ready', () => {
-              console.log('VPL Editor is ready');
               (window as any).currentEditor.isReady = true;
 
               // If we have program data, set it now that the editor is ready
@@ -670,11 +717,9 @@ export default function AutomationsEditor() {
                   const typedEditor = el as any;
                   if (typeof typedEditor.updateProgram === 'function') {
                     typedEditor.updateProgram(currentProgramData);
-                    console.log('Program set using updateProgram');
                   }
                   else if (typeof typedEditor.setProgram === 'function') {
                     typedEditor.setProgram(currentProgramData);
-                    console.log('Program set using setProgram');
                   }
                   else {
                     console.error('No setProgram or updateProgram function found');
@@ -688,7 +733,6 @@ export default function AutomationsEditor() {
             // Set a timeout to initialize the editor if the ready event doesn't fire
             setTimeout(() => {
               if (!(window as any).currentEditor.isReady) {
-                console.log('Setting editor ready flag via timeout');
                 (window as any).currentEditor.isReady = true;
 
                 // If we have program data and the editor is not yet initialized, try to set it
@@ -697,11 +741,9 @@ export default function AutomationsEditor() {
                     const typedEditor = el as any;
                     if (typeof typedEditor.updateProgram === 'function') {
                       typedEditor.updateProgram(currentProgramData);
-                      console.log('Program set using updateProgram (via timeout)');
                     }
                     else if (typeof typedEditor.setProgram === 'function') {
                       typedEditor.setProgram(currentProgramData);
-                      console.log('Program set using setProgram (via timeout)');
                     }
                     else {
                       console.error('No setProgram or updateProgram function found');
