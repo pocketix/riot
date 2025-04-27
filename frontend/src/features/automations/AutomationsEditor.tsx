@@ -596,10 +596,35 @@ export default function AutomationsEditor() {
       //i need to create a function that will parse the vplproceures db and add each entry as a valid userpocedure entry in the header.userProcedures
       proceduresParsingForLoad(programData)
 
+      // Set the current program data
       setCurrentProgramData(programData)
 
-      // Increment the key to force a re-render of the editor
-      setEditorKey(prevKey => prevKey + 1)
+      // Directly update the editor with the loaded program
+      const editor = (window as any).currentEditor
+      if (editor && editor.isReady) {
+        console.log('Directly updating editor with loaded program:', programData)
+        try {
+          if (typeof editor.updateProgram === 'function') {
+            editor.updateProgram(programData)
+            console.log('Program loaded into editor using updateProgram')
+          } else if (typeof editor.setProgram === 'function') {
+            editor.setProgram(programData)
+            console.log('Program loaded into editor using setProgram')
+          } else {
+            console.error('No updateProgram or setProgram function found on editor')
+            // If direct update fails, force re-render as fallback
+            setEditorKey(prevKey => prevKey + 1)
+          }
+        } catch (error) {
+          console.error('Error updating editor with loaded program:', error)
+          // If direct update fails, force re-render as fallback
+          setEditorKey(prevKey => prevKey + 1)
+        }
+      } else {
+        console.log('Editor not ready, using key re-render method')
+        // If editor is not ready, use the key re-render method
+        setEditorKey(prevKey => prevKey + 1)
+      }
 
       toast.success(`Program "${selectedProgramData.name}" loaded successfully`)
     } catch (error) {
