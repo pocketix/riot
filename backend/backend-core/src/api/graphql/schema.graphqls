@@ -34,7 +34,7 @@ input SDTypeInput {
   label: String
   icon: String
   parameters: [SDParameterInput!]!
-  commands: [SDCommandInputWithoutType!]
+  commands: [SDCommandInputWithoutType!]!
 }
 
 input SDCommandInputWithoutType {
