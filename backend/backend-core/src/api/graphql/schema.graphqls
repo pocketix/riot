@@ -366,6 +366,7 @@ type VPLProgram {
     lastRun: Date
     enabled: Boolean!
     sdParameterSnapshots: [SDParameterSnapshot!]!
+    procedures: [VPLProcedure!]! # Procedures used by this program
 }
 
 type VPLProgramExecutionResult {
@@ -387,6 +388,7 @@ type VPLProcedure {
     data: JSON!
     createdAt: Date!
     updatedAt: Date!
+    programs: [VPLProgram!]! # Programs that use this procedure
 }
 
 input VPLProcedureInput {

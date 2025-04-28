@@ -13502,7 +13502,7 @@ func (ec *executionContext) unmarshalInputSDCommandInputWithoutType(ctx context.
 			if err != nil {
 				return it, err
 			}
-			it.Payload = &data
+			it.Payload = data
 		}
 	}
 
