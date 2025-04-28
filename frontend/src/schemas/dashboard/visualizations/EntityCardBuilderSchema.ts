@@ -4,11 +4,13 @@ import { z } from 'zod'
 // yet the functionality is kept the same by using superRefine()
 export const entityCardSchema = z.object({
   title: z.string().optional(),
+  icon: z.string().optional(),
   rows: z
     .array(
       z
         .object({
           name: z.string().min(1, { message: 'Row name is required' }),
+          icon: z.string().optional(),
           instance: z
             .object({
               uid: z.string().min(1, { message: 'Instance is required' }),

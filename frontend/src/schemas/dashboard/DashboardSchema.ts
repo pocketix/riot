@@ -3,6 +3,7 @@ import { bulletChartBuilderSchema } from './visualizations/BulletChartBuilderSch
 import { entityCardSchema } from './visualizations/EntityCardBuilderSchema'
 import { tableCardSchema } from './visualizations/TableBuilderSchema'
 import { lineChartBuilderSchema } from './visualizations/LineChartBuilderSchema'
+import { switchCardSchema } from './visualizations/SwitchBuilderSchema'
 
 export const LayoutItemSchema = z.object({
   w: z.number(),
@@ -36,17 +37,19 @@ const DBItemDetailsSchema = z.discriminatedUnion('visualization', [
   z.object({
     visualization: z.literal('table'),
     visualizationConfig: tableCardSchema
+  }),
+  z.object({
+    visualization: z.literal('switch'),
+    visualizationConfig: switchCardSchema
   })
 ])
-
-export const DetailsSchema = z.record(z.string(), DBItemDetailsSchema)
 
 export const TabSchema = z.object({
   id: z.number(),
   userIdentifier: z.string(),
   icon: z.string().optional(),
   layout: LayoutsSchema,
-  details: DetailsSchema
+  details: z.any()
 })
 
 export const RiotDashboardConfigSchema = z.object({

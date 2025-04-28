@@ -301,7 +301,7 @@ input SDTypeInput {
   label: String
   icon: String
   parameters: [SDParameterInput!]!
-  commands: [SDCommandInputWithoutType!]
+  commands: [SDCommandInputWithoutType!]!
 }
 
 input SDCommandInputWithoutType {
@@ -630,7 +630,7 @@ type VPLProgram {
     id: ID!
     name: String!
     data: JSON!
-    lastRun: String
+    lastRun: Date
     enabled: Boolean!
     sdParameterSnapshots: [SDParameterSnapshot!]!
     procedures: [VPLProcedure!]! # Procedures used by this program
@@ -640,7 +640,7 @@ type VPLProgramExecutionResult {
     program: VPLProgram!
     sdParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
     SdCommandInvocations: [SDCommandInvocation!]!
-    executionTime: String!
+    executionTime: Date!
     enabled: Boolean!
     success: Boolean!
     error: String
@@ -10720,7 +10720,7 @@ func (ec *executionContext) _VPLProgram_lastRun(ctx context.Context, field graph
 	}
 	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalODate2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_VPLProgram_lastRun(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10730,7 +10730,7 @@ func (ec *executionContext) fieldContext_VPLProgram_lastRun(_ context.Context, f
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Date does not have child fields")
 		},
 	}
 	return fc, nil
@@ -11104,7 +11104,7 @@ func (ec *executionContext) _VPLProgramExecutionResult_executionTime(ctx context
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_VPLProgramExecutionResult_executionTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -11114,7 +11114,7 @@ func (ec *executionContext) fieldContext_VPLProgramExecutionResult_executionTime
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type Date does not have child fields")
 		},
 	}
 	return fc, nil
@@ -13717,7 +13717,7 @@ func (ec *executionContext) unmarshalInputSDTypeInput(ctx context.Context, obj a
 			it.Parameters = data
 		case "commands":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commands"))
-			data, err := ec.unmarshalOSDCommandInputWithoutType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutTypeᚄ(ctx, v)
+			data, err := ec.unmarshalNSDCommandInputWithoutType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutTypeᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -16944,6 +16944,21 @@ func (ec *executionContext) unmarshalNSDCommandInputWithoutType2githubᚗcomᚋM
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNSDCommandInputWithoutType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutTypeᚄ(ctx context.Context, v any) ([]graphQLModel.SDCommandInputWithoutType, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]graphQLModel.SDCommandInputWithoutType, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNSDCommandInputWithoutType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutType(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) marshalNSDCommandInvocation2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInvocation(ctx context.Context, sel ast.SelectionSet, v graphQLModel.SDCommandInvocation) graphql.Marshaler {
 	return ec._SDCommandInvocation(ctx, sel, &v)
 }
@@ -17836,24 +17851,6 @@ func (ec *executionContext) marshalOLogicalOperationType2ᚖgithubᚗcomᚋMicha
 		return graphql.Null
 	}
 	return v
-}
-
-func (ec *executionContext) unmarshalOSDCommandInputWithoutType2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutTypeᚄ(ctx context.Context, v any) ([]graphQLModel.SDCommandInputWithoutType, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []any
-	vSlice = graphql.CoerceList(v)
-	var err error
-	res := make([]graphQLModel.SDCommandInputWithoutType, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNSDCommandInputWithoutType2githubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDCommandInputWithoutType(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
 }
 
 func (ec *executionContext) marshalOSDParameterSnapshot2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterSnapshotᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDParameterSnapshot) graphql.Marshaler {

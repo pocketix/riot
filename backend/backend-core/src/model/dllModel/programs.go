@@ -1,10 +1,12 @@
 package dllModel
 
+import "time"
+
 type VPLProgram struct {
 	ID                   uint32
 	Name                 string
 	Data                 string
-	LastRun              *string
+	LastRun              *time.Time
 	Enabled              bool
 	SDParameterSnapshots []VPLProgramSDSnapshotLink
 }

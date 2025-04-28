@@ -5,7 +5,7 @@ import { IoAdd } from 'react-icons/io5'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { tableCardSchema, TableCardConfig } from '@/schemas/dashboard/visualizations/TableBuilderSchema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { FieldErrors, useFieldArray, useForm } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
@@ -16,11 +16,13 @@ import { SingleParameterCombobox } from './components/single-parameter-combobox'
 import { TimeFrameSelector } from './components/time-frame-selector'
 import { AggregateFunctionCombobox } from './components/aggregate-function-combobox'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
-import { ChevronDown, ChevronUp, InfoIcon } from 'lucide-react'
+import { ArrowDown, ArrowUp, InfoIcon } from 'lucide-react'
 import { Parameter } from '@/context/InstancesContext'
 import { ResponsiveTable } from '../visualizations/ResponsiveTable'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { TableColumnData } from '../cards/TableCardController'
+import IconPicker from '@/ui/IconPicker'
+import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
 
 export interface TableCardBuilderViewProps {
   config?: TableCardConfig
@@ -37,11 +39,13 @@ export interface TableCardBuilderViewProps {
 }
 
 export function TableCardBuilderView(props: TableCardBuilderViewProps) {
+  const [openAccordions, setOpenAccordions] = useState<string[]>([])
   const tableRef = useRef<HTMLDivElement>(null)
   const form = useForm<z.infer<typeof tableCardSchema>>({
     resolver: zodResolver(tableCardSchema),
     defaultValues: props.config || {
       title: 'Area',
+      icon: '',
       tableTitle: 'Sensors',
       timeFrame: '24',
       decimalPlaces: 1,
@@ -81,10 +85,25 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
     name: 'rows'
   })
 
+  const handleError = (errors: FieldErrors<z.infer<typeof tableCardSchema>>) => {
+    const accordionsToOpen: string[] = []
+
+    if (errors.columns) accordionsToOpen.push('columns')
+    if (errors.rows) accordionsToOpen.push('rows')
+
+    setOpenAccordions(accordionsToOpen)
+  }
+
+  const iconValue = form.watch('icon') ?? ''
+  const IconComponent = iconValue ? getCustomizableIcon(iconValue) : null
+
   return (
     <div className="w-full">
       <Card className="h-fit w-full overflow-hidden p-2 pt-0" ref={tableRef}>
-        {form.watch('title') && <h3 className="text-lg font-semibold">{form.watch('title')}</h3>}
+        <div className="flex items-center gap-1">
+          {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
+          {form.watch('title') && <h3 className="text-lg font-semibold">{form.watch('title')}</h3>}
+        </div>
         <ResponsiveTable
           key={JSON.stringify(props.tableData)}
           columnData={props.tableData}
@@ -99,7 +118,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
             onSubmit={form.handleSubmit((values) => {
               const height = tableRef.current?.getBoundingClientRect().height || 0
               props.onSubmit(values, height)
-            })}
+            }, handleError)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()
@@ -107,19 +126,34 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
             }}
           >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Card Title</FormLabel>
-                    <FormControl>
-                      <Input value={field.value} onChange={field.onChange} className="w-full" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex items-center gap-1">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Card Title</FormLabel>
+                      <FormControl>
+                        <Input value={field.value} onChange={field.onChange} className="w-full" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="icon"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Icon</FormLabel>
+                      <FormControl>
+                        <IconPicker icon={field.value ?? ''} setIcon={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="tableTitle"
@@ -137,9 +171,9 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                 control={form.control}
                 name="decimalPlaces"
                 render={({ field }) => (
-                  <FormItem className="self-center">
+                  <FormItem>
                     <FormLabel>
-                      <div className="flex items-center gap-2">
+                      <div className="inline-flex gap-1">
                         Number of decimal places
                         <ResponsiveTooltip
                           content={
@@ -190,7 +224,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                 )}
               />
             </div>
-            <Accordion type="single" collapsible className="mt-4 w-full">
+            <Accordion type="multiple" className="mt-4 w-full" value={openAccordions} onValueChange={setOpenAccordions}>
               <AccordionItem value="columns">
                 <AccordionTrigger>Columns</AccordionTrigger>
                 <AccordionContent className="mt-2 flex w-full flex-col rounded-md border p-2 px-1">
@@ -211,7 +245,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                               moveColumn(index, index - 1)
                             }}
                           >
-                            <ChevronUp size={14} />
+                            <ArrowUp size={14} />
                           </Button>
                           <Button
                             type="button"
@@ -224,7 +258,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                               moveColumn(index, index + 1)
                             }}
                           >
-                            <ChevronDown size={14} />
+                            <ArrowDown size={14} />
                           </Button>
                           <Button
                             type="button"
@@ -322,7 +356,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                               moveRow(rowIndex, rowIndex - 1)
                             }}
                           >
-                            <ChevronUp size={14} />
+                            <ArrowUp size={14} />
                           </Button>
                           <Button
                             type="button"
@@ -335,7 +369,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                               moveRow(rowIndex, rowIndex + 1)
                             }}
                           >
-                            <ChevronDown size={14} />
+                            <ArrowDown size={14} />
                           </Button>
                           <Button
                             type="button"

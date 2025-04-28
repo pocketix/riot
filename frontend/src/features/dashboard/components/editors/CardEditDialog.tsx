@@ -24,6 +24,8 @@ import { EntityCardBuilderController } from '../builders/EntityCardBuilderContro
 import { TableCardBuilderController } from '../builders/TableCardBuilderController'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { Pencil } from 'lucide-react'
+import { SwitchCardBuilderController } from '../builders/SwitchCardBuilderController'
+import { SwitchCardConfig } from '@/schemas/dashboard/visualizations/SwitchBuilderSchema'
 
 export interface CardEditDialogProps<ConfigType extends AllConfigTypes> {
   config?: ConfigType
@@ -58,8 +60,12 @@ export function CardEditDialog<ConfigType extends AllConfigTypes>({
           />
         )
       case 'switch':
-        // TODO: Add Switch builder
-        return <div>Switch</div>
+        return (
+          <SwitchCardBuilderController
+            config={config as SwitchCardConfig}
+            onDataSubmit={(data: BuilderResult<SwitchCardConfig>) => handleSave(data as BuilderResult<ConfigType>)}
+          />
+        )
       case 'table':
         return (
           <TableCardBuilderController

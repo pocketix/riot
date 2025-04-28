@@ -320,7 +320,7 @@ type SDTypeInput struct {
 	Label      *string                     `json:"label,omitempty"`
 	Icon       *string                     `json:"icon,omitempty"`
 	Parameters []SDParameterInput          `json:"parameters"`
-	Commands   []SDCommandInputWithoutType `json:"commands,omitempty"`
+	Commands   []SDCommandInputWithoutType `json:"commands"`
 }
 
 type SensorField struct {

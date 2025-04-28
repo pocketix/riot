@@ -41,7 +41,7 @@ export const Navbar = styled.div`
 export const MainGrid = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 50vh;
-  gap: 1rem;
+  min-height: 80vh;
+  gap: 0.5rem;
   height: calc(max-content + 100px);
 `

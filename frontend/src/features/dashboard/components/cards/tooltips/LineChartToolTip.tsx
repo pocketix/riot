@@ -25,7 +25,7 @@ export const ChartToolTip = ({ position, containerRef, instanceName, parameterNa
           container={containerRef as React.RefObject<HTMLDivElement>}
         >
           <div className="flex flex-col justify-center">
-            <span className="text-center font-bold">{instanceName}</span>
+            <span className="font-bold">{instanceName}</span>
             <span className="font-bold">{parameterName}</span>
           </div>
           <div className={`flex ${containerWidth! < 300 ? 'flex-col' : 'gap-1'} justify-center`}>

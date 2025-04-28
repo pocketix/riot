@@ -19,6 +19,7 @@ export const EntityCardView = (props: EntityCardViewProps) => {
       error={props.error}
       visualizationType="entitycard"
       cardTitle={props.chartConfig?.title}
+      cardIcon={props.chartConfig?.icon}
       configuration={props.chartConfig!}
     >
       <ResponsiveEntityTable config={props.chartConfig!} sparklineData={props.sparklineData} className="px-2 pt-0" />

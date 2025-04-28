@@ -34,7 +34,7 @@ input SDTypeInput {
   label: String
   icon: String
   parameters: [SDParameterInput!]!
-  commands: [SDCommandInputWithoutType!]
+  commands: [SDCommandInputWithoutType!]!
 }
 
 input SDCommandInputWithoutType {
@@ -363,7 +363,7 @@ type VPLProgram {
     id: ID!
     name: String!
     data: JSON!
-    lastRun: String
+    lastRun: Date
     enabled: Boolean!
     sdParameterSnapshots: [SDParameterSnapshot!]!
 }
@@ -372,7 +372,7 @@ type VPLProgramExecutionResult {
     program: VPLProgram!
     sdParameterSnapshotsToUpdate: [SDParameterSnapshot!]!
     SdCommandInvocations: [SDCommandInvocation!]!
-    executionTime: String!
+    executionTime: Date!
     enabled: Boolean!
     success: Boolean!
     error: String

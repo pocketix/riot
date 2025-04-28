@@ -24,6 +24,7 @@ export const ChartCardView = (props: ChartCardViewProps) => {
       error={props.error}
       visualizationType="line"
       cardTitle={props.chartConfig?.cardTitle}
+      cardIcon={props.chartConfig?.icon}
       configuration={props.chartConfig!}
     >
       <>

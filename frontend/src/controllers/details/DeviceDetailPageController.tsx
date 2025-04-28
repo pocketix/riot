@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
+  SdInstancesDocument,
+  SdInstancesWithParamsDocument,
+  SdInstancesWithTypeAndSnapshotDocument,
   SdParameterType,
   StatisticsOperation,
   useSdTypeParametersQuery,
-  useStatisticsQuerySensorsWithFieldsQuery
+  useStatisticsQuerySensorsWithFieldsQuery,
+  useUpdateUserIdentifierOfSdInstanceMutation
 } from '@/generated/graphql'
 import { DeviceDetailPageProps, DeviceDetailPageView } from '@/views/DeviceDetailView'
 import { useInstances } from '@/context/InstancesContext'
 import { useInstanceWithKPIs } from '@/hooks/useInstanceWithKPIs'
 import { useFormattedLastUpdated } from '@/hooks/useLastUpdated'
+import { toast } from 'sonner'
 
 export const DeviceDetailPageController = () => {
   const { id } = useParams()
@@ -36,6 +41,38 @@ export const DeviceDetailPageController = () => {
     variables: { sdTypeId: instance?.type.id! },
     skip: !instance?.type?.id
   })
+
+  const [saveUserIdentifier] = useUpdateUserIdentifierOfSdInstanceMutation({
+    onCompleted: () => {
+      toast.success('Device updated!', { id: 'device-update' })
+    },
+    refetchQueries: [
+      {
+        query: SdInstancesDocument
+      },
+      {
+        query: SdInstancesWithTypeAndSnapshotDocument
+      },
+      {
+        query: SdInstancesWithParamsDocument
+      }
+    ],
+    onError: (error) => {
+      toast.error('Failed to update device...', { id: 'device-update' })
+      console.error('Failed to update user identifier: ', error)
+    }
+  })
+
+  const handleUserIdentifierChange = async (newUserIdentifier: string) => {
+    if (!instance) return
+    toast.loading('Updating device...', { id: 'device-update' })
+    await saveUserIdentifier({
+      variables: {
+        id: instance.id,
+        newUserIdentifier: newUserIdentifier
+      }
+    })
+  }
 
   const currentParameter = useMemo(() => {
     return selectedParameter || parametersData?.sdType.parameters[0]?.denotation || null
@@ -118,6 +155,8 @@ export const DeviceDetailPageController = () => {
     currentParameter: wholeParameter || null,
 
     chartData: processedChartData,
+
+    onUserIdentifierChange: handleUserIdentifierChange,
 
     selectedParameter,
     setSelectedParameter,
