@@ -216,6 +216,24 @@ func (r *mutationResolver) DeleteVPLProcedure(ctx context.Context, id uint32) (b
 	return true, nil
 }
 
+func (r *mutationResolver) LinkProgramToProcedure(ctx context.Context, programID uint32, procedureID uint32) (bool, error) {
+	err := domainLogicLayer.LinkProgramToProcedure(programID, procedureID)
+	if err != nil {
+		log.Printf("Error occurred (link program to procedure): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) UnlinkProgramFromProcedure(ctx context.Context, programID uint32, procedureID uint32) (bool, error) {
+	err := domainLogicLayer.UnlinkProgramFromProcedure(programID, procedureID)
+	if err != nil {
+		log.Printf("Error occurred (unlink program from procedure): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
 	getSDTypeResult := domainLogicLayer.GetSDType(id)
 	if getSDTypeResult.IsFailure() {
@@ -382,6 +400,24 @@ func (r *queryResolver) VplProcedures(ctx context.Context) ([]graphQLModel.VPLPr
 		return nil, getVPLProceduresResult.GetError()
 	}
 	return getVPLProceduresResult.Unwrap()
+}
+
+func (r *queryResolver) VplProceduresForProgram(ctx context.Context, programID uint32) ([]graphQLModel.VPLProcedure, error) {
+	getProceduresForProgramResult := domainLogicLayer.GetProceduresForProgram(programID)
+	if getProceduresForProgramResult.IsFailure() {
+		log.Printf("Error occurred (get VPL procedures for program): %s\n", getProceduresForProgramResult.GetError().Error())
+		return nil, getProceduresForProgramResult.GetError()
+	}
+	return getProceduresForProgramResult.Unwrap()
+}
+
+func (r *queryResolver) VplProgramsForProcedure(ctx context.Context, procedureID uint32) ([]graphQLModel.VPLProgram, error) {
+	getProgramsForProcedureResult := domainLogicLayer.GetProgramsForProcedure(procedureID)
+	if getProgramsForProcedureResult.IsFailure() {
+		log.Printf("Error occurred (get VPL programs for procedure): %s\n", getProgramsForProcedureResult.GetError().Error())
+		return nil, getProgramsForProcedureResult.GetError()
+	}
+	return getProgramsForProcedureResult.Unwrap()
 }
 
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {

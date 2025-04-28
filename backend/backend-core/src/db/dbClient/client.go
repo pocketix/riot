@@ -74,6 +74,10 @@ type RelationalDatabaseClient interface {
 	LoadVPLProcedure(id uint32) sharedUtils.Result[dllModel.VPLProcedure]
 	LoadVPLProcedures() sharedUtils.Result[[]dllModel.VPLProcedure]
 	DeleteVPLProcedure(id uint32) error
+	LinkProgramToProcedure(programID uint32, procedureID uint32) error
+	UnlinkProgramFromProcedure(programID uint32, procedureID uint32) error
+	GetProceduresForProgram(programID uint32) sharedUtils.Result[[]dllModel.VPLProcedure]
+	GetProgramsForProcedure(procedureID uint32) sharedUtils.Result[[]dllModel.VPLProgram]
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -229,6 +233,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.SDParameterSnapshotEntity),
 		new(dbModel.VPLProgramsEntity),
 		new(dbModel.VPLProceduresEntity),
+		new(dbModel.VPLProgramProcedureLinkEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
 
@@ -791,7 +796,6 @@ func (r *relationalDatabaseClientImpl) LoadVPLProgram(id uint32) sharedUtils.Res
 	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProgram(vplProgramEntityLoadResult.GetPayload()))
 }
 
-
 func (r *relationalDatabaseClientImpl) LoadVPLPrograms() sharedUtils.Result[[]dllModel.VPLProgram] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -811,8 +815,6 @@ func (r *relationalDatabaseClientImpl) DeleteVPLProgram(id uint32) error {
 
 	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.VPLProgramsEntity](r.db, id)
 }
-
-
 
 func (r *relationalDatabaseClientImpl) PersistVPLProcedure(vplProcedure dllModel.VPLProcedure) sharedUtils.Result[dllModel.VPLProcedure] {
 	r.mu.Lock()
@@ -858,4 +860,129 @@ func (r *relationalDatabaseClientImpl) DeleteVPLProcedure(id uint32) error {
 	defer r.mu.Unlock()
 
 	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.VPLProceduresEntity](r.db, id)
+}
+
+// LinkProgramToProcedure creates a link between a program and a procedure
+func (r *relationalDatabaseClientImpl) LinkProgramToProcedure(programID uint32, procedureID uint32) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Check if the program exists
+	programExists := dbUtil.DoIDsExist[dbModel.VPLProgramsEntity](r.db, []uint32{programID})
+	if programExists.IsFailure() {
+		return programExists.GetError()
+	}
+	if !programExists.GetPayload() {
+		return fmt.Errorf("program with ID %d does not exist", programID)
+	}
+
+	// Check if the procedure exists
+	procedureExists := dbUtil.DoIDsExist[dbModel.VPLProceduresEntity](r.db, []uint32{procedureID})
+	if procedureExists.IsFailure() {
+		return procedureExists.GetError()
+	}
+	if !procedureExists.GetPayload() {
+		return fmt.Errorf("procedure with ID %d does not exist", procedureID)
+	}
+
+	// Create the link entity
+	linkEntity := dbModel.VPLProgramProcedureLinkEntity{
+		ProgramID:   programID,
+		ProcedureID: procedureID,
+	}
+
+	// Persist the link
+	if err := dbUtil.PersistEntityIntoDB(r.db, &linkEntity); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UnlinkProgramFromProcedure removes a link between a program and a procedure
+func (r *relationalDatabaseClientImpl) UnlinkProgramFromProcedure(programID uint32, procedureID uint32) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Delete the link
+	result := r.db.Where("program_id = ? AND procedure_id = ?", programID, procedureID).Delete(&dbModel.VPLProgramProcedureLinkEntity{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
+// GetProceduresForProgram returns all procedures linked to a program
+func (r *relationalDatabaseClientImpl) GetProceduresForProgram(programID uint32) sharedUtils.Result[[]dllModel.VPLProcedure] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Get all procedure IDs linked to the program
+	var links []dbModel.VPLProgramProcedureLinkEntity
+	if err := r.db.Where("program_id = ?", programID).Find(&links).Error; err != nil {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProcedure](err)
+	}
+
+	// If no links found, return an empty slice
+	if len(links) == 0 {
+		return sharedUtils.NewSuccessResult([]dllModel.VPLProcedure{})
+	}
+
+	// Extract procedure IDs
+	procedureIDs := make([]uint32, len(links))
+	for i, link := range links {
+		procedureIDs[i] = link.ProcedureID
+	}
+
+	// Get all procedures with the extracted IDs
+	var procedures []dbModel.VPLProceduresEntity
+	if err := r.db.Where("id IN ?", procedureIDs).Find(&procedures).Error; err != nil {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProcedure](err)
+	}
+
+	// Convert to DLL model
+	result := make([]dllModel.VPLProcedure, len(procedures))
+	for i, procedure := range procedures {
+		result[i] = db2dll.ToDLLModelVplProcedure(procedure)
+	}
+
+	return sharedUtils.NewSuccessResult(result)
+}
+
+// GetProgramsForProcedure returns all programs linked to a procedure
+func (r *relationalDatabaseClientImpl) GetProgramsForProcedure(procedureID uint32) sharedUtils.Result[[]dllModel.VPLProgram] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Get all program IDs linked to the procedure
+	var links []dbModel.VPLProgramProcedureLinkEntity
+	if err := r.db.Where("procedure_id = ?", procedureID).Find(&links).Error; err != nil {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](err)
+	}
+
+	// If no links found, return an empty slice
+	if len(links) == 0 {
+		return sharedUtils.NewSuccessResult([]dllModel.VPLProgram{})
+	}
+
+	// Extract program IDs
+	programIDs := make([]uint32, len(links))
+	for i, link := range links {
+		programIDs[i] = link.ProgramID
+	}
+
+	// Get all programs with the extracted IDs
+	var programs []dbModel.VPLProgramsEntity
+	if err := r.db.Where("id IN ?", programIDs).Find(&programs).Error; err != nil {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](err)
+	}
+
+	// Convert to DLL model
+	result := make([]dllModel.VPLProgram, len(programs))
+	for i, program := range programs {
+		result[i] = db2dll.ToDLLModelVplProgram(program)
+	}
+
+	return sharedUtils.NewSuccessResult(result)
 }

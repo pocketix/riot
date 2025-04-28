@@ -222,21 +222,21 @@ type Query struct {
 }
 
 type SDCommand struct {
-	ID       uint32  `json:"id"`
-	Name     string  `json:"name"`
-	Payload  *string `json:"payload,omitempty"`
-	SdTypeID uint32  `json:"sdTypeId"`
+	ID       uint32 `json:"id"`
+	Name     string `json:"name"`
+	Payload  string `json:"payload"`
+	SdTypeID uint32 `json:"sdTypeId"`
 }
 
 type SDCommandInput struct {
-	Name     string  `json:"name"`
-	Payload  *string `json:"payload,omitempty"`
-	SdTypeID uint32  `json:"sdTypeId"`
+	Name     string `json:"name"`
+	Payload  string `json:"payload"`
+	SdTypeID uint32 `json:"sdTypeId"`
 }
 
 type SDCommandInputWithoutType struct {
-	Name    string  `json:"name"`
-	Payload *string `json:"payload,omitempty"`
+	Name    string `json:"name"`
+	Payload string `json:"payload"`
 }
 
 type SDCommandInvocation struct {
@@ -388,11 +388,12 @@ type UserConfigInput struct {
 }
 
 type VPLProcedure struct {
-	ID        uint32 `json:"id"`
-	Name      string `json:"name"`
-	Data      string `json:"data"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	ID        uint32       `json:"id"`
+	Name      string       `json:"name"`
+	Data      string       `json:"data"`
+	CreatedAt string       `json:"createdAt"`
+	UpdatedAt string       `json:"updatedAt"`
+	Programs  []VPLProgram `json:"programs"`
 }
 
 type VPLProcedureInput struct {
@@ -407,6 +408,7 @@ type VPLProgram struct {
 	LastRun              *string               `json:"lastRun,omitempty"`
 	Enabled              bool                  `json:"enabled"`
 	SdParameterSnapshots []SDParameterSnapshot `json:"sdParameterSnapshots"`
+	Procedures           []VPLProcedure        `json:"procedures"`
 }
 
 type VPLProgramExecutionResult struct {

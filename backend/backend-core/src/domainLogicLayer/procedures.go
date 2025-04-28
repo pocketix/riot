@@ -64,6 +64,21 @@ func GetVPLProcedures() sharedUtils.Result[[]graphQLModel.VPLProcedure] {
 
 // DeleteVPLProcedure deletes a VPL procedure by ID
 func DeleteVPLProcedure(id uint32) error {
+	// Get all programs linked to this procedure
+	programsResult := dbClient.GetRelationalDatabaseClientInstance().GetProgramsForProcedure(id)
+	if programsResult.IsFailure() {
+		log.Printf("Warning: Failed to get programs for procedure %d: %s", id, programsResult.GetError())
+	} else {
+		// Unlink all programs from this procedure
+		for _, program := range programsResult.GetPayload() {
+			err := dbClient.GetRelationalDatabaseClientInstance().UnlinkProgramFromProcedure(program.ID, id)
+			if err != nil {
+				log.Printf("Warning: Failed to unlink program %d from procedure %d: %s", program.ID, id, err)
+			}
+		}
+	}
+
+	// Delete the procedure
 	return dbClient.GetRelationalDatabaseClientInstance().DeleteVPLProcedure(id)
 }
 
@@ -74,6 +89,14 @@ func ExtractAndSaveUserProcedures(programData string) error {
 	if err := json.Unmarshal([]byte(programData), &programJSON); err != nil {
 		log.Printf("Failed to parse program data: %s", err)
 		return err
+	}
+
+	// Get the program ID if it exists
+	var programID uint32
+	if id, exists := programJSON["id"]; exists {
+		if idFloat, ok := id.(float64); ok {
+			programID = uint32(idFloat)
+		}
 	}
 
 	// Check if userProcedures exists in the program data
@@ -90,6 +113,16 @@ func ExtractAndSaveUserProcedures(programData string) error {
 		return nil
 	}
 
+	// Get all existing procedures
+	existingProcedures := dbClient.GetRelationalDatabaseClientInstance().LoadVPLProcedures()
+	if existingProcedures.IsFailure() {
+		log.Printf("Failed to load existing procedures: %s", existingProcedures.GetError())
+		return existingProcedures.GetError()
+	}
+
+	// Track saved procedure IDs to link to the program
+	var savedProcedureIDs []uint32
+
 	// Iterate through each procedure and save it
 	for name, procedureData := range proceduresMap {
 		// Convert procedure data to JSON string
@@ -103,13 +136,6 @@ func ExtractAndSaveUserProcedures(programData string) error {
 		procedure := dllModel.VPLProcedure{
 			Name: name,
 			Data: string(procedureJSON),
-		}
-
-		// Check if a procedure with this name already exists
-		existingProcedures := dbClient.GetRelationalDatabaseClientInstance().LoadVPLProcedures()
-		if existingProcedures.IsFailure() {
-			log.Printf("Failed to load existing procedures: %s", existingProcedures.GetError())
-			continue
 		}
 
 		// Look for a procedure with the same name
@@ -132,8 +158,64 @@ func ExtractAndSaveUserProcedures(programData string) error {
 			log.Printf("Failed to save procedure '%s': %s", name, result.GetError())
 		} else {
 			log.Printf("Saved procedure '%s'", name)
+			savedProcedureIDs = append(savedProcedureIDs, result.GetPayload().ID)
+		}
+	}
+
+	// If we have a program ID and saved procedures, link them
+	if programID > 0 && len(savedProcedureIDs) > 0 {
+		// First, get all existing procedure links for this program
+		existingLinks := dbClient.GetRelationalDatabaseClientInstance().GetProceduresForProgram(programID)
+		if existingLinks.IsFailure() {
+			log.Printf("Failed to get existing procedure links: %s", existingLinks.GetError())
+		} else {
+			// Create a map of existing procedure IDs
+			existingLinkMap := make(map[uint32]bool)
+			for _, proc := range existingLinks.GetPayload() {
+				existingLinkMap[proc.ID] = true
+			}
+
+			// Link each saved procedure to the program if not already linked
+			for _, procID := range savedProcedureIDs {
+				if !existingLinkMap[procID] {
+					err := dbClient.GetRelationalDatabaseClientInstance().LinkProgramToProcedure(programID, procID)
+					if err != nil {
+						log.Printf("Failed to link procedure %d to program %d: %s", procID, programID, err)
+					} else {
+						log.Printf("Linked procedure %d to program %d", procID, programID)
+					}
+				}
+			}
 		}
 	}
 
 	return nil
+}
+
+// GetProceduresForProgram gets all procedures linked to a program
+func GetProceduresForProgram(programID uint32) sharedUtils.Result[[]graphQLModel.VPLProcedure] {
+	proceduresResult := dbClient.GetRelationalDatabaseClientInstance().GetProceduresForProgram(programID)
+	if proceduresResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]graphQLModel.VPLProcedure](proceduresResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(proceduresResult.GetPayload(), dll2gql.ToGraphQLModelVPLProcedure))
+}
+
+// GetProgramsForProcedure gets all programs linked to a procedure
+func GetProgramsForProcedure(procedureID uint32) sharedUtils.Result[[]graphQLModel.VPLProgram] {
+	programsResult := dbClient.GetRelationalDatabaseClientInstance().GetProgramsForProcedure(procedureID)
+	if programsResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]graphQLModel.VPLProgram](programsResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(programsResult.GetPayload(), dll2gql.ToGraphQLModelVPLProgram))
+}
+
+// LinkProgramToProcedure links a program to a procedure
+func LinkProgramToProcedure(programID uint32, procedureID uint32) error {
+	return dbClient.GetRelationalDatabaseClientInstance().LinkProgramToProcedure(programID, procedureID)
+}
+
+// UnlinkProgramFromProcedure unlinks a program from a procedure
+func UnlinkProgramFromProcedure(programID uint32, procedureID uint32) error {
+	return dbClient.GetRelationalDatabaseClientInstance().UnlinkProgramFromProcedure(programID, procedureID)
 }

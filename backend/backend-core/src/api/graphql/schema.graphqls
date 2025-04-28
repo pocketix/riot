@@ -382,7 +382,6 @@ type VPLProgramExecutionResult {
 # ----- VPL Procedures -----
 
 type VPLProcedure {
-
     id: ID!
     name: String!
     data: JSON!
@@ -418,6 +417,8 @@ type Query {
   vplProgram(id: ID!): VPLProgram! # Returns a specific VPLProgram by its ID
   vplProcedure(id: ID!): VPLProcedure! # Returns a specific VPLProcedure by its ID
   vplProcedures: [VPLProcedure!]! # Returns all VPLProcedures
+  vplProceduresForProgram(programId: ID!): [VPLProcedure!]! # Returns all procedures used by a program
+  vplProgramsForProcedure(procedureId: ID!): [VPLProgram!]! # Returns all programs that use a procedure
 }
 
 type Mutation {
@@ -446,6 +447,8 @@ type Mutation {
   createVPLProcedure(input: VPLProcedureInput!): VPLProcedure! # Creating a procedure
   updateVPLProcedure(id: ID!, input: VPLProcedureInput!): VPLProcedure! # Updating a procedure
   deleteVPLProcedure(id: ID!): Boolean! # Deleting a procedure
+  linkProgramToProcedure(programId: ID!, procedureId: ID!): Boolean! # Link a program to a procedure
+  unlinkProgramFromProcedure(programId: ID!, procedureId: ID!): Boolean! # Unlink a program from a procedure
 }
 
 type Subscription {

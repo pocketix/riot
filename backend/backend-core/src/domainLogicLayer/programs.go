@@ -482,5 +482,20 @@ func GetVPLPrograms() sharedUtils.Result[[]graphQLModel.VPLProgram] {
 }
 
 func DeleteVPLProgram(id uint32) error {
+	// Get all procedures linked to this program
+	proceduresResult := dbClient.GetRelationalDatabaseClientInstance().GetProceduresForProgram(id)
+	if proceduresResult.IsFailure() {
+		log.Printf("Warning: Failed to get procedures for program %d: %s", id, proceduresResult.GetError())
+	} else {
+		// Unlink all procedures from this program
+		for _, procedure := range proceduresResult.GetPayload() {
+			err := dbClient.GetRelationalDatabaseClientInstance().UnlinkProgramFromProcedure(id, procedure.ID)
+			if err != nil {
+				log.Printf("Warning: Failed to unlink procedure %d from program %d: %s", procedure.ID, id, err)
+			}
+		}
+	}
+
+	// Delete the program
 	return dbClient.GetRelationalDatabaseClientInstance().DeleteVPLProgram(id)
 }
