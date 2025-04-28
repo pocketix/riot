@@ -867,32 +867,36 @@ func (r *relationalDatabaseClientImpl) LinkProgramToProcedure(programID uint32, 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	// Check if the program exists
-	programExists := dbUtil.DoIDsExist[dbModel.VPLProgramsEntity](r.db, []uint32{programID})
-	if programExists.IsFailure() {
-		return programExists.GetError()
-	}
-	if !programExists.GetPayload() {
-		return fmt.Errorf("program with ID %d does not exist", programID)
+	// Check if program exists
+	var program dbModel.VPLProgramsEntity
+	if err := r.db.First(&program, programID).Error; err != nil {
+		return fmt.Errorf("program with ID %d not found: %w", programID, err)
 	}
 
-	// Check if the procedure exists
-	procedureExists := dbUtil.DoIDsExist[dbModel.VPLProceduresEntity](r.db, []uint32{procedureID})
-	if procedureExists.IsFailure() {
-		return procedureExists.GetError()
-	}
-	if !procedureExists.GetPayload() {
-		return fmt.Errorf("procedure with ID %d does not exist", procedureID)
+	// Check if procedure exists
+	var procedure dbModel.VPLProceduresEntity
+	if err := r.db.First(&procedure, procedureID).Error; err != nil {
+		return fmt.Errorf("procedure with ID %d not found: %w", procedureID, err)
 	}
 
-	// Create the link entity
-	linkEntity := dbModel.VPLProgramProcedureLinkEntity{
+	// Check if link already exists
+	var existingLink dbModel.VPLProgramProcedureLinkEntity
+	result := r.db.Where("program_id = ? AND procedure_id = ?", programID, procedureID).First(&existingLink)
+	if result.Error == nil {
+		// Link already exists, nothing to do
+		return nil
+	} else if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		// Some other error occurred
+		return result.Error
+	}
+
+	// Create the link
+	link := dbModel.VPLProgramProcedureLinkEntity{
 		ProgramID:   programID,
 		ProcedureID: procedureID,
 	}
 
-	// Persist the link
-	if err := dbUtil.PersistEntityIntoDB(r.db, &linkEntity); err != nil {
+	if err := dbUtil.PersistEntityIntoDB(r.db, &link); err != nil {
 		return err
 	}
 

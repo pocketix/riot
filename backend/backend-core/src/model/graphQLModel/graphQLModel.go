@@ -222,10 +222,10 @@ type Query struct {
 }
 
 type SDCommand struct {
-	ID       uint32 `json:"id"`
-	Name     string `json:"name"`
-	Payload  string `json:"payload"`
-	SdTypeID uint32 `json:"sdTypeId"`
+	ID       uint32  `json:"id"`
+	Name     string  `json:"name"`
+ 	Payload  *string `json:"payload,omitempty"`
+	SdTypeID uint32  `json:"sdTypeId"`
 }
 
 type SDCommandInput struct {
@@ -235,8 +235,8 @@ type SDCommandInput struct {
 }
 
 type SDCommandInputWithoutType struct {
-	Name    string `json:"name"`
-	Payload string `json:"payload"`
+	Name    string  `json:"name"`
+	Payload *string `json:"payload,omitempty"`
 }
 
 type SDCommandInvocation struct {
