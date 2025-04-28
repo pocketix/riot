@@ -12908,7 +12908,7 @@ func (ec *executionContext) unmarshalInputSDCommandInput(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
-			it.Payload = data
+			it.Payload = &data
 		case "sdTypeId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sdTypeId"))
 			data, err := ec.unmarshalNID2uint32(ctx, v)
@@ -12949,7 +12949,7 @@ func (ec *executionContext) unmarshalInputSDCommandInputWithoutType(ctx context.
 			if err != nil {
 				return it, err
 			}
-			it.Payload = data
+			it.Payload = &data
 		}
 	}
 
