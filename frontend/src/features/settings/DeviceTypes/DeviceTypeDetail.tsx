@@ -29,6 +29,7 @@ import DeleteConfirmationModal from '@/ui/DeleteConfirmationModal'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import Heading from '@/ui/Heading'
+import * as Tooltip from '@radix-ui/react-tooltip'
 
 const PageWrapper = styled.div`
   display: flex;
@@ -256,22 +257,42 @@ export default function DeviceTypeDetail() {
         if (Array.isArray(parsed)) {
           parsed.forEach((param: any, paramIdx: number) => {
             let possibleValues = param.possibleValues
+            let parsingFailed = false
+
             if (typeof possibleValues === 'string') {
-              try {
-                possibleValues = JSON.parse(possibleValues)
-              } catch {
+              const trimmed = possibleValues.trim()
+              if (trimmed.length > 0) {
+                try {
+                  possibleValues = JSON.parse(trimmed)
+                } catch {
+                  parsingFailed = true
+                }
+              } else {
                 possibleValues = undefined
               }
             }
-
-            if (!Array.isArray(possibleValues)) {
-              setError(`root.commands.${cmdIdx}.payloadParams.${paramIdx}`, {
+            if (parsingFailed) {
+              setError(`root.commands.${cmdIdx}.payloadParams.${paramIdx}.possibleValues`, {
                 type: 'manual',
-                message: 'Invalid possibleValues: must be an array'
+                message: 'Invalid JSON format'
               })
               hasPayloadErrors = true
-            } else {
+            } else if (possibleValues !== undefined && !Array.isArray(possibleValues)) {
+              setError(`root.commands.${cmdIdx}.payloadParams.${paramIdx}.possibleValues`, {
+                type: 'manual',
+                message: 'Possible values must be an array'
+              })
+              hasPayloadErrors = true
+            } else if (Array.isArray(possibleValues)) {
               param.possibleValues = possibleValues
+            }
+
+            if (!param.name || param.name.trim() === '') {
+              setError(`root.commands.${cmdIdx}.payloadParams.${paramIdx}.name`, {
+                type: 'manual',
+                message: 'Name is required'
+              })
+              hasPayloadErrors = true
             }
           })
           command.payload = JSON.stringify(parsed)
@@ -347,7 +368,10 @@ export default function DeviceTypeDetail() {
   }
 
   function getPayloadParamError(errors: any, cmdIdx: number, paramIdx: number) {
-    return (errors.root?.commands?.[cmdIdx]?.payloadParams as any)?.[paramIdx]
+    return (errors.root?.commands?.[cmdIdx]?.payloadParams as any)?.[paramIdx]?.possibleValues
+  }
+  function getParamNameError(errors: any, cmdIdx: number, paramIdx: number) {
+    return (errors.root?.commands?.[cmdIdx]?.payloadParams as any)?.[paramIdx]?.name
   }
 
   const handleDelete = async () => {
@@ -378,7 +402,6 @@ export default function DeviceTypeDetail() {
     setValue('parameters', [{ denotation: '', type: 'NUMBER', label: '' }, ...getValues('parameters')])
   }
 
-  // Add a new command with a default payload structure (payload is a JSON stringified array of parameters)
   const addCommand = () => {
     setValue('commands', [
       {
@@ -419,14 +442,27 @@ export default function DeviceTypeDetail() {
               )}
 
               {editMode ? (
-                <div>
-                  <Label htmlFor="device-name">{t('deviceTypeDetail.enterName')}</Label>
-                  <Input
-                    {...register('label', { required: t('deviceTypeDetail.deviceTypeNameRequired') })}
-                    placeholder={t('deviceTypeDetail.enterName')}
-                  />
-                  {errors.label && <p className="text-sm text-red-500">{errors.label.message}</p>}
-                </div>
+                <Tooltip.Provider>
+                  <Tooltip.Root open={!!errors.label}>
+                    <Tooltip.Trigger asChild>
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="device-name">{t('deviceTypeDetail.enterName')}</Label>
+                        <Input
+                          {...register('label', { required: t('deviceTypeDetail.deviceTypeNameRequired') })}
+                          placeholder={t('deviceTypeDetail.enterName')}
+                          className={`w-full ${errors.label ? 'border-red-500' : ''}`}
+                        />
+                      </div>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content
+                      className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                      side="top"
+                      sideOffset={4}
+                    >
+                      {errors.label?.message}
+                    </Tooltip.Content>
+                  </Tooltip.Root>
+                </Tooltip.Provider>
               ) : (
                 <Title>{watch('label')}</Title>
               )}
@@ -491,13 +527,24 @@ export default function DeviceTypeDetail() {
             {editMode ? (
               <div className="flex items-center justify-center gap-2 pr-3">
                 <strong>{t('deviceTypeDetail.denotation')}:</strong>
-                <div className="w-full">
-                  <Input
-                    {...register('denotation', { required: t('deviceTypeDetail.denotationRequired') })}
-                    placeholder={t('deviceTypeDetail.denotation')}
-                  />
-                  {errors.denotation && <p className="text-sm text-red-500">{errors.denotation.message}</p>}
-                </div>
+                <Tooltip.Provider>
+                  <Tooltip.Root open={!!errors.denotation}>
+                    <Tooltip.Trigger asChild>
+                      <Input
+                        {...register('denotation', { required: t('deviceTypeDetail.denotationRequired') })}
+                        placeholder={t('deviceTypeDetail.denotation')}
+                        className={`w-full ${errors.denotation ? 'border-red-500' : ''}`}
+                      />
+                    </Tooltip.Trigger>
+                    <Tooltip.Content
+                      className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                      side="top"
+                      sideOffset={4}
+                    >
+                      {errors.denotation?.message}
+                    </Tooltip.Content>
+                  </Tooltip.Root>
+                </Tooltip.Provider>
               </div>
             ) : (
               <div>
@@ -535,25 +582,50 @@ export default function DeviceTypeDetail() {
                   editMode ? (
                     <ParamRow key={index}>
                       <ParamCell>
-                        <div className="flex flex-col gap-2">
-                          <Input
-                            {...register(`parameters.${index}.denotation`, {
-                              required: t('deviceTypeDetail.denotationRequired')
-                            })}
-                            placeholder={t('deviceTypeDetail.denotation')}
-                          />
-                          {errors.parameters?.[index]?.denotation && (
-                            <p className="text-sm text-red-500">{errors.parameters[index].denotation.message}</p>
-                          )}
-                        </div>
+                        <Tooltip.Provider>
+                          <Tooltip.Root open={!!errors.parameters?.[index]?.denotation}>
+                            <Tooltip.Trigger asChild>
+                              <div className="flex flex-col gap-2">
+                                <Input
+                                  {...register(`parameters.${index}.denotation`, {
+                                    required: t('deviceTypeDetail.denotationRequired')
+                                  })}
+                                  placeholder={t('deviceTypeDetail.denotation')}
+                                  className={`w-full ${errors.parameters?.[index]?.denotation ? 'border-red-500' : ''}`}
+                                />
+                              </div>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content
+                              className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                              side="top"
+                              sideOffset={4}
+                            >
+                              {errors.parameters?.[index]?.denotation?.message}
+                            </Tooltip.Content>
+                          </Tooltip.Root>
+                        </Tooltip.Provider>
                       </ParamCell>
                       <ParamCell>
-                        <div className="flex min-w-max flex-col gap-2">
-                          <Input {...register(`parameters.${index}.label`)} placeholder="Label" />
-                          {errors.parameters?.[index]?.label && (
-                            <p className="text-sm text-red-500">{errors.parameters[index].label.message}</p>
-                          )}
-                        </div>
+                        <Tooltip.Provider>
+                          <Tooltip.Root open={!!errors.parameters?.[index]?.label}>
+                            <Tooltip.Trigger asChild>
+                              <div className="flex flex-col gap-2">
+                                <Input
+                                  {...register(`parameters.${index}.label`)}
+                                  placeholder="Label"
+                                  className={`w-full ${errors.parameters?.[index]?.label ? 'border-red-500' : ''}`}
+                                />
+                              </div>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content
+                              className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                              side="top"
+                              sideOffset={4}
+                            >
+                              {errors.parameters?.[index]?.label?.message}
+                            </Tooltip.Content>
+                          </Tooltip.Root>
+                        </Tooltip.Provider>
                       </ParamCell>
                       <ParamCell>
                         <div className="flex items-center gap-2">
@@ -661,23 +733,54 @@ export default function DeviceTypeDetail() {
                   return editMode ? (
                     <ParamRow key={cmdIdx}>
                       <ParamCell>
-                        <Input
-                          {...register(`commands.${cmdIdx}.name`, { required: 'Required' })}
-                          placeholder="switch"
-                          className="min-w-20"
-                        />
+                        <Tooltip.Provider>
+                          <Tooltip.Root open={!!errors.commands?.[cmdIdx]?.name}>
+                            <Tooltip.Trigger asChild>
+                              <Input
+                                {...register(`commands.${cmdIdx}.name`, { required: 'The name is required' })}
+                                placeholder="switch"
+                                className={`min-w-20 ${errors.commands?.[cmdIdx]?.name ? 'border-red-500' : ''}`}
+                              />
+                            </Tooltip.Trigger>
+                            <Tooltip.Content
+                              className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                              side="top"
+                              sideOffset={4}
+                            >
+                              {errors.commands?.[cmdIdx]?.name?.message}
+                            </Tooltip.Content>
+                          </Tooltip.Root>
+                        </Tooltip.Provider>
                       </ParamCell>
                       <ParamCell>
                         <div className="flex flex-col gap-2">
                           {/* Render all payload parameters */}
                           {payloadParams.map((param, paramIdx) => (
                             <div key={paramIdx} className="mb-1 flex items-center gap-2">
-                              <Input
-                                value={param.name}
-                                onChange={(e) => updatePayloadParam(paramIdx, 'name', e.target.value)}
-                                placeholder="Param name"
-                                className="w-28"
-                              />
+                              <Tooltip.Provider>
+                                <Tooltip.Root open={!!getParamNameError(errors, cmdIdx, paramIdx)}>
+                                  <Tooltip.Trigger asChild>
+                                    <Input
+                                      value={param.name}
+                                      onChange={(e) => {
+                                        clearErrors(`root.commands.${cmdIdx}.payloadParams.${paramIdx}.name`)
+                                        updatePayloadParam(paramIdx, 'name', e.target.value)
+                                      }}
+                                      placeholder="Param name"
+                                      className={`w-28 ${
+                                        getParamNameError(errors, cmdIdx, paramIdx) ? 'border-red-500' : ''
+                                      }`}
+                                    />
+                                  </Tooltip.Trigger>
+                                  <Tooltip.Content
+                                    className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                                    side="top"
+                                    sideOffset={4}
+                                  >
+                                    {getParamNameError(errors, cmdIdx, paramIdx)?.message}
+                                  </Tooltip.Content>
+                                </Tooltip.Root>
+                              </Tooltip.Provider>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="outline" className="w-28">
@@ -696,22 +799,38 @@ export default function DeviceTypeDetail() {
                                 </DropdownMenuContent>
                               </DropdownMenu>
                               <div className="flex flex-col gap-2">
-                                <Input
-                                  defaultValue={param.possibleValues ?? []}
-                                  onBlur={(e) => {
-                                    updatePayloadParam(paramIdx, 'possibleValues', e.target.value)
-                                  }}
-                                  onChange={() => {
-                                    clearErrors(`root.commands.${cmdIdx}.payloadParams.${paramIdx}`)
-                                  }}
-                                  placeholder='["ON", "OFF"]'
-                                  className="w-40"
-                                />
-                                {getPayloadParamError(errors, cmdIdx, paramIdx) && (
-                                  <p className="text-sm text-red-500">
-                                    {getPayloadParamError(errors, cmdIdx, paramIdx)?.message}
-                                  </p>
-                                )}
+                                <Tooltip.Provider>
+                                  <Tooltip.Root open={!!getPayloadParamError(errors, cmdIdx, paramIdx)}>
+                                    <Tooltip.Trigger asChild>
+                                      <Input
+                                        defaultValue={
+                                          Array.isArray(param.possibleValues)
+                                            ? JSON.stringify(param.possibleValues)
+                                            : (param.possibleValues ?? '')
+                                        }
+                                        onBlur={(e) => {
+                                          updatePayloadParam(paramIdx, 'possibleValues', e.target.value)
+                                        }}
+                                        onChange={() => {
+                                          clearErrors(
+                                            `root.commands.${cmdIdx}.payloadParams.${paramIdx}.possibleValues`
+                                          )
+                                        }}
+                                        placeholder='["ON", "OFF"]'
+                                        className={`w-40 ${
+                                          getPayloadParamError(errors, cmdIdx, paramIdx) ? 'border-red-500' : ''
+                                        }`}
+                                      />
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content
+                                      className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                                      side="top"
+                                      sideOffset={4}
+                                    >
+                                      {getPayloadParamError(errors, cmdIdx, paramIdx)?.message}
+                                    </Tooltip.Content>
+                                  </Tooltip.Root>
+                                </Tooltip.Provider>
                               </div>
                               <Button
                                 variant="secondary"
@@ -760,7 +879,6 @@ export default function DeviceTypeDetail() {
                         {(() => {
                           try {
                             const arr = JSON.parse(command.payload)
-                            console.log(arr)
                             if (!Array.isArray(arr)) return null
                             return (
                               <div className="flex flex-col gap-2">
