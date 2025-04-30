@@ -23,4 +23,7 @@ FROM alpine AS prod
 
 COPY --from=build /app/backend-core/RIoT-backend-core /app/backend-core/RIoT-backend-core
 
+# Copy the GraphQL schema file
+COPY --from=build /app/backend-core/src/api/graphql/schema.graphqls /app/backend-core/schema.graphqls
+
 CMD ["/app/backend-core/RIoT-backend-core"]

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/isc"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
@@ -41,6 +42,8 @@ func main() {
 	log.Println("Waiting for dependencies...")
 	waitForDependencies()
 	log.Println("Dependencies ready...")
+	err := dbClient.GetRelationalDatabaseClientInstance().PerformOnStartupOperations()
+	sharedUtils.TerminateOnError(err, "Unable to perform on-startup database operations")
 	//sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
 	kickstartISC()
 	graphql.SetupGraphQLServer()
