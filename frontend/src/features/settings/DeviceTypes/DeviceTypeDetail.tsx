@@ -322,10 +322,12 @@ export default function DeviceTypeDetail() {
                 type: p.type as SdParameterType,
                 label: p.label
               })),
-              commands: data.commands.map((c: any) => ({
-                name: c.name,
-                payload: c.payload
-              }))
+              commands: Array.isArray(data.commands)
+                ? data.commands.map((c: any) => ({
+                    name: c.name,
+                    payload: c.payload
+                  }))
+                : []
             }
           }
         })
@@ -349,10 +351,12 @@ export default function DeviceTypeDetail() {
                 type: p.type as SdParameterType,
                 label: p.label
               })),
-              commands: data.commands.map((c: any) => ({
-                name: c.name,
-                payload: c.payload
-              }))
+              commands: Array.isArray(data.commands)
+                ? data.commands.map((c: any) => ({
+                    name: c.name,
+                    payload: c.payload
+                  }))
+                : []
             }
           }
         })
@@ -445,7 +449,7 @@ export default function DeviceTypeDetail() {
                 <Tooltip.Provider>
                   <Tooltip.Root open={!!errors.label}>
                     <Tooltip.Trigger asChild>
-                      <div className="flex flex-col gap-1">
+                      <div>
                         <Label htmlFor="device-name">{t('deviceTypeDetail.enterName')}</Label>
                         <Input
                           {...register('label', { required: t('deviceTypeDetail.deviceTypeNameRequired') })}
@@ -454,11 +458,7 @@ export default function DeviceTypeDetail() {
                         />
                       </div>
                     </Tooltip.Trigger>
-                    <Tooltip.Content
-                      className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
-                      side="top"
-                      sideOffset={4}
-                    >
+                    <Tooltip.Content className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white" side="bottom">
                       {errors.label?.message}
                     </Tooltip.Content>
                   </Tooltip.Root>
@@ -613,7 +613,7 @@ export default function DeviceTypeDetail() {
                                 <Input
                                   {...register(`parameters.${index}.label`)}
                                   placeholder="Label"
-                                  className={`w-full ${errors.parameters?.[index]?.label ? 'border-red-500' : ''}`}
+                                  className={`w-full min-w-max ${errors.parameters?.[index]?.label ? 'border-red-500' : ''}`}
                                 />
                               </div>
                             </Tooltip.Trigger>
@@ -655,7 +655,7 @@ export default function DeviceTypeDetail() {
                               )
                             }}
                           >
-                            <TbTrash className="mr-1" />
+                            <TbTrash />
                           </Button>
                         </div>
                       </ParamCell>
@@ -663,7 +663,7 @@ export default function DeviceTypeDetail() {
                   ) : (
                     <ParamRow key={index}>
                       <ParamCell>{param.denotation}</ParamCell>
-                      <ParamCell>{param.label || '-'}</ParamCell>
+                      <ParamCell className="min-w-36">{param.label || '-'}</ParamCell>
                       <ParamCell>{param.type}</ParamCell>
                     </ParamRow>
                   )
@@ -840,7 +840,7 @@ export default function DeviceTypeDetail() {
                                   removePayloadParam(paramIdx)
                                 }}
                               >
-                                <TbTrash className="mr-1" /> Remove Param
+                                <TbTrash /> Remove Param
                               </Button>
                             </div>
                           ))}
@@ -868,7 +868,7 @@ export default function DeviceTypeDetail() {
                             )
                           }}
                         >
-                          <TbTrash className="mr-1" />
+                          <TbTrash />
                         </Button>
                       </ParamCell>
                     </ParamRow>
