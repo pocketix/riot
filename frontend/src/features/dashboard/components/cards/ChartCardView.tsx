@@ -23,7 +23,7 @@ export const ChartCardView = (props: ChartCardViewProps) => {
       isLoading={props.isLoading}
       error={props.error}
       visualizationType="line"
-      cardTitle={props.chartConfig?.cardTitle}
+      cardTitle={props.chartConfig?.title}
       cardIcon={props.chartConfig?.icon}
       configuration={props.chartConfig!}
     >

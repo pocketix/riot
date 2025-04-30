@@ -18,7 +18,7 @@ export const BulletCardView = (props: BulletCardViewProps) => {
       isLoading={props.isLoading}
       error={props.error}
       visualizationType="bullet"
-      cardTitle={props.chartConfig?.cardTitle}
+      cardTitle={props.chartConfig?.title}
       cardIcon={props.chartConfig?.icon}
       configuration={props.chartConfig!}
     >

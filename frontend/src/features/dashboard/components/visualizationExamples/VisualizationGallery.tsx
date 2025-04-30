@@ -7,9 +7,10 @@ import { SwitchVisualization } from '../visualizations/SwitchVisualization'
 import { ResponsiveEntityTable } from '../visualizations/ResponsiveEntityTable'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
 import { SequentialStatesVisualization } from '../devices/components/SequentialStatesVisualization'
+import { VisualizationTypes } from '@/types/dashboard/gridItem'
 
 export interface VisualizationGalleryProps {
-  setSelectedVisualization: (Visualization: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard' | 'seqstates') => void
+  setSelectedVisualization: (visualization: VisualizationTypes) => void
   selectedVisualization: string | null
 }
 

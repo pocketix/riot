@@ -22,14 +22,25 @@ import { useEffect, useState } from 'react'
 import { GridItem, AllConfigTypes } from '@/types/dashboard/gridItem'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Tab } from '@/schemas/dashboard/DashboardSchema'
 
 export interface AddItemModalProps {
   onAddItem<ConfigType extends AllConfigTypes>(item: GridItem<ConfigType>): void
   triggerOpen?: boolean
   onDialogOpenChange?: (open: boolean) => void
+  tabs: Tab[]
+  activeTabID: number
+  currentBreakpoint: string
 }
 
-export function AddItemModal({ onAddItem, triggerOpen = false, onDialogOpenChange }: AddItemModalProps) {
+export function AddItemModal({
+  onAddItem,
+  triggerOpen = false,
+  onDialogOpenChange,
+  tabs,
+  activeTabID,
+  currentBreakpoint
+}: AddItemModalProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const isDesktop = useMediaQuery('(min-width: 768px)')
 
@@ -65,7 +76,13 @@ export function AddItemModal({ onAddItem, triggerOpen = false, onDialogOpenChang
         <DialogTitle>Add new item to dashboard</DialogTitle>
         <DialogDescription>Select a device you wish to add to the dashboard.</DialogDescription>
       </DialogHeader>
-      <AddItemForm onAddItem={handleAddItem} setDialogOpen={handleOpenChange} />
+      <AddItemForm
+        onAddItem={handleAddItem}
+        setDialogOpen={handleOpenChange}
+        tabs={tabs}
+        activeTabID={activeTabID}
+        currentBreakpoint={currentBreakpoint}
+      />
     </>
   )
 
@@ -84,7 +101,13 @@ export function AddItemModal({ onAddItem, triggerOpen = false, onDialogOpenChang
               <DrawerTitle>Add new item to dashboard</DrawerTitle>
               <DrawerDescription>Select a device you wish to add to the dashboard.</DrawerDescription>
             </DrawerHeader>
-            <AddItemForm onAddItem={handleAddItem} setDialogOpen={handleOpenChange} />
+            <AddItemForm
+              onAddItem={handleAddItem}
+              setDialogOpen={handleOpenChange}
+              tabs={tabs}
+              activeTabID={activeTabID}
+              currentBreakpoint={currentBreakpoint}
+            />
             <DrawerFooter className="pt-4">
               <DrawerClose asChild>
                 <Button variant="outline" className="w-full">

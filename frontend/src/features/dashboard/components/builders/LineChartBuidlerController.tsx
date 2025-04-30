@@ -398,7 +398,7 @@ export function LineChartBuilderController({ onDataSubmit, config }: LineChartBu
       config: values,
       sizing: {
         minH: 5,
-        h: 10 + (values.cardTitle ? 1 : 0),
+        h: 10 + (values.title ? 1 : 0),
         ...(config ? {} : { w: 2 })
       }
     }

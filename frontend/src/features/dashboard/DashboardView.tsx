@@ -40,7 +40,7 @@ interface DashboardViewProps {
   onLayoutChange: (layout: Layout[], layouts: { [key: string]: Layout[] }, currentBreakpoint: string) => void
   onDeleteItem: (id: string, breakpoint: string) => void
   onRestoreAllTabs: (savedTabsState: Tab[]) => boolean
-  onAddItem: <ConfigType extends AllConfigTypes>(item: GridItem<ConfigType>) => void
+  onAddItem: <ConfigType extends AllConfigTypes>(item: GridItem<ConfigType>, currentBreakpoint: string) => void
   onSaveConfig: <ConfigType extends AllConfigTypes>(
     builderResult: BuilderResult<ConfigType>,
     dbItemDetails: DBItemDetails,
@@ -91,6 +91,10 @@ const DashboardView = (props: DashboardViewProps) => {
     const newEditMode = !editMode
     setEditMode(newEditMode)
     setHighlightedCardID(null)
+  }
+
+  const handleAddItem = (item: GridItem<AllConfigTypes>) => {
+    props.onAddItem(item, currentBreakpoint)
   }
 
   const handleRestoreLayout = () => {
@@ -356,9 +360,12 @@ const DashboardView = (props: DashboardViewProps) => {
         </div>
       </MainGrid>
       <AddItemModal
-        onAddItem={props.onAddItem}
+        onAddItem={handleAddItem}
         triggerOpen={showAddDialog}
         onDialogOpenChange={(isOpen) => setShowAddDialog(isOpen)}
+        tabs={props.tabs}
+        activeTabID={props.activeTabId}
+        currentBreakpoint={currentBreakpoint}
       />
     </DashboardRoot>
   )

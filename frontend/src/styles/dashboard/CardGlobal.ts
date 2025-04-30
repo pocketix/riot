@@ -21,14 +21,13 @@ export const DragHandle = styled.div`
   z-index: 3;
   background-color: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
-  border: 1px solid hsl(var(--border));
   border-radius: 12px;
   cursor: grab;
 `
 
 export const ArrowContainer = styled.div`
   position: absolute;
-  bottom: 0px;
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   background-color: hsl(var(--background));
@@ -39,7 +38,7 @@ export const ArrowContainer = styled.div`
   z-index: 2;
   display: flex;
   flex-direction: row;
-  gap: 8px;
+  gap: 4px;
 `
 
 export const Arrow = styled.button<{ disabled?: boolean; $red?: boolean; $green?: boolean }>`
@@ -55,7 +54,7 @@ export const Arrow = styled.button<{ disabled?: boolean; $red?: boolean; $green?
     background-color 0.3s,
     opacity 0.3s;
   cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};
-  padding: 4px 8px;
+  padding: 2px 4px;
   border: 1px solid hsl(var(--border));
   border-radius: 4px;
   display: flex;

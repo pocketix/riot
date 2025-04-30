@@ -123,7 +123,7 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
     <Container key={props.cardID} className={`${props.cardID}`}>
       {props.editModeEnabled && (
         <DragHandle>
-          <AiOutlineDrag className="drag-handle h-8 w-8 rounded-lg border-2 p-1" />
+          <AiOutlineDrag className="drag-handle h-7 w-7 rounded-lg p-0.5" />
         </DragHandle>
       )}
       {props.editModeEnabled && (

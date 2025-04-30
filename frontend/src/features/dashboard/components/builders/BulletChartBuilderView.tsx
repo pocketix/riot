@@ -69,7 +69,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
     mode: 'onChange',
     resolver: zodResolver(bulletChartBuilderSchema),
     defaultValues: props.config || {
-      cardTitle: 'Bullet Charts',
+      title: 'Bullet Charts',
       icon: '',
       rows: [
         {
@@ -295,7 +295,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
       <Card className="h-fit w-full">
         <div className="flex items-center gap-1 px-2">
           {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
-          {form.watch('cardTitle') ? <h3 className="text-lg font-semibold">{form.watch('cardTitle')}</h3> : null}
+          {form.watch('title') ? <h3 className="text-lg font-semibold">{form.watch('title')}</h3> : null}
         </div>
         {fields.map((_, index) => {
           const row = form.watch(`rows.${index}`)
@@ -322,7 +322,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
             <div className="flex w-full items-center gap-1">
               <FormField
                 control={form.control}
-                name="cardTitle"
+                name="title"
                 render={({ field }) => (
                   <FormItem className="w-full">
                     <FormLabel>Title</FormLabel>

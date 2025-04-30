@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const lineChartBuilderSchema = z.object({
-  cardTitle: z.string().optional(),
+  title: z.string().optional(),
   icon: z.string().optional(),
   toolTip: z.object({
     x: z.string().min(1, { message: 'X-Axis tooltip name is required' }),

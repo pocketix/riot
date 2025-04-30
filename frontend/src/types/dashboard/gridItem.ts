@@ -6,10 +6,10 @@ import { SwitchCardConfig } from '@/schemas/dashboard/visualizations/SwitchBuild
 import { SequentialStatesCardConfig } from '@/schemas/dashboard/visualizations/SequentialStatesBuilderSchema'
 
 export type AllConfigTypes = ChartCardConfig | BulletCardConfig | EntityCardConfig | TableCardConfig | SwitchCardConfig | SequentialStatesCardConfig
-
+export type VisualizationTypes = 'line' | 'switch' | 'table' | 'bullet' | 'entitycard' | 'seqstates'
 export type GridItem<ConfigType extends AllConfigTypes> = {
   layoutID?: string
-  visualization: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard' | 'seqstates'
+  visualization: VisualizationTypes
   visualizationConfig: BuilderResult<ConfigType>
 }
 

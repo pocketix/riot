@@ -55,7 +55,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
   const form = useForm<z.infer<typeof lineChartBuilderSchema>>({
     resolver: zodResolver(lineChartBuilderSchema),
     defaultValues: props.config || {
-      cardTitle: 'Line Chart',
+      title: 'Line Chart',
       icon: '',
       yAxisMarkers: [],
       chartArea: true,
@@ -275,7 +275,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
       <Card className="flex h-[230px] w-full flex-col">
         <div className="flex items-center gap-2 px-2">
           {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
-          {form.watch('cardTitle') && <h3 className="text-md font-semibold">{form.watch('cardTitle')}</h3>}
+          {form.watch('title') && <h3 className="text-md font-semibold">{form.watch('title')}</h3>}
         </div>
         <div className="relative h-full w-full">
           {props.chartData.length === 0 && (
@@ -286,7 +286,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
             </div>
           )}
           <div
-            className={`relative w-full ${form.watch('cardTitle') ? 'h-[200px]' : 'h-[220px]'} ${props.chartData.length === 0 ? 'opacity-25' : 'opacity-100'}`}
+            className={`relative w-full ${form.watch('title') ? 'h-[200px]' : 'h-[220px]'} ${props.chartData.length === 0 ? 'opacity-25' : 'opacity-100'}`}
             ref={containerRef}
           >
             <div className="absolute inset-0">
@@ -340,7 +340,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
               <div className="flex items-center gap-1">
                 <FormField
                   control={form.control}
-                  name="cardTitle"
+                  name="title"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Card Title</FormLabel>

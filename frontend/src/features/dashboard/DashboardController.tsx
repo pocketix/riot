@@ -174,26 +174,33 @@ const DashboardController = () => {
   )
 
   const handleAddItem = useCallback(
-    <ConfigType extends AllConfigTypes>(item: GridItem<ConfigType>) => {
+    <ConfigType extends AllConfigTypes>(item: GridItem<ConfigType>, currentBreakpoint: string) => {
       if (!activeTabID || !activeTab) return
+      // If the item.layouID is defined, it means that the item is already in the details for given tab
+      // and we are only inserting it into the current breakpoint layout
 
       const newLayouts = { ...activeTab.layout }
       const currentDetails = { ...activeTab.details }
 
       // Find largest index across all layouts in all tabs
       let largestIndex = 0
-      tabs.forEach((tab) => {
-        Object.keys(tab.layout).forEach((breakpoint) => {
-          tab.layout[breakpoint].forEach((layoutItem) => {
-            const itemIndex = parseInt(layoutItem.i)
-            if (!isNaN(itemIndex) && itemIndex > largestIndex) {
-              largestIndex = itemIndex
-            }
+      if (!item.layoutID) {
+        tabs.forEach((tab) => {
+          Object.keys(tab.layout).forEach((breakpoint) => {
+            tab.layout[breakpoint].forEach((layoutItem) => {
+              const itemIndex = parseInt(layoutItem.i)
+              if (!isNaN(itemIndex) && itemIndex > largestIndex) {
+                largestIndex = itemIndex
+              }
+            })
           })
         })
-      })
+      } else {
+        largestIndex = parseInt(item.layoutID)
+      }
 
-      const newIndex = (largestIndex + 1).toString()
+
+      const newIndex = item.layoutID || (largestIndex + 1).toString()
 
       // Get layouts separately for all breakpoints,
       // as the widths cannot be the same for all breakpoints.
@@ -217,26 +224,47 @@ const DashboardController = () => {
         return itemLayout
       }
 
-      // Insert into all layouts for the current tab
-      Object.keys(newLayouts).forEach((breakpoint) => {
-        const itemLayout = getItemLayoutForBreakpoint(breakpoint, item)
-        newLayouts[breakpoint].push({ ...itemLayout })
-        newLayouts[breakpoint] = utils.compact(
+      // Adding into the current breakpoint ONLY!
+      if (item.layoutID) {
+        const itemLayout = getItemLayoutForBreakpoint(currentBreakpoint, item)
+        newLayouts[currentBreakpoint].push({ ...itemLayout })
+        newLayouts[currentBreakpoint] = utils.compact(
           utils.moveElement(
-            newLayouts[breakpoint],
+            newLayouts[currentBreakpoint],
             itemLayout,
             0,
             Infinity,
             true,
             false,
             'vertical',
-            COLS_CONST[breakpoint as keyof typeof COLS_CONST],
+            COLS_CONST[currentBreakpoint as keyof typeof COLS_CONST],
             false
           ),
           'vertical',
-          COLS_CONST[breakpoint as keyof typeof COLS_CONST]
+          COLS_CONST[currentBreakpoint as keyof typeof COLS_CONST]
         )
-      })
+      } else {
+        // Insert into all layouts for the current tab
+        Object.keys(newLayouts).forEach((breakpoint) => {
+          const itemLayout = getItemLayoutForBreakpoint(breakpoint, item)
+          newLayouts[breakpoint].push({ ...itemLayout })
+          newLayouts[breakpoint] = utils.compact(
+            utils.moveElement(
+              newLayouts[breakpoint],
+              itemLayout,
+              0,
+              Infinity,
+              true,
+              false,
+              'vertical',
+              COLS_CONST[breakpoint as keyof typeof COLS_CONST],
+              false
+            ),
+            'vertical',
+            COLS_CONST[breakpoint as keyof typeof COLS_CONST]
+          )
+        })
+      }
 
       // Create database item entry
       const dbItemDetails = {
@@ -286,7 +314,7 @@ const DashboardController = () => {
             return {
               ...layoutItem,
               w: builderResult.sizing?.w || layoutItem.w,
-              h: builderResult.sizing?.h || layoutItem.h,
+              h: builderResult.sizing?.h! > layoutItem.h ? builderResult.sizing?.h! || layoutItem.h : layoutItem.h, // if the user has changed the height and it is still suitable, leave it
               minH: builderResult.sizing?.minH || layoutItem.minH,
               minW: builderResult.sizing?.minW || layoutItem.minW
             }
