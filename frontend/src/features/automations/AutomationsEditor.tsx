@@ -2,16 +2,23 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useMutation, useQuery } from '@apollo/client'
+import { useMutation, useQuery, useApolloClient } from '@apollo/client'
 import {
   CREATE_VPL_PROGRAM,
   UPDATE_VPL_PROGRAM,
   DELETE_VPL_PROGRAM,
   UPDATE_VPL_PROCEDURE,
   CREATE_VPL_PROCEDURE,
-  DELETE_VPL_PROCEDURE
+  DELETE_VPL_PROCEDURE,
+  LINK_PROGRAM_TO_PROCEDURE,
+  UNLINK_PROGRAM_FROM_PROCEDURE
 } from '@/graphql/automations/Mutations'
-import { GET_VPL_PROGRAMS, GET_VPL_PROCEDURES } from '@/graphql/automations/Queries'
+import {
+  GET_VPL_PROGRAMS,
+  GET_VPL_PROCEDURES,
+  GET_VPL_PROGRAMS_FOR_PROCEDURE,
+  GET_VPL_PROCEDURES_FOR_PROGRAM
+} from '@/graphql/automations/Queries'
 import { toast } from 'sonner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -64,6 +71,14 @@ export default function AutomationsEditor() {
   const [updateVPLProcedure] = useMutation(UPDATE_VPL_PROCEDURE)
   const [createVPLProcedure] = useMutation(CREATE_VPL_PROCEDURE)
   const [deleteVPLProcedure] = useMutation(DELETE_VPL_PROCEDURE)
+  const [linkProgramToProcedure] = useMutation(LINK_PROGRAM_TO_PROCEDURE)
+  const [unlinkProgramFromProcedure] = useMutation(UNLINK_PROGRAM_FROM_PROCEDURE)
+
+  // State for tracking procedure links
+  const [procedureLinks, setProcedureLinks] = useState<Map<string, Set<string>>>(new Map())
+
+  // Get the Apollo Client instance
+  const apolloClient = useApolloClient()
 
 
   // Function to create an empty program with procedures
@@ -189,8 +204,105 @@ export default function AutomationsEditor() {
   useEffect(() => {
     if (!proceduresLoading && proceduresData?.vplProcedures) {
       console.log('Procedures loaded, ready to initialize editor:', proceduresData.vplProcedures)
+
+      // Check if Apollo client is available
+      if (!apolloClient) {
+        console.error('Apollo Client is not available, cannot initialize procedure links')
+        return
+      }
+
+      // Initialize procedure links
+      initializeProcedureLinks()
     }
-  }, [proceduresLoading, proceduresData])
+  }, [proceduresLoading, proceduresData, apolloClient])
+
+  // Function to initialize procedure links
+  const initializeProcedureLinks = async () => {
+    if (!apolloClient) {
+      console.error('Apollo Client is not available, cannot initialize procedure links')
+      return
+    }
+
+    const procedures = proceduresData?.vplProcedures || []
+    const newProcedureLinks = new Map<string, Set<string>>()
+
+    // For each procedure, fetch the programs that use it
+    for (const procedure of procedures) {
+      try {
+        const { data } = await getProgramsForProcedure(procedure.id)
+        const programs = data?.vplProgramsForProcedure || []
+
+        // Create a set of program IDs that use this procedure
+        const programIds = new Set<string>()
+        programs.forEach((program: VPLProgram) => programIds.add(program.id))
+
+        // Add the procedure-program link to the map
+        newProcedureLinks.set(procedure.id, programIds)
+      } catch (error) {
+        console.error(`Error fetching programs for procedure ${procedure.id}:`, error)
+      }
+    }
+
+    // Update the procedure links state
+    setProcedureLinks(newProcedureLinks)
+    console.log('Procedure links initialized:', newProcedureLinks)
+  }
+
+  // Helper function to check if a procedure is used in any program
+  const isProcedureUsedInPrograms = (procedureId: string): boolean => {
+    const programIds = procedureLinks.get(procedureId)
+    return programIds !== undefined && programIds.size > 0
+  }
+
+  // Helper function to get all programs that use a procedure
+  const getProgramsUsingProcedure = (procedureId: string): string[] => {
+    const programIds = procedureLinks.get(procedureId)
+    if (!programIds) return []
+
+    // Convert program IDs to program names
+    return Array.from(programIds).map(programId => {
+      const program = programsData?.vplPrograms?.find((p: VPLProgram) => p.id === programId)
+      return program ? program.name : `Unknown Program (ID: ${programId})`
+    })
+  }
+
+  // Function to get programs for a procedure
+  const getProgramsForProcedure = (procedureId: string) => {
+    return new Promise<any>((resolve, reject) => {
+      if (!apolloClient) {
+        console.error('Apollo Client is not available');
+        reject(new Error('Apollo Client is not available'));
+        return;
+      }
+
+      apolloClient.query({
+        query: GET_VPL_PROGRAMS_FOR_PROCEDURE,
+        variables: { procedureId },
+        fetchPolicy: 'network-only' // Always fetch from network to get the latest data
+      })
+      .then(resolve)
+      .catch(reject)
+    })
+  }
+
+  // Function to get procedures for a program
+  const getProceduresForProgram = (programId: string) => {
+    return new Promise<any>((resolve, reject) => {
+      if (!apolloClient) {
+        console.error('Apollo Client is not available');
+        reject(new Error('Apollo Client is not available'));
+        return;
+      }
+
+      apolloClient.query({
+        query: GET_VPL_PROCEDURES_FOR_PROGRAM,
+        variables: { programId },
+        fetchPolicy: 'network-only' // Always fetch from network to get the latest data
+      })
+      .then(resolve)
+      .catch(reject)
+    })
+  }
 
   // Effect to initialize editor when both editor is ready and procedures are loaded
   useEffect(() => {
@@ -226,7 +338,7 @@ export default function AutomationsEditor() {
     return newName
   }
 
-  const proceduresParsingForSave = (program: any) => {
+  const proceduresParsingForSave = async (program: any) => {
     // access the header.userProcedures as json and parse each entry making it into new db entry. if the procedure already exists, update it but only if the data changed and warn the user via toast that existing procedure was updated and it might break functionality if it was used in other programs
     if (!program.header || !program.header.userProcedures) {
       console.log('No user procedures found in program:', program)
@@ -246,6 +358,20 @@ export default function AutomationsEditor() {
     const allProceduresFromDB = proceduresData?.vplProcedures || []
     console.log('All procedures from DB:', allProceduresFromDB)
 
+    // Track the procedures used in this program
+    const usedProcedureIds: string[] = []
+
+    // Get the current program ID if we're updating an existing program
+    let currentProgramId: string | null = null
+    if (selectedProgram) {
+      const selectedProgramData = programsData?.vplPrograms?.find(
+        (p: VPLProgram) => p.name === selectedProgram
+      )
+      if (selectedProgramData) {
+        currentProgramId = selectedProgramData.id
+      }
+    }
+
     for (const procedureName in userProcedures) {
       const procedureData = userProcedures[procedureName]
       console.log(`Processing procedure "${procedureName}":`, procedureData)
@@ -258,6 +384,9 @@ export default function AutomationsEditor() {
       console.log(`Existing procedure check for "${procedureName}":`, existingProcedure)
 
       if (existingProcedure) {
+        // Add this procedure to the list of used procedures
+        usedProcedureIds.push(existingProcedure.id)
+
         // Procedure exists, check if the data has changed
         const procedureDataString = JSON.stringify(procedureData)
         console.log(`Comparing data for "${procedureName}":`, {
@@ -272,9 +401,9 @@ export default function AutomationsEditor() {
           const existingData = JSON.parse(existingProcedure.data);
           const newData = procedureData; // Already an object
 
-          // Convert both to JSON strings with the same formatting
-          const normalizedExisting = JSON.stringify(existingData);
-          const normalizedNew = JSON.stringify(newData);
+          // Convert both to JSON strings with the same formatting and sort keys for consistent comparison
+          const normalizedExisting = JSON.stringify(existingData, Object.keys(existingData).sort());
+          const normalizedNew = JSON.stringify(newData, Object.keys(newData).sort());
 
           console.log(`Normalized comparison for "${procedureName}":`, {
             existing: normalizedExisting,
@@ -283,6 +412,14 @@ export default function AutomationsEditor() {
 
           // Compare the normalized strings
           hasChanged = normalizedExisting !== normalizedNew;
+
+          // Log whether the procedure has changed
+          console.log(`Procedure "${procedureName}" has ${hasChanged ? 'changed' : 'not changed'}`);
+
+          // If the procedure hasn't changed, we don't need to update it
+          if (!hasChanged) {
+            console.log(`Skipping update for unchanged procedure "${procedureName}"`);
+          }
         } catch (error) {
           console.error(`Error comparing procedure data for "${procedureName}":`, error);
           // If there's an error in parsing, assume the data has changed
@@ -290,28 +427,71 @@ export default function AutomationsEditor() {
         }
 
         if (hasChanged) {
-          // Data has changed, update the procedure
-          updateVPLProcedure({
-            variables: {
-              id: existingProcedure.id,
-              input: {
-                name: procedureName,
-                data: procedureDataString
+          try {
+            // Check if the procedure is used in any programs using our helper function
+            const affectedProgramNames = getProgramsUsingProcedure(existingProcedure.id)
+            const isUsedInPrograms = isProcedureUsedInPrograms(existingProcedure.id)
+
+            // Data has changed, update the procedure
+            updateVPLProcedure({
+              variables: {
+                id: existingProcedure.id,
+                input: {
+                  name: procedureName,
+                  data: procedureDataString
+                }
               }
-            }
-          })
-          .then(() => {
-            // Use a longer duration for warnings (8 seconds)
-            toast.warning(`⚠️ IMPORTANT: Procedure "${procedureName}" updated. It might break other programs if implementation logic was changed.`, {
-              duration: 5000
             })
-            // Refresh the procedures list to show the updated data
-            refetchProcedures()
-          })
-          .catch(error => {
-            console.error('Error updating procedure:', error)
-            toast.error(`Failed to update procedure "${procedureName}": ${error.message || 'Unknown error'}`)
-          })
+            .then(() => {
+              // If there are affected programs, show a warning with their names
+              if (isUsedInPrograms) {
+                const programNames = affectedProgramNames.join('\n')
+                toast.warning(
+                  <div>
+                    <p>⚠️ IMPORTANT: Procedure "{procedureName}" updated. It might affect the following programs:</p>
+                    <pre style={{ maxHeight: '150px', overflow: 'auto', marginTop: '8px', padding: '8px', background: '#f0f0f0', borderRadius: '4px' }}>
+                      {programNames}
+                    </pre>
+                  </div>,
+                  { duration: 8000 }
+                )
+              } else {
+                toast.success(`Procedure "${procedureName}" updated successfully`)
+              }
+
+              // Refresh the procedures list to show the updated data
+              refetchProcedures()
+              // Refresh the procedure links
+              initializeProcedureLinks()
+            })
+            .catch(error => {
+              console.error('Error updating procedure:', error)
+              toast.error(`Failed to update procedure "${procedureName}": ${error.message || 'Unknown error'}`)
+            })
+          } catch (error) {
+            console.error('Error fetching programs for procedure:', error)
+            // Continue with the update even if we can't fetch the affected programs
+            updateVPLProcedure({
+              variables: {
+                id: existingProcedure.id,
+                input: {
+                  name: procedureName,
+                  data: procedureDataString
+                }
+              }
+            })
+            .then(() => {
+              toast.warning(`⚠️ IMPORTANT: Procedure "${procedureName}" updated. It might break other programs if implementation logic was changed.`, {
+                duration: 5000
+              })
+              refetchProcedures()
+              initializeProcedureLinks()
+            })
+            .catch(error => {
+              console.error('Error updating procedure:', error)
+              toast.error(`Failed to update procedure "${procedureName}": ${error.message || 'Unknown error'}`)
+            })
+          }
         }
       } else {
         // Procedure doesn't exist, create a new one
@@ -325,12 +505,35 @@ export default function AutomationsEditor() {
             }
           }
         })
-        .then(() => {
+        .then((result) => {
+          const newProcedure = result.data.createVPLProcedure
+
+          // Add this procedure to the list of used procedures
+          usedProcedureIds.push(newProcedure.id)
+
+          // If we have a current program ID, link the procedure to it
+          if (currentProgramId) {
+            linkProgramToProcedure({
+              variables: {
+                programId: currentProgramId,
+                procedureId: newProcedure.id
+              }
+            })
+            .then(() => {
+              console.log(`Linked procedure ${newProcedure.id} to program ${currentProgramId}`)
+            })
+            .catch(error => {
+              console.error('Error linking procedure to program:', error)
+            })
+          }
+
           // Use a longer duration for success messages (5 seconds)
           toast.success(`New procedure "${procedureName}" created`, {
           })
           // Refresh the procedures list to show the updated data
           refetchProcedures()
+          // Refresh the procedure links
+          initializeProcedureLinks()
         })
         .catch(error => {
           console.error('Error creating procedure:', error)
@@ -342,7 +545,7 @@ export default function AutomationsEditor() {
     // Check for deleted procedures by comparing with originalProcedures
     for (const originalProcedureName in originalProcedures) {
       // If the procedure is not in the current userProcedures, it was deleted
-      if (!userProcedures[originalProcedureName]) {
+      if (!program.header.userProcedures[originalProcedureName]) {
         console.log(`Procedure "${originalProcedureName}" was deleted`)
 
         // Find the procedure in the database
@@ -351,35 +554,125 @@ export default function AutomationsEditor() {
         )
 
         if (deletedProcedure) {
-          // Delete the procedure from the database without asking
-          deleteVPLProcedure({
-            variables: {
-              id: deletedProcedure.id
-            }
-          })
-          .then(() => {
-            // Show a warning toast about the deletion
-            toast.warning(`⚠️ IMPORTANT: Procedure "${originalProcedureName}" was deleted from the database. If it was used in other programs, this might cause issues.`, {
-              duration: 8000 // 8 seconds
+          // Before deleting, get the programs that use this procedure
+          try {
+            // Check if the procedure is used in any programs using our helper function
+            const affectedProgramNames = getProgramsUsingProcedure(deletedProcedure.id)
+            const isUsedInPrograms = isProcedureUsedInPrograms(deletedProcedure.id)
+
+            // Delete the procedure from the database without asking
+            deleteVPLProcedure({
+              variables: {
+                id: deletedProcedure.id
+              }
             })
-            // Refresh the procedures list to show the updated data
-            refetchProcedures()
-          })
-          .catch(error => {
-            console.error('Error deleting procedure:', error)
-            toast.error(`Failed to delete procedure "${originalProcedureName}": ${error.message || 'Unknown error'}`)
-          })
+            .then(() => {
+              // If there are affected programs, show a warning with their names
+              if (isUsedInPrograms) {
+                const programNames = affectedProgramNames.join('\n')
+                toast.warning(
+                  <div>
+                    <p>⚠️ IMPORTANT: Procedure "{originalProcedureName}" was deleted. It might affect the following programs:</p>
+                    <pre style={{ maxHeight: '150px', overflow: 'auto', marginTop: '8px', padding: '8px', background: '#f0f0f0', borderRadius: '4px' }}>
+                      {programNames}
+                    </pre>
+                  </div>,
+                  { duration: 8000 }
+                )
+              } else {
+                toast.success(`Procedure "${originalProcedureName}" deleted successfully`)
+              }
+
+              // Refresh the procedures list to show the updated data
+              refetchProcedures()
+              // Refresh the procedure links
+              initializeProcedureLinks()
+            })
+            .catch(error => {
+              console.error('Error deleting procedure:', error)
+              toast.error(`Failed to delete procedure "${originalProcedureName}": ${error.message || 'Unknown error'}`)
+            })
+          } catch (error) {
+            console.error('Error fetching programs for procedure:', error)
+            // Continue with the deletion even if we can't fetch the affected programs
+            deleteVPLProcedure({
+              variables: {
+                id: deletedProcedure.id
+              }
+            })
+            .then(() => {
+              toast.warning(`⚠️ IMPORTANT: Procedure "${originalProcedureName}" was deleted from the database. If it was used in other programs, this might cause issues.`, {
+                duration: 8000 // 8 seconds
+              })
+              refetchProcedures()
+              initializeProcedureLinks()
+            })
+            .catch(error => {
+              console.error('Error deleting procedure:', error)
+              toast.error(`Failed to delete procedure "${originalProcedureName}": ${error.message || 'Unknown error'}`)
+            })
+          }
         }
       }
     }
 
+    // If we have a current program ID, update the procedure links
+    if (currentProgramId) {
+      // Get the current procedures linked to this program
+      try {
+        const { data } = await getProceduresForProgram(currentProgramId)
+        const currentProcedures = data?.vplProceduresForProgram || []
+        const currentProcedureIds = currentProcedures.map((p: VPLProcedure) => p.id)
+
+        // Find procedures to link (in usedProcedureIds but not in currentProcedureIds)
+        const proceduresToLink = usedProcedureIds.filter((id: string) => !currentProcedureIds.includes(id))
+
+        // Find procedures to unlink (in currentProcedureIds but not in usedProcedureIds)
+        const proceduresToUnlink = currentProcedureIds.filter((id: string) => !usedProcedureIds.includes(id))
+
+        // Link new procedures
+        for (const procedureId of proceduresToLink) {
+          linkProgramToProcedure({
+            variables: {
+              programId: currentProgramId,
+              procedureId
+            }
+          })
+          .then(() => {
+            console.log(`Linked procedure ${procedureId} to program ${currentProgramId}`)
+          })
+          .catch(error => {
+            console.error(`Error linking procedure ${procedureId} to program ${currentProgramId}:`, error)
+          })
+        }
+
+        // Unlink removed procedures
+        for (const procedureId of proceduresToUnlink) {
+          unlinkProgramFromProcedure({
+            variables: {
+              programId: currentProgramId,
+              procedureId
+            }
+          })
+          .then(() => {
+            console.log(`Unlinked procedure ${procedureId} from program ${currentProgramId}`)
+          })
+          .catch(error => {
+            console.error(`Error unlinking procedure ${procedureId} from program ${currentProgramId}:`, error)
+          })
+        }
+      } catch (error) {
+        console.error(`Error getting procedures for program ${currentProgramId}:`, error)
+      }
+    }
+
     // Update the originalProcedures state with the current procedures
-    setOriginalProcedures({...userProcedures})
+    setOriginalProcedures({...program.header.userProcedures})
   }
 
 
   // Function to save a program with the given name
-  const saveProgram = (name: string, overwriteId?: string) => {
+  const saveProgram = async (name: string, overwriteId?: string) => {
     const editor = (window as any).currentEditor
     if (!editor) {
       toast.error('Editor not initialized')
@@ -399,21 +692,22 @@ export default function AutomationsEditor() {
       return
     }
 
-    // Process procedures before validating the program structure
-    proceduresParsingForSave(program)
+    // Set isSaving state
+    setIsSaving(true)
 
-    // Validate program structure
     try {
-      // Check if program has required properties
+      // Validate program structure
       if (!program.block || !Array.isArray(program.block)) {
         toast.error('Invalid program structure: missing block array')
+        setIsSaving(false)
         return
       }
 
       // Create a sanitized copy of the program to avoid reference issues
       const programCopy = JSON.parse(JSON.stringify(program))
-      // Set isSaving state
-      setIsSaving(true)
+
+      // Process procedures before saving the program
+      await proceduresParsingForSave(programCopy)
 
       // If we're overwriting an existing program
       if (overwriteId) {
@@ -428,6 +722,8 @@ export default function AutomationsEditor() {
           toast.success(`Program "${name}" updated successfully`)
           setProgramName('') // Clear the name field after successful save
           refetchPrograms()
+          // Refresh the procedure links
+          initializeProcedureLinks()
         })
         .catch(error => {
           console.error('Update operation error:', error)
@@ -458,7 +754,40 @@ export default function AutomationsEditor() {
           const savedProgram = result.data.createVPLProgram
           toast.success(`Program "${savedProgram.name}" saved successfully`)
           setProgramName('') // Clear the name field after successful save
+
+          // Get the procedures used in this program
+          const usedProcedureIds: string[] = []
+          if (programCopy.header && programCopy.header.userProcedures) {
+            // Find the procedure IDs for each procedure in the program
+            for (const procedureName in programCopy.header.userProcedures) {
+              const procedure = proceduresData?.vplProcedures?.find(
+                (p: VPLProcedure) => p.name === procedureName
+              )
+              if (procedure) {
+                usedProcedureIds.push(procedure.id)
+              }
+            }
+
+            // Link each procedure to the new program
+            for (const procedureId of usedProcedureIds) {
+              linkProgramToProcedure({
+                variables: {
+                  programId: savedProgram.id,
+                  procedureId
+                }
+              })
+              .then(() => {
+                console.log(`Linked procedure ${procedureId} to new program ${savedProgram.id}`)
+              })
+              .catch(error => {
+                console.error(`Error linking procedure ${procedureId} to new program ${savedProgram.id}:`, error)
+              })
+            }
+          }
+
           refetchPrograms()
+          // Refresh the procedure links
+          initializeProcedureLinks()
         })
         .catch(error => {
           console.error('Save operation error:', error)
@@ -485,7 +814,7 @@ export default function AutomationsEditor() {
     }
   }
 
-  const handleSaveProgram = () => {
+  const handleSaveProgram = async () => {
     if (!programName.trim()) {
       toast.error('Please enter a program name')
       return
@@ -503,16 +832,16 @@ export default function AutomationsEditor() {
                   `• Click OK to overwrite the existing program\n` +
                   `• Click Cancel to save as "${uniqueName}"`)) {
         // User chose to overwrite
-        saveProgram(programName, existingProgram.id)
+        await saveProgram(programName, existingProgram.id)
       } else {
         // User chose to save as a new name
-        saveProgram(uniqueName)
+        await saveProgram(uniqueName)
         // Update the program name field to show the new name
         setProgramName(uniqueName)
       }
     } else {
       // No duplicate, proceed with normal save
-      saveProgram(programName)
+      await saveProgram(programName)
     }
   }
 
@@ -651,7 +980,7 @@ export default function AutomationsEditor() {
   }
 
   // Update the current program
-  const handleUpdateProgram = () => {
+  const handleUpdateProgram = async () => {
     if (!selectedProgram) {
       toast.error('Please select a program to update')
       return
@@ -685,27 +1014,42 @@ export default function AutomationsEditor() {
       }
 
       setIsUpdating(true)
-      updateVPLProgram({
-        variables: {
-          id: selectedProgramData.id,
-          name: programName,
-          data: JSON.stringify(program)
-        }
-      })
-      .then(() => {
-        toast.success(`Program updated successfully from "${selectedProgram}" to "${programName}"`)
-        setSelectedProgram(programName) // Update the selected program to the new name
 
-        // Refresh the programs list
-        refetchPrograms()
-      })
-      .catch(error => {
-        console.error('Update operation error:', error)
-        toast.error(`Failed to update program: ${error.message}`)
-      })
-      .finally(() => {
+      try {
+        // Create a sanitized copy of the program to avoid reference issues
+        const programCopy = JSON.parse(JSON.stringify(program))
+
+        // Process procedures before updating the program
+        await proceduresParsingForSave(programCopy)
+
+        updateVPLProgram({
+          variables: {
+            id: selectedProgramData.id,
+            name: programName,
+            data: JSON.stringify(programCopy)
+          }
+        })
+        .then(() => {
+          toast.success(`Program updated successfully from "${selectedProgram}" to "${programName}"`)
+          setSelectedProgram(programName) // Update the selected program to the new name
+
+          // Refresh the programs list
+          refetchPrograms()
+          // Refresh the procedure links
+          initializeProcedureLinks()
+        })
+        .catch(error => {
+          console.error('Update operation error:', error)
+          toast.error(`Failed to update program: ${error.message}`)
+        })
+        .finally(() => {
+          setIsUpdating(false)
+        })
+      } catch (error) {
+        console.error('Error processing program data:', error)
+        toast.error(`Error processing program data: ${error instanceof Error ? error.message : 'Unknown error'}`)
         setIsUpdating(false)
-      })
+      }
     } else {
       toast.error('Editor not initialized')
     }
@@ -783,7 +1127,7 @@ export default function AutomationsEditor() {
   }
 
   // Update procedures without saving the program
-  const handleUpdateProcedures = () => {
+  const handleUpdateProcedures = async () => {
     // Access the editor through the window object
     const editor = (window as any).currentEditor
     if (!editor) {
@@ -817,8 +1161,15 @@ export default function AutomationsEditor() {
     toast.info('Updating procedures...')
 
     try {
-      proceduresParsingForSave(program)
+      // Create a sanitized copy of the program to avoid reference issues
+      const programCopy = JSON.parse(JSON.stringify(program))
+
+      // Process procedures
+      await proceduresParsingForSave(programCopy)
       toast.success('Procedures updated successfully')
+
+      // Refresh the procedure links
+      initializeProcedureLinks()
     } catch (error) {
       console.error('Error updating procedures:', error)
       toast.error(`Failed to update procedures: ${error instanceof Error ? error.message : 'Unknown error'}`)

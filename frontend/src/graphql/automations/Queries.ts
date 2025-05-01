@@ -55,3 +55,25 @@ export const GET_VPL_PROCEDURE = gql`
     }
   }
 `
+
+export const GET_VPL_PROGRAMS_FOR_PROCEDURE = gql`
+  query VplProgramsForProcedure($procedureId: ID!) {
+    vplProgramsForProcedure(procedureId: $procedureId) {
+      id
+      name
+      data
+      lastRun
+      enabled
+    }
+  }
+`
+
+export const GET_VPL_PROCEDURES_FOR_PROGRAM = gql`
+  query VplProceduresForProgram($programId: ID!) {
+    vplProceduresForProgram(programId: $programId) {
+      id
+      name
+      data
+    }
+  }
+`

@@ -73,3 +73,15 @@ export const DELETE_VPL_PROCEDURE = gql`
     deleteVPLProcedure(id: $id)
   }
 `
+
+export const LINK_PROGRAM_TO_PROCEDURE = gql`
+  mutation LinkProgramToProcedure($programId: ID!, $procedureId: ID!) {
+    linkProgramToProcedure(programId: $programId, procedureId: $procedureId)
+  }
+`
+
+export const UNLINK_PROGRAM_FROM_PROCEDURE = gql`
+  mutation UnlinkProgramFromProcedure($programId: ID!, $procedureId: ID!) {
+    unlinkProgramFromProcedure(programId: $programId, procedureId: $procedureId)
+  }
+`
