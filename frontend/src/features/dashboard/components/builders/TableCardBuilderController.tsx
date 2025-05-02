@@ -93,7 +93,7 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
             const deviceParsed = deviceDataMap[rowData.instance.uid]
 
             // Insert the new row value at the rowIndex, which is the index of row being changed
-            prevValues[rowIndex] = deviceParsed ? deviceParsed[rowData.parameter.denotation] : undefined
+            prevValues[rowIndex] = deviceParsed ? deviceParsed[rowData.parameter.denotation] : null
 
             // Update the whole column with new the value
             updated[index] = { function: column.function, values: prevValues }
@@ -105,7 +105,7 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
             const prevValues = prev[index]?.values
 
             // Only set the missing data to undefined
-            prevValues[rowIndex] = undefined
+            prevValues[rowIndex] = null
             updated[index] = { function: column.function, values: prevValues }
             return updated
           })
@@ -123,7 +123,7 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
     // Reset the whole column
     setColumnData((prev) => {
       const updated = [...prev]
-      updated[columnIndex] = { function: column.function, values: config.rows.map(() => undefined) }
+      updated[columnIndex] = { function: column.function, values: config.rows.map(() => null) }
       return updated
     })
 
@@ -161,7 +161,7 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
             const updated = [...prev]
             const prevValues = prev[columnIndex]?.values
             const deviceParsed = deviceDataMap[row.instance.uid]
-            prevValues[rowIndex] = deviceParsed ? deviceParsed[row.parameter.denotation] : undefined
+            prevValues[rowIndex] = deviceParsed ? deviceParsed[row.parameter.denotation] : null
             updated[columnIndex] = { function: column.function, values: prevValues }
             return updated
           })
@@ -169,7 +169,7 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
           setColumnData((prev) => {
             const updated = [...prev]
             const prevValues = prev[columnIndex]?.values
-            prevValues[rowIndex] = undefined
+            prevValues[rowIndex] = null
             updated[columnIndex] = { function: column.function, values: prevValues }
             return updated
           })
@@ -187,7 +187,7 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
     setColumnData(
       config.columns.map((col) => ({
         function: col.function,
-        values: config.rows.map(() => undefined)
+        values: config.rows.map(() => null)
       }))
     )
 
@@ -241,8 +241,8 @@ export function TableCardBuilderController({ onDataSubmit, config }: TableCardBu
     const result: TableCardBuilderResult = {
       config: values,
       sizing: {
-        w: 2,
-        h: Math.max(Math.ceil(height / 20), 3)
+        h: Math.max(Math.ceil(height / 20), 3),
+        ...(config ? {} : { w: 2 })
       }
     }
     onDataSubmit(result)

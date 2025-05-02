@@ -4,7 +4,7 @@ import { Arrow, ArrowContainer } from '@/styles/dashboard/CardGlobal'
 import { moveWidget } from '@/lib/dashboard/LayoutArrows'
 import { ResizePopover } from './ResizePopover'
 import { TbBorderBottomPlus, TbBorderRightPlus } from 'react-icons/tb'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 export interface AccessibilityContainerProps {
   cols: { lg: number; md: number; xs: number; xxs: number }
@@ -31,6 +31,7 @@ export const AccessibilityContainer = ({
   isAtTopEdge,
   isBottom
 }: AccessibilityContainerProps) => {
+  const [openPopover, setOpenPopover] = useState<'width' | 'height' | null>(null)
   // Get the item from the layout
   const item = useMemo(() => layout.find((item) => item.i === cardID), [layout, cardID])
 
@@ -80,8 +81,11 @@ export const AccessibilityContainer = ({
           minValue={item?.minW || 1}
           currentValue={item?.w}
           rightEdge={isAtRightEdge}
-          highlight="width"
-          setHighlight={setHighlight}
+          isOpen={openPopover === 'width'}
+          onOpenChange={(isOpen) => {
+            setOpenPopover(isOpen ? 'width' : null)
+            setHighlight(isOpen ? 'width' : null)
+          }}
         >
           <TbBorderRightPlus />
         </ResizePopover>
@@ -94,8 +98,11 @@ export const AccessibilityContainer = ({
           maxValue={item?.maxH}
           minValue={item?.minH || 1}
           currentValue={item?.h}
-          highlight="height"
-          setHighlight={setHighlight}
+          isOpen={openPopover === 'height'}
+          onOpenChange={(isOpen) => {
+            setOpenPopover(isOpen ? 'height' : null)
+            setHighlight(isOpen ? 'height' : null)
+          }}
         >
           <TbBorderBottomPlus />
         </ResizePopover>

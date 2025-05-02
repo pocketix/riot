@@ -18,7 +18,7 @@ export const BulletCardView = (props: BulletCardViewProps) => {
       isLoading={props.isLoading}
       error={props.error}
       visualizationType="bullet"
-      cardTitle={props.chartConfig?.cardTitle}
+      cardTitle={props.chartConfig?.title}
       cardIcon={props.chartConfig?.icon}
       configuration={props.chartConfig!}
     >
@@ -32,13 +32,12 @@ export const BulletCardView = (props: BulletCardViewProps) => {
             )
           }
 
-          const rowData = props.data.find((d) => d.rowIndex === index)
           return (
             <BulletRow
               key={index}
               row={row}
-              aggregatedData={rowData?.data}
-              aggregateUpdatedAt={rowData?.updatedAt}
+              aggregatedData={props.data[index]?.data}
+              aggregateUpdatedAt={props.data[index]?.updatedAt}
               editModeEnabled={props.editModeEnabled}
             />
           )

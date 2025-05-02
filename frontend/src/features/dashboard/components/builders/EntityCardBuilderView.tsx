@@ -23,6 +23,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
 import IconPicker from '@/ui/IconPicker'
 import { ValueSymbolPicker } from './components/value-symbol-picker'
+import { Checkbox } from '@/components/ui/checkbox'
 
 export interface EntityCardBuilderViewProps {
   config?: EntityCardConfig
@@ -80,7 +81,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
 
   return (
     <div className="w-full">
-      <Card className="w-fulloverflow-hidden h-fit p-2 pt-0" ref={tableRef}>
+      <Card className="h-fit w-full overflow-hidden p-2 pt-0" ref={tableRef}>
         <div className="flex items-center gap-2">
           {IconComponent && <IconComponent className="h-5 w-5 text-muted-foreground" />}
           {form.watch('title') && <h3 className="text-lg font-semibold">{form.watch('title')}</h3>}
@@ -292,7 +293,40 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                         />
                       )}
 
-                      {form.watch(`rows.${index}.visualization`) === 'immediate' &&
+                      {form.watch(`rows.${index}.visualization`) === 'sparkline' && (
+                        <FormField
+                          control={form.control}
+                          name={`rows.${index}.showRealtime`}
+                          render={({ field }) => (
+                            <FormItem className="flex items-center gap-2">
+                              <FormLabel className="inline-flex gap-1">
+                                Show latest value
+                                <ResponsiveTooltip
+                                  content={
+                                    <div>
+                                      <p className="text-sm">Show the latest value next to the sparkline</p>
+                                    </div>
+                                  }
+                                >
+                                  <InfoIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                </ResponsiveTooltip>
+                              </FormLabel>
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value ?? false}
+                                  onCheckedChange={field.onChange}
+                                  className="!mt-0"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                      {(form.watch(`rows.${index}.visualization`) === 'immediate' ||
+                        (form.watch(`rows.${index}.visualization`) === 'sparkline' &&
+                          form.watch(`rows.${index}.showRealtime`))) &&
                         props
                           .getParameterOptions(
                             form.getValues(`rows.${index}.instance.id`),
@@ -331,7 +365,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                                     onChange={(value) => {
                                       field.onChange(value)
                                     }}
-                                    placeholder="2"
+                                    placeholder="Enter value..."
                                     className="w-full"
                                     min={0}
                                     step={1}
@@ -343,7 +377,9 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                           />
                         )}
 
-                      {form.watch(`rows.${index}.visualization`) === 'immediate' && (
+                      {(form.watch(`rows.${index}.visualization`) === 'immediate' ||
+                        (form.watch(`rows.${index}.visualization`) === 'sparkline' &&
+                          form.watch(`rows.${index}.showRealtime`))) && (
                         <FormField
                           control={form.control}
                           name={`rows.${index}.valueSymbol`}

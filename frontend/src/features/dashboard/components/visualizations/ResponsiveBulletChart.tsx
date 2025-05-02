@@ -141,6 +141,10 @@ const ResponsiveBulletBase = ({ data, rowConfig, lastUpdated, onElementClick, cl
     return Math.min(...data.ranges) * 1.2
   }, [data])
 
+  if (!data.measures || data.measures.length === 0) {
+    return <div className="h-full w-full select-none" />
+  }
+
   return (
     <>
       <div

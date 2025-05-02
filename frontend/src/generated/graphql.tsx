@@ -126,11 +126,14 @@ export type Mutation = {
   createSDCommandInvocation: SdCommandInvocation;
   createSDInstanceGroup: SdInstanceGroup;
   createSDType: SdType;
+  createVPLProgram: VplProgram;
   deleteKPIDefinition: Scalars['Boolean']['output'];
   deleteSDCommand: Scalars['Boolean']['output'];
   deleteSDInstanceGroup: Scalars['Boolean']['output'];
   deleteSDType: Scalars['Boolean']['output'];
   deleteUserConfig: Scalars['Boolean']['output'];
+  deleteVPLProgram: Scalars['Boolean']['output'];
+  executeVPLProgram: VplProgramExecutionResult;
   invokeSDCommand: Scalars['Boolean']['output'];
   statisticsMutate: Scalars['Boolean']['output'];
   updateKPIDefinition: KpiDefinition;
@@ -139,6 +142,7 @@ export type Mutation = {
   updateSDInstanceGroup: SdInstanceGroup;
   updateSDType: SdType;
   updateUserConfig: UserConfig;
+  updateVPLProgram: VplProgram;
 };
 
 
@@ -167,6 +171,12 @@ export type MutationCreateSdTypeArgs = {
 };
 
 
+export type MutationCreateVplProgramArgs = {
+  data: Scalars['JSON']['input'];
+  name: Scalars['String']['input'];
+};
+
+
 export type MutationDeleteKpiDefinitionArgs = {
   id: Scalars['ID']['input'];
 };
@@ -192,6 +202,16 @@ export type MutationDeleteUserConfigArgs = {
 };
 
 
+export type MutationDeleteVplProgramArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationExecuteVplProgramArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationInvokeSdCommandArgs = {
   id: Scalars['ID']['input'];
 };
@@ -209,9 +229,9 @@ export type MutationUpdateKpiDefinitionArgs = {
 
 
 export type MutationUpdateSdCommandArgs = {
-  description?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
   name?: InputMaybe<Scalars['String']['input']>;
+  payload?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -236,6 +256,13 @@ export type MutationUpdateSdTypeArgs = {
 export type MutationUpdateUserConfigArgs = {
   input: UserConfigInput;
   userId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateVplProgramArgs = {
+  data: Scalars['JSON']['input'];
+  id: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
 };
 
 export type NumericEqAtomKpiNode = AtomKpiNode & KpiNode & {
@@ -314,6 +341,8 @@ export type Query = {
   statisticsQuerySensorsWithFields: Array<OutputData>;
   statisticsQuerySimpleSensors: Array<OutputData>;
   userConfig: UserConfig;
+  vplProgram: VplProgram;
+  vplPrograms: Array<VplProgram>;
 };
 
 
@@ -358,18 +387,28 @@ export type QueryUserConfigArgs = {
   id: Scalars['ID']['input'];
 };
 
+
+export type QueryVplProgramArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type SdCommand = {
   __typename?: 'SDCommand';
-  description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+  payload?: Maybe<Scalars['String']['output']>;
   sdTypeId: Scalars['ID']['output'];
 };
 
 export type SdCommandInput = {
-  description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
+  payload?: InputMaybe<Scalars['String']['input']>;
   sdTypeId: Scalars['ID']['input'];
+};
+
+export type SdCommandInputWithoutType = {
+  name: Scalars['String']['input'];
+  payload?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SdCommandInvocation = {
@@ -446,6 +485,7 @@ export type SdParameterSnapshot = {
   parameterId: Scalars['ID']['output'];
   string?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['Date']['output'];
+  vplPrograms: Array<Scalars['ID']['output']>;
 };
 
 export enum SdParameterType {
@@ -456,6 +496,7 @@ export enum SdParameterType {
 
 export type SdType = {
   __typename?: 'SDType';
+  commands: Array<SdCommand>;
   denotation: Scalars['String']['output'];
   icon?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
@@ -464,6 +505,7 @@ export type SdType = {
 };
 
 export type SdTypeInput = {
+  commands?: InputMaybe<Array<SdCommandInputWithoutType>>;
   denotation: Scalars['String']['input'];
   icon?: InputMaybe<Scalars['String']['input']>;
   label?: InputMaybe<Scalars['String']['input']>;
@@ -553,6 +595,28 @@ export type UserConfigInput = {
   config: Scalars['JSON']['input'];
 };
 
+export type VplProgram = {
+  __typename?: 'VPLProgram';
+  data: Scalars['JSON']['output'];
+  enabled: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  lastRun?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  sdParameterSnapshots: Array<SdParameterSnapshot>;
+};
+
+export type VplProgramExecutionResult = {
+  __typename?: 'VPLProgramExecutionResult';
+  SdCommandInvocations: Array<SdCommandInvocation>;
+  enabled: Scalars['Boolean']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  executionReason?: Maybe<Scalars['String']['output']>;
+  executionTime: Scalars['String']['output'];
+  program: VplProgram;
+  sdParameterSnapshotsToUpdate: Array<SdParameterSnapshot>;
+  success: Scalars['Boolean']['output'];
+};
+
 export type DeleteSdTypeMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -565,7 +629,7 @@ export type CreateSdTypeMutationVariables = Exact<{
 }>;
 
 
-export type CreateSdTypeMutation = { __typename?: 'Mutation', createSDType: { __typename?: 'SDType', denotation: string, icon?: string | null, id: number, label?: string | null, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, label?: string | null, type: SdParameterType }> } };
+export type CreateSdTypeMutation = { __typename?: 'Mutation', createSDType: { __typename?: 'SDType', denotation: string, icon?: string | null, id: number, label?: string | null, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, label?: string | null, type: SdParameterType }>, commands: Array<{ __typename?: 'SDCommand', id: number, name: string, payload?: string | null, sdTypeId: number }> } };
 
 export type CreateKpiDefinitionMutationVariables = Exact<{
   input: KpiDefinitionInput;
@@ -618,7 +682,7 @@ export type UpdateSdTypeMutationVariables = Exact<{
 }>;
 
 
-export type UpdateSdTypeMutation = { __typename?: 'Mutation', updateSDType: { __typename?: 'SDType', denotation: string, icon?: string | null, id: number, label?: string | null, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, label?: string | null, type: SdParameterType }> } };
+export type UpdateSdTypeMutation = { __typename?: 'Mutation', updateSDType: { __typename?: 'SDType', denotation: string, icon?: string | null, id: number, label?: string | null, parameters: Array<{ __typename?: 'SDParameter', denotation: string, id: number, label?: string | null, type: SdParameterType }>, commands: Array<{ __typename?: 'SDCommand', id: number, name: string, payload?: string | null, sdTypeId: number }> } };
 
 export type CreateSdInstanceGroupMutationVariables = Exact<{
   input: SdInstanceGroupInput;
@@ -652,7 +716,7 @@ export type SdTypeQueryVariables = Exact<{
 }>;
 
 
-export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }> } };
+export type SdTypeQuery = { __typename?: 'Query', sdType: { __typename?: 'SDType', id: number, denotation: string, label?: string | null, icon?: string | null, parameters: Array<{ __typename?: 'SDParameter', id: number, label?: string | null, denotation: string, type: SdParameterType }>, commands: Array<{ __typename?: 'SDCommand', id: number, name: string, payload?: string | null, sdTypeId: number }> } };
 
 export type SdTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -682,6 +746,11 @@ export type RestOfKpiDefinitionDetailPageDataQueryVariables = Exact<{ [key: stri
 
 
 export type RestOfKpiDefinitionDetailPageDataQuery = { __typename?: 'Query', sdTypes: Array<{ __typename?: 'SDType', id: number, denotation: string, parameters: Array<{ __typename?: 'SDParameter', id: number, denotation: string, type: SdParameterType }> }>, sdInstances: Array<{ __typename?: 'SDInstance', id: number, uid: string, confirmedByUser: boolean, userIdentifier: string, type: { __typename?: 'SDType', id: number } }> };
+
+export type VplProgramsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type VplProgramsQuery = { __typename?: 'Query', vplPrograms: Array<{ __typename?: 'VPLProgram', data: any, id: number, enabled: boolean, lastRun?: string | null, name: string }> };
 
 export type OnSdInstanceRegisteredSubscriptionVariables = Exact<{ [key: string]: never; }>;
 
@@ -794,6 +863,12 @@ export const CreateSdTypeDocument = gql`
       id
       label
       type
+    }
+    commands {
+      id
+      name
+      payload
+      sdTypeId
     }
   }
 }
@@ -1061,6 +1136,12 @@ export const UpdateSdTypeDocument = gql`
       label
       type
     }
+    commands {
+      id
+      name
+      payload
+      sdTypeId
+    }
   }
 }
     `;
@@ -1252,6 +1333,12 @@ export const SdTypeDocument = gql`
       label
       denotation
       type
+    }
+    commands {
+      id
+      name
+      payload
+      sdTypeId
     }
   }
 }
@@ -1585,6 +1672,49 @@ export type RestOfKpiDefinitionDetailPageDataQueryHookResult = ReturnType<typeof
 export type RestOfKpiDefinitionDetailPageDataLazyQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataLazyQuery>;
 export type RestOfKpiDefinitionDetailPageDataSuspenseQueryHookResult = ReturnType<typeof useRestOfKpiDefinitionDetailPageDataSuspenseQuery>;
 export type RestOfKpiDefinitionDetailPageDataQueryResult = Apollo.QueryResult<RestOfKpiDefinitionDetailPageDataQuery, RestOfKpiDefinitionDetailPageDataQueryVariables>;
+export const VplProgramsDocument = gql`
+    query VplPrograms {
+  vplPrograms {
+    data
+    id
+    enabled
+    lastRun
+    name
+  }
+}
+    `;
+
+/**
+ * __useVplProgramsQuery__
+ *
+ * To run a query within a React component, call `useVplProgramsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useVplProgramsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useVplProgramsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useVplProgramsQuery(baseOptions?: Apollo.QueryHookOptions<VplProgramsQuery, VplProgramsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<VplProgramsQuery, VplProgramsQueryVariables>(VplProgramsDocument, options);
+      }
+export function useVplProgramsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<VplProgramsQuery, VplProgramsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<VplProgramsQuery, VplProgramsQueryVariables>(VplProgramsDocument, options);
+        }
+export function useVplProgramsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<VplProgramsQuery, VplProgramsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<VplProgramsQuery, VplProgramsQueryVariables>(VplProgramsDocument, options);
+        }
+export type VplProgramsQueryHookResult = ReturnType<typeof useVplProgramsQuery>;
+export type VplProgramsLazyQueryHookResult = ReturnType<typeof useVplProgramsLazyQuery>;
+export type VplProgramsSuspenseQueryHookResult = ReturnType<typeof useVplProgramsSuspenseQuery>;
+export type VplProgramsQueryResult = Apollo.QueryResult<VplProgramsQuery, VplProgramsQueryVariables>;
 export const OnSdInstanceRegisteredDocument = gql`
     subscription OnSDInstanceRegistered {
   onSDInstanceRegistered {

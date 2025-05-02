@@ -19,9 +19,12 @@ export interface ResponsiveEntityTableProps {
   sparklineData: Serie[]
   className?: string
   height?: number
+  mock?: Boolean
 }
 
-const ResponsiveEntityTableBase = ({ config, sparklineData, className, height }: ResponsiveEntityTableProps) => {
+const mockValue = 23
+
+const ResponsiveEntityTableBase = ({ config, sparklineData, className, height, mock }: ResponsiveEntityTableProps) => {
   const { setDetailsSelectedDevice } = useDeviceDetail()
 
   const containerStyle: CSSProperties = height
@@ -55,7 +58,9 @@ const ResponsiveEntityTableBase = ({ config, sparklineData, className, height }:
               row={row}
               rowCount={config.rows.length}
               sparklineData={sparklineData[rowIndex]}
+              mockValue={mock ? mockValue : undefined}
               onRowClick={() => setDetailsSelectedDevice(row.instance.id!, row.parameter.id)}
+              mock={!!mock}
             />
           ))}
         </tbody>
@@ -69,32 +74,41 @@ interface EntityRowProps {
   sparklineData?: Serie
   rowCount: number
   onRowClick: () => void
+  mockValue?: number | string
+  mock?: boolean
 }
 
-const EntityRow = memo(({ row, sparklineData, rowCount, onRowClick }: EntityRowProps) => {
-  const { value } = useParameterSnapshot(row.instance?.id!, row.parameter?.id!)
-  const { getParameterByIds } = useInstances()
+const EntityRow = memo(({ row, sparklineData, rowCount, onRowClick, mockValue, mock }: EntityRowProps) => {
+  const { value: realValue } = useParameterSnapshot(row.instance?.id!, row.parameter?.id!)
+  const { getParameterByIds, getInstanceById } = useInstances()
 
   const wholeParameter = getParameterByIds(row.instance?.id!, row.parameter?.id!)
+  const value = mock ? mockValue : realValue
 
   const hasData = useMemo(() => {
     if (row.visualization === 'sparkline') {
       return sparklineData && sparklineData.data && sparklineData.data.length > 0
     }
-    return value !== undefined
+    return value !== null && value !== undefined
   }, [row.visualization, sparklineData, value])
 
   if (!hasData) {
     return (
-      <tr onClick={onRowClick} className="cursor-pointer hover:bg-muted/50" style={{ height: `calc(100% / ${rowCount})` }}>
+      <tr
+        onClick={onRowClick}
+        className="cursor-pointer hover:bg-muted/50"
+        style={{ height: `calc(100% / ${rowCount})` }}
+      >
         <td className="text-sm">{row.name}</td>
         <td className="h-[24px] w-[75px] text-center text-sm">
-          <Skeleton className="h-full w-full" disableAnimation>
+          <Skeleton className="flex h-full w-full items-center justify-center" disableAnimation>
             <ResponsiveTooltip
               content={
-                <div className="flex max-w-28 flex-col">
+                <div className="flex flex-col items-center justify-center">
                   <span className="font-semibold text-destructive">No data available</span>
-                  <span className="break-words text-xs">Device: {row.instance?.uid!}</span>
+                  <span className="break-all text-xs">
+                    Device: {getInstanceById(row.instance?.id!)?.userIdentifier || row.instance?.uid!}
+                  </span>
                   <span className="break-words text-xs">
                     Parameter: {wholeParameter?.label || wholeParameter?.denotation || 'Unknown'}
                   </span>
@@ -110,18 +124,36 @@ const EntityRow = memo(({ row, sparklineData, rowCount, onRowClick }: EntityRowP
   }
 
   return (
-    <tr onClick={onRowClick} className="cursor-pointer hover:bg-muted/50" style={{ height: `calc(100% / ${rowCount})` }}>
+    <tr
+      onClick={onRowClick}
+      className="w-full cursor-pointer hover:bg-muted/50"
+      style={{ height: `calc(100% / ${rowCount})` }}
+    >
       <td className="text-sm">{row.name}</td>
-
       {row.visualization === 'sparkline' && (
-        <td className="h-[24px] w-[75px] min-w-0 text-end text-sm">
-          <ResponsiveLineChart data={[sparklineData!]} detailsOnClick={false} useSparklineMode={true} />
+        <td className="h-[24px] min-w-0 p-0">
+          <div className="ml-auto flex h-full min-w-0 max-w-[150px] items-center justify-end gap-0.5 overflow-hidden">
+            {row.showRealtime && (
+              <span className="flex flex-shrink-0 items-start gap-0.5 pr-1 text-sm">
+                {typeof value === 'number' ? Number((value as number).toFixed(row.decimalPlaces)) : String(value)}
+                <span>{row.valueSymbol!}</span>
+              </span>
+            )}
+            <div className="relative h-full min-w-[30px] max-w-[100px] flex-1">
+              <div className="absolute inset-0">
+                <ResponsiveLineChart data={[sparklineData!]} detailsOnClick={false} useSparklineMode={true} />
+              </div>
+            </div>
+          </div>
         </td>
       )}
 
       {row.visualization === 'immediate' && (
-        <td className="w-fit text-end text-sm">
-          {typeof value === 'number' ? Number(value.toFixed(row.decimalPlaces)) : String(value)} {row.valueSymbol!}
+        <td className="w-fit">
+          <div className="flex justify-end gap-0.5 text-end text-sm">
+            <span>{typeof value === 'number' ? Number(value.toFixed(row.decimalPlaces)) : String(value)}</span>
+            <span>{row.valueSymbol!}</span>
+          </div>
         </td>
       )}
 
@@ -130,11 +162,9 @@ const EntityRow = memo(({ row, sparklineData, rowCount, onRowClick }: EntityRowP
           {/* command invocation on onCheckedChange - not setup */}
           <ResponsiveTooltip
             content={
-              <div className="flex max-w-28 flex-col">
-                <span className="font-semibold text-destructive">Command actions not yet available</span>
-                <span className="break-words text-xs text-muted-foreground">
-                  This button only displays the current state
-                </span>
+              <div className="flex flex-col">
+                <span className="break-words font-semibold text-destructive">Command actions not yet available</span>
+                <span className="break-words text-xs">This button only displays the current state</span>
               </div>
             }
           >

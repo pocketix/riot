@@ -219,19 +219,21 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
                 <div className="h-fit max-h-[150px] sm:max-h-[300px]">
                   <CommandEmpty>No results found.</CommandEmpty>
                   <CommandGroup>
-                    <CommandItem key="all" onSelect={toggleAll} className="cursor-pointer">
-                      <div
-                        className={cn(
-                          'mr-2 flex h-4 w-4 items-center justify-center rounded-sm',
-                          tempValue.length === options.length
-                            ? 'bg-primary text-primary-foreground'
-                            : 'opacity-50 [&_svg]:invisible'
-                        )}
-                      >
-                        <CheckIcon className="h-4 w-4" />
-                      </div>
-                      <span>(Select All)</span>
-                    </CommandItem>
+                    {sortedOptions.length > 0 && (
+                      <CommandItem key="all" onSelect={toggleAll} className="cursor-pointer">
+                        <div
+                          className={cn(
+                            'mr-2 flex h-4 w-4 items-center justify-center rounded-sm',
+                            tempValue.length === options.length
+                              ? 'bg-primary text-primary-foreground'
+                              : 'opacity-50 [&_svg]:invisible'
+                          )}
+                        >
+                          <CheckIcon className="h-4 w-4" />
+                        </div>
+                        <span>(Select All)</span>
+                      </CommandItem>
+                    )}
                     {sortedOptions.map((option) => {
                       const isSelected = selectedIds.includes(option.id)
                       return (
@@ -252,6 +254,11 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
                         </CommandItem>
                       )
                     })}
+                    {sortedOptions.length === 0 && (
+                      <CommandItem disabled className="cursor-not-allowed">
+                        No options available
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                   <CommandGroup>
                     <div className="flex items-center justify-between">

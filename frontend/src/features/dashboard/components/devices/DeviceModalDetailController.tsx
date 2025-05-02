@@ -80,7 +80,7 @@ export const DeviceModalDetailController = () => {
       },
       request: {
         from: fromTime,
-        aggregateMinutes: isNumberType ? Math.ceil((Number(timeFrame) * 60) / 32) : 0,
+        aggregateMinutes: isNumberType ? Math.ceil((Number(timeFrame) * 60) / 32) : 1,
         operation: StatisticsOperation.Last
       }
     }

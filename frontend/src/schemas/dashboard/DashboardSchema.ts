@@ -4,6 +4,7 @@ import { entityCardSchema } from './visualizations/EntityCardBuilderSchema'
 import { tableCardSchema } from './visualizations/TableBuilderSchema'
 import { lineChartBuilderSchema } from './visualizations/LineChartBuilderSchema'
 import { switchCardSchema } from './visualizations/SwitchBuilderSchema'
+import { sequentialStatesBuilderSchema } from './visualizations/SequentialStatesBuilderSchema'
 
 export const LayoutItemSchema = z.object({
   w: z.number(),
@@ -41,6 +42,10 @@ const DBItemDetailsSchema = z.discriminatedUnion('visualization', [
   z.object({
     visualization: z.literal('switch'),
     visualizationConfig: switchCardSchema
+  }),
+  z.object({
+    visualization: z.literal('seqstates'),
+    visualizationConfig: sequentialStatesBuilderSchema
   })
 ])
 

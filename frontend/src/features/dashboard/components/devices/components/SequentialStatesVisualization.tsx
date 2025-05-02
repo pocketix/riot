@@ -1,5 +1,5 @@
 // Inspired by https://github.com/denisemauldin/d3-timeline
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, memo } from 'react'
 import { axisBottom } from 'd3-axis'
 import { timeFormat } from 'd3-time-format'
 import { ScaleTime, scaleTime } from 'd3-scale'
@@ -10,17 +10,24 @@ import { Datum } from '@nivo/line'
 import { Card } from '@/components/ui/card'
 import { Portal } from '@radix-ui/react-portal'
 import { getColorBlindSchemeWithBW } from '../../visualizations/color-schemes/color-impaired'
+import { ResponsiveTooltip } from '@/components/responsive-tooltip'
+import { Skeleton } from '@/components/ui/skeleton'
+import { isEqual } from 'lodash'
 
 interface SequentialStatesProps {
   data: readonly Datum[]
+  dataInfo?: {
+    instanceName: string
+    parameterName: string
+  }
 }
 
 interface StateDataSegment {
   startTime: Date
   endTime: Date
   value: string
-  duration: number
   color: string
+  labelColor: string
 }
 
 interface HelpingLine {
@@ -40,10 +47,10 @@ const formatDuration = (millis: number): string => {
   return `${seconds}s`
 }
 
-export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) => {
-  const height = 70
+export const SequentialStatesVisualizationBase = ({ data, dataInfo }: SequentialStatesProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const svgRef = useRef<SVGSVGElement | null>(null)
+
   // stable container to prevent errors
   const stableContainerRef = useRef<SVGGElement | null>(null)
   const tooltipRef = useRef<HTMLDivElement | null>(null)
@@ -52,9 +59,10 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
   const xScaleRef = useRef<ScaleTime<number, number> | null>(null)
   const timelineDataRef = useRef<StateDataSegment[]>([])
   const currentSegmentRef = useRef<StateDataSegment | null>(null)
-  const marginRef = useRef({ top: 30, right: 0, bottom: 20, left: 0 })
+  const marginRef = useRef({ top: 15, right: 15, bottom: 20, left: 20 })
   const innerHeightRef = useRef(0)
   const [width, setWidth] = useState(0)
+  const [height, setHeight] = useState(0)
   const [tooltip, setTooltip] = useState({
     show: false,
     x: 0,
@@ -71,14 +79,13 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
     x: number | null // x is independent of the tooltip card position
   }>({ show: false, x: null })
 
-  // Using observer, as using keepAspectRatio prop on svg does not produce the
-  // wanted bahviour and it becomes unreadable
   useEffect(() => {
     if (!containerRef.current) return
     const resizeObserver = new ResizeObserver((entries) => {
       if (!entries || entries.length === 0) return
-      const { width } = entries[0].contentRect
+      const { width, height } = entries[0].contentRect
       setWidth(width)
+      setHeight(height)
     })
     resizeObserver.observe(containerRef.current)
     return () => {
@@ -97,7 +104,8 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
     const g = select(stableContainerRef.current)
     g.selectAll('*').remove()
 
-    const currentTime = new Date()
+    // Increased the 'currentTime' to avoid new states being too small
+    const currentTime = new Date(new Date().getTime() + 1000 * 60 * 2)
     const margin = marginRef.current
     const innerWidth = width - margin.left - margin.right
     const innerHeight = height - margin.top - margin.bottom
@@ -128,69 +136,114 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
     return () => {
       g.selectAll('*').remove()
     }
-  }, [data, width, isDarkMode])
+  }, [data, width, height, isDarkMode])
 
   const processData = (data: readonly Datum[], currentTime: Date): StateDataSegment[] => {
-    const valueColorMap: Record<string, string> = {}
-
     // Set discards duplicates
     const uniqueValues = Array.from(new Set(data.map((d) => String(d.y))))
 
-    // TODO: Handle more than 8 unique values
     if (uniqueValues.length > 8) {
-      console.warn('More than 8 unique values, some colors will be repeated')
-      // maybe toast ? or turn into BW with legend as described in the proposal
-    }
+      let colorScheme: string[] = []
+      let labelColorScheme: string[] = []
+      // if more than 8 colors, alternate between two colors
+      if (isDarkMode) {
+        colorScheme = ['#ffffff', '#767676']
+        labelColorScheme = ['#222222', '#222222']
+      } else {
+        colorScheme = ['#222222', '#bbbbbb']
+        labelColorScheme = ['#ffffff', '#222222']
+      }
+      // Sort by time, just in case, this caused artefacts in line chart
+      const sortedData = [...data].sort((a, b) => new Date(a.x!).getTime() - new Date(b.x!).getTime())
+      const combinedSegments: StateDataSegment[] = []
+      if (sortedData.length === 0) return []
 
-    const colorScheme = getColorBlindSchemeWithBW(isDarkMode)
+      let currentSegment = {
+        startTime: new Date(sortedData[0].x!),
+        value: String(sortedData[0].y)
+      }
+      let colorIndex = 0
 
-    uniqueValues.forEach((value, i) => {
-      valueColorMap[value] = colorScheme[i % colorScheme.length]
-    })
+      for (let i = 1; i < sortedData.length; i++) {
+        const point = sortedData[i]
+        const pointValue = String(point.y)
+        const pointTime = new Date(point.x!)
 
-    // Sort by time, it already should be sorted, but just in case
-    const sortedData = [...data].sort((a, b) => new Date(a.x!).getTime() - new Date(b.x!).getTime())
-
-    const combinedSegments: StateDataSegment[] = []
-    if (sortedData.length === 0) return []
-
-    // First segment - first data point
-    let currentSegment = {
-      startTime: new Date(sortedData[0].x!),
-      value: String(sortedData[0].y)
-    }
-
-    for (let i = 1; i < sortedData.length; i++) {
-      const point = sortedData[i]
-      const pointValue = String(point.y)
-      const pointTime = new Date(point.x!)
-
-      if (pointValue !== currentSegment.value) {
-        const endTime = pointTime
-        combinedSegments.push({
-          startTime: currentSegment.startTime,
-          endTime: endTime,
-          value: currentSegment.value,
-          duration: endTime.getTime() - currentSegment.startTime.getTime(),
-          color: valueColorMap[currentSegment.value]
-        })
-        currentSegment = {
-          startTime: pointTime,
-          value: pointValue
+        if (pointValue !== currentSegment.value) {
+          const endTime = pointTime
+          combinedSegments.push({
+            startTime: currentSegment.startTime,
+            endTime: endTime,
+            value: currentSegment.value,
+            color: colorScheme[colorIndex % colorScheme.length],
+            labelColor: labelColorScheme[colorIndex % labelColorScheme.length]
+          })
+          colorIndex++
+          currentSegment = {
+            startTime: pointTime,
+            value: pointValue
+          }
         }
       }
+      // Last segment
+      combinedSegments.push({
+        startTime: currentSegment.startTime,
+        endTime: currentTime,
+        value: currentSegment.value,
+        color: colorScheme[colorIndex % colorScheme.length],
+        labelColor: labelColorScheme[colorIndex % labelColorScheme.length]
+      })
+      return combinedSegments
+    } else {
+      const colorScheme = getColorBlindSchemeWithBW(isDarkMode)
+      const labelColorScheme = Array(colorScheme.length).fill(strokeColor)
+      const valueColorMap: Record<string, string> = {}
+      const valueLabelColorMap: Record<string, string> = {}
+
+      uniqueValues.forEach((value, i) => {
+        valueColorMap[value] = colorScheme[i % colorScheme.length]
+        valueLabelColorMap[value] = labelColorScheme[i % labelColorScheme.length]
+      })
+
+      const sortedData = [...data].sort((a, b) => new Date(a.x!).getTime() - new Date(b.x!).getTime())
+      const combinedSegments: StateDataSegment[] = []
+      if (sortedData.length === 0) return []
+
+      let currentSegment = {
+        startTime: new Date(sortedData[0].x!),
+        value: String(sortedData[0].y)
+      }
+
+      for (let i = 1; i < sortedData.length; i++) {
+        const point = sortedData[i]
+        const pointValue = String(point.y)
+        const pointTime = new Date(point.x!)
+
+        if (pointValue !== currentSegment.value) {
+          const endTime = pointTime
+          combinedSegments.push({
+            startTime: currentSegment.startTime,
+            endTime: endTime,
+            value: currentSegment.value,
+            color: valueColorMap[currentSegment.value],
+            labelColor: valueLabelColorMap[currentSegment.value]
+          })
+          currentSegment = {
+            startTime: pointTime,
+            value: pointValue
+          }
+        }
+      }
+      // Last segment
+      combinedSegments.push({
+        startTime: currentSegment.startTime,
+        endTime: currentTime,
+        value: currentSegment.value,
+        color: valueColorMap[currentSegment.value],
+        labelColor: valueLabelColorMap[currentSegment.value]
+      })
+      return combinedSegments
     }
-
-    // The last segment doesnt get added in the loop
-    combinedSegments.push({
-      startTime: currentSegment.startTime,
-      endTime: currentTime,
-      value: currentSegment.value,
-      duration: currentTime.getTime() - currentSegment.startTime.getTime(),
-      color: valueColorMap[currentSegment.value]
-    })
-
-    return combinedSegments
   }
 
   const createSegments = (
@@ -205,7 +258,7 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
       .append('rect')
       .attr('class', 'segment')
       .attr('x', (d) => xScale(d.startTime))
-      .attr('width', (d) => Math.max(1, xScale(d.endTime) - xScale(d.startTime)))
+      .attr('width', (d) => Math.max(5, xScale(d.endTime) - xScale(d.startTime)))
       .attr('y', function () {
         const width = parseFloat(this.getAttribute('width') || '0')
         return width <= 10 ? -10 : 0
@@ -224,7 +277,7 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
       .attr('y', height / 2)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'middle')
-      .attr('fill', strokeColor)
+      .attr('fill', (d) => d.labelColor)
       .style('font-size', '12px')
       .style('pointer-events', 'none')
       .style('user-select', 'none')
@@ -234,7 +287,7 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
         const textWidth = d.value.length * 6
         if (textWidth > cellWidth - 10) {
           const maxChars = Math.floor((cellWidth - 10) / 6)
-          return maxChars > 3 ? `${d.value.substring(0, maxChars - 3)}...` : ''
+          return maxChars > 2 ? `${d.value.substring(0, maxChars - 3)}...` : ''
         }
         return d.value
       })
@@ -335,8 +388,11 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
     const pageY = 'touches' in event ? event.touches[0].pageY : (event as PointerEvent | MouseEvent).pageY
 
     const formattedStart = segmentData.startTime.toLocaleString()
-    const formattedEnd = segmentData.endTime.toLocaleString()
-    const duration = formatDuration(segmentData.duration)
+    const now = new Date()
+    // The increased xAxis time range causes the end time to be in the future
+    const safeEndTime = segmentData.endTime > now ? now : segmentData.endTime
+    const formattedEnd = safeEndTime.toLocaleString()
+    const duration = formatDuration(safeEndTime.getTime() - segmentData.startTime.getTime())
 
     const tooltipWidth = tooltipRef.current.offsetWidth
     const tooltipHeight = tooltipRef.current.offsetHeight
@@ -439,7 +495,7 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
   }
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className="relative h-full w-full">
       <svg
         ref={svgRef}
         className="block w-full overflow-visible"
@@ -468,6 +524,30 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
         )}
       </svg>
 
+      {/* When this was used in a separate return, the visualization was not rendering if the data came afterwards */}
+      {(!data || data.length === 0) && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80">
+          <ResponsiveTooltip
+            content={
+              <div className="flex flex-col">
+                <span className="text-center font-bold text-destructive">No data available</span>
+                {dataInfo && (
+                  <div className="flex w-full flex-col">
+                    <span className="break-words text-center text-xs">Device: {dataInfo.instanceName}</span>
+                    <span className="break-words text-center text-xs">Parameter: {dataInfo.parameterName}</span>
+                  </div>
+                )}
+              </div>
+            }
+            className="h-full w-full"
+          >
+            <Skeleton className="flex h-full w-full items-center justify-center">
+              <span className="truncate font-semibold text-destructive">No data available</span>
+            </Skeleton>
+          </ResponsiveTooltip>
+        </div>
+      )}
+
       {/* Using portal, as when this visualization gets displayed in a drawer, the tooltip was not visible */}
       <Portal>
         <Card
@@ -481,14 +561,27 @@ export const SequentialStatesVisualization = ({ data }: SequentialStatesProps) =
             pointerEvents: 'none'
           }}
         >
-          <div className="font-bold" style={{ color: tooltip.segmentColor }}>
-            {tooltip.state}
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-4 rounded-full" style={{ backgroundColor: tooltip.segmentColor }} />
+            <div className="font-bold transition-all duration-300 ease-in-out">{tooltip.state}</div>
           </div>
-          <div>Start: {tooltip.startTime}</div>
-          <div>End: {tooltip.endTime}</div>
-          <div>Duration: {tooltip.duration}</div>
+          <div className="flex flex-col justify-center">
+            <span className="text-xs font-bold">{dataInfo?.instanceName}</span>
+            <span className="text-xs font-bold">{dataInfo?.parameterName}</span>
+          </div>
+          <div className="text-xs">
+            <b>Start:</b> {tooltip.startTime}
+          </div>
+          <div className="text-xs">
+            <b>End:</b> {tooltip.endTime}
+          </div>
+          <div className="text-xs">
+            <b>Duration:</b> {tooltip.duration}
+          </div>
         </Card>
       </Portal>
     </div>
   )
 }
+
+export const SequentialStatesVisualization = memo(SequentialStatesVisualizationBase, isEqual)

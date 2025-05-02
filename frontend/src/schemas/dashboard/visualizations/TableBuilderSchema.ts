@@ -5,7 +5,6 @@ export const tableCardSchema = z.object({
   icon: z.string().optional(),
   tableTitle: z.string().min(1, { message: 'Table title is required' }),
   timeFrame: z.string().min(1, { message: 'Time frame must be at least 1' }),
-  decimalPlaces: z.number().min(0, { message: 'Decimal places must be a non-negative number' }),
   columns: z
     .array(
       z.object({
@@ -18,6 +17,8 @@ export const tableCardSchema = z.object({
     .array(
       z.object({
         name: z.string().min(1, { message: 'Row name is required' }),
+        decimalPlaces: z.number().min(0, { message: 'Decimal places must be a non-negative number' }),
+        valueSymbol: z.string().optional(),
         instance: z
           .object({
             uid: z.string().min(1, { message: 'Instance is required' }),

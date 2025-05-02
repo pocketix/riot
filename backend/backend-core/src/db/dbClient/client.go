@@ -431,6 +431,7 @@ func loadSDType(g *gorm.DB, whereClause dbUtil.WhereClause) sharedUtils.Result[d
 	sdTypeEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDTypeEntity](g,
 		dbUtil.Preload("Parameters"),
 		dbUtil.Preload("Parameters.SDParameterSnapshot"),
+		dbUtil.Preload("Commands"),
 		whereClause,
 	)
 	if sdTypeEntityLoadResult.IsFailure() {

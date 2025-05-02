@@ -17,7 +17,7 @@ export interface BulletChartBuilderControllerProps {
 export function BulletChartBuilderController({ onDataSubmit, config }: BulletChartBuilderControllerProps) {
   const { getInstanceByUid, getInstanceById, getInstanceParameters } = useInstances()
   const [getChartData] = useStatisticsQuerySensorsWithFieldsLazyQuery()
-  const [data, setData] = useState<Datum[]>([])
+  const [data, setData] = useState<(Datum | null)[]>([])
   const [smartRangeDialog, setSmartRangeDialog] = useState<{ open: boolean; rowIndex: number | null }>({
     open: false,
     rowIndex: null
@@ -154,9 +154,6 @@ export function BulletChartBuilderController({ onDataSubmit, config }: BulletCha
     if (!row || !row.instance.uid || !row.parameter.denotation) return
 
     try {
-      // 'last' values are handled by the bulletRow component
-
-      // other functions using statistics API
       const result = await getChartData({
         variables: {
           sensors: {
@@ -170,35 +167,55 @@ export function BulletChartBuilderController({ onDataSubmit, config }: BulletCha
         }
       })
 
-      if (result.data?.statisticsQuerySensorsWithFields.length! > 0) {
-        const parsedValue = result.data?.statisticsQuerySensorsWithFields[0]?.data
-          ? JSON.parse(result.data?.statisticsQuerySensorsWithFields[0].data)
-          : null
-
-        const value = parsedValue ? parsedValue[row.parameter.denotation] : undefined
-
-        if (value !== undefined) {
-          setData((prev) => {
-            const newData = [...prev]
-            newData[rowIndex] = {
-              id: row.config.name || row.parameter.denotation,
-              ranges: [
-                ...(row.config.ranges || []).flatMap((range: { min: number; max: number }) => [range.min, range.max]),
-                0,
-                0
-              ],
-              measures: [value],
-              markers: row.config.markers || []
-            }
-            return newData
-          })
-        }
+      // If no data at all
+      if (!result.data?.statisticsQuerySensorsWithFields?.length) {
+        setData((prev) => {
+          const newData = [...prev]
+          newData[rowIndex] = null
+          return newData
+        })
+        return
       }
+
+      const parsedValue = result.data.statisticsQuerySensorsWithFields[0]?.data
+        ? JSON.parse(result.data.statisticsQuerySensorsWithFields[0].data)
+        : null
+
+      const value = parsedValue ? parsedValue[row.parameter.denotation] : undefined
+
+      if (value === undefined) {
+        setData((prev) => {
+          const newData = [...prev]
+          newData[rowIndex] = null
+          return newData
+        })
+        return
+      }
+
+      setData((prev) => {
+        const newData = [...prev]
+        newData[rowIndex] = {
+          id: row.config.name || row.parameter.denotation,
+          ranges: [
+            ...(row.config.ranges || []).flatMap((range: { min: number; max: number }) => [range.min, range.max]),
+            0,
+            0
+          ],
+          measures: [value],
+          markers: row.config.markers || []
+        }
+        return newData
+      })
     } catch (error) {
       const instance = getInstanceByUid(row.instance.uid)
       toast.error(
         `Failed to fetch data for '${instance?.userIdentifier || row.instance.uid} - ${row.parameter.denotation}'`
       )
+      setData((prev) => {
+        const newData = [...prev]
+        newData[rowIndex] = null
+        return newData
+      })
       console.error('Fetch error:', error)
     }
   }
@@ -287,7 +304,7 @@ export function BulletChartBuilderController({ onDataSubmit, config }: BulletCha
 
       const newData = [...prev]
       const { ranges, markers, measures, id } = updatedData
-
+      if (!newData[index]) return newData
       if (ranges) newData[index].ranges = ranges
       if (markers) newData[index].markers = markers
       if (measures) newData[index].measures = measures
@@ -310,7 +327,7 @@ export function BulletChartBuilderController({ onDataSubmit, config }: BulletCha
       sizing: {
         minH: 5,
         h: Math.max(values.rows.length * 3 + 2, 4),
-        w: 2
+        ...(config ? {} : { w: 2 })
       }
     }
     onDataSubmit(result)

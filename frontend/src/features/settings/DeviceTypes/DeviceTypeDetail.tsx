@@ -29,6 +29,7 @@ import DeleteConfirmationModal from '@/ui/DeleteConfirmationModal'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import Heading from '@/ui/Heading'
+import * as Tooltip from '@radix-ui/react-tooltip'
 
 const PageWrapper = styled.div`
   display: flex;
@@ -176,7 +177,8 @@ export default function DeviceTypeDetail() {
     label: '',
     denotation: '',
     icon: '',
-    parameters: [] as { denotation: string; type: string; label?: string | null }[]
+    parameters: [] as { denotation: string; type: string; label?: string | null }[],
+    commands: [] as { name: string; payload: string }[]
   })
 
   const {
@@ -198,7 +200,7 @@ export default function DeviceTypeDetail() {
     variables: { sdTypeId: sdTypeId! },
     skip: !sdTypeId || isAddingNew,
     onCompleted: (fetchedData) => {
-      if (fetchedData?.sdType) {
+      if (fetchedData?.sdType.commands) {
         const fetchedValues = {
           label: fetchedData.sdType.label || '',
           denotation: fetchedData.sdType.denotation || '',
@@ -208,9 +210,12 @@ export default function DeviceTypeDetail() {
               denotation: param.denotation,
               type: param.type,
               label: param.label
-            })) || []
+            })) || [],
+          commands: fetchedData.sdType.commands.map((c) => ({
+            ...c,
+            payload: c.payload || ''
+          }))
         }
-
         setInitialValues(fetchedValues)
         reset(fetchedValues)
       }
@@ -245,8 +250,67 @@ export default function DeviceTypeDetail() {
 
     if (hasDuplicate) return
 
+    let hasPayloadErrors = false
+    data.commands.forEach((command: any, cmdIdx: number) => {
+      try {
+        const parsed = JSON.parse(command.payload)
+        if (Array.isArray(parsed)) {
+          parsed.forEach((param: any, paramIdx: number) => {
+            let possibleValues = param.possibleValues
+            let parsingFailed = false
+
+            if (typeof possibleValues === 'string') {
+              const trimmed = possibleValues.trim()
+              if (trimmed.length > 0) {
+                try {
+                  possibleValues = JSON.parse(trimmed)
+                } catch {
+                  parsingFailed = true
+                }
+              } else {
+                possibleValues = undefined
+              }
+            }
+            if (parsingFailed) {
+              setError(`root.commands.${cmdIdx}.payloadParams.${paramIdx}.possibleValues`, {
+                type: 'manual',
+                message: 'Invalid JSON format'
+              })
+              hasPayloadErrors = true
+            } else if (possibleValues !== undefined && !Array.isArray(possibleValues)) {
+              setError(`root.commands.${cmdIdx}.payloadParams.${paramIdx}.possibleValues`, {
+                type: 'manual',
+                message: 'Possible values must be an array'
+              })
+              hasPayloadErrors = true
+            } else if (Array.isArray(possibleValues)) {
+              param.possibleValues = possibleValues
+            }
+
+            if (!param.name || param.name.trim() === '') {
+              setError(`root.commands.${cmdIdx}.payloadParams.${paramIdx}.name`, {
+                type: 'manual',
+                message: 'Name is required'
+              })
+              hasPayloadErrors = true
+            }
+          })
+          command.payload = JSON.stringify(parsed)
+        }
+      } catch {
+        setError(`commands.${cmdIdx}.payload`, {
+          type: 'manual',
+          message: 'Invalid payload JSON'
+        })
+        hasPayloadErrors = true
+      }
+    })
+
+    if (hasPayloadErrors) return
+
     try {
       if (isAddingNew) {
+        console.log('Creating new device type with data:', data)
         const response = await createSDTypeMutation({
           variables: {
             input: {
@@ -257,7 +321,13 @@ export default function DeviceTypeDetail() {
                 denotation: p.denotation,
                 type: p.type as SdParameterType,
                 label: p.label
-              }))
+              })),
+              commands: Array.isArray(data.commands)
+                ? data.commands.map((c: any) => ({
+                    name: c.name,
+                    payload: c.payload
+                  }))
+                : []
             }
           }
         })
@@ -268,7 +338,7 @@ export default function DeviceTypeDetail() {
           navigate(`/settings/device-types/${newId}`)
         }
       } else {
-        console.log('Updating device type:', data)
+        console.log('Updating device type with data:', data)
         await updateSDTypeMutation({
           variables: {
             updateSdTypeId: Number(id),
@@ -280,7 +350,13 @@ export default function DeviceTypeDetail() {
                 denotation: p.denotation,
                 type: p.type as SdParameterType,
                 label: p.label
-              }))
+              })),
+              commands: Array.isArray(data.commands)
+                ? data.commands.map((c: any) => ({
+                    name: c.name,
+                    payload: c.payload
+                  }))
+                : []
             }
           }
         })
@@ -293,6 +369,13 @@ export default function DeviceTypeDetail() {
       console.error('Submission failed:', error)
       toast.error(t('deviceTypeDetail.createdError'))
     }
+  }
+
+  function getPayloadParamError(errors: any, cmdIdx: number, paramIdx: number) {
+    return (errors.root?.commands?.[cmdIdx]?.payloadParams as any)?.[paramIdx]?.possibleValues
+  }
+  function getParamNameError(errors: any, cmdIdx: number, paramIdx: number) {
+    return (errors.root?.commands?.[cmdIdx]?.payloadParams as any)?.[paramIdx]?.name
   }
 
   const handleDelete = async () => {
@@ -323,6 +406,16 @@ export default function DeviceTypeDetail() {
     setValue('parameters', [{ denotation: '', type: 'NUMBER', label: '' }, ...getValues('parameters')])
   }
 
+  const addCommand = () => {
+    setValue('commands', [
+      {
+        name: '',
+        payload: JSON.stringify([{ name: '', type: '', possibleValues: [] }])
+      },
+      ...getValues('commands')
+    ])
+  }
+
   if (loading) return <Spinner />
   if (error)
     return (
@@ -336,7 +429,7 @@ export default function DeviceTypeDetail() {
       <div className="flex w-full max-w-[1300px] flex-col items-center justify-center p-[1.5rem]">
         <div className="mb-4 flex w-full items-center justify-between">
           <Heading>{t('settings')}</Heading>
-          <Button variant={'goBack'} onClick={() => navigate(-1)}>
+          <Button variant={'goBack'} onClick={() => navigate('/settings/device-types')}>
             &larr; Go Back
           </Button>
         </div>
@@ -353,14 +446,23 @@ export default function DeviceTypeDetail() {
               )}
 
               {editMode ? (
-                <div>
-                  <Label htmlFor="device-name">{t('deviceTypeDetail.enterName')}</Label>
-                  <Input
-                    {...register('label', { required: t('deviceTypeDetail.deviceTypeNameRequired') })}
-                    placeholder={t('deviceTypeDetail.enterName')}
-                  />
-                  {errors.label && <p className="text-sm text-red-500">{errors.label.message}</p>}
-                </div>
+                <Tooltip.Provider>
+                  <Tooltip.Root open={!!errors.label}>
+                    <Tooltip.Trigger asChild>
+                      <div>
+                        <Label htmlFor="device-name">{t('deviceTypeDetail.enterName')}</Label>
+                        <Input
+                          {...register('label', { required: t('deviceTypeDetail.deviceTypeNameRequired') })}
+                          placeholder={t('deviceTypeDetail.enterName')}
+                          className={`w-full ${errors.label ? 'border-red-500' : ''}`}
+                        />
+                      </div>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white" side="bottom">
+                      {errors.label?.message}
+                    </Tooltip.Content>
+                  </Tooltip.Root>
+                </Tooltip.Provider>
               ) : (
                 <Title>{watch('label')}</Title>
               )}
@@ -425,13 +527,24 @@ export default function DeviceTypeDetail() {
             {editMode ? (
               <div className="flex items-center justify-center gap-2 pr-3">
                 <strong>{t('deviceTypeDetail.denotation')}:</strong>
-                <div className="w-full">
-                  <Input
-                    {...register('denotation', { required: t('deviceTypeDetail.denotationRequired') })}
-                    placeholder={t('deviceTypeDetail.denotation')}
-                  />
-                  {errors.denotation && <p className="text-sm text-red-500">{errors.denotation.message}</p>}
-                </div>
+                <Tooltip.Provider>
+                  <Tooltip.Root open={!!errors.denotation}>
+                    <Tooltip.Trigger asChild>
+                      <Input
+                        {...register('denotation', { required: t('deviceTypeDetail.denotationRequired') })}
+                        placeholder={t('deviceTypeDetail.denotation')}
+                        className={`w-full ${errors.denotation ? 'border-red-500' : ''}`}
+                      />
+                    </Tooltip.Trigger>
+                    <Tooltip.Content
+                      className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                      side="top"
+                      sideOffset={4}
+                    >
+                      {errors.denotation?.message}
+                    </Tooltip.Content>
+                  </Tooltip.Root>
+                </Tooltip.Provider>
               </div>
             ) : (
               <div>
@@ -469,25 +582,50 @@ export default function DeviceTypeDetail() {
                   editMode ? (
                     <ParamRow key={index}>
                       <ParamCell>
-                        <div className="flex flex-col gap-2">
-                          <Input
-                            {...register(`parameters.${index}.denotation`, {
-                              required: t('deviceTypeDetail.denotationRequired')
-                            })}
-                            placeholder={t('deviceTypeDetail.denotation')}
-                          />
-                          {errors.parameters?.[index]?.denotation && (
-                            <p className="text-sm text-red-500">{errors.parameters[index].denotation.message}</p>
-                          )}
-                        </div>
+                        <Tooltip.Provider>
+                          <Tooltip.Root open={!!errors.parameters?.[index]?.denotation}>
+                            <Tooltip.Trigger asChild>
+                              <div className="flex flex-col gap-2">
+                                <Input
+                                  {...register(`parameters.${index}.denotation`, {
+                                    required: t('deviceTypeDetail.denotationRequired')
+                                  })}
+                                  placeholder={t('deviceTypeDetail.denotation')}
+                                  className={`w-full ${errors.parameters?.[index]?.denotation ? 'border-red-500' : ''}`}
+                                />
+                              </div>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content
+                              className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                              side="top"
+                              sideOffset={4}
+                            >
+                              {errors.parameters?.[index]?.denotation?.message}
+                            </Tooltip.Content>
+                          </Tooltip.Root>
+                        </Tooltip.Provider>
                       </ParamCell>
                       <ParamCell>
-                        <div className="flex min-w-max flex-col gap-2">
-                          <Input {...register(`parameters.${index}.label`)} placeholder="Label" />
-                          {errors.parameters?.[index]?.label && (
-                            <p className="text-sm text-red-500">{errors.parameters[index].label.message}</p>
-                          )}
-                        </div>
+                        <Tooltip.Provider>
+                          <Tooltip.Root open={!!errors.parameters?.[index]?.label}>
+                            <Tooltip.Trigger asChild>
+                              <div className="flex flex-col gap-2">
+                                <Input
+                                  {...register(`parameters.${index}.label`)}
+                                  placeholder="Label"
+                                  className={`w-full min-w-max ${errors.parameters?.[index]?.label ? 'border-red-500' : ''}`}
+                                />
+                              </div>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content
+                              className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                              side="top"
+                              sideOffset={4}
+                            >
+                              {errors.parameters?.[index]?.label?.message}
+                            </Tooltip.Content>
+                          </Tooltip.Root>
+                        </Tooltip.Provider>
                       </ParamCell>
                       <ParamCell>
                         <div className="flex items-center gap-2">
@@ -525,7 +663,7 @@ export default function DeviceTypeDetail() {
                   ) : (
                     <ParamRow key={index}>
                       <ParamCell>{param.denotation}</ParamCell>
-                      <ParamCell>{param.label || '-'}</ParamCell>
+                      <ParamCell className="min-w-36">{param.label || '-'}</ParamCell>
                       <ParamCell>{param.type}</ParamCell>
                     </ParamRow>
                   )
@@ -534,43 +672,256 @@ export default function DeviceTypeDetail() {
             </ParametersContainer>
           )}
 
-          {/* Command Configuration (TODO: Wait for backend support and connect) */}
-          <TableItem>
-            <strong>Commands </strong>(0):
+          <TableItem className="pb-4">
+            <strong>Commands </strong>({watch('commands').length}):
           </TableItem>
 
-          <Button className="mb-4 ml-4 mr-4" disabled>
-            <TbPlus /> Add command
-          </Button>
+          {editMode && (
+            <Button
+              onClick={(e) => {
+                e.preventDefault()
+                addCommand()
+              }}
+              className="mb-4 ml-4 mr-4"
+            >
+              <TbPlus /> Add command
+            </Button>
+          )}
 
-          <ParametersContainer>
-            <ParamTable>
-              <ParamHeaderRow>
-                <ParamCell>Name</ParamCell>
-                <ParamCell>Type</ParamCell>
-                <ParamCell className="whitespace-nowrap">Possible values</ParamCell>
-              </ParamHeaderRow>
+          {watch('commands').length > 0 && (
+            <ParametersContainer>
+              <ParamTable>
+                <ParamHeaderRow>
+                  <ParamCell>Name</ParamCell>
+                  <ParamCell>Payload Parameters</ParamCell>
+                  {editMode && <ParamCell />}
+                </ParamHeaderRow>
+                {watch('commands').map((command, cmdIdx) => {
+                  let payloadParams: any[] = []
+                  try {
+                    try {
+                      const parsed = JSON.parse(command.payload)
+                      payloadParams = Array.isArray(parsed) ? parsed : []
+                    } catch (err) {
+                      console.error('Failed to parse command.payload:', err)
+                      payloadParams = []
+                    }
+                  } catch {
+                    payloadParams = []
+                  }
+                  const updatePayload = (params: any[]) => {
+                    const newCommands = [...watch('commands')]
+                    newCommands[cmdIdx] = {
+                      ...newCommands[cmdIdx],
+                      payload: JSON.stringify(params)
+                    }
+                    setValue('commands', newCommands)
+                  }
+                  const updatePayloadParam = (paramIdx: number, key: string, value: any) => {
+                    const next = payloadParams.map((p, i) => {
+                      if (i !== paramIdx) return p
+                      return { ...p, [key]: value }
+                    })
+                    updatePayload(next)
+                  }
+                  const addPayloadParam = () => {
+                    updatePayload([...payloadParams, { name: '', type: '', possibleValues: [] }])
+                  }
+                  const removePayloadParam = (paramIdx: number) => {
+                    updatePayload(payloadParams.filter((_, i) => i !== paramIdx))
+                  }
+                  return editMode ? (
+                    <ParamRow key={cmdIdx}>
+                      <ParamCell>
+                        <Tooltip.Provider>
+                          <Tooltip.Root open={!!errors.commands?.[cmdIdx]?.name}>
+                            <Tooltip.Trigger asChild>
+                              <Input
+                                {...register(`commands.${cmdIdx}.name`, { required: 'The name is required' })}
+                                placeholder="switch"
+                                className={`min-w-20 ${errors.commands?.[cmdIdx]?.name ? 'border-red-500' : ''}`}
+                              />
+                            </Tooltip.Trigger>
+                            <Tooltip.Content
+                              className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                              side="top"
+                              sideOffset={4}
+                            >
+                              {errors.commands?.[cmdIdx]?.name?.message}
+                            </Tooltip.Content>
+                          </Tooltip.Root>
+                        </Tooltip.Provider>
+                      </ParamCell>
+                      <ParamCell>
+                        <div className="flex flex-col gap-2">
+                          {/* Render all payload parameters */}
+                          {payloadParams.map((param, paramIdx) => (
+                            <div key={paramIdx} className="mb-1 flex items-center gap-2">
+                              <Tooltip.Provider>
+                                <Tooltip.Root open={!!getParamNameError(errors, cmdIdx, paramIdx)}>
+                                  <Tooltip.Trigger asChild>
+                                    <Input
+                                      value={param.name}
+                                      onChange={(e) => {
+                                        clearErrors(`root.commands.${cmdIdx}.payloadParams.${paramIdx}.name`)
+                                        updatePayloadParam(paramIdx, 'name', e.target.value)
+                                      }}
+                                      placeholder="Param name"
+                                      className={`w-28 ${
+                                        getParamNameError(errors, cmdIdx, paramIdx) ? 'border-red-500' : ''
+                                      }`}
+                                    />
+                                  </Tooltip.Trigger>
+                                  <Tooltip.Content
+                                    className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                                    side="top"
+                                    sideOffset={4}
+                                  >
+                                    {getParamNameError(errors, cmdIdx, paramIdx)?.message}
+                                  </Tooltip.Content>
+                                </Tooltip.Root>
+                              </Tooltip.Provider>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="outline" className="w-28">
+                                    {param.type || 'Type'}
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                  {['NUMBER', 'STRING', 'BOOLEAN'].map((option) => (
+                                    <DropdownMenuItem
+                                      key={option}
+                                      onClick={() => updatePayloadParam(paramIdx, 'type', option)}
+                                    >
+                                      {option}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                              <div className="flex flex-col gap-2">
+                                <Tooltip.Provider>
+                                  <Tooltip.Root open={!!getPayloadParamError(errors, cmdIdx, paramIdx)}>
+                                    <Tooltip.Trigger asChild>
+                                      <Input
+                                        defaultValue={
+                                          Array.isArray(param.possibleValues)
+                                            ? JSON.stringify(param.possibleValues)
+                                            : (param.possibleValues ?? '')
+                                        }
+                                        onBlur={(e) => {
+                                          updatePayloadParam(paramIdx, 'possibleValues', e.target.value)
+                                        }}
+                                        onChange={() => {
+                                          clearErrors(
+                                            `root.commands.${cmdIdx}.payloadParams.${paramIdx}.possibleValues`
+                                          )
+                                        }}
+                                        placeholder='["ON", "OFF"]'
+                                        className={`w-40 ${
+                                          getPayloadParamError(errors, cmdIdx, paramIdx) ? 'border-red-500' : ''
+                                        }`}
+                                      />
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content
+                                      className="max-w-[200px] rounded bg-red-500 p-2 text-xs text-white"
+                                      side="top"
+                                      sideOffset={4}
+                                    >
+                                      {getPayloadParamError(errors, cmdIdx, paramIdx)?.message}
+                                    </Tooltip.Content>
+                                  </Tooltip.Root>
+                                </Tooltip.Provider>
+                              </div>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  removePayloadParam(paramIdx)
+                                }}
+                              >
+                                <TbTrash /> Remove Param
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              addPayloadParam()
+                            }}
+                          >
+                            <TbPlus /> Add parameter
+                          </Button>
+                        </div>
+                      </ParamCell>
+                      <ParamCell>
+                        <Button
+                          variant="destructive"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            setValue(
+                              'commands',
+                              watch('commands').filter((_, i) => i !== cmdIdx)
+                            )
+                          }}
+                        >
+                          <TbTrash />
+                        </Button>
+                      </ParamCell>
+                    </ParamRow>
+                  ) : (
+                    <ParamRow key={cmdIdx}>
+                      <ParamCell>{command.name}</ParamCell>
+                      <ParamCell className="whitespace-pre-wrap break-words">
+                        {(() => {
+                          try {
+                            const arr = JSON.parse(command.payload)
+                            if (!Array.isArray(arr)) return null
+                            return (
+                              <div className="flex flex-col gap-2">
+                                <div className="flex gap-4 text-sm font-semibold text-muted-foreground">
+                                  <div className="w-32">Name</div>
+                                  <div className="w-32">Type</div>
+                                  <div className="w-48">Possible Values</div>
+                                </div>
+                                {arr.map((p, i) => {
+                                  let possibleValues = p.possibleValues
 
-              <ParamRow>
-                <ParamCell>
-                  <Input placeholder="state" disabled />
-                </ParamCell>
-                <ParamCell>
-                  <Input className="w-max" placeholder="string" disabled />
-                </ParamCell>
-                <div>
-                  <ParamCell>
-                    <Input className="w-max" placeholder='["ON", "OFF"]' disabled />
-                  </ParamCell>
-                  <ParamCell>
-                    <Button variant="destructive" disabled>
-                      <TbTrash />
-                    </Button>
-                  </ParamCell>
-                </div>
-              </ParamRow>
-            </ParamTable>
-          </ParametersContainer>
+                                  if (typeof possibleValues === 'string') {
+                                    try {
+                                      possibleValues = JSON.parse(possibleValues)
+                                    } catch {
+                                      possibleValues = []
+                                    }
+                                  }
+                                  return (
+                                    <div key={i} className="flex gap-4">
+                                      <div className="w-32 font-medium">{p.name}</div>
+                                      <div className="w-32 italic text-muted-foreground">{p.type}</div>
+                                      <div className="w-48 text-sm text-muted-foreground">
+                                        {Array.isArray(possibleValues) && possibleValues.length > 0
+                                          ? `[${possibleValues.join(', ')}]`
+                                          : '-'}
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )
+                          } catch {
+                            return <span>{command.payload}</span>
+                          }
+                        })()}
+                      </ParamCell>
+                    </ParamRow>
+                  )
+                })}
+              </ParamTable>
+            </ParametersContainer>
+          )}
         </PageContainer>
       </div>
     </PageWrapper>
