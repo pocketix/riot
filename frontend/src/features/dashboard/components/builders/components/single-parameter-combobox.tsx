@@ -27,7 +27,11 @@ export function SingleParameterCombobox(props: SingleParameterComboboxProps) {
   const sortedOptions = useMemo(() => {
     if (!props.options) return []
     if (props.options.length === 0) return []
-    return [...props.options].sort((a, b) => a.denotation.localeCompare(b.denotation))
+    return [...props.options].sort((a, b) => {
+      const aLabel = a.label || a.denotation
+      const bLabel = b.label || b.denotation
+      return aLabel.localeCompare(bLabel)
+    })
   }, [props.options])
 
   const filteredOptions = useMemo(() => {
@@ -85,7 +89,7 @@ export function SingleParameterCombobox(props: SingleParameterComboboxProps) {
                   ))}
                 </CommandGroup>
               </div>
-              <ScrollBar orientation='horizontal'/>
+              <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </CommandList>
         </Command>
