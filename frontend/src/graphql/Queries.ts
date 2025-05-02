@@ -29,6 +29,12 @@ export const GET_PARAMETERS = gql`
         denotation
         type
       }
+      commands {
+        id
+        name
+        payload
+        sdTypeId
+      }
     }
   }
 `
@@ -166,6 +172,18 @@ export const GET_REST_OF_KPI_DEFINITION_DETAIL_PAGE_DATA = gql`
       type {
         id
       }
+    }
+  }
+`
+
+export const GET_PROGRMS = gql`
+  query VplPrograms {
+    vplPrograms {
+      data
+      id
+      enabled
+      lastRun
+      name
     }
   }
 `

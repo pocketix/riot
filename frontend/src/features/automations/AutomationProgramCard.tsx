@@ -2,27 +2,14 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import styled from 'styled-components'
 import { TbDotsVertical, TbEye, TbPencil, TbTrash } from 'react-icons/tb'
-
-interface VPLProgram {
-  id: string
-  name: string
-  data: any
-  referencedValues: {
-    id: string
-    programID: string
-    deviceId: string
-    parameter: string
-  }[]
-  isRunning: boolean
-  lastRun: string
-}
+import { VplProgramsQuery } from '@/generated/graphql'
 
 interface AutomationProgramCardProps {
-  program: VPLProgram
-  onRun: (programId: string) => void
-  onEdit?: (programId: string) => void
-  onDelete?: (programId: string) => void
-  onDetails?: (programId: string) => void
+  program: VplProgramsQuery['vplPrograms'][number]
+  onRun: (programId: number) => void
+  onEdit?: (programId: number) => void
+  onDelete?: (programId: number) => void
+  onDetails?: (programId: number) => void
 }
 
 const Card = styled.div`
@@ -44,6 +31,7 @@ const Header = styled.div`
 
 const StatusDot = styled.div<{ active: boolean }>`
   width: 1.2rem;
+
   height: 1.2rem;
   border-radius: 50%;
   background-color: ${({ active }) => (active ? 'var(--color-green-500)' : 'var(--color-red-500)')};
@@ -87,14 +75,14 @@ export default function AutomationProgramCard({
   onDelete,
   onDetails
 }: AutomationProgramCardProps) {
-  const { id, name, isRunning, lastRun } = program
+  const { id, name, lastRun, enabled } = program
 
   return (
     <Card>
       <Header>
         <ProgramName>{name}</ProgramName>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <StatusDot active={isRunning} title={isRunning ? 'Running' : 'Stopped'} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: 'auto' }}>
+          <StatusDot active={enabled} title={enabled ? 'Running' : 'Stopped'} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <IconButton variant="ghost" title="More options">
@@ -121,7 +109,7 @@ export default function AutomationProgramCard({
           </DropdownMenu>
         </div>
       </Header>
-      <Info>Last run: {lastRun}</Info>
+      <Info>Last run: {lastRun ? lastRun : '-'}</Info>
       <Button onClick={() => onRun(id)}>Run</Button>
     </Card>
   )

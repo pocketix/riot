@@ -19,6 +19,12 @@ export const CREATE_DEVICE_TYPE = gql`
         label
         type
       }
+      commands {
+        id
+        name
+        payload
+        sdTypeId
+      }
     }
   }
 `
@@ -104,6 +110,12 @@ export const UPDATE_DEVICE_TYPE = gql`
         id
         label
         type
+      }
+      commands {
+        id
+        name
+        payload
+        sdTypeId
       }
     }
   }
