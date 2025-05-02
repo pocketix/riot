@@ -1,7 +1,7 @@
 import React, { forwardRef, useRef, CSSProperties, memo, RefObject, useState, useEffect } from 'react'
 import { CustomLayerProps, LineSvgProps, Point, PointTooltipProps, ResponsiveLine, Serie } from '@nivo/line'
 import { useDarkMode } from '@/context/DarkModeContext'
-import { timeTicksLayer, getMaxValue } from '@/features/dashboard/components/utils/charts/tickUtils'
+import { timeTicksLayer } from '@/features/dashboard/components/utils/charts/tickUtils'
 import { darkTheme, lightTheme } from '@/features/dashboard/components/cards/components/ChartThemes'
 import { ChartToolTip } from '@/features/dashboard/components/cards/tooltips/LineChartToolTip'
 import { useDeviceDetail } from '@/context/DeviceDetailContext'
@@ -9,11 +9,11 @@ import { ScaleSpec } from '@nivo/scales'
 import { useInstances } from '@/context/InstancesContext'
 import { ChartCardConfig } from '@/schemas/dashboard/visualizations/LineChartBuilderSchema'
 import { getColorBlindSchemeWithBW } from './color-schemes/color-impaired'
-import { CartesianMarkerProps } from '@nivo/core'
 import { LineChartLegend } from './LineChartLegend'
 import { toast } from 'sonner'
 import { useChartLongPress } from '@/hooks/useLineChartLongPress'
 import { cn } from '@/lib/utils'
+import { merge } from 'lodash'
 
 export interface ResponsiveLineChartProps {
   className?: string
@@ -23,10 +23,14 @@ export interface ResponsiveLineChartProps {
   detailsOnClick?: boolean
   height?: number
   useSparklineMode?: boolean
+  biaxial?: boolean
 }
 
 const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartProps>(
-  ({ className, data, config = {}, height, detailsOnClick = true, useSparklineMode }, forwardedRef) => {
+  (
+    { className, data, config = {}, height, onPointClick, detailsOnClick = true, useSparklineMode, biaxial },
+    forwardedRef
+  ) => {
     const { getInstanceById, getParameterByIds } = useInstances()
     const { isDarkMode } = useDarkMode()
     const { setDetailsSelectedDevice } = useDeviceDetail()
@@ -60,8 +64,6 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
 
     const containerRef: RefObject<HTMLDivElement> =
       forwardedRef && 'current' in forwardedRef ? (forwardedRef as RefObject<HTMLDivElement>) : localContainerRef
-    const isChartCardConfig = 'margin' in config && 'yScale' in config && 'toolTip' in config
-
     const [tickValues, setTickValues] = useState(6)
 
     // not really necessary, as the amount of ticks if fine upon initial render
@@ -88,89 +90,38 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
       }
     }, [containerRef])
 
-    // Default config, if no config is provided
-    const {
-      margin = { top: 10, right: 10, bottom: 20, left: 40 },
-      enableGridX = true,
-      enableGridY = true,
-      pointSize = 5,
-      yFormat,
-      pointBorderWidth = 0,
-      curve = 'linear',
-      axisLeft,
-      axisBottom,
-      onClick
-    } = config as Partial<LineSvgProps>
+    const defaultConfig: Partial<ChartCardConfig> & Partial<LineSvgProps> = {
+      margin: { top: 10, right: 10, bottom: 20, left: 40 },
+      yScale: {
+        type: 'linear',
+        min: 'auto',
+        max: 'auto',
+        stacked: false,
+        nice: true,
+        format: '~s'
+      },
+      axisBottom: { tickValues: 0 },
+      axisLeft: { format: '~s' },
+      enableGridX: true,
+      enableGridY: true,
+      pointSize: 4,
+      toolTip: {
+        x: 'Time',
+        y: 'Value',
+        yFormat: '>-.2~f'
+      }
+    }
 
-    const mergedConfig = isChartCardConfig
+    const mergedConfig = merge({}, defaultConfig, config)
+
+    const axisLeftConfig = biaxial ? null : { ...mergedConfig.axisLeft, format: '~s', tickValues: tickValues }
+
+    const adjustedMargin = biaxial
       ? {
-          margin: (config as ChartCardConfig).margin,
-          yScale: (config as ChartCardConfig).yScale,
-          yFormat: (config as ChartCardConfig).toolTip?.yFormat,
-          chartArea: (config as ChartCardConfig).chartArea,
-          axisBottom: {
-            ...(config as ChartCardConfig).axisBottom,
-            tickValues: 0 // we are generating the ticks by the custom layer called timeTicksLayer
-          },
-          axisLeft: {
-            ...(config as ChartCardConfig).axisLeft,
-            format: '~s'
-          },
-          enableGridX: (config as ChartCardConfig).enableGridX,
-          enableGridY: (config as ChartCardConfig).enableGridY,
-          pointSize: (config as ChartCardConfig).pointSize || 5,
-          tooltipConfig: {
-            xName: (config as ChartCardConfig).toolTip.x,
-            yName: (config as ChartCardConfig).toolTip.y,
-            yFormat: (config as ChartCardConfig).toolTip?.yFormat
-          },
-          markers: (config as ChartCardConfig).yAxisMarkers?.map((marker) => ({
-            axis: 'y',
-            value: marker.value,
-            lineStyle: {
-              stroke: marker.color,
-              strokeWidth: 2,
-              strokeDasharray: marker.style === 'solid' ? undefined : marker.style === 'dashed' ? '4 2' : '2 2'
-            },
-            legend: marker.legend,
-            legendPosition: marker.legendPosition,
-            textStyle: {
-              fill: marker.color,
-              fontSize: 12,
-              fontWeight: 500
-            }
-          })) as CartesianMarkerProps[],
-          legend: {
-            enabled: (config as ChartCardConfig).legend?.enabled,
-            position: (config as ChartCardConfig).legend?.position
-          }
+          ...mergedConfig.margin,
+          top: Math.max(mergedConfig.margin?.top ?? 10, 40) // Increase top margin for top axis
         }
-      : {
-          margin,
-          yScale: {
-            type: 'linear',
-            min: 'auto',
-            max: 'auto',
-            stacked: false,
-            nice: true
-          },
-          yFormat,
-          axisBottom: {
-            ...axisBottom,
-            tickValues: 0
-          },
-          axisLeft: {
-            ...axisLeft,
-            format: '~s'
-          },
-          enableGridX,
-          enableGridY,
-          pointSize,
-          tooltipConfig: {
-            xName: 'Time',
-            yName: 'Value'
-          }
-        }
+      : mergedConfig.margin
 
     if (useSparklineMode) {
       return (
@@ -209,8 +160,8 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
 
     const handlePointClick = (point: Point, event: React.MouseEvent) => {
       // override
-      if (onClick) {
-        onClick(point, event)
+      if (onPointClick) {
+        onPointClick(point, event)
         return
       }
 
@@ -254,21 +205,23 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
             areaOpacity={isDarkMode ? 0.2 : 0.1}
-            margin={mergedConfig.margin}
+            margin={adjustedMargin}
             xScale={{ type: 'time', format: '%Y-%m-%dT%H:%M:%SZ', useUTC: true }}
             xFormat="time:%Y-%m-%d %H:%M:%S"
             yScale={
               {
                 ...mergedConfig.yScale,
-                min: mergedConfig.yScale.min,
-                max: mergedConfig.yScale.max === 'auto' ? getMaxValue(data) * 1.01 : Number(mergedConfig.yScale.max),
+                // TODO
+                // min: mergedConfig.yScale?.min === 'auto' ? getMinValue(data) * 0.99 : Number(mergedConfig.yScale?.min),
+                // max: mergedConfig.yScale?.max === 'auto' ? getMaxValue(data) * 1.01 : Number(mergedConfig.yScale?.max),
+                min: mergedConfig.yScale?.min,
+                max: mergedConfig.yScale?.max,
                 nice: true,
                 clamp: true
               } as ScaleSpec
             }
-            yFormat={mergedConfig.tooltipConfig.yFormat}
-            axisBottom={{ ...mergedConfig.axisBottom, tickValues: 0 }}
-            curve={curve}
+            yFormat={mergedConfig.toolTip?.yFormat}
+            curve={mergedConfig.curve}
             // Gradient from https://nivo.rocks/storybook/?path=/docs/line--docs
             defs={[
               {
@@ -293,10 +246,12 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
                 match: '*'
               }
             ]}
-            axisLeft={{
-              ...mergedConfig.axisLeft,
-              tickValues: tickValues
-            }}
+            axisBottom={{ ...mergedConfig.axisBottom, tickValues: 0 }}
+            // axisLeft={{
+            //   ...mergedConfig.axisLeft,
+            //   tickValues: tickValues
+            // }}
+            axisLeft={axisLeftConfig}
             layers={[
               (props: CustomLayerProps) =>
                 timeTicksLayer({
@@ -305,7 +260,8 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
                   isDarkMode,
                   width: props.innerWidth,
                   height: props.innerHeight,
-                  enableGridX: mergedConfig.enableGridX!
+                  enableGridX: mergedConfig.enableGridX!,
+                  position: biaxial ? 'top' : 'bottom'
                 }),
               'grid',
               'axes',
@@ -321,11 +277,11 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
             markers={mergedConfig.markers}
             pointSize={mergedConfig.pointSize}
             pointColor={isDarkMode ? '#ffffff' : '#000000'}
-            pointBorderWidth={pointBorderWidth}
+            pointBorderWidth={0}
             pointBorderColor={{ from: 'serieColor' }}
             pointLabelYOffset={-10}
             enableGridY={mergedConfig.enableGridY}
-            colors={getColorBlindSchemeWithBW(isDarkMode)}
+            colors={biaxial ? getColorBlindSchemeWithBW(isDarkMode)[1] : getColorBlindSchemeWithBW(isDarkMode)}
             theme={isDarkMode ? darkTheme : lightTheme}
             onClick={handlePointClick}
             tooltip={(pos: PointTooltipProps) => {
@@ -346,8 +302,8 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
                   containerRef={containerRef as React.RefObject<HTMLDivElement>}
                   instanceName={instanceName}
                   parameterName={wholeParameter?.label || wholeParameter?.denotation}
-                  xName={mergedConfig.tooltipConfig.xName}
-                  yName={mergedConfig.tooltipConfig.yName}
+                  xName={mergedConfig.toolTip?.x}
+                  yName={mergedConfig.toolTip?.y}
                 />
               )
             }}
