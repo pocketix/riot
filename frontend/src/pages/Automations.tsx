@@ -8,6 +8,10 @@ import styled from 'styled-components'
 import tw from 'tailwind-styled-components'
 import AutomationProgramCard from '@/features/automations/AutomationProgramCard'
 import { useState } from 'react'
+import { useQuery } from '@apollo/client'
+import { GET_PROGRMS } from '@/graphql/Queries'
+import { VplProgramsQuery, VplProgramsQueryVariables } from '@/generated/graphql'
+import Spinner from '@/ui/Spinner'
 
 const PageWrapper = styled.div`
   display: flex;
@@ -59,50 +63,17 @@ const ClearButton = tw.button`
   absolute right-2 top-1/2 -translate-y-1/2
 `
 
-const mockPrograms = [
-  {
-    id: '1',
-    name: 'Morning Routine',
-    data: {},
-    referencedValues: [],
-    isRunning: true,
-    lastRun: '2024-05-01 07:00'
-  },
-  {
-    id: '2',
-    name: 'Evening Lights',
-    data: {},
-    referencedValues: [],
-    isRunning: false,
-    lastRun: '2024-05-01 20:15'
-  },
-  {
-    id: '3',
-    name: 'Evening Lights',
-    data: {},
-    referencedValues: [],
-    isRunning: false,
-    lastRun: '2024-05-01 20:15'
-  },
-  {
-    id: '4',
-    name: 'Evening Lights',
-    data: {},
-    referencedValues: [],
-    isRunning: false,
-    lastRun: '2024-05-01 20:15'
-  }
-]
-
 export default function Automations() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
 
-  const handleRun = (programId: string) => {
+  const { data, loading, error } = useQuery<VplProgramsQuery, VplProgramsQueryVariables>(GET_PROGRMS)
+
+  const handleRun = (programId: number) => {
     console.log('Run program with ID:', programId)
   }
 
-  const filteredPrograms = mockPrograms.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+  const filteredPrograms = data?.vplPrograms.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
 
   return (
     <PageWrapper>
@@ -128,11 +99,17 @@ export default function Automations() {
           </div>
         </TopBar>
 
-        <Grid>
-          {filteredPrograms.map((program) => (
-            <AutomationProgramCard key={program.id} program={program} onRun={handleRun} />
-          ))}
-        </Grid>
+        {error ? (
+          <p>Error:{error.message}</p>
+        ) : loading ? (
+          <Spinner />
+        ) : (
+          <Grid>
+            {filteredPrograms?.map((program) => (
+              <AutomationProgramCard key={program.id} program={program} onRun={handleRun} />
+            ))}
+          </Grid>
+        )}
       </Container>
     </PageWrapper>
   )

@@ -6,7 +6,6 @@ interface ResponsiveTooltipProps {
   content: string | ReactNode
   className?: string
   contentClassName?: string
-  maxWidth?: string
   align?: 'center' | 'start' | 'end'
   side?: 'top' | 'right' | 'bottom' | 'left'
   sideOffset?: number
@@ -20,7 +19,6 @@ export const ResponsiveTooltip = ({
   children,
   className,
   contentClassName,
-  maxWidth = '200px',
   align = 'center',
   side = 'top',
   sideOffset = 5
@@ -68,11 +66,12 @@ export const ResponsiveTooltip = ({
           </div>
         </TooltipTrigger>
         <TooltipContent
-          className={cn('!p-3', !content ? 'hidden' : '', contentClassName)}
-          style={{ maxWidth }}
+          className={cn('max-w-[90vw] break-all pt-0', !content ? 'hidden' : '', contentClassName)}
           align={align}
           side={side}
           sideOffset={sideOffset}
+          avoidCollisions={true}
+          collisionPadding={10}
         >
           <div className="inline-block">{formattedContent}</div>
         </TooltipContent>

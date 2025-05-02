@@ -3,12 +3,13 @@ import { BulletCardConfig } from '@/schemas/dashboard/visualizations/BulletChart
 import { EntityCardConfig } from '@/schemas/dashboard/visualizations/EntityCardBuilderSchema'
 import { TableCardConfig } from '@/schemas/dashboard/visualizations/TableBuilderSchema'
 import { SwitchCardConfig } from '@/schemas/dashboard/visualizations/SwitchBuilderSchema'
+import { SequentialStatesCardConfig } from '@/schemas/dashboard/visualizations/SequentialStatesBuilderSchema'
 
-export type AllConfigTypes = ChartCardConfig | BulletCardConfig | EntityCardConfig | TableCardConfig | SwitchCardConfig
-
+export type AllConfigTypes = ChartCardConfig | BulletCardConfig | EntityCardConfig | TableCardConfig | SwitchCardConfig | SequentialStatesCardConfig
+export type VisualizationTypes = 'line' | 'switch' | 'table' | 'bullet' | 'entitycard' | 'seqstates'
 export type GridItem<ConfigType extends AllConfigTypes> = {
   layoutID?: string
-  visualization: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard'
+  visualization: VisualizationTypes
   visualizationConfig: BuilderResult<ConfigType>
 }
 

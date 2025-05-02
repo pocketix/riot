@@ -26,10 +26,12 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { Pencil } from 'lucide-react'
 import { SwitchCardBuilderController } from '../builders/SwitchCardBuilderController'
 import { SwitchCardConfig } from '@/schemas/dashboard/visualizations/SwitchBuilderSchema'
+import { SequentialStatesBuilderController } from '../builders/SequentialStatesBuilderController'
+import { SequentialStatesCardConfig } from '@/schemas/dashboard/visualizations/SequentialStatesBuilderSchema'
 
 export interface CardEditDialogProps<ConfigType extends AllConfigTypes> {
   config?: ConfigType
-  visualizationType: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard'
+  visualizationType: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard' | 'seqstates'
   onSave: (result: BuilderResult<ConfigType>) => void
 }
 
@@ -85,6 +87,15 @@ export function CardEditDialog<ConfigType extends AllConfigTypes>({
           <EntityCardBuilderController
             config={config as EntityCardConfig}
             onDataSubmit={(data: BuilderResult<EntityCardConfig>) => handleSave(data as BuilderResult<ConfigType>)}
+          />
+        )
+      case 'seqstates':
+        return (
+          <SequentialStatesBuilderController
+            config={config as SequentialStatesCardConfig}
+            onDataSubmit={(data: BuilderResult<SequentialStatesCardConfig>) =>
+              handleSave(data as BuilderResult<ConfigType>)
+            }
           />
         )
       default:

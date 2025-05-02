@@ -11,11 +11,20 @@ interface timeTicksLayerProps {
   data: readonly Datum[]
   isDarkMode: boolean
   enableGridX: boolean
+  position?: 'top' | 'bottom'
 }
 
 const timeTicksCache = new Map<string, Date[]>()
 
-export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enableGridX }: timeTicksLayerProps) => {
+export const timeTicksLayer = ({
+  xScale,
+  height,
+  width,
+  data,
+  isDarkMode,
+  enableGridX,
+  position
+}: timeTicksLayerProps) => {
   const [minRange, maxRange] = xScale.range()
 
   const startDate = new Date(data[0]?.x!)
@@ -47,26 +56,27 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
       return pos >= minRange && pos <= maxRange
     })
 
-    if (visibleTicks[0].getMonth() !== visibleTicks[visibleTicks.length - 1].getMonth()) {
-      // if not all the ticks are within the same month,
-      // D3 displays the last day of the first month and the first day of the second month
-      // only keep the first day of the second month in these cases
+    // TODO? doesnt seem to be an issue anymore ? 
+    // if (visibleTicks[0].getMonth() !== visibleTicks[visibleTicks.length - 1].getMonth()) {
+    //   // if not all the ticks are within the same month,
+    //   // D3 displays the last day of the first month and the first day of the second month
+    //   // only keep the first day of the second month in these cases
 
-      for (let i = 0; i < visibleTicks.length - 1; i++) {
-        const currentDate = visibleTicks[i]
-        const nextDate = visibleTicks[i + 1]
+    //   for (let i = 0; i < visibleTicks.length - 1; i++) {
+    //     const currentDate = visibleTicks[i]
+    //     const nextDate = visibleTicks[i + 1]
 
-        if (
-          currentDate.getDate() === new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() &&
-          nextDate.getDate() === 1
-        ) {
-          if (currentDate.getMonth() !== nextDate.getMonth()) {
-            visibleTicks.splice(i, 1)
-            i--
-          }
-        }
-      }
-    }
+    //     if (
+    //       currentDate.getDate() === new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() &&
+    //       nextDate.getDate() === 1
+    //     ) {
+    //       if (currentDate.getMonth() !== nextDate.getMonth()) {
+    //         visibleTicks.splice(i, 1)
+    //         i--
+    //       }
+    //     }
+    //   }
+    // }
 
     timeTicksCache.set(cacheKey, visibleTicks)
     return visibleTicks
@@ -76,14 +86,20 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
     <g>
       {timeTicks.map((date, i) => {
         const x = xScale(date)
+        const isTop = position === 'top'
+        const tickY1 = isTop ? 0 : height
+        const tickY2 = isTop ? -5 : height + 5
+        const gridY1 = isTop ? 0 : 0
+        const gridY2 = isTop ? height : height
+        const labelY = isTop ? -10 : height + 16
 
         return (
           <g key={`xAxis-highlighted-${date.getTime()}-${i}`} transform={`translate(${x}, 0)`}>
             <line
               x1={0}
               x2={0}
-              y1={height}
-              y2={height + 5}
+              y1={tickY1}
+              y2={tickY2}
               stroke={isDarkMode ? darkTheme.axis.ticks.line.stroke : lightTheme.axis.ticks.line.stroke}
               strokeWidth={isDarkMode ? darkTheme.axis.ticks.line.strokeWidth : lightTheme.axis.ticks.line.strokeWidth}
             />
@@ -91,8 +107,8 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
               <line
                 x1={0}
                 x2={0}
-                y1={0}
-                y2={height}
+                y1={gridY1}
+                y2={gridY2}
                 stroke={isDarkMode ? darkTheme.grid.line.stroke : lightTheme.grid.line.stroke}
                 strokeWidth={isDarkMode ? darkTheme.grid.line.strokeWidth : lightTheme.grid.line.strokeWidth}
               />
@@ -102,8 +118,8 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
                 <line
                   x1={0}
                   x2={0}
-                  y1={0}
-                  y2={height}
+                  y1={gridY1}
+                  y2={gridY2}
                   stroke={isDarkMode ? darkTheme.axis.ticks.text.fill : lightTheme.axis.ticks.text.fill}
                   strokeWidth={1}
                   strokeDasharray="3,2"
@@ -116,7 +132,7 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
                     fontWeight: date.getDate() === 1 ? '800' : '600',
                     fontFamily: 'sans-serif'
                   }}
-                  y={height + 16}
+                  y={labelY}
                 >
                   {timeFormat('%b %d')(date)}
                 </text>
@@ -129,7 +145,7 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
                   fill: isDarkMode ? darkTheme.axis.ticks.text.fill : lightTheme.axis.ticks.text.fill,
                   fontFamily: 'sans-serif'
                 }}
-                y={height + 16}
+                y={labelY}
               >
                 {timeFormat('%H:%M')(date)}
               </text>
@@ -142,7 +158,7 @@ export const timeTicksLayer = ({ xScale, height, width, data, isDarkMode, enable
 }
 
 export const getMaxValue = (data: Serie[]) => {
-  let max = 0
+  let max = Number.MIN_VALUE
   data.forEach((serie) => {
     serie.data.forEach((datum) => {
       if (datum.y !== null && Number(datum.y) > max) {
@@ -152,4 +168,17 @@ export const getMaxValue = (data: Serie[]) => {
   })
 
   return max
+}
+
+export const getMinValue = (data: Serie[]) => {
+  let min = Number.MAX_VALUE
+  data.forEach((serie) => {
+    serie.data.forEach((datum) => {
+      if (datum.y !== null && Number(datum.y) < min) {
+        min = Number(datum.y)
+      }
+    })
+  })
+
+  return min
 }

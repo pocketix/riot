@@ -3,11 +3,14 @@ import { SwitchCardConfig, switchCardSchema } from '@/schemas/dashboard/visualiz
 import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
 import { useParameterSnapshot } from '@/hooks/useParameterSnapshot'
 import { SwitchCardView } from './SwitchCardView'
+import { useInstances } from '@/context/InstancesContext'
 
 type SwitchCardProps = BaseVisualizationCardProps<SwitchCardConfig>
 
 export const SwitchCardController = (props: SwitchCardProps) => {
   const [error, setError] = useState<string | null>(null)
+  const { getInstanceById, getParameterByIds } = useInstances()
+  const [errorInfo, setErrorInfo] = useState<{ instanceName: string; parameterName: string } | undefined>(undefined)
 
   const switchConfig = useMemo(() => {
     if (props.configuration && props.isVisible) {
@@ -24,6 +27,7 @@ export const SwitchCardController = (props: SwitchCardProps) => {
     switchConfig?.booleanSettings.instanceID!,
     switchConfig?.booleanSettings.parameter.id!
   )
+
   const { value: percentageValue } = useParameterSnapshot(
     switchConfig?.percentualSettings?.instanceID!,
     switchConfig?.percentualSettings?.parameter?.id!
@@ -32,6 +36,7 @@ export const SwitchCardController = (props: SwitchCardProps) => {
   const percentage = useMemo(() => {
     if (!switchConfig?.percentualSettings?.instanceID || percentageValue === undefined) return null
 
+    if (!percentageValue) return null
     const numValue = Number(percentageValue)
     if (isNaN(numValue)) return null
 
@@ -48,7 +53,7 @@ export const SwitchCardController = (props: SwitchCardProps) => {
     switchConfig?.percentualSettings?.instanceID
   ])
 
-  const [internalIsOn, setInternalIsOn] = useState(() => stateValue)
+  const [internalIsOn, setInternalIsOn] = useState(() => (stateValue === null ? false : stateValue))
   const [internalPercentage, setInternalPercentage] = useState(() => percentage)
   const prevStateValue = useRef(stateValue)
   const prevPercentageValue = useRef(percentage)
@@ -57,7 +62,7 @@ export const SwitchCardController = (props: SwitchCardProps) => {
 
   useEffect(() => {
     if (stateValue !== prevStateValue.current) {
-      setInternalIsOn(stateValue)
+      setInternalIsOn(stateValue!)
       prevStateValue.current = stateValue
       lastChangedByUser.current = false
     }
@@ -90,14 +95,28 @@ export const SwitchCardController = (props: SwitchCardProps) => {
   }
 
   useEffect(() => {
-    if (stateValue === undefined) {
+    if (stateValue === null) {
       setError('Failed to load state data')
+      setErrorInfo({
+        instanceName: getInstanceById(switchConfig?.booleanSettings.instanceID!)?.userIdentifier!,
+        parameterName: getParameterByIds(
+          switchConfig?.booleanSettings.instanceID!,
+          switchConfig?.booleanSettings.parameter.id!
+        )?.denotation!
+      })
     } else if (
-      percentageValue === undefined &&
+      percentageValue === null &&
       switchConfig?.percentualSettings?.instanceID &&
       switchConfig?.percentualSettings?.parameter?.id
     ) {
       setError('Failed to load percentage data')
+      setErrorInfo({
+        instanceName: getInstanceById(switchConfig?.percentualSettings.instanceID!)?.userIdentifier!,
+        parameterName: getParameterByIds(
+          switchConfig?.percentualSettings.instanceID!,
+          switchConfig?.percentualSettings.parameter.id!
+        )?.denotation!
+      })
     } else {
       setError(null)
     }
@@ -115,6 +134,7 @@ export const SwitchCardController = (props: SwitchCardProps) => {
       percentage={internalPercentage as number}
       isLoading={false}
       error={error}
+      errorInfo={errorInfo}
       switchConfig={props.configuration?.visualizationConfig}
       onPercentualChange={handlePercentualChange}
       onStateChange={handleStateChange}

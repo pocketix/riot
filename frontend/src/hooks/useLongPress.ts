@@ -63,14 +63,17 @@ export function useLongPress(
   // Mouse
   const handleMouseDown: React.MouseEventHandler = (e) => {
     if (lastEventType.current === 'touch') return
+    if (e.button !== 0) return // only react to left mouse button clicks
     startGeneric(e.clientX, e.clientY, 'mouse')
   }
   const handleMouseMove: React.MouseEventHandler = (e) => {
     if (lastEventType.current === 'touch') return
+    if (e.button !== 0) return
     moveGeneric(e.clientX, e.clientY)
   }
-  const handleMouseUp: React.MouseEventHandler = () => {
+  const handleMouseUp: React.MouseEventHandler = (e) => {
     if (lastEventType.current === 'touch') return
+    if (e.button !== 0) return
     endGeneric('mouse')
   }
 

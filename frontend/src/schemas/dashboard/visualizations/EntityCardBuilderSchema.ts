@@ -84,6 +84,7 @@ export const entityCardSchema = z.object({
               }
               return data
             }),
+          showRealtime: z.boolean().optional(),
           timeFrame: z.string().optional()
         })
         .superRefine((data, ctx) => {

@@ -10,7 +10,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { TbTrash } from 'react-icons/tb'
-import { Label } from '@/components/ui/label'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
 import { TimeFrameSelector } from './components/time-frame-selector'
@@ -23,6 +22,7 @@ import { useRef, useState } from 'react'
 import { TableColumnData } from '../cards/TableCardController'
 import IconPicker from '@/ui/IconPicker'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
+import { ValueSymbolPicker } from './components/value-symbol-picker'
 
 export interface TableCardBuilderViewProps {
   config?: TableCardConfig
@@ -48,7 +48,6 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
       icon: '',
       tableTitle: 'Sensors',
       timeFrame: '24',
-      decimalPlaces: 1,
       columns: [
         {
           header: '',
@@ -58,6 +57,8 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
       rows: [
         {
           name: '',
+          decimalPlaces: 0,
+          valueSymbol: '',
           instance: { uid: '', id: null },
           parameter: { id: null, denotation: '' }
         }
@@ -167,43 +168,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="decimalPlaces"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      <div className="inline-flex gap-1">
-                        Number of decimal places
-                        <ResponsiveTooltip
-                          content={
-                            <>
-                              <p className="text-sm">The number of decimal places to display in the table.</p>
-                              <p className="text-sm text-muted-foreground">
-                                In the final visualization, trailing zeros will be removed.
-                              </p>
-                            </>
-                          }
-                        >
-                          <InfoIcon size={16} />
-                        </ResponsiveTooltip>
-                      </div>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        value={field.value}
-                        onChange={(e) => {
-                          field.onChange(Number(e.target.value))
-                        }}
-                        type="number"
-                        min={0}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
               <FormField
                 control={form.control}
                 name="timeFrame"
@@ -281,7 +246,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Label>
+                                <FormLabel>
                                   Header
                                   <Input
                                     value={field.value}
@@ -289,7 +254,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                                     placeholder="Header"
                                     className="h-9 w-full"
                                   />
-                                </Label>
+                                </FormLabel>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -301,7 +266,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Label>
+                                <FormLabel>
                                   Function
                                   <AggregateFunctionCombobox
                                     value={field.value}
@@ -310,7 +275,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                                       props.fetchSingleColumnData(form.getValues(), index)
                                     }}
                                   />
-                                </Label>
+                                </FormLabel>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -344,7 +309,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                       {rowIndex !== 0 && <Separator className="my-2" />}
                       <div className="flex w-full items-center justify-between gap-4">
                         <h4 className="font-semibold">Row {rowIndex + 1}</h4>
-                        <div className="flex gap-1">
+                        <div className="mt-2 flex gap-1">
                           <Button
                             type="button"
                             variant="ghost"
@@ -392,7 +357,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Label>
+                                <FormLabel>
                                   Row Name
                                   <Input
                                     value={field.value}
@@ -404,7 +369,72 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                                     placeholder="Row Name"
                                     className="w-full"
                                   />
-                                </Label>
+                                </FormLabel>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`rows.${rowIndex}.decimalPlaces`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                <div className="inline-flex gap-1">
+                                  Number of decimal places
+                                  <ResponsiveTooltip
+                                    content={
+                                      <>
+                                        <p className="text-sm">The number of decimal places to display in the table.</p>
+                                        <p className="text-sm text-muted-foreground">
+                                          In the final visualization, trailing zeros will be removed.
+                                        </p>
+                                      </>
+                                    }
+                                  >
+                                    <InfoIcon size={16} className="text-muted-foreground" />
+                                  </ResponsiveTooltip>
+                                </div>
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  value={field.value}
+                                  onChange={(e) => {
+                                    field.onChange(Number(e.target.value))
+                                  }}
+                                  type="number"
+                                  min={0}
+                                  placeholder="Enter value..."
+                                  className="!mt-0 w-full"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`rows.${rowIndex}.valueSymbol`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="inline-flex gap-1">
+                                Value Symbol
+                                <ResponsiveTooltip
+                                  content={
+                                    <>
+                                      <p className="text-sm">The symbol to display next to the value.</p>
+                                      <p className="text-sm text-muted-foreground">
+                                        If you want to use a custom symbol, enter it in the input field.
+                                      </p>
+                                    </>
+                                  }
+                                >
+                                  <InfoIcon size={16} className="text-muted-foreground" />
+                                </ResponsiveTooltip>
+                              </FormLabel>
+                              <FormControl>
+                                <ValueSymbolPicker value={field.value!} onChange={field.onChange} className="!mt-0" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -416,7 +446,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Label>
+                                <FormLabel>
                                   Instance
                                   <SingleInstanceCombobox
                                     onValueChange={(value) => {
@@ -425,7 +455,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                                     }}
                                     value={field.value.id}
                                   />
-                                </Label>
+                                </FormLabel>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -437,7 +467,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Label>
+                                <FormLabel>
                                   Parameter
                                   <SingleParameterCombobox
                                     options={
@@ -458,7 +488,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                                     }}
                                     disabled={!form.watch(`rows.${rowIndex}.instance.uid`)}
                                   />
-                                </Label>
+                                </FormLabel>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -470,7 +500,12 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                   <Button
                     type="button"
                     onClick={() =>
-                      appendRow({ name: '', instance: { uid: '', id: null }, parameter: { id: null, denotation: '' } })
+                      appendRow({
+                        name: '',
+                        instance: { uid: '', id: null },
+                        parameter: { id: null, denotation: '' },
+                        decimalPlaces: 0
+                      })
                     }
                     variant={'outline'}
                     size={'sm'}

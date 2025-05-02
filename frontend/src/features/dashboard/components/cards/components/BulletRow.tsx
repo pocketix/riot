@@ -11,7 +11,7 @@ import { ResponsiveTooltip } from '@/components/responsive-tooltip'
 interface BulletRowProps {
   row: BulletCardConfig['rows'][number]
   editModeEnabled: boolean
-  aggregatedData?: Datum
+  aggregatedData?: Datum | null
   aggregateUpdatedAt?: Date
 }
 
@@ -24,10 +24,12 @@ export const BulletRow = ({
   let { value, lastUpdated } = useParameterSnapshot(row.instance.id!, row.parameter.id!)
   const { getInstanceById } = useInstances()
 
-  lastUpdated = aggregatedData !== undefined ? aggregateUpdatedAt! : lastUpdated
+  lastUpdated = aggregatedData !== null ? aggregateUpdatedAt! : lastUpdated
 
-  const chartData: Datum = useMemo(() => {
-    if (aggregatedData) {
+  // Either the aggregated data or the parameter snapshot value
+  // if the chartData is null, an error is displayed
+  const chartData: Datum | null = useMemo(() => {
+    if (aggregatedData !== undefined) {
       return aggregatedData
     }
 
@@ -35,9 +37,12 @@ export const BulletRow = ({
       ? [...row.config.ranges.flatMap((range) => [range.min, range.max])]
       : [0, 0, -1, -1]
 
+    // Parameter snapshot returned null
+    if (value === null) return null
+
     return {
       id: row.config.name,
-      measures: [Number(value) || 0],
+      measures: [Number(value)],
       markers: row.config.markers,
       ranges: ranges
     }
@@ -48,20 +53,21 @@ export const BulletRow = ({
   if (!chartData) {
     return (
       <ChartContainer $editModeEnabled={editModeEnabled}>
-        <Skeleton className="h-full w-full p-2" disableAnimation>
+        <Skeleton className="h-full w-full p-0" disableAnimation>
           <ResponsiveTooltip
             content={
-              <div className="flex max-w-28 flex-col">
+              <div className="flex flex-col items-center justify-center">
                 <span className="font-semibold text-destructive">No data available</span>
                 <span className="break-words text-xs">Device: {instanceName}</span>
                 <span className="text-xs">Parameter: {row.config.name}</span>
               </div>
             }
+            className="h-full w-full"
           >
-            <div className="flex w-full flex-col items-center justify-center">
-              <span className="w-full truncate text-center font-bold text-destructive">Data not available</span>
-              <span className="w-full truncate text-center text-xs text-gray-500">Device: {instanceName}</span>
-              <span className="w-full truncate text-center text-xs text-gray-500">Parameter: {row.config.name}</span>
+            <div className="flex h-full w-full flex-col items-center justify-center">
+              <span className="flex h-full w-full items-center justify-center text-center font-bold text-destructive">
+                Data unavailable
+              </span>
             </div>
           </ResponsiveTooltip>
         </Skeleton>

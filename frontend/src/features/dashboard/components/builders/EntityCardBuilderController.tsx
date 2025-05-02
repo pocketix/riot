@@ -100,8 +100,8 @@ export function EntityCardBuilderController({ onDataSubmit, config }: EntityCard
     const result: EntityCardBuilderResult = {
       config: values,
       sizing: {
-        w: 1,
-        h: Math.max(Math.ceil(height / 20), 3)
+        h: Math.max(Math.ceil(height / 20), 3),
+        ...(config ? {} : { w: 1 })
       }
     }
     onDataSubmit(result)

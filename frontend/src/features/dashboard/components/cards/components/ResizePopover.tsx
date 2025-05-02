@@ -9,10 +9,10 @@ export interface ResizePopoverProps {
   minValue?: number
   currentValue?: number
   rightEdge?: boolean
-  highlight: 'width' | 'height'
   onDecrease?: () => void
   onIncrease?: () => void
-  setHighlight: (highlight: 'width' | 'height' | null) => void
+  isOpen: boolean
+  onOpenChange: (isOpen: boolean) => void
 }
 
 export function ResizePopover({
@@ -23,8 +23,8 @@ export function ResizePopover({
   maxValue,
   minValue,
   rightEdge,
-  setHighlight,
-  highlight
+  isOpen,
+  onOpenChange
 }: ResizePopoverProps) {
   const increaseDisabled = currentValue === maxValue || rightEdge
   const decreaseDisabled = currentValue === minValue
@@ -35,7 +35,7 @@ export function ResizePopover({
   }
 
   return (
-    <Popover onOpenChange={(isOpen) => setHighlight(isOpen ? highlight : null)}>
+    <Popover open={isOpen} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         <Arrow disabled={false}>{children}</Arrow>
       </PopoverTrigger>

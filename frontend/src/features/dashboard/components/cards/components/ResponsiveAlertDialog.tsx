@@ -65,7 +65,13 @@ export function ResponsiveAlertDialog(props: ResponsiveAlertDialogProps) {
     return (
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogTrigger asChild>
-          {props.children ? props.children : <TbTrash className="cursor-pointer text-destructive" />}
+          {props.children ? (
+            props.children
+          ) : (
+            <span>
+              <TbTrash className="cursor-pointer text-destructive" />
+            </span>
+          )}
         </AlertDialogTrigger>
         <AlertDialogContent ref={dialogRef}>
           <AlertDialogHeader>
@@ -87,7 +93,13 @@ export function ResponsiveAlertDialog(props: ResponsiveAlertDialogProps) {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        {props.children ? props.children : <TbTrash className="cursor-pointer text-destructive" />}
+        {props.children ? (
+          props.children
+        ) : (
+          <span>
+            <TbTrash className="cursor-pointer text-destructive" />
+          </span>
+        )}
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm">

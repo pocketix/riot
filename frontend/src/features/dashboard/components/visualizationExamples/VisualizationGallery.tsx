@@ -6,9 +6,11 @@ import { ResponsiveBulletChart } from '../visualizations/ResponsiveBulletChart'
 import { SwitchVisualization } from '../visualizations/SwitchVisualization'
 import { ResponsiveEntityTable } from '../visualizations/ResponsiveEntityTable'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
+import { SequentialStatesVisualization } from '../devices/components/SequentialStatesVisualization'
+import { VisualizationTypes } from '@/types/dashboard/gridItem'
 
 export interface VisualizationGalleryProps {
-  setSelectedVisualization: (Visualization: 'line' | 'switch' | 'table' | 'bullet' | 'entitycard') => void
+  setSelectedVisualization: (visualization: VisualizationTypes) => void
   selectedVisualization: string | null
 }
 
@@ -33,6 +35,29 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
     {
       x: new Date(new Date(new Date().getTime() - 1000 * 60 * 60 * 5).toISOString().split('.')[0] + 'Z'),
       y: 30.3
+    }
+  ]
+
+  const seqStatesData = [
+    {
+      x: new Date(new Date(new Date().getTime() - 1000 * 60 * 60).toISOString().split('.')[0] + 'Z'),
+      y: 'ON'
+    },
+    {
+      x: new Date(new Date(new Date().getTime() - 1000 * 60 * 60 * 2).toISOString().split('.')[0] + 'Z'),
+      y: 'OFF'
+    },
+    {
+      x: new Date(new Date(new Date().getTime() - 1000 * 60 * 60 * 3).toISOString().split('.')[0] + 'Z'),
+      y: 'OFF'
+    },
+    {
+      x: new Date(new Date(new Date().getTime() - 1000 * 60 * 60 * 4).toISOString().split('.')[0] + 'Z'),
+      y: 'OFF'
+    },
+    {
+      x: new Date(new Date(new Date().getTime() - 1000 * 60 * 60 * 5).toISOString().split('.')[0] + 'Z'),
+      y: 'ON'
     }
   ]
 
@@ -157,7 +182,8 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
           id: 1,
           denotation: 'temperature'
         },
-        visualization: 'immediate'
+        visualization: 'immediate',
+        valueSymbol: '°C'
       },
       {
         name: 'Sensor1',
@@ -249,14 +275,23 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
               }
             }))
           }}
+          mock={true}
           sparklineData={dataLine}
         />
       </Card>
       <Card
-        className={`${selectedVisualization === 'switch' ? 'border-2 border-blue-500' : 'border-2'} box-border h-fit cursor-pointer p-1`}
+        className={`${selectedVisualization === 'switch' ? 'border-2 border-blue-500' : 'border-2'} relative box-border h-fit cursor-pointer p-1`}
         onClick={() => setSelectedVisualization('switch')}
       >
+        <div className="absolute inset-0 z-10" />
         <SwitchVisualization isOn={true} percentage={50} title="Spotlight" icon={IconComponent} />
+      </Card>
+      <Card
+        className={`${selectedVisualization === 'seqstates' ? 'border-2 border-blue-500' : 'border-2'} relative box-border h-[70px] cursor-pointer p-1`}
+        onClick={() => setSelectedVisualization('seqstates')}
+      >
+        <div className="absolute inset-0 z-10" />
+        <SequentialStatesVisualization data={seqStatesData} />
       </Card>
     </div>
   )

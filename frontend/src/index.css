@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  /* Used for inputs with type='time' to make the clock icon dark-mode compatible */
+  .invert-time-icon::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

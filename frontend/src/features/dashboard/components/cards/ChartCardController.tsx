@@ -9,11 +9,13 @@ import {
 } from '@/generated/graphql'
 import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
 import { ChartCardView } from './ChartCardView'
+import { useInstances } from '@/context/InstancesContext'
 
 type ChartCardProps = BaseVisualizationCardProps<ChartCardConfig>
 
 export const ChartCardController = (props: ChartCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
+  const { getInstanceById } = useInstances()
   const [data, setData] = useState<Serie[]>([])
   const [chartConfig, setChartConfig] = useState<ChartCardConfig>()
   const [unavailableData, setUnavailableData] = useState<{ device: string; parameter: string }[]>([])
@@ -132,7 +134,8 @@ export const ChartCardController = (props: ChartCardProps) => {
         }
 
         if (paramData.data?.length === 0) {
-          unavailableItems.push({ device: instance.uid, parameter: param.denotation })
+          const instanceName = getInstanceById(instance.id!)?.userIdentifier || instance.uid
+          unavailableItems.push({ device: instanceName, parameter: param.denotation })
         } else {
           result.push(paramData)
         }

@@ -7,8 +7,7 @@ import { Datum } from '@nivo/bullet'
 
 type BulletCardProps = BaseVisualizationCardProps<BulletCardConfig>
 export type BulletRowData = {
-  rowIndex: number
-  data: Datum
+  data: Datum | null
   updatedAt?: Date
 }
 
@@ -45,6 +44,14 @@ export const BulletCardController = (props: BulletCardProps) => {
     }
   }, [props.configuration])
 
+  function setRowData(rowIndex: number, rowData: BulletRowData) {
+    setData(prevData => {
+      const newData = [...prevData]
+      newData[rowIndex] = rowData
+      return newData
+    })
+  }
+
   const fetchRowData = async (row: BulletCardConfig['rows'][number], rowIndex: number) => {
     if (!chartConfig || !props.isVisible || row.config.function === 'last') return
 
@@ -67,47 +74,63 @@ export const BulletCardController = (props: BulletCardProps) => {
         }
       })
 
-      if (!result.data?.statisticsQuerySensorsWithFields) return
+      if (!result.data?.statisticsQuerySensorsWithFields) {
+        setRowData(rowIndex, {
+          updatedAt: new Date(),
+          data: null
+        })
+        setIsLoading(false)
+        return
+      }
 
       const sensorData = result.data.statisticsQuerySensorsWithFields[0]
-      if (!sensorData?.data) return
+      if (!sensorData?.data) {
+        setRowData(rowIndex, {
+          updatedAt: new Date(),
+          data: null
+        })
+        setIsLoading(false)
+        return
+      }
 
       try {
         const parsedValue = JSON.parse(sensorData.data)
         const value = parsedValue[row.parameter.denotation]
 
-        if (value === undefined) return
-
-        setData((prevData) => {
-          const newData = [...prevData]
-
-          const existingIndex = newData.findIndex((item) => item.rowIndex === rowIndex)
-          const newRowData = {
-            rowIndex,
+        if (value === undefined) {
+          setRowData(rowIndex, {
             updatedAt: new Date(),
-            data: {
-              id: row.config.name,
-              measures: [value],
-              markers: row.config.markers,
-              ranges: row.config.ranges ? row.config.ranges.flatMap((range) => [range.min, range.max]) : [0, 0]
-            }
-          }
+            data: null
+          })
+          setIsLoading(false)
+          return
+        }
 
-          if (existingIndex >= 0) {
-            newData[existingIndex] = newRowData
-          } else {
-            newData.push(newRowData)
+        setRowData(rowIndex, {
+          updatedAt: new Date(),
+          data: {
+            id: row.config.name,
+            measures: [value],
+            markers: row.config.markers,
+            ranges: row.config.ranges ? row.config.ranges.flatMap((range) => [range.min, range.max]) : [0, 0]
           }
-
-          return newData
         })
-
         setIsLoading(false)
       } catch (err) {
         console.error(`Error parsing data for bullet row`, err)
+        setRowData(rowIndex, {
+          updatedAt: new Date(),
+          data: null
+        })
+        setIsLoading(false)
       }
     } catch (error) {
       console.error(`Fetch error for bullet row`, error)
+      setRowData(rowIndex, {
+        updatedAt: new Date(),
+        data: null
+      })
+      setIsLoading(false)
     }
   }
 
