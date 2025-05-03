@@ -1,5 +1,6 @@
 # Ingore the IDE folder
 .idea
+.DS_Store
 
 # Ignore most of the docker directory contents
 /docker/mongo-data
@@ -8,9 +9,18 @@
 /docker/postgres-data
 
 # Ignore some front-end directories
-frontend/dist/
-frontend/.parcel-cache/
+frontend-old/dist/
+frontend-old/.parcel-cache/
+frontend-old/node_modules
+
+frontend/.DS_Store
+frontend/*.local
+frontend/.vscode/*
 frontend/node_modules
+frontend/.env
+frontend/dist
+.vscode/launch.json
 
 # Ignore backend executables
 backend/bin
+.vscode/settings.json

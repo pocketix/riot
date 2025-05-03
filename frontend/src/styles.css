@@ -1,0 +1,49 @@
+.sparkle-1 {
+  position: fixed;
+  z-index: -1;
+  width: 400px;
+  height: 200px;
+  top: -5em;
+  left: -10em;
+  opacity: 0.5;
+  filter: blur(80px);
+  background: radial-gradient(circle, #fe53bb, #dc00dc00);
+
+  @media (min-width: 1024px) {
+    left: 5em;
+  }
+}
+
+.sparkle-2 {
+  position: fixed;
+  z-index: -1;
+  width: 400px;
+  height: 200px;
+  top: 18em;
+  right: -10em;
+  opacity: 0.5;
+  filter: blur(80px);
+  background: radial-gradient(circle, #0081f1, #dc00dc00);
+
+  @media (min-width: 1024px) {
+    top: 18em;
+    right: 0;
+  }
+}
+
+.sparkle-3 {
+  position: fixed;
+  z-index: -1;
+  width: 400px;
+  height: 200px;
+  bottom: -5em;
+  left: -10em;
+  opacity: 0.5;
+  filter: blur(80px);
+  background: radial-gradient(circle, #08f7fe, #dc00dc00);
+
+  @media (min-width: 1024px) {
+    bottom: -10em;
+    left: 20em;
+  }
+}

@@ -74,7 +74,7 @@ type SDParameterEntity struct {
 	ID                  uint32                      `gorm:"column:id;primaryKey;not null"`
 	SDTypeID            uint32                      `gorm:"column:sd_type_id;not null"`
 	Denotation          string                      `gorm:"column:denotation;not null"`
-	Label      string `gorm:"column:label"`
+	Label               string                      `gorm:"column:label"`
 	Type                string                      `gorm:"column:type;not null"`
 	SDParameterSnapshot []SDParameterSnapshotEntity `gorm:"foreignKey:SDParameterID;constraint:OnDelete:CASCADE"`
 }
@@ -102,12 +102,13 @@ func (SDInstanceEntity) TableName() string {
 }
 
 type SDParameterSnapshotEntity struct {
-	SDInstanceID  uint32    `gorm:"column:sd_instance_id;primaryKey;not null"`
-	SDParameterID uint32    `gorm:"column:sd_parameter_id;primaryKey;not null"`
-	String        *string   `gorm:"column:string"`
-	Number        *float64  `gorm:"column:number"`
-	Boolean       *bool     `gorm:"column:boolean"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;autoUpdateTime"`
+	SDInstanceID  uint32                           `gorm:"column:sd_instance_id;primaryKey;not null"`
+	SDParameterID uint32                           `gorm:"column:sd_parameter_id;primaryKey;not null"`
+	String        *string                          `gorm:"column:string"`
+	Number        *float64                         `gorm:"column:number"`
+	Boolean       *bool                            `gorm:"column:boolean"`
+	UpdatedAt     time.Time                        `gorm:"column:updated_at;autoUpdateTime"`
+	VPLPrograms   []VPLProgramSDSnapshotLinkEntity `gorm:"many2many:link;joinForeignKey:SDInstanceID,SDParameterID;joinReferences:ProgramID"`
 }
 
 func (SDParameterSnapshotEntity) TableName() string {
@@ -192,11 +193,11 @@ func (UserConfigEntity) TableName() string {
 }
 
 type SDCommandEntity struct {
-	ID          uint32 `gorm:"column:id;primaryKey;not null"`
-	SDTypeID    uint32 `gorm:"column:sd_type_id;not null"` // One type of smart device has the same set of commands
-	Name        string `gorm:"column:denotation;not null"`
-	Type        string `gorm:"column:type;not null"`
-	Description string `gorm:"column:payload;not null"`
+	ID       uint32 `gorm:"column:id;primaryKey;not null"`
+	SDTypeID uint32 `gorm:"column:sd_type_id;not null;uniqueIndex:idx_typeid_denotation"` // One type of smart device has the same set of commands
+	Name     string `gorm:"column:denotation;not null;uniqueIndex:idx_typeid_denotation"`
+	Type     string `gorm:"column:type;not null"`
+	Payload  string `gorm:"column:payload;not null"`
 }
 
 func (SDCommandEntity) TableName() string {
@@ -214,4 +215,27 @@ type SDCommandInvocationEntity struct {
 
 func (SDCommandInvocationEntity) TableName() string {
 	return "command_invocation"
+}
+
+type VPLProgramsEntity struct {
+	ID                   uint32                           `gorm:"column:id;primaryKey;not null"`
+	Name                 string                           `gorm:"column:name;not null"`
+	Data                 string                           `gorm:"column:data;type:jsonb;not null"`
+	LastRun              *time.Time                       `gorm:"column:last_run"`
+	Enabled              bool                             `gorm:"column:enabled;not null"`
+	SDParameterSnapshots []VPLProgramSDSnapshotLinkEntity `gorm:"many2many:link;joinForeignKey:ProgramID;joinReferences:SDInstanceID,SDParameterID"`
+}
+
+func (VPLProgramsEntity) TableName() string {
+	return "vpl_programs"
+}
+
+type VPLProgramSDSnapshotLinkEntity struct {
+	ProgramID     uint32 `gorm:"column:program_id;primaryKey;not null"`
+	SDInstanceID  uint32 `gorm:"column:sd_instance_id;primaryKey;not null"`
+	SDParameterID uint32 `gorm:"column:sd_parameter_id;primaryKey;not null"`
+}
+
+func (VPLProgramSDSnapshotLinkEntity) TableName() string {
+	return "vpl_program_sd_snapshot_link"
 }

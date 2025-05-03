@@ -222,16 +222,21 @@ type Query struct {
 }
 
 type SDCommand struct {
-	ID          uint32  `json:"id"`
-	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
-	SdTypeID    uint32  `json:"sdTypeId"`
+	ID       uint32 `json:"id"`
+	Name     string `json:"name"`
+	Payload  string `json:"payload"`
+	SdTypeID uint32 `json:"sdTypeId"`
 }
 
 type SDCommandInput struct {
-	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
-	SdTypeID    uint32  `json:"sdTypeId"`
+	Name     string `json:"name"`
+	Payload  string `json:"payload"`
+	SdTypeID uint32 `json:"sdTypeId"`
+}
+
+type SDCommandInputWithoutType struct {
+	Name    string `json:"name"`
+	Payload string `json:"payload"`
 }
 
 type SDCommandInvocation struct {
@@ -298,6 +303,7 @@ type SDParameterSnapshot struct {
 	Number      *float64 `json:"number,omitempty"`
 	Boolean     *bool    `json:"boolean,omitempty"`
 	UpdatedAt   string   `json:"updatedAt"`
+	VplPrograms []uint32 `json:"vplPrograms"`
 }
 
 type SDType struct {
@@ -306,13 +312,15 @@ type SDType struct {
 	Label      *string       `json:"label,omitempty"`
 	Icon       *string       `json:"icon,omitempty"`
 	Parameters []SDParameter `json:"parameters"`
+	Commands   []SDCommand   `json:"commands"`
 }
 
 type SDTypeInput struct {
-	Denotation string             `json:"denotation"`
-	Label      *string            `json:"label,omitempty"`
-	Icon       *string            `json:"icon,omitempty"`
-	Parameters []SDParameterInput `json:"parameters"`
+	Denotation string                      `json:"denotation"`
+	Label      *string                     `json:"label,omitempty"`
+	Icon       *string                     `json:"icon,omitempty"`
+	Parameters []SDParameterInput          `json:"parameters"`
+	Commands   []SDCommandInputWithoutType `json:"commands"`
 }
 
 type SensorField struct {
@@ -377,6 +385,26 @@ type UserConfig struct {
 
 type UserConfigInput struct {
 	Config string `json:"config"`
+}
+
+type VPLProgram struct {
+	ID                   uint32                `json:"id"`
+	Name                 string                `json:"name"`
+	Data                 string                `json:"data"`
+	LastRun              *string               `json:"lastRun,omitempty"`
+	Enabled              bool                  `json:"enabled"`
+	SdParameterSnapshots []SDParameterSnapshot `json:"sdParameterSnapshots"`
+}
+
+type VPLProgramExecutionResult struct {
+	Program                      VPLProgram            `json:"program"`
+	SdParameterSnapshotsToUpdate []SDParameterSnapshot `json:"sdParameterSnapshotsToUpdate"`
+	SdCommandInvocations         []SDCommandInvocation `json:"SdCommandInvocations"`
+	ExecutionTime                string                `json:"executionTime"`
+	Enabled                      bool                  `json:"enabled"`
+	Success                      bool                  `json:"success"`
+	Error                        *string               `json:"error,omitempty"`
+	ExecutionReason              *string               `json:"executionReason,omitempty"`
 }
 
 type KPINodeType string

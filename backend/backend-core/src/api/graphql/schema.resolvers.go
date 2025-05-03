@@ -120,8 +120,8 @@ func (r *mutationResolver) CreateSDCommand(ctx context.Context, input graphQLMod
 	return createSDCommandResult.Unwrap()
 }
 
-func (r *mutationResolver) UpdateSDCommand(ctx context.Context, id uint32, name *string, description *string) (graphQLModel.SDCommand, error) {
-	updateSDCommandResult := domainLogicLayer.UpdateSDCommand(id, name, description)
+func (r *mutationResolver) UpdateSDCommand(ctx context.Context, id uint32, name *string, payload *string) (graphQLModel.SDCommand, error) {
+	updateSDCommandResult := domainLogicLayer.UpdateSDCommand(id, name, payload)
 	if updateSDCommandResult.IsFailure() {
 		log.Printf("Error occurred (update SD command): %s\n", updateSDCommandResult.GetError().Error())
 		return graphQLModel.SDCommand{}, updateSDCommandResult.GetError()
@@ -153,6 +153,38 @@ func (r *mutationResolver) InvokeSDCommand(ctx context.Context, id uint32) (bool
 		return false, invokeSDCommandResult.GetError()
 	}
 	return true, nil
+}
+
+func (r *mutationResolver) CreateVPLProgram(ctx context.Context, name string, data string) (graphQLModel.VPLProgram, error) {
+	createVPLProgramResult := domainLogicLayer.CreateVPLProgram(name, data)
+	if createVPLProgramResult.IsFailure() {
+		log.Printf("Error occurred (create VPL program): %s\n", createVPLProgramResult.GetError().Error())
+		return graphQLModel.VPLProgram{}, createVPLProgramResult.GetError()
+	}
+
+	return createVPLProgramResult.Unwrap()
+}
+
+func (r *mutationResolver) UpdateVPLProgram(ctx context.Context, id uint32, name string, data string) (graphQLModel.VPLProgram, error) {
+	updateVPLProgramResult := domainLogicLayer.UpdateVPLProgram(id, name, data)
+	if updateVPLProgramResult.IsFailure() {
+		log.Printf("Error occurred (update VPL program): %s\n", updateVPLProgramResult.GetError().Error())
+		return graphQLModel.VPLProgram{}, updateVPLProgramResult.GetError()
+	}
+
+	return updateVPLProgramResult.Unwrap()
+}
+
+func (r *mutationResolver) DeleteVPLProgram(ctx context.Context, id uint32) (bool, error) {
+	if err := domainLogicLayer.DeleteVPLProgram(id); err != nil {
+		log.Printf("Error occurred (delete VPL program): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) ExecuteVPLProgram(ctx context.Context, id uint32) (graphQLModel.VPLProgramExecutionResult, error) {
+	panic(fmt.Errorf("not implemented: ExecuteVPLProgram - executeVPLProgram"))
 }
 
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
@@ -285,6 +317,24 @@ func (r *queryResolver) SdCommandInvocations(ctx context.Context) ([]graphQLMode
 		log.Printf("Error occurred (get SD command invocations): %s\n", getSDCommandInvocationsResult.GetError().Error())
 	}
 	return getSDCommandInvocationsResult.Unwrap()
+}
+
+func (r *queryResolver) VplPrograms(ctx context.Context) ([]graphQLModel.VPLProgram, error) {
+	getVPLProgramsResult := domainLogicLayer.GetVPLPrograms()
+	if getVPLProgramsResult.IsFailure() {
+		log.Printf("Error occurred (get VPL programs): %s\n", getVPLProgramsResult.GetError().Error())
+		return nil, getVPLProgramsResult.GetError()
+	}
+	return getVPLProgramsResult.Unwrap()
+}
+
+func (r *queryResolver) VplProgram(ctx context.Context, id uint32) (graphQLModel.VPLProgram, error) {
+	getVPLProgramResult := domainLogicLayer.GetVPLProgram(id)
+	if getVPLProgramResult.IsFailure() {
+		log.Printf("Error occurred (get VPL program): %s\n", getVPLProgramResult.GetError().Error())
+		return graphQLModel.VPLProgram{}, getVPLProgramResult.GetError()
+	}
+	return getVPLProgramResult.Unwrap()
 }
 
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {

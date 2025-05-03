@@ -2,6 +2,7 @@ package db2dll
 
 import (
 	"fmt"
+
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dbModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
@@ -32,5 +33,6 @@ func ToDLLModelSDType(sdTypeEntity dbModel.SDTypeEntity) dllModel.SDType {
 				SDParameterSnapshots: sharedUtils.Map(sdParameterEntity.SDParameterSnapshot, ToDLLModelSDParameterSnapshot),
 			}
 		}),
+		Commands: sharedUtils.Map(sdTypeEntity.Commands, ToDLLModelSDCommand),
 	}
 }
