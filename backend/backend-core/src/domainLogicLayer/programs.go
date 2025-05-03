@@ -456,6 +456,9 @@ func ConvertSharedModelVPLProgramExecuteToDLLModel(program sharedModel.VPLInterp
 		},
 		SDParameterSnapshotList: SDParameterSnapshotList,
 		SDCommandInvocationList: SDCommandInvocationList,
+		ExecutionTime:           time.Now().Format(time.RFC3339),
+		Enabled:                 true,
+		Success:                 true,
 	}, nil
 }
 
