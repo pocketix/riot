@@ -1,5 +1,5 @@
 # Stage 1: Build the React application
-FROM node:20.12.2 AS builder
+FROM --platform=$BUILDPLATFORM node:20.12.2 AS builder
 # Set the working directory
 WORKDIR /app
 # Copy package.json and package-lock.json
