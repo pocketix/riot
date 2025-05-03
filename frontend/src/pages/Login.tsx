@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import Logo from '../ui/Logo'
 import Heading from '../ui/Heading'
-import LoginForm from '@/features/authentication/LoginForm'
+// import LoginForm from '@/features/authentication/LoginForm'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useSearchParams } from 'react-router-dom'
 
@@ -34,12 +34,12 @@ function Login() {
       <Heading as="h1" align="center">
         Log in to your account
       </Heading>
-      <LoginForm />
+      {/* <LoginForm /> */}
       <button
         onClick={handleOAuthLogin}
-        className="flex items-center justify-center gap-3 px-6 py-2 border border-gray-300 rounded-md shadow-sm bg-white hover:bg-gray-100 transition-colors duration-150"
+        className="flex items-center justify-center gap-3 rounded-md border border-gray-300 bg-white px-6 py-2 shadow-sm transition-colors duration-150 hover:bg-gray-100"
       >
-        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" className="w-5 h-5" />
+        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" className="h-5 w-5" />
         <span className="text-sm font-medium text-gray-700">Sign in with Google</span>
       </button>
     </LoginLayout>
