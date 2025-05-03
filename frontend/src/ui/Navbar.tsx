@@ -21,7 +21,7 @@ const NavbarContainer = styled.div`
   width: 100%;
   background-color: var(--color-grey-50);
   // Iphone bottom tab switcher
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  /* padding-bottom: env(safe-area-inset-bottom, 0); */
 
   @media (min-width: ${breakpoints.md}) {
     flex-direction: column;
