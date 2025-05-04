@@ -108,7 +108,7 @@ type SDParameterSnapshotEntity struct {
 	Number        *float64                         `gorm:"column:number"`
 	Boolean       *bool                            `gorm:"column:boolean"`
 	UpdatedAt     time.Time                        `gorm:"column:updated_at;autoUpdateTime"`
-	VPLPrograms   []VPLProgramSDSnapshotLinkEntity `gorm:"many2many:link;joinForeignKey:SDInstanceID,SDParameterID;joinReferences:ProgramID"`
+	VPLPrograms   []VPLProgramSDSnapshotLinkEntity `gorm:"foreignKey:SDInstanceID,SDParameterID;references:SDInstanceID,SDParameterID;constraint:OnDelete:CASCADE"`
 }
 
 func (SDParameterSnapshotEntity) TableName() string {
@@ -223,7 +223,7 @@ type VPLProgramsEntity struct {
 	Data                 string                           `gorm:"column:data;type:jsonb;not null"`
 	LastRun              *time.Time                       `gorm:"column:last_run"`
 	Enabled              bool                             `gorm:"column:enabled;not null"`
-	SDParameterSnapshots []VPLProgramSDSnapshotLinkEntity `gorm:"many2many:link;joinForeignKey:ProgramID;joinReferences:SDInstanceID,SDParameterID"`
+	SDParameterSnapshots []VPLProgramSDSnapshotLinkEntity `gorm:"foreignKey:ProgramID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 func (VPLProgramsEntity) TableName() string {
