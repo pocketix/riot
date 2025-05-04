@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/url"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"github.com/pocketix/interpret-unit/src/utils"
 	"github.com/pocketix/pocketix-go/src/models"
 	"github.com/pocketix/pocketix-go/src/parser"
+	"github.com/pocketix/pocketix-go/src/services"
 	"github.com/pocketix/pocketix-go/src/statements"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -267,6 +269,7 @@ func sendExecutionError(rabbitMQClient rabbitmq.Client, delivery amqp.Delivery, 
 func main() {
 	log.SetOutput(os.Stderr)
 	log.Println("Interpret Unit started")
+	services.SetOutput(io.Discard)
 
 	// Backend Core
 	rawBackendCoreURL := sharedUtils.GetEnvironmentVariableValue("BACKEND_CORE_URL").GetPayloadOrDefault("http://riot-backend-core:9090")
@@ -275,7 +278,10 @@ func main() {
 
 	sharedUtils.TerminateOnError(sharedUtils.WaitForDSs(time.Minute, sharedUtils.NewPairOf(parsedBackendCoreURL.Hostname(), parsedBackendCoreURL.Port())), "Some dependencies of this application are inaccessible")
 	log.Println("Dependencies should be up and running...")
-	sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
+
+	if sharedUtils.GetEnvironmentVariableValue("ENABLE_PROFILING").GetPayloadOrDefault("false") == "true" {
+		sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
+	}
 	sharedUtils.WaitForAll(
 		func() {
 			err := performVPLValidityCheckRequest()
