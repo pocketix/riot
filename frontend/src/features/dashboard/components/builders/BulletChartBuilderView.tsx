@@ -85,7 +85,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
             reverse: false,
             measureSize: 0.2,
             markers: [],
-            margin: { top: 0, right: 10, bottom: 20, left: 30 },
+            margin: { top: 0, right: 10, bottom: 22, left: 30 },
             titleOffsetX: -5,
             colorScheme: 'greys'
           }
