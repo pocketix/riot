@@ -383,7 +383,7 @@ export const DeviceDetailPageView = ({
                       </div>
                     </div>
 
-                    <Accordion type="single" collapsible defaultValue="comparison">
+                    <Accordion type="single" collapsible>
                       <AccordionItem value="comparison">
                         <AccordionTrigger>
                           <div className="flex flex-col">
