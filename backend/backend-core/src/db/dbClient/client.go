@@ -408,14 +408,13 @@ func (r *relationalDatabaseClientImpl) PersistSDType(sdType dllModel.SDType) sha
 	} else if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return sharedUtils.NewFailureResult[dllModel.SDType](result.Error)
 	}
-	
+
 	if err := dbUtil.PersistEntityIntoDB[dbModel.SDTypeEntity](r.db, &sdTypeEntity); err != nil {
 		return sharedUtils.NewFailureResult[dllModel.SDType](err)
 	}
 
 	return sharedUtils.NewSuccessResult[dllModel.SDType](db2dll.ToDLLModelSDType(sdTypeEntity))
 }
-
 
 func loadSDType(g *gorm.DB, whereClause dbUtil.WhereClause) sharedUtils.Result[dllModel.SDType] {
 	sdTypeEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDTypeEntity](g,
@@ -551,6 +550,7 @@ func (r *relationalDatabaseClientImpl) LoadSDInstances() sharedUtils.Result[[]dl
 		r.db,
 		dbUtil.Preload("SDType"),
 		dbUtil.Preload("SDType.Parameters"),
+		dbUtil.Preload("SDType.Commands"),
 		dbUtil.Preload("SDParameterSnapshot"),
 	)
 	if sdInstanceEntitiesLoadResult.IsFailure() {
