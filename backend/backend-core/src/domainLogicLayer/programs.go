@@ -122,7 +122,7 @@ func ConvertSharedModelVPLProgramSaveToDLLModel(program sharedModel.VPLProgram) 
 	for key, referencedValue := range program.ReferencedValues {
 		sdInstance := databaseClient.LoadSDInstanceBasedOnUID(key)
 
-		if sdInstance.IsFailure() || sdInstance.GetPayload().IsEmpty() {
+		if sdInstance.IsFailure() || sdInstance.GetPayload().IsEmpty() || sdInstance.GetPayload().GetPayload().ID.IsEmpty() {
 			log.Printf("Could not find SD instance")
 			return dllModel.VPLProgram{}, errors.New("could not find SD instance")
 		}
@@ -137,7 +137,7 @@ func ConvertSharedModelVPLProgramSaveToDLLModel(program sharedModel.VPLProgram) 
 			return parameter.Denotation == referencedValue
 		})
 
-		if parameter.IsEmpty() {
+		if parameter.IsEmpty() || parameter.GetPayload().ID.IsEmpty() {
 			log.Printf("Save program failed: %s", errors.New("parameter not found"))
 			return dllModel.VPLProgram{}, errors.New("parameter not found")
 		}
