@@ -37,6 +37,8 @@ interface DashboardViewProps {
   cols: { lg: number; md: number; xs: number; xxs: number }
   rowHeight: number
   highlightedCardIDInitial?: string | null
+  editMode: boolean
+  setEditMode: (editMode: boolean) => void
   onLayoutChange: (layout: Layout[], layouts: { [key: string]: Layout[] }, currentBreakpoint: string) => void
   onDeleteItem: (id: string, breakpoint: string) => void
   onRestoreAllTabs: (savedTabsState: Tab[]) => boolean
@@ -63,7 +65,6 @@ const DashboardView = (props: DashboardViewProps) => {
   const [resizeCardID, setResizeCardID] = useState<string | null>(null)
   const [currentBreakpoint, setCurrentBreakpoint] = useState('lg')
   const [width, setWidth] = useState<number>(0)
-  const [editMode, setEditMode] = useState<boolean>(false)
   const [highlightedCardID, setHighlightedCardID] = useState<string | null>(props.highlightedCardIDInitial || null)
   const [savedTabsState, setSavedTabsState] = useState<Tab[]>([])
   const [showAddDialog, setShowAddDialog] = useState(false)
@@ -81,15 +82,16 @@ const DashboardView = (props: DashboardViewProps) => {
   }
 
   const handleSetEditMode = () => {
-    if (!editMode) {
+    if (!props.editMode) {
       setSavedTabsState([...props.tabs])
+      props.setEditMode(!props.editMode)
       toast.info('Your current dashboard settings have been saved.')
     } else {
       toast.success('You have exited the edit mode.')
     }
 
-    const newEditMode = !editMode
-    setEditMode(newEditMode)
+    const newEditMode = !props.editMode
+    props.setEditMode(newEditMode)
     setHighlightedCardID(null)
   }
 
@@ -191,9 +193,9 @@ const DashboardView = (props: DashboardViewProps) => {
       <Navbar>
         <h3 className="text-primary">Dashboard</h3>
         <div className="flex gap-2">
-          {editMode && <RestoreLayoutDialog onSuccess={handleRestoreLayout} />}
+          {props.editMode && <RestoreLayoutDialog onSuccess={handleRestoreLayout} />}
           <Button onClick={handleSetEditMode} variant={'default'}>
-            {editMode ? 'End' : 'Edit'}
+            {props.editMode ? 'End' : 'Edit'}
           </Button>
         </div>
       </Navbar>
@@ -206,7 +208,7 @@ const DashboardView = (props: DashboardViewProps) => {
           onDeleteTab={props.onDeleteTab}
           onEditTab={props.onEditTab}
           onAddTab={props.onAddTab}
-          editMode={editMode}
+          editMode={props.editMode}
         />
         <div {...swipeHandlers} className="min-h-[80vh] w-full overflow-hidden pb-10">
           {!props.layouts || props.layouts[currentBreakpoint]?.length === 0 || !props.layouts[currentBreakpoint] ? (
@@ -237,16 +239,16 @@ const DashboardView = (props: DashboardViewProps) => {
               cols={props.cols}
               draggableHandle=".drag-handle"
               rowHeight={props.rowHeight}
-              isDraggable={editMode}
-              isResizable={editMode}
-              isDroppable={editMode}
+              isDraggable={props.editMode}
+              isResizable={props.editMode}
+              isDroppable={props.editMode}
               onResizeStart={handleResizeStart}
               onResizeStop={handleResizeStop}
               useCSSTransforms={false}
               containerPadding={[10, 0]}
               compactType={'vertical'}
               verticalCompact={true}
-              resizeHandle={<MyHandle $editMode={editMode} />}
+              resizeHandle={<MyHandle $editMode={props.editMode} />}
             >
               {props.layouts[currentBreakpoint]?.map((item: Layout) => {
                 const itemId = item.i
@@ -269,7 +271,7 @@ const DashboardView = (props: DashboardViewProps) => {
                     }
                     props.onLayoutChange(newLayout, updatedLayouts, currentBreakpoint)
                   },
-                  editModeEnabled: editMode,
+                  editModeEnabled: props.editMode,
                   breakPoint: currentBreakpoint,
                   cols: props.cols,
                   handleDeleteItem: props.onDeleteItem,

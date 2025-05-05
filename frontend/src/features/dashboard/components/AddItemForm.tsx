@@ -16,6 +16,8 @@ import { ResponsiveTooltip } from '@/components/responsive-tooltip'
 import { InfoIcon } from 'lucide-react'
 import { useDebounce } from 'use-debounce'
 import { Layout } from 'react-grid-layout'
+import { ResponsiveAlertDialog } from './cards/components/ResponsiveAlertDialog'
+import { useSwipeable } from 'react-swipeable'
 
 export interface AddItemFormProps {
   setDialogOpen: (open: boolean) => void
@@ -35,8 +37,30 @@ export function AddItemForm(props: AddItemFormProps) {
   } | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [search] = useDebounce(searchInput, 300)
+  const [showLeavingAlert, setShowLeavingAlert] = useState(false)
+
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (activeTab === 'visualization' && selectedVisualization) {
+        setActiveTab('builder')
+      }
+    },
+    onSwipedRight: () => {
+      if (activeTab === 'builder') {
+        setShowLeavingAlert(true)
+      }
+    },
+    swipeDuration: 300,
+    delta: 80
+  })
 
   const handleVisualizationSelect = (visualization: VisualizationTypes) => {
+    // if the visualization is already selected, proceed to the builder
+    // fixes testing issue with the next button not always being visible
+    if (visualization === selectedVisualization) {
+      setActiveTab('builder')
+      return
+    }
     setSelectedVisualization(visualization)
     if (selectedConfig) {
       setSelectedConfig(null)
@@ -219,7 +243,7 @@ export function AddItemForm(props: AddItemFormProps) {
   }
 
   return (
-    <div className="sm:space-y-8">
+    <div className="sm:space-y-8" {...swipeHandlers}>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="visualization">Visualization</TabsTrigger>
@@ -329,6 +353,24 @@ export function AddItemForm(props: AddItemFormProps) {
           )}
         </TabsContent>
       </Tabs>
+      <div className="absolute">
+        <ResponsiveAlertDialog
+          onSuccess={() => {
+            setActiveTab('visualization')
+            setSelectedVisualization(null)
+            setSelectedConfig(null)
+          }}
+          externalOpen={showLeavingAlert}
+          onExternalOpenChange={setShowLeavingAlert}
+          content={
+            <p className="text-center font-semibold text-destructive">
+              Going back will discard any changes made in the builder.
+            </p>
+          }
+        >
+          <div />
+        </ResponsiveAlertDialog>
+      </div>
     </div>
   )
 }
