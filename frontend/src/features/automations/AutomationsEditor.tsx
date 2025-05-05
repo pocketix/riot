@@ -337,17 +337,31 @@ export default function AutomationsEditor() {
       // Create an empty program with all procedures
       const emptyProgramWithProcedures = createEmptyProgramWithProcedures()
 
+      // Ensure the program has the expected structure
+      if (!emptyProgramWithProcedures.block) {
+        emptyProgramWithProcedures.block = []
+        console.log('Added missing block array to empty program')
+      }
+
+      if (!Array.isArray(emptyProgramWithProcedures.block)) {
+        emptyProgramWithProcedures.block = []
+        console.log('Replaced invalid block with empty array in empty program')
+      }
+
       console.log('Setting program with procedures in editor:', emptyProgramWithProcedures)
 
       // Set the program in the editor
       if (typeof editor.updateProgram === 'function') {
-        editor.updateProgram(emptyProgramWithProcedures)
+        // Create a deep copy to avoid reference issues
+        const programCopy = JSON.parse(JSON.stringify(emptyProgramWithProcedures))
+        editor.updateProgram(programCopy)
         console.log('Editor initialized with procedures using updateProgram')
       } else {
         console.error('No updateProgram function found')
       }
     } catch (error) {
       console.error('Error initializing editor with procedures:', error)
+      toast.error(`Error initializing editor: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -652,22 +666,7 @@ export default function AutomationsEditor() {
     )
   }
 
-  // Function to generate a unique name by adding or incrementing a number in parentheses
-  const generateUniqueName = (baseName: string): string => {
-    // Check if the base name already exists
-    if (!checkProgramExists(baseName)) return baseName
-
-    // Try adding numbers in parentheses until we find a unique name
-    let counter = 1
-    let newName = `${baseName} (${counter})` // Added space before parenthesis for better readability
-
-    while (checkProgramExists(newName)) {
-      counter++
-      newName = `${baseName} (${counter})` // Added space before parenthesis for better readability
-    }
-
-    return newName
-  }
+  // Function to generate a unique name has been removed as we no longer use incremented names
 
   const proceduresParsingForSave = async (program: any) => {
     // access the header.userProcedures as json and parse each entry making it into new db entry. if the procedure already exists, update it but only if the data changed and warn the user via toast that existing procedure was updated and it might break functionality if it was used in other programs
@@ -1155,20 +1154,15 @@ export default function AutomationsEditor() {
     const existingProgram = checkProgramExists(programName)
 
     if (existingProgram) {
-      // Generate the unique name before showing the confirm dialog
-      const uniqueName = generateUniqueName(programName)
-
-      // Program with the same name exists, ask user what to do
-      if (confirm(`A program named "${programName}" already exists. Do you want to:\n\n` +
+      // Program with the same name exists, ask user if they want to overwrite
+      if (confirm(`A program named "${programName}" already exists.\n\n` +
                   `• Click OK to overwrite the existing program\n` +
-                  `• Click Cancel to save as "${uniqueName}"`)) {
+                  `• Click Cancel to cancel the save operation`)) {
         // User chose to overwrite
         await saveProgram(programName, existingProgram.id)
       } else {
-        // User chose to save as a new name
-        await saveProgram(uniqueName)
-        // Update the program name field to show the new name
-        setProgramName(uniqueName)
+        // User chose to cancel
+        toast.info('Save operation cancelled. Please rename your program if you want to save it as a new program.')
       }
     } else {
       // No duplicate, proceed with normal save
@@ -1208,6 +1202,12 @@ export default function AutomationsEditor() {
           // Parse the procedure data from JSON string to object
           const procedureData = JSON.parse(procedure.data)
 
+          // Validate that procedureData is an object
+          if (typeof procedureData !== 'object' || procedureData === null) {
+            console.error(`Invalid procedure data for "${procedure.name}": not an object`)
+            return // Skip this procedure
+          }
+
           // Add the procedure to the program's header.userProcedures
           // The name in the table is the key, and the data is the value
           program.header.userProcedures[procedure.name] = procedureData
@@ -1226,6 +1226,11 @@ export default function AutomationsEditor() {
     // Ensure the program header only contains userVariables and userProcedures
     const { userVariables, userProcedures } = program.header
     program.header = { userVariables, userProcedures }
+
+    // Ensure userProcedures is an object, not null or undefined
+    if (!program.header.userProcedures) {
+      program.header.userProcedures = {}
+    }
 
     // Save the original procedures for comparison when saving
     setOriginalProcedures({...program.header.userProcedures})
@@ -1274,8 +1279,21 @@ export default function AutomationsEditor() {
           if (editor && editor.isReady) {
             console.log('Directly updating editor with loaded program:', programData)
             try {
+              // Ensure the program has the expected structure before updating
+              if (!programData.block) {
+                programData.block = []
+                console.log('Added missing block array to program')
+              }
+
+              if (!Array.isArray(programData.block)) {
+                programData.block = []
+                console.log('Replaced invalid block with empty array')
+              }
+
               if (typeof editor.updateProgram === 'function') {
-                editor.updateProgram(programData)
+                // Create a deep copy to avoid reference issues
+                const programCopy = JSON.parse(JSON.stringify(programData))
+                editor.updateProgram(programCopy)
                 console.log('Program loaded into editor using updateProgram')
               } else {
                 console.error('No updateProgram function found on editor')
@@ -1284,6 +1302,7 @@ export default function AutomationsEditor() {
               }
             } catch (error) {
               console.error('Error updating editor with loaded program:', error)
+              toast.error(`Error loading program: ${error instanceof Error ? error.message : 'Unknown error'}`)
               // If direct update fails, force re-render as fallback
               setEditorKey(prevKey => prevKey + 1)
             }
@@ -1707,9 +1726,22 @@ export default function AutomationsEditor() {
                 // If we have program data and the editor is not yet initialized, try to set it
                 if (currentProgramData && el === (window as any).currentEditor) {
                   try {
+                    // Ensure the program has the expected structure before updating
+                    if (!currentProgramData.block) {
+                      currentProgramData.block = []
+                      console.log('Added missing block array to program (timeout)')
+                    }
+
+                    if (!Array.isArray(currentProgramData.block)) {
+                      currentProgramData.block = []
+                      console.log('Replaced invalid block with empty array (timeout)')
+                    }
+
                     const typedEditor = el as any;
                     if (typeof typedEditor.updateProgram === 'function') {
-                      typedEditor.updateProgram(currentProgramData);
+                      // Create a deep copy to avoid reference issues
+                      const programCopy = JSON.parse(JSON.stringify(currentProgramData))
+                      typedEditor.updateProgram(programCopy);
 
                       // After loading the program, also load the devices
                       if (!instancesLoading && instancesData?.sdInstances) {
@@ -1721,6 +1753,7 @@ export default function AutomationsEditor() {
                     }
                   } catch (error) {
                     console.error('Error setting program data (via timeout):', error);
+                    toast.error(`Error loading program (timeout): ${error instanceof Error ? error.message : 'Unknown error'}`);
                   }
                 } else if (el === (window as any).currentEditor && !proceduresLoading && proceduresData?.vplProcedures) {
                   // If no program data but procedures are loaded, initialize with procedures
