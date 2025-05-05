@@ -171,7 +171,7 @@ func str2Time(str *string) *time.Time {
 }
 
 func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExecutionResult] {
-	programToExecute := GetVPLProgram(id)
+	programToExecute := dbClient.GetRelationalDatabaseClientInstance().LoadVPLProgram(id)
 	if programToExecute.IsFailure() {
 		log.Printf("Execute program failed: %s", programToExecute.GetError())
 		return sharedUtils.NewFailureResult[graphQLModel.VPLProgramExecutionResult](programToExecute.GetError())
@@ -248,13 +248,25 @@ func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExec
 		return sharedUtils.NewFailureResult[graphQLModel.VPLProgramExecutionResult](result.GetError())
 	}
 
-	dllResult, err := ConvertSharedModelVPLProgramExecuteToDLLModel(result.GetPayload())
-	if err != nil {
-		log.Printf("Execute program failed: %s", err)
-		return sharedUtils.NewFailureResult[graphQLModel.VPLProgramExecutionResult](err)
-	}
-
+	dllResult := ConvertExecuteResultToDLLModel(result.GetPayload(), programToExecute.GetPayload())
 	return sharedUtils.NewSuccessResult[graphQLModel.VPLProgramExecutionResult](dll2gql.ToGraphQLModelPLProgramExecutionResult(dllResult))
+}
+
+func ConvertExecuteResultToDLLModel(programExecutionResult sharedModel.VPLInterpretExecuteResultOrError, executedProgram dllModel.VPLProgram) dllModel.VPLProgramExecutionResult {
+	return dllModel.VPLProgramExecutionResult{
+		Program: executedProgram,
+		SDCommandInvocationList: sharedUtils.Map(programExecutionResult.SDCommandInvocations, func(sdCommandInvocation sharedModel.SDCommandToInvoke) dllModel.SDCommandInvocation {
+			return dllModel.SDCommandInvocation{
+				InvocationTime: programExecutionResult.ExecutionTime.Format(time.RFC3339),
+				Payload:        sdCommandInvocation.Payload,
+				CommandID:      sdCommandInvocation.CommandID,
+				SDInstanceID:   sdCommandInvocation.SDInstanceID,
+			}
+		}),
+		ExecutionTime: programExecutionResult.ExecutionTime.Format(time.RFC3339),
+		Enabled:       true,
+		Success:       true,
+	}
 }
 
 func startSnapshotRequestListener(ctx context.Context, wg *sync.WaitGroup) {
@@ -264,39 +276,74 @@ func startSnapshotRequestListener(ctx context.Context, wg *sync.WaitGroup) {
 	client := rabbitmq.NewClient()
 	defer client.Dispose()
 
-	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[[]sharedModel.SDParameterSnapshotRequest](
+	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.SDInstanceRequest](
 		client,
 		sharedConstants.VPLInterpretGetSnapshotsResponseQueueName,
 		"",
-		func(messagePayload []sharedModel.SDParameterSnapshotRequest, delivery amqp.Delivery) error {
+		func(messagePayload sharedModel.SDInstanceRequest, delivery amqp.Delivery) error {
 			select {
 			case <-ctx.Done():
 				log.Printf("Snapshot request listener stopped")
 				return nil
 			default:
 			}
-			parameterSnapshotRequestList := make([]sharedModel.SDParameterSnapshotResponse, 0)
-			if messagePayload == nil {
-				log.Printf("Received empty snapshot request")
-			} else {
-				log.Printf("Received snapshot request: %v\n", messagePayload)
 
-				for _, snapshot := range messagePayload {
-					sdInstance := databaseClient.LoadSDInstanceBasedOnUID(snapshot.SDInstanceUID)
-					if sdInstance.IsFailure() {
-						log.Printf("Received snapshot request failed: %s", sdInstance.GetError())
-						return sdInstance.GetError()
-					}
-					sdSnapshotResponse, err := toSharedModelSnapshotResponse(snapshot, sdInstance.GetPayload().GetPayload())
-					if err != nil {
-						log.Printf("Received snapshot request failed: %s", err)
-						return err
-					}
-					parameterSnapshotRequestList = append(parameterSnapshotRequestList, sdSnapshotResponse)
+			log.Printf("Received snapshot request: %v\n", messagePayload)
+
+			var SDInstanceResultInformation sharedModel.VPLInterpretGetDeviceInformationResultOrError
+
+			switch messagePayload.RequestType {
+			case "sdCommand":
+				sdInstance := databaseClient.LoadSDInstanceBasedOnUID(messagePayload.SDInstanceUID)
+				if sdInstance.IsFailure() || sdInstance.GetPayload().IsEmpty() || sdInstance.GetPayload().GetPayload().ID.IsEmpty() {
+					log.Printf("Received instance information request failed: %s", sdInstance.GetError())
+					return sdInstance.GetError()
+				}
+				sdCommand := sharedUtils.FindFirst(sdInstance.GetPayload().GetPayload().SDType.Commands, func(command dllModel.SDCommand) bool {
+					return command.Name == messagePayload.SDParameterID
+				})
+				if sdCommand.IsEmpty() {
+					log.Printf("Received instance information request failed: %s", errors.New("command not found"))
+					return errors.New("command not found")
+				}
+
+				SDInstanceResultInformation.SDInstanceResultInformation.SDCommandToInvoke = sharedModel.SDCommandToInvoke{
+					SDInstanceUID: messagePayload.SDInstanceUID,
+					CommandName:   sdCommand.GetPayload().Name,
+					Payload:       sdCommand.GetPayload().Description,
+				}
+			case "sdParameter":
+				sdInstance := databaseClient.LoadSDInstanceBasedOnUID(messagePayload.SDInstanceUID)
+				if sdInstance.IsFailure() || sdInstance.GetPayload().IsEmpty() || sdInstance.GetPayload().GetPayload().ID.IsEmpty() {
+					log.Printf("Received instance information request failed: %s", sdInstance.GetError())
+					return sdInstance.GetError()
+				}
+				sdParameter := sharedUtils.FindFirst(sdInstance.GetPayload().GetPayload().SDType.Parameters, func(parameter dllModel.SDParameter) bool {
+					return parameter.Denotation == messagePayload.SDParameterID
+				})
+				if sdParameter.IsEmpty() {
+					log.Printf("Received instance information request failed: %s", errors.New("parameter not found"))
+					return errors.New("parameter not found")
+				}
+
+				sdParameterSnapshot := sharedUtils.FindFirst(sdInstance.GetPayload().GetPayload().ParameterSnapshots, func(parameter dllModel.SDParameterSnapshot) bool {
+					return parameter.SDParameter == sdParameter.GetPayload().ID.GetPayload()
+				})
+				if sdParameterSnapshot.IsEmpty() {
+					log.Printf("Received instance information request failed: %s", errors.New("parameter snapshot not found"))
+					return errors.New("parameter snapshot not found")
+				}
+
+				SDInstanceResultInformation.SDInstanceResultInformation.SDParameterSnapshotToUpdate = sharedModel.SDParameterSnapshotToUpdate{
+					SDInstanceUID: messagePayload.SDInstanceUID,
+					SDParameterID: sdParameter.GetPayload().Denotation,
+					String:        sdParameterSnapshot.GetPayload().String.ToPointer(),
+					Number:        sdParameterSnapshot.GetPayload().Number.ToPointer(),
+					Boolean:       sdParameterSnapshot.GetPayload().Boolean.ToPointer(),
 				}
 			}
 
-			serializedResponse := sharedUtils.SerializeToJSON(parameterSnapshotRequestList)
+			serializedResponse := sharedUtils.SerializeToJSON(SDInstanceResultInformation)
 			if serializedResponse.IsFailure() {
 				log.Printf("Received snapshot request failed: %s", serializedResponse.GetError())
 				return serializedResponse.GetError()
@@ -323,55 +370,19 @@ func startSnapshotRequestListener(ctx context.Context, wg *sync.WaitGroup) {
 	}
 }
 
-func toSharedModelSnapshotResponse(snapshot sharedModel.SDParameterSnapshotRequest, instance dllModel.SDInstance) (sharedModel.SDParameterSnapshotResponse, error) {
-	var sdParameterDenotation string
-	return sharedModel.SDParameterSnapshotResponse{
-		SDInstanceUID: snapshot.SDInstanceUID,
-		SDType: sharedModel.SDType{
-			SDParameters: sharedUtils.Map(instance.SDType.Parameters, func(parameter dllModel.SDParameter) sharedModel.SDParameter {
-				sdParameterDenotation = parameter.Denotation
-				return sharedModel.SDParameter{
-					ParameterID:         parameter.ID.GetPayload(),
-					ParameterDenotation: parameter.Denotation,
-				}
-			}),
-			SDCommands: sharedUtils.Map(instance.CommandInvocations, func(command dllModel.SDCommandInvocation) sharedModel.SDCommand {
-				concreteCommand := dbClient.GetRelationalDatabaseClientInstance().LoadSDCommand(command.CommandID)
-				if concreteCommand.IsFailure() {
-					log.Printf("Save program failed: %s", concreteCommand.GetError())
-					return sharedModel.SDCommand{}
-				}
-				return sharedModel.SDCommand{
-					CommandID:         concreteCommand.GetPayload().ID,
-					CommandDenotation: concreteCommand.GetPayload().Name,
-				}
-			}),
-		},
-		SDParameterSnapshots: sharedUtils.Map(instance.ParameterSnapshots, func(parameter dllModel.SDParameterSnapshot) sharedModel.SDParameterSnapshot {
-			return sharedModel.SDParameterSnapshot{
-				SDParameter: sdParameterDenotation,
-				String:      parameter.String.ToPointer(),
-				Number:      parameter.Number.ToPointer(),
-				Boolean:     parameter.Boolean.ToPointer(),
-			}
-		}),
-	}, nil
-}
-
-func toSharedModelVPLProgram(program graphQLModel.VPLProgram) (sharedModel.VPLProgram, error) {
+func toSharedModelVPLProgram(program dllModel.VPLProgram) (sharedModel.VPLProgram, error) {
 	client := dbClient.GetRelationalDatabaseClientInstance()
 	referencedValues := make(map[string]string)
 
-	for _, sdParameterSnapshot := range program.SdParameterSnapshots {
+	for _, sdParameterSnapshot := range program.SDParameterSnapshots {
 		sdInstance := client.LoadSDInstance(sdParameterSnapshot.InstanceID)
-		sdType := client.LoadSDType(sdParameterSnapshot.ParameterID)
 
-		if sdInstance.IsFailure() || sdType.IsFailure() {
-			log.Printf("Save program failed: %s", sdInstance.GetError())
-			return sharedModel.VPLProgram{}, sdInstance.GetError()
+		if sdInstance.IsFailure() || sdInstance.GetPayload().ID.IsEmpty() {
+			log.Printf("Save program failed: %s", errors.New("instance not found"))
+			return sharedModel.VPLProgram{}, errors.New("instance not found")
 		}
 
-		parameter := sharedUtils.FindFirst(sdType.GetPayload().Parameters, func(parameter dllModel.SDParameter) bool {
+		parameter := sharedUtils.FindFirst(sdInstance.GetPayload().SDType.Parameters, func(parameter dllModel.SDParameter) bool {
 			return parameter.ID.GetPayload() == sdParameterSnapshot.ParameterID
 		})
 		if parameter.IsEmpty() {
@@ -385,80 +396,6 @@ func toSharedModelVPLProgram(program graphQLModel.VPLProgram) (sharedModel.VPLPr
 		Name:             program.Name,
 		Data:             program.Data,
 		ReferencedValues: referencedValues,
-	}, nil
-}
-
-func ConvertSharedModelVPLProgramExecuteToDLLModel(program sharedModel.VPLInterpretExecuteResultOrError) (dllModel.VPLProgramExecutionResult, error) {
-	var SDParameterSnapshotList []dllModel.SDParameterSnapshot
-	var SDCommandInvocationList []dllModel.SDCommandInvocation
-	databaseClient := dbClient.GetRelationalDatabaseClientInstance()
-
-	for _, sdParameterSnapshot := range program.SDParameterSnapshotsToUpdate {
-		sdInstance := databaseClient.LoadSDInstanceBasedOnUID(sdParameterSnapshot.SDInstanceUID)
-		sdType := databaseClient.LoadSDTypeBasedOnDenotation(sdParameterSnapshot.SDParameterID)
-
-		if sdInstance.IsFailure() || sdType.IsFailure() {
-			log.Printf("Execute program failed: %s", sdInstance.GetError())
-			return dllModel.VPLProgramExecutionResult{}, sdInstance.GetError()
-		}
-
-		parameter := sharedUtils.FindFirst(sdType.GetPayload().Parameters, func(parameter dllModel.SDParameter) bool {
-			return parameter.Denotation == sdParameterSnapshot.SDParameterID
-		})
-
-		SDParameterSnapshotList = append(SDParameterSnapshotList, dllModel.SDParameterSnapshot{
-			SDInstance:  sdInstance.GetPayload().GetPayload().ID.GetPayload(),
-			SDParameter: parameter.GetPayload().ID.GetPayload(),
-			String:      sharedUtils.NewOptionalFromPointer(sdParameterSnapshot.String),
-			Number:      sharedUtils.NewOptionalFromPointer(sdParameterSnapshot.Number),
-			Boolean:     sharedUtils.NewOptionalFromPointer(sdParameterSnapshot.Boolean),
-			UpdatedAt:   time.Now(),
-		})
-
-	}
-
-	for _, sdCommandInvocation := range program.SDCommandInvocations {
-		sdInstance := databaseClient.LoadSDInstanceBasedOnUID(sdCommandInvocation.SDInstanceUID)
-		sdType := sdInstance.GetPayload().GetPayload().SDType
-
-		if sdInstance.IsFailure() {
-			log.Printf("Execute program failed: %s", sdInstance.GetError())
-			return dllModel.VPLProgramExecutionResult{}, sdInstance.GetError()
-		}
-		sdCommandsResult := databaseClient.LoadSDCommands()
-		if sdCommandsResult.IsFailure() {
-			log.Printf("Execute program failed: %s", sdCommandsResult.GetError())
-			return dllModel.VPLProgramExecutionResult{}, sdCommandsResult.GetError()
-		}
-		sdCommands := sharedUtils.Filter(sdCommandsResult.GetPayload(), func(command dllModel.SDCommand) bool {
-			return command.SdTypeID == sdType.ID.GetPayload()
-		})
-
-		command := sharedUtils.FindFirst(sdCommands, func(command dllModel.SDCommand) bool {
-			return command.Name == sdCommandInvocation.CommandName
-		})
-
-		if command.IsEmpty() {
-			log.Printf("Execute program failed: %s", errors.New("command not found"))
-			return dllModel.VPLProgramExecutionResult{}, errors.New("command not found")
-		}
-
-		SDCommandInvocationList = append(SDCommandInvocationList, dllModel.SDCommandInvocation{
-			SDInstanceID: sdInstance.GetPayload().GetPayload().ID.GetPayload(),
-			CommandID:    command.GetPayload().ID,
-		})
-	}
-	return dllModel.VPLProgramExecutionResult{
-		Program: dllModel.VPLProgram{
-			ID:   program.Program.ID,
-			Name: program.Program.Name,
-			Data: program.Program.Data,
-		},
-		SDParameterSnapshotList: SDParameterSnapshotList,
-		SDCommandInvocationList: SDCommandInvocationList,
-		ExecutionTime:           time.Now().Format(time.RFC3339),
-		Enabled:                 true,
-		Success:                 true,
 	}, nil
 }
 
