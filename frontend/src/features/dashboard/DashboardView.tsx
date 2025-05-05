@@ -213,7 +213,10 @@ const DashboardView = (props: DashboardViewProps) => {
         <div {...swipeHandlers} className="min-h-[80vh] w-full overflow-hidden pb-10">
           {!props.layouts || props.layouts[currentBreakpoint]?.length === 0 || !props.layouts[currentBreakpoint] ? (
             <Card className="mx-auto my-auto flex h-full w-2/3 flex-col items-center justify-center gap-2 self-center rounded-lg border border-dashed border-gray-300 p-4 text-center">
-              <div className="rounded-full bg-gray-100 p-4 shadow-lg">
+              <div
+                className="cursor-pointer rounded-full bg-gray-100 p-4 shadow-lg"
+                onClick={() => setShowAddDialog(true)}
+              >
                 <FaPlus className="h-8 w-8 text-black" />
               </div>
               <div>
