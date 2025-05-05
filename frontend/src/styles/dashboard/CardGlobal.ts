@@ -30,14 +30,15 @@ export const ArrowContainer = styled.div`
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  background-color: hsl(var(--background));
+  width: 80%;
+  max-height: 50%;
   padding: 2px;
   border-radius: 4px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  border: 1px solid hsl(var(--border));
   z-index: 2;
   display: flex;
   flex-direction: row;
+  justify-content: center;
   gap: 4px;
 `
 
@@ -60,8 +61,18 @@ export const Arrow = styled.button<{ disabled?: boolean; $red?: boolean; $green?
   display: flex;
   align-items: center;
   justify-content: center;
+  width: clamp(32px, calc(50%), 60px);
+  height: clamp(32px, calc(100% / 6), 50px);
+
   &:hover {
     opacity: ${(props) => (props.disabled ? 0.5 : 0.8)};
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+    max-height: 24px;
+    max-width: 24px;
   }
 `
 
