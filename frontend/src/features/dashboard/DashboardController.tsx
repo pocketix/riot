@@ -11,11 +11,13 @@ import { DashboardConfig, DBItemDetails, RiotDashboardConfigSchema, Tab } from '
 import { AddTabFormSchemaType } from '@/schemas/dashboard/AddTabSchema'
 
 const DashboardController = () => {
-  const userID = 1 // TODO: Replace with real user id
+  const userID = 1 // Replace with real user id when implemented
   const { instances } = useInstances()
   const [mounted, setMounted] = useState<boolean>(false)
   const [tabs, setTabs] = useState<Tab[]>([])
   const [activeTabID, setActiveTabID] = useState<number>(0)
+  const [editMode, setEditMode] = useState<boolean>(false)
+  const [pendingChanges, setPendingChanges] = useState<Tab[]>([])
   const [updateUserConfig, { data: saveConfigData, loading: saveConfigLoading, error: saveConfigError }] =
     useUpdateUserConfigMutation()
 
@@ -42,10 +44,15 @@ const DashboardController = () => {
   const ROW_HEIGHT = 10
 
   const handleSaveToDB = useCallback(
-    (updatedTabs: Tab[]) => {
+    (updatedTabs: Tab[], sync?: boolean) => {
+      if (editMode && !sync) {
+        setPendingChanges(updatedTabs)
+        return
+      }
+
       const DBDataStructure: DashboardConfig = {
         riot: {
-          tabs: updatedTabs
+          tabs: sync ? pendingChanges : updatedTabs
         }
       }
 
@@ -58,7 +65,7 @@ const DashboardController = () => {
         }
       })
     },
-    [updateUserConfig, userID]
+    [updateUserConfig, userID, editMode, pendingChanges, setPendingChanges]
   )
 
   const layoutChanged = useCallback(
@@ -103,6 +110,17 @@ const DashboardController = () => {
     },
     [tabs, activeTabID, handleSaveToDB]
   )
+
+  const handleSetEditMode = (newEditMode: boolean) => {
+    if (editMode && !newEditMode) {
+      // User finished editting, save pending changes
+      setEditMode(newEditMode)
+      handleSaveToDB(pendingChanges, true)
+    } else if (!editMode && newEditMode) {
+      setEditMode(newEditMode)
+      setPendingChanges([...tabs])
+    }
+  }
 
   const handleAddTab = (values: AddTabFormSchemaType) => {
     let highestId = 0
@@ -198,7 +216,6 @@ const DashboardController = () => {
       } else {
         largestIndex = parseInt(item.layoutID)
       }
-
 
       const newIndex = item.layoutID || (largestIndex + 1).toString()
 
@@ -557,6 +574,8 @@ const DashboardController = () => {
       mounted={mounted}
       cols={COLS_CONST}
       rowHeight={ROW_HEIGHT}
+      editMode={editMode}
+      setEditMode={handleSetEditMode}
       onLayoutChange={layoutChanged}
       onDeleteItem={handleDeleteItem}
       onRestoreAllTabs={handleRestoreAllTabs}
