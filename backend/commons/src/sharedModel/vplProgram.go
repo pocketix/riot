@@ -9,6 +9,7 @@ type VPLProgram struct {
 	LastRun          *string           `json:"lastRun,omitempty"`
 	Enabled          bool              `json:"enabled"`
 	ReferencedValues map[string]string `json:"referencedValues"`
+	Procedures       map[string]string `json:"procedures,omitempty"`
 }
 
 type VPLInterpretSaveRequestBody struct {

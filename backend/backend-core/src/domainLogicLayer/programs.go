@@ -387,11 +387,28 @@ func toSharedModelVPLProgram(program graphQLModel.VPLProgram) (sharedModel.VPLPr
 		}
 		referencedValues[sdInstance.GetPayload().UID] = parameter.GetPayload().Denotation
 	}
+
+	// Get linked procedures for this program
+	proceduresResult := client.GetProceduresForProgram(program.ID)
+	if proceduresResult.IsFailure() {
+		log.Printf("Warning: Failed to get procedures for program %d: %s", program.ID, proceduresResult.GetError())
+		// Continue without procedures if there's an error
+	}
+
+	// Create a map of procedures to include in the program data
+	procedures := make(map[string]string)
+	if !proceduresResult.IsFailure() {
+		for _, procedure := range proceduresResult.GetPayload() {
+			procedures[procedure.Name] = procedure.Data
+		}
+	}
+
 	return sharedModel.VPLProgram{
 		ID:               program.ID,
 		Name:             program.Name,
 		Data:             program.Data,
 		ReferencedValues: referencedValues,
+		Procedures:       procedures,
 	}, nil
 }
 
