@@ -36,8 +36,8 @@ func performVPLValidityCheckRequest() error {
 
 			variableStore := models.NewVariableStore()
 			procedureStore := models.NewProcedureStore()
-			commandHandlingStore := models.NewCommandsHandlingStore()
-			err := parser.Parse([]byte(messagePayload.Data), variableStore, procedureStore, commandHandlingStore, &statements.NoOpCollector{})
+			referencedValueStore := models.NewReferencedValueStore()
+			err := parser.Parse([]byte(messagePayload.Data), variableStore, procedureStore, referencedValueStore, &statements.NoOpCollector{})
 
 			if err != nil {
 				log.Printf("Failed to parse VPL program: %s\n", err.Error())
@@ -51,7 +51,7 @@ func performVPLValidityCheckRequest() error {
 						Data:    messagePayload.Data,
 						Enabled: false,
 						ReferencedValues: utils.ReferencedValue2StringMap(
-							commandHandlingStore.ReferencedValueStore.GetReferencedValues(),
+							referencedValueStore.GetReferencedValues(),
 						),
 					},
 				}
@@ -180,11 +180,11 @@ func ExecuteVPLProgramRequest() error {
 		func(messagePayload sharedModel.VPLProgram, delivery amqp.Delivery) error {
 			variableStore := models.NewVariableStore()
 			procedureStore := models.NewProcedureStore()
-			commandHandlingStore := models.NewCommandsHandlingStore()
-			commandHandlingStore.ReferencedValueStore.SetResolveParameterFunction(ResolveDeviceInformationFunction)
+			referencedValueStore := models.NewReferencedValueStore()
+			referencedValueStore.SetResolveParameterFunction(ResolveDeviceInformationFunction)
 
 			statementList := make([]statements.Statement, 0)
-			err := parser.Parse([]byte(messagePayload.Data), variableStore, procedureStore, commandHandlingStore, &statements.ASTCollector{Target: &statementList})
+			err := parser.Parse([]byte(messagePayload.Data), variableStore, procedureStore, referencedValueStore, &statements.ASTCollector{Target: &statementList})
 
 			if err != nil {
 				log.Printf("Failed to parse VPL program: %s\n", err.Error())
@@ -196,12 +196,12 @@ func ExecuteVPLProgramRequest() error {
 
 			for _, command := range statementList {
 				if deviceCommand, ok := command.(*statements.DeviceCommand); ok {
-					deviceCommand, err := deviceCommand.DeviceCommand2ModelsDeviceCommand(commandHandlingStore)
+					deviceCommand, err := deviceCommand.DeviceCommand2ModelsDeviceCommand()
 					if err != nil {
 						log.Printf("Failed to convert device command: %s\n", err.Error())
 						return sendExecutionError(rabbitMQClient, delivery, err)
 					}
-					sdCommandInformation, err := commandHandlingStore.ReferencedValueStore.ResolveDeviceInformationFunction(deviceCommand.DeviceUID, deviceCommand.CommandDenotation, "sdCommand")
+					sdCommandInformation, err := referencedValueStore.ResolveDeviceInformationFunction(deviceCommand.DeviceUID, deviceCommand.CommandDenotation, "sdCommand")
 					if err != nil {
 						log.Printf("Failed to send command to device: %s\n", err.Error())
 						return sendExecutionError(rabbitMQClient, delivery, err)
@@ -214,7 +214,7 @@ func ExecuteVPLProgramRequest() error {
 					commandInvocationsToSend = append(commandInvocationsToSend, utils.InterpretSDCommandInvocation2SharedModelCommandInvocation(sdCommandInvocation))
 					continue
 				}
-				_, err := command.Execute(variableStore, commandHandlingStore)
+				_, err := command.Execute(variableStore, referencedValueStore)
 				if err != nil {
 					log.Printf("Failed to execute command: %s\n", err.Error())
 					return sendExecutionError(rabbitMQClient, delivery, err)
