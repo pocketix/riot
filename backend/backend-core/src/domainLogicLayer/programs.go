@@ -322,7 +322,7 @@ func startSnapshotRequestListener(ctx context.Context, wg *sync.WaitGroup) {
 				SDInstanceResultInformation.SDInstanceResultInformation.SDCommandToInvoke = sharedModel.SDCommandToInvoke{
 					SDInstanceUID: messagePayload.SDInstanceUID,
 					CommandName:   sdCommand.GetPayload().Name,
-					Payload:       sdCommand.GetPayload().Description,
+					Payload:       sdCommand.GetPayload().Payload,
 				}
 			case "sdParameter":
 				sdInstance := databaseClient.LoadSDInstanceBasedOnUID(messagePayload.SDInstanceUID)
