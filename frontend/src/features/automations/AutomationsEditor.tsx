@@ -19,6 +19,7 @@ import {
   GET_VPL_PROGRAMS_FOR_PROCEDURE,
   GET_VPL_PROCEDURES_FOR_PROGRAM
 } from '@/graphql/automations/Queries'
+import { GET_INSTANCES, GET_PARAMETERS, GET_SD_TYPES } from '@/graphql/Queries'
 import { toast } from 'sonner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -34,6 +35,68 @@ interface VPLProcedure {
   id: string
   name: string
   data: string
+}
+
+// Device interfaces for VPL editor
+interface DeviceFunction {
+  type: 'unit' | 'unit_with_args'
+  group: string
+  label: string
+  icon: string
+  backgroundColor?: string
+  foregroundColor?: string
+  arguments?: DeviceFunctionArgument[]
+}
+
+interface DeviceFunctionArgument {
+  type: 'str_opt' | 'num_opt' | 'boolean' | 'string' | 'number'
+  options?: { id: string | number, label: string }[]
+}
+
+interface Device {
+  deviceName: string
+  deviceType: string
+  attributes: string[]
+  functions: DeviceFunction[]
+}
+
+interface SDInstance {
+  id: string
+  uid: string
+  confirmedByUser: boolean
+  userIdentifier: string
+  type: {
+    id: string
+    denotation: string
+    icon?: string
+    label?: string
+  }
+}
+
+// SDType interface for type checking - used in function parameters and type assertions
+// @ts-ignore - This type is used in type assertions
+type SDType = {
+  id: string
+  denotation: string
+  label?: string
+  icon?: string
+  parameters: SDParameter[]
+  commands: SDCommand[]
+}
+
+interface SDParameter {
+  id: string
+  denotation: string
+  label?: string
+  type: 'STRING' | 'NUMBER' | 'BOOLEAN'
+}
+
+interface SDCommand {
+  id: string
+  name: string
+  payload: string
+  sdTypeId: string
+  label?: string // Optional label property
 }
 
 // Extend the Window interface to include our custom property
@@ -54,12 +117,21 @@ export default function AutomationsEditor() {
   const [editorKey, setEditorKey] = useState(0) // Used to force re-render of the editor
   const [currentProgramData, setCurrentProgramData] = useState<any>(null) // Store the current program data
   const [originalProcedures, setOriginalProcedures] = useState<Record<string, any>>({}) // Store the original procedures for comparison
+  // We only need to track loading state for devices, not the devices themselves
+  const [, setDevices] = useState<Device[]>([]) // Only need the setter for updateEditorDevices
+  const [isLoadingDevices, setIsLoadingDevices] = useState(false) // Track loading state for devices
 
   // GraphQL query to fetch all VPL programs
   const { data: programsData, loading: programsLoading, refetch: refetchPrograms } = useQuery(GET_VPL_PROGRAMS)
 
   // GraphQL query to fetch all VPL procedures
   const { data: proceduresData, loading: proceduresLoading, refetch: refetchProcedures } = useQuery(GET_VPL_PROCEDURES)
+
+  // GraphQL query to fetch all SD instances
+  const { data: instancesData, loading: instancesLoading } = useQuery(GET_INSTANCES)
+
+  // GraphQL query to fetch all SD types - not directly used but needed for the schema
+  useQuery(GET_SD_TYPES)
 
   // State for tracking if a program is loading
   const [loadingProgram, setLoadingProgram] = useState(false)
@@ -79,6 +151,105 @@ export default function AutomationsEditor() {
 
   // Get the Apollo Client instance
   const apolloClient = useApolloClient()
+
+  // Function to parse command payload from JSON string
+  const parseCommandPayload = (payload: string): { name: string, type: string, possibleValues: any[] }[] => {
+    try {
+      // If it's already a JSON object, return it
+      if (typeof payload === 'object') {
+        return payload;
+      }
+
+      // Try to parse as JSON
+      return JSON.parse(payload);
+    } catch (error) {
+      console.error('Error parsing command payload:', error);
+      console.error('Raw payload:', payload);
+      return [];
+    }
+  }
+
+  // Function to select an appropriate icon for a command
+  const selectIconForCommand = (commandName: string, deviceType: string): string => {
+    // Map common commands to icons
+    if (commandName.toLowerCase().includes('relay') ||
+        commandName.toLowerCase().includes('switch')) {
+      return 'toggleOn'
+    }
+
+    if (commandName.toLowerCase().includes('light') ||
+        commandName.toLowerCase().includes('led')) {
+      return 'lightbulb'
+    }
+
+    if (commandName.toLowerCase().includes('temp')) {
+      return 'thermometerHalf'
+    }
+
+    // Default icons based on device type
+    const deviceTypeIcons: Record<string, string> = {
+      'switch': 'toggleOn',
+      'sensor': 'cpu',
+      'relay': 'lightningChargeFill',
+      'light': 'lightbulb',
+      'thermostat': 'thermometerHalf',
+      'shelly': 'lightningChargeFill'
+    }
+
+    // Check if the device type contains any of the keys in deviceTypeIcons
+    for (const key in deviceTypeIcons) {
+      if (deviceType.toLowerCase().includes(key)) {
+        return deviceTypeIcons[key]
+      }
+    }
+
+    return 'cpu' // Default icon
+  }
+
+  // Function to select a color for the device type
+  const selectColorForDeviceType = (deviceType: string): string => {
+    const colorMap: Record<string, string> = {
+      'switch': '#6366f1',    // Indigo
+      'sensor': '#06b6d4',    // Cyan
+      'relay': '#f97316',     // Orange
+      'light': '#eab308',     // Yellow
+      'thermostat': '#ec4899', // Pink
+      'shelly': '#f97316'     // Orange for Shelly devices
+    }
+
+    // Check if the device type contains any of the keys in colorMap
+    for (const key in colorMap) {
+      if (deviceType.toLowerCase().includes(key)) {
+        return colorMap[key]
+      }
+    }
+
+    return '#6366f1' // Default to indigo
+  }
+
+  // Function to map SD parameter type to VPL argument type
+  const mapArgumentType = (sourceType: string): string => {
+    const typeMap: Record<string, string> = {
+      'string': 'str_opt',
+      'number': 'num_opt',
+      'boolean': 'boolean',
+      'text': 'string',
+      'STRING': 'str_opt',
+      'NUMBER': 'num_opt',
+      'BOOLEAN': 'boolean'
+    }
+
+    return typeMap[sourceType] || 'str_opt'
+  }
+
+  // Function to format values for display
+  const formatLabel = (value: any): string => {
+    if (typeof value === 'string') {
+      // Capitalize first letter, lowercase the rest
+      return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
+    }
+    return String(value)
+  }
 
 
   // Function to create an empty program with procedures
@@ -166,19 +337,184 @@ export default function AutomationsEditor() {
       // Create an empty program with all procedures
       const emptyProgramWithProcedures = createEmptyProgramWithProcedures()
 
+      // Ensure the program has the expected structure
+      if (!emptyProgramWithProcedures.block) {
+        emptyProgramWithProcedures.block = []
+        console.log('Added missing block array to empty program')
+      }
+
+      if (!Array.isArray(emptyProgramWithProcedures.block)) {
+        emptyProgramWithProcedures.block = []
+        console.log('Replaced invalid block with empty array in empty program')
+      }
+
       console.log('Setting program with procedures in editor:', emptyProgramWithProcedures)
 
       // Set the program in the editor
       if (typeof editor.updateProgram === 'function') {
-        editor.updateProgram(emptyProgramWithProcedures)
+        // Create a deep copy to avoid reference issues
+        const programCopy = JSON.parse(JSON.stringify(emptyProgramWithProcedures))
+        editor.updateProgram(programCopy)
         console.log('Editor initialized with procedures using updateProgram')
       } else {
         console.error('No updateProgram function found')
       }
     } catch (error) {
       console.error('Error initializing editor with procedures:', error)
+      toast.error(`Error initializing editor: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
+
+  // Function to convert SD instances to VPL editor device format
+  const convertToVplDevices = async (): Promise<Device[]> => {
+    setIsLoadingDevices(true)
+
+    try {
+      if (!instancesData?.sdInstances || instancesData.sdInstances.length === 0) {
+        console.log('No SD instances found')
+        return []
+      }
+
+      // Filter instances to only include those confirmed by the user
+      const confirmedInstances = instancesData.sdInstances.filter(
+        (instance: SDInstance) => instance.confirmedByUser
+      )
+
+      if (confirmedInstances.length === 0) {
+        console.log('No confirmed SD instances found')
+        return []
+      }
+
+      console.log('Converting SD instances to VPL devices:', confirmedInstances)
+
+      // Process each instance to create a VPL device
+      const vplDevices: Device[] = []
+
+      for (const instance of confirmedInstances) {
+        // Get the type details for this instance
+        const typeId = instance.type.id
+
+        // Fetch the type details with commands
+        const { data: typeData } = await apolloClient.query({
+          query: GET_PARAMETERS,
+          variables: { sdTypeId: typeId },
+          fetchPolicy: 'network-only'
+        })
+
+        if (!typeData?.sdType) {
+          console.log(`No type data found for instance ${instance.uid}`)
+          continue
+        }
+
+        const sdType = typeData.sdType
+        console.log(`Type data for instance ${instance.uid}:`, sdType)
+
+        // Extract attributes from parameters
+        const attributes = sdType.parameters.map((param: SDParameter) => {
+          // If label is not present, use the denotation
+          return param.label || param.denotation;
+        })
+
+        // Convert commands to functions
+        const functions: DeviceFunction[] = []
+
+        if (sdType.commands && sdType.commands.length > 0) {
+          for (const command of sdType.commands) {
+            // Parse the command payload
+            const parameters = parseCommandPayload(command.payload)
+
+            if (parameters.length > 0) {
+              // This is a function with arguments
+              functions.push({
+                type: 'unit_with_args',
+                group: 'iot',
+                label: command.label || command.name, // If label is not present, use the name
+                icon: selectIconForCommand(command.name, sdType.denotation),
+                backgroundColor: selectColorForDeviceType(sdType.denotation),
+                foregroundColor: '#ffffff',
+                arguments: parameters.map(param => ({
+                  type: mapArgumentType(param.type) as 'str_opt' | 'num_opt' | 'boolean' | 'string' | 'number',
+                  options: param.possibleValues
+                    ? param.possibleValues.map(value => {
+                        // Handle the case where the value might be a string with quotes
+                        let cleanValue = value;
+                        if (typeof value === 'string') {
+                          // Remove quotes if they exist
+                          if ((value.startsWith('"') && value.endsWith('"')) ||
+                              (value.startsWith("'") && value.endsWith("'"))) {
+                            cleanValue = value.substring(1, value.length - 1);
+                          }
+                        }
+                        return {
+                          id: cleanValue,
+                          label: formatLabel(cleanValue)
+                        };
+                      })
+                    : undefined
+                }))
+              })
+            } else {
+              // This is a simple function without arguments
+              functions.push({
+                type: 'unit',
+                group: 'iot',
+                label: command.label || command.name, // If label is not present, use the name
+                icon: selectIconForCommand(command.name, sdType.denotation),
+                backgroundColor: selectColorForDeviceType(sdType.denotation),
+                foregroundColor: '#ffffff'
+              })
+            }
+          }
+        }
+
+        // No default functions will be added if there are no commands
+        // This is intentional - we only want to show actual commands from the device
+
+        // Create the VPL device - use userIdentifier as the name, but fall back to UID if not available
+        vplDevices.push({
+          deviceName: instance.userIdentifier || instance.uid,
+          deviceType: sdType.label || sdType.denotation, // If label is not present, use the denotation
+          attributes,
+          functions
+        })
+      }
+
+      console.log('Converted VPL devices:', vplDevices)
+      return vplDevices
+    } catch (error) {
+      console.error('Error converting SD instances to VPL devices:', error)
+      toast.error('Failed to load devices')
+      return []
+    } finally {
+      setIsLoadingDevices(false)
+    }
+  }
+
+  // Function to update the VPL editor with devices
+  const updateEditorDevices = async () => {
+    const editor = (window as any).currentEditor
+    if (!editor || !editor.isReady) {
+      console.log('Editor not ready for device update')
+      return
+    }
+
+    try {
+      const vplDevices = await convertToVplDevices()
+      setDevices(vplDevices)
+
+      // Update the editor with the devices
+      if (typeof editor.updateDevices === 'function') {
+        editor.updateDevices(vplDevices)
+        console.log('Updated editor with devices:', vplDevices)
+      } else {
+        console.error('No updateDevices function found on editor')
+      }
+    } catch (error) {
+      console.error('Error updating editor devices:', error)
+    }
+  }
+
+  // No debug devices function - we only want to use real devices from the database
 
   // First useEffect to set up the window.currentEditor property
   useEffect(() => {
@@ -312,6 +648,15 @@ export default function AutomationsEditor() {
     }
   }, [isEditorReady, proceduresLoading, proceduresData, currentProgramData])
 
+  // Effect to load devices when the editor is ready
+  useEffect(() => {
+    if (isEditorReady && !instancesLoading && instancesData?.sdInstances) {
+      console.log('Editor ready and instances loaded, updating devices')
+      updateEditorDevices()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditorReady, instancesLoading, instancesData])
+
   // Function to check if a program with the given name already exists
   const checkProgramExists = (name: string): VPLProgram | undefined => {
     if (!programsData?.vplPrograms) return undefined
@@ -321,22 +666,7 @@ export default function AutomationsEditor() {
     )
   }
 
-  // Function to generate a unique name by adding or incrementing a number in parentheses
-  const generateUniqueName = (baseName: string): string => {
-    // Check if the base name already exists
-    if (!checkProgramExists(baseName)) return baseName
-
-    // Try adding numbers in parentheses until we find a unique name
-    let counter = 1
-    let newName = `${baseName} (${counter})` // Added space before parenthesis for better readability
-
-    while (checkProgramExists(newName)) {
-      counter++
-      newName = `${baseName} (${counter})` // Added space before parenthesis for better readability
-    }
-
-    return newName
-  }
+  // Function to generate a unique name has been removed as we no longer use incremented names
 
   const proceduresParsingForSave = async (program: any) => {
     // access the header.userProcedures as json and parse each entry making it into new db entry. if the procedure already exists, update it but only if the data changed and warn the user via toast that existing procedure was updated and it might break functionality if it was used in other programs
@@ -824,20 +1154,15 @@ export default function AutomationsEditor() {
     const existingProgram = checkProgramExists(programName)
 
     if (existingProgram) {
-      // Generate the unique name before showing the confirm dialog
-      const uniqueName = generateUniqueName(programName)
-
-      // Program with the same name exists, ask user what to do
-      if (confirm(`A program named "${programName}" already exists. Do you want to:\n\n` +
+      // Program with the same name exists, ask user if they want to overwrite
+      if (confirm(`A program named "${programName}" already exists.\n\n` +
                   `• Click OK to overwrite the existing program\n` +
-                  `• Click Cancel to save as "${uniqueName}"`)) {
+                  `• Click Cancel to cancel the save operation`)) {
         // User chose to overwrite
         await saveProgram(programName, existingProgram.id)
       } else {
-        // User chose to save as a new name
-        await saveProgram(uniqueName)
-        // Update the program name field to show the new name
-        setProgramName(uniqueName)
+        // User chose to cancel
+        toast.info('Save operation cancelled. Please rename your program if you want to save it as a new program.')
       }
     } else {
       // No duplicate, proceed with normal save
@@ -877,6 +1202,12 @@ export default function AutomationsEditor() {
           // Parse the procedure data from JSON string to object
           const procedureData = JSON.parse(procedure.data)
 
+          // Validate that procedureData is an object
+          if (typeof procedureData !== 'object' || procedureData === null) {
+            console.error(`Invalid procedure data for "${procedure.name}": not an object`)
+            return // Skip this procedure
+          }
+
           // Add the procedure to the program's header.userProcedures
           // The name in the table is the key, and the data is the value
           program.header.userProcedures[procedure.name] = procedureData
@@ -895,6 +1226,11 @@ export default function AutomationsEditor() {
     // Ensure the program header only contains userVariables and userProcedures
     const { userVariables, userProcedures } = program.header
     program.header = { userVariables, userProcedures }
+
+    // Ensure userProcedures is an object, not null or undefined
+    if (!program.header.userProcedures) {
+      program.header.userProcedures = {}
+    }
 
     // Save the original procedures for comparison when saving
     setOriginalProcedures({...program.header.userProcedures})
@@ -943,8 +1279,21 @@ export default function AutomationsEditor() {
           if (editor && editor.isReady) {
             console.log('Directly updating editor with loaded program:', programData)
             try {
+              // Ensure the program has the expected structure before updating
+              if (!programData.block) {
+                programData.block = []
+                console.log('Added missing block array to program')
+              }
+
+              if (!Array.isArray(programData.block)) {
+                programData.block = []
+                console.log('Replaced invalid block with empty array')
+              }
+
               if (typeof editor.updateProgram === 'function') {
-                editor.updateProgram(programData)
+                // Create a deep copy to avoid reference issues
+                const programCopy = JSON.parse(JSON.stringify(programData))
+                editor.updateProgram(programCopy)
                 console.log('Program loaded into editor using updateProgram')
               } else {
                 console.error('No updateProgram function found on editor')
@@ -953,6 +1302,7 @@ export default function AutomationsEditor() {
               }
             } catch (error) {
               console.error('Error updating editor with loaded program:', error)
+              toast.error(`Error loading program: ${error instanceof Error ? error.message : 'Unknown error'}`)
               // If direct update fails, force re-render as fallback
               setEditorKey(prevKey => prevKey + 1)
             }
@@ -963,6 +1313,11 @@ export default function AutomationsEditor() {
           }
 
           toast.success(`Program "${selectedProgramData.name}" loaded successfully`)
+
+          // After loading the program, also load the devices
+          if (!instancesLoading && instancesData?.sdInstances) {
+            updateEditorDevices()
+          }
         } catch (error) {
           console.error('Error parsing program data:', error)
           toast.error('Failed to parse program data')
@@ -1307,6 +1662,13 @@ export default function AutomationsEditor() {
         >
           {proceduresLoading || isRefetchingProcedures ? 'Loading...' : 'Debug: List Procedures'}
         </Button>
+        <Button
+          className="bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80"
+          onClick={updateEditorDevices}
+          disabled={isLoadingDevices}
+        >
+          {isLoadingDevices ? 'Loading...' : 'Debug: Load Devices'}
+        </Button>
       </div>
 
         {/* VPL Editor */}
@@ -1330,6 +1692,11 @@ export default function AutomationsEditor() {
                   const typedEditor = el as any;
                   if (typeof typedEditor.updateProgram === 'function') {
                     typedEditor.updateProgram(currentProgramData);
+
+                    // After loading the program, also load the devices
+                    if (!instancesLoading && instancesData?.sdInstances) {
+                      updateEditorDevices();
+                    }
                   }
                   else {
                     console.error('No updateProgram function found');
@@ -1340,6 +1707,11 @@ export default function AutomationsEditor() {
               } else if (!proceduresLoading && proceduresData?.vplProcedures) {
                 // If no program data but procedures are loaded, initialize with procedures
                 initializeEditorWithProcedures();
+
+                // After initializing with procedures, also load the devices
+                if (!instancesLoading && instancesData?.sdInstances) {
+                  updateEditorDevices();
+                }
               } else {
                 console.log('Waiting for procedures to load before initializing editor');
               }
@@ -1354,19 +1726,43 @@ export default function AutomationsEditor() {
                 // If we have program data and the editor is not yet initialized, try to set it
                 if (currentProgramData && el === (window as any).currentEditor) {
                   try {
+                    // Ensure the program has the expected structure before updating
+                    if (!currentProgramData.block) {
+                      currentProgramData.block = []
+                      console.log('Added missing block array to program (timeout)')
+                    }
+
+                    if (!Array.isArray(currentProgramData.block)) {
+                      currentProgramData.block = []
+                      console.log('Replaced invalid block with empty array (timeout)')
+                    }
+
                     const typedEditor = el as any;
                     if (typeof typedEditor.updateProgram === 'function') {
-                      typedEditor.updateProgram(currentProgramData);
+                      // Create a deep copy to avoid reference issues
+                      const programCopy = JSON.parse(JSON.stringify(currentProgramData))
+                      typedEditor.updateProgram(programCopy);
+
+                      // After loading the program, also load the devices
+                      if (!instancesLoading && instancesData?.sdInstances) {
+                        updateEditorDevices();
+                      }
                     }
                     else {
                       console.error('No updateProgram function found');
                     }
                   } catch (error) {
                     console.error('Error setting program data (via timeout):', error);
+                    toast.error(`Error loading program (timeout): ${error instanceof Error ? error.message : 'Unknown error'}`);
                   }
                 } else if (el === (window as any).currentEditor && !proceduresLoading && proceduresData?.vplProcedures) {
                   // If no program data but procedures are loaded, initialize with procedures
                   initializeEditorWithProcedures();
+
+                  // After initializing with procedures, also load the devices
+                  if (!instancesLoading && instancesData?.sdInstances) {
+                    updateEditorDevices();
+                  }
                 } else if (el === (window as any).currentEditor) {
                   console.log('Waiting for procedures to load before initializing editor (timeout)');
                 }
