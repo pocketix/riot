@@ -133,11 +133,16 @@ func ConvertSharedModelVPLProgramSaveToDLLModel(program sharedModel.VPLProgram) 
 
 	for key, referencedValue := range program.ReferencedValues {
 		sdInstance := databaseClient.LoadSDInstanceBasedOnUID(key)
-		sdType := databaseClient.LoadSDTypeBasedOnDenotation(referencedValue)
 
-		if sdInstance.IsFailure() || sdType.IsFailure() {
-			log.Printf("Save program failed: %s", sdInstance.GetError())
-			return dllModel.VPLProgram{}, sdInstance.GetError()
+		if sdInstance.IsFailure() || sdInstance.GetPayload().IsEmpty() {
+			log.Printf("Could not find SD instance")
+			return dllModel.VPLProgram{}, errors.New("could not find SD instance")
+		}
+
+		sdType := databaseClient.LoadSDType(sdInstance.GetPayload().GetPayload().SDType.ID.GetPayload())
+		if sdType.IsFailure() || sdType.GetPayload().ID.IsEmpty() {
+			log.Printf("Could not find SD type")
+			return dllModel.VPLProgram{}, errors.New("could not find SD type")
 		}
 
 		parameter := sharedUtils.FindFirst(sdType.GetPayload().Parameters, func(parameter dllModel.SDParameter) bool {
@@ -480,6 +485,9 @@ func ConvertSharedModelVPLProgramExecuteToDLLModel(program sharedModel.VPLInterp
 		},
 		SDParameterSnapshotList: SDParameterSnapshotList,
 		SDCommandInvocationList: SDCommandInvocationList,
+		ExecutionTime:           time.Now().Format(time.RFC3339),
+		Enabled:                 true,
+		Success:                 true,
 	}, nil
 }
 

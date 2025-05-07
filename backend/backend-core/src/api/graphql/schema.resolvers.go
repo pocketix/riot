@@ -184,7 +184,12 @@ func (r *mutationResolver) DeleteVPLProgram(ctx context.Context, id uint32) (boo
 }
 
 func (r *mutationResolver) ExecuteVPLProgram(ctx context.Context, id uint32) (graphQLModel.VPLProgramExecutionResult, error) {
-	panic(fmt.Errorf("not implemented: ExecuteVPLProgram - executeVPLProgram"))
+	executeVPLProgramResult := domainLogicLayer.ExecuteVPLProgram(id)
+	if executeVPLProgramResult.IsFailure() {
+		log.Printf("Error occurred (execute VPL program): %s\n", executeVPLProgramResult.GetError().Error())
+		return graphQLModel.VPLProgramExecutionResult{}, executeVPLProgramResult.GetError()
+	}
+	return executeVPLProgramResult.Unwrap()
 }
 
 func (r *mutationResolver) CreateVPLProcedure(ctx context.Context, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error) {
