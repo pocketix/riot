@@ -28,11 +28,16 @@ type VPLInterpretSaveResultOrError struct {
 }
 
 type VPLInterpretExecuteResultOrError struct {
-	Program                      VPLProgram                    `json:"program"`
-	SDParameterSnapshotsToUpdate []SDParameterSnapshotToUpdate `json:"snapshots,omitempty"`
-	SDCommandInvocations         []SDCommandToInvoke           `json:"commands,omitempty"`
-	ExecutionTime                *time.Time                    `json:"executionTime,omitempty"`
-	Error                        string                        `json:"error,omitempty"`
+	Program VPLProgram `json:"program"`
+	// SDParameterSnapshotsToUpdate []SDParameterSnapshotToUpdate `json:"snapshots,omitempty"`
+	SDCommandInvocations []SDCommandToInvoke `json:"commands,omitempty"`
+	ExecutionTime        *time.Time          `json:"executionTime,omitempty"`
+	Error                string              `json:"error,omitempty"`
+}
+
+type VPLInterpretGetDeviceInformationResultOrError struct {
+	SDInstanceResultInformation SDInstanceResultInformation `json:"sdInstanceResultInformation"`
+	Error                       string                      `json:"error,omitempty"`
 }
 
 type SDParameterSnapshotToUpdate struct {
@@ -44,43 +49,20 @@ type SDParameterSnapshotToUpdate struct {
 }
 
 type SDCommandToInvoke struct {
-	SDInstanceUID string              `json:"sdInstanceUID"`
-	CommandName   string              `json:"commandName"`
-	Arguments     []SDCommandArgument `json:"parameters"`
+	SDInstanceID  uint32 `json:"sdInstanceID"`
+	SDInstanceUID string `json:"sdInstanceUID"`
+	CommandID     uint32 `json:"commandID"`
+	CommandName   string `json:"commandName"`
+	Payload       string `json:"payload,omitempty"`
 }
 
-type SDCommandArgument struct {
-	Type  string `json:"type"`
-	Value any    `json:"value"`
-}
-
-type SDParameterSnapshotRequest struct {
+type SDInstanceRequest struct {
 	SDInstanceUID string `json:"sdInstanceUID"`
 	SDParameterID string `json:"sdParameterID"`
+	RequestType   string `json:"requestType"`
 }
 
-type VPLInterpretGetSnapshotsResultOrError struct {
-	SDParameterSnapshotRequest []SDParameterSnapshotResponse `json:"snapshots,omitempty"`
-	Error                      string                        `json:"error,omitempty"`
-}
-
-type SDParameterSnapshotResponse struct {
-	SDInstanceUID        string                `json:"sdInstanceUID"`
-	SDType               SDType                `json:"sdType"`
-	SDParameterSnapshots []SDParameterSnapshot `json:"snapshots"`
-}
-
-type SDType struct {
-	SDParameters []SDParameter `json:"sdParameters"`
-	SDCommands   []SDCommand   `json:"sdCommands"`
-}
-
-type SDParameter struct {
-	ParameterID         uint32 `json:"parameterID"`
-	ParameterDenotation string `json:"parameterDenotation"`
-}
-
-type SDCommand struct {
-	CommandID         uint32 `json:"commandID"`
-	CommandDenotation string `json:"commandDenotation"`
+type SDInstanceResultInformation struct {
+	SDParameterSnapshotToUpdate SDParameterSnapshotToUpdate `json:"sdParameterSnapshotToUpdate"`
+	SDCommandToInvoke           SDCommandToInvoke           `json:"sdCommandToInvoke"`
 }

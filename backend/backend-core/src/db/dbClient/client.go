@@ -789,7 +789,7 @@ func (r *relationalDatabaseClientImpl) LoadVPLProgram(id uint32) sharedUtils.Res
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	vplProgramEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.VPLProgramsEntity](r.db, dbUtil.Where("id = ?", id))
+	vplProgramEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.VPLProgramsEntity](r.db, dbUtil.Where("id = ?", id), dbUtil.Preload("SDParameterSnapshots"))
 
 	if vplProgramEntityLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[dllModel.VPLProgram](vplProgramEntityLoadResult.GetError())
@@ -802,7 +802,7 @@ func (r *relationalDatabaseClientImpl) LoadVPLPrograms() sharedUtils.Result[[]dl
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	vplProgramEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.VPLProgramsEntity](r.db)
+	vplProgramEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.VPLProgramsEntity](r.db, dbUtil.Preload("SDParameterSnapshots"))
 
 	if vplProgramEntitiesLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](vplProgramEntitiesLoadResult.GetError())
