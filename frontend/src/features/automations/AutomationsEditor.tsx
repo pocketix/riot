@@ -175,20 +175,8 @@ export default function AutomationsEditor() {
   const selectIconForCommand = (): string => {
     // List of available icons
     const availableIcons = [
-      'toggleOn',
       'lightbulb',
-      'thermometerHalf',
-      'cpu',
-      'lightningChargeFill',
       'bell',
-      'cloud',
-      'server',
-      'database',
-      'network',
-      'shield',
-      'settings',
-      'battery',
-      'plug'
     ]
 
     // Select a random icon from the list
@@ -218,15 +206,6 @@ export default function AutomationsEditor() {
     return typeMap[sourceType] || 'str_opt'
   }
 
-  // Function to format values for display
-  const formatLabel = (value: any): string => {
-    if (typeof value === 'string') {
-      // Capitalize first letter, lowercase the rest
-      return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
-    }
-    return String(value)
-  }
-
 
   // Function to create an empty program with procedures
   const createEmptyProgramWithProcedures = () => {
@@ -244,25 +223,16 @@ export default function AutomationsEditor() {
       block: []
     }
 
-    // First, ensure we have the latest procedures data
-    console.log('Creating empty program with procedures')
-
-    // Get all procedures from the database - use the latest data
     const allProceduresFromDB = proceduresData?.vplProcedures || []
     console.log('Using procedures from DB:', allProceduresFromDB)
 
-    // Add each procedure to the program's header.userProcedures
     if (allProceduresFromDB.length > 0) {
       allProceduresFromDB.forEach((procedure: VPLProcedure) => {
         try {
-          // Parse the procedure data from JSON string to object
           const procedureData = JSON.parse(procedure.data)
-
-          // Add the procedure to the program's header.userProcedures
-          // The name in the table is the key, and the data is the value
           emptyProgram.header.userProcedures[procedure.name] = procedureData
-
           console.log(`Added procedure "${procedure.name}" to empty program:`, procedureData)
+
         } catch (error) {
           console.error(`Error parsing procedure data for "${procedure.name}":`, error)
         }
@@ -319,16 +289,10 @@ export default function AutomationsEditor() {
         console.log('Added missing block array to empty program')
       }
 
-      if (!Array.isArray(emptyProgramWithProcedures.block)) {
-        emptyProgramWithProcedures.block = []
-        console.log('Replaced invalid block with empty array in empty program')
-      }
-
       console.log('Setting program with procedures in editor:', emptyProgramWithProcedures)
 
-      // Set the program in the editor
       if (typeof editor.updateProgram === 'function') {
-        // Create a deep copy to avoid reference issues
+
         const programCopy = JSON.parse(JSON.stringify(emptyProgramWithProcedures))
         editor.updateProgram(programCopy)
         console.log('Editor initialized with procedures using updateProgram')
@@ -361,18 +325,13 @@ export default function AutomationsEditor() {
         return []
       }
 
-      // Process each instance to create a VPL device
       const vplDevices: Device[] = []
 
       for (const instance of confirmedInstances) {
-        // Get the type details for this instance
         const typeId = instance.type.id
-
-        // Fetch the type details with commands
         const { data: typeData } = await apolloClient.query({
           query: GET_PARAMETERS,
-          variables: { sdTypeId: typeId },
-          fetchPolicy: 'network-only'
+          variables: { sdTypeId: typeId }
         })
 
         if (!typeData?.sdType) {
@@ -384,7 +343,6 @@ export default function AutomationsEditor() {
 
         // Extract attributes from parameters
         const attributes = sdType.parameters.map((param: SDParameter) => {
-          // If label is not present, use the denotation
           return param.label || param.denotation;
         })
 
@@ -393,15 +351,12 @@ export default function AutomationsEditor() {
 
         if (sdType.commands && sdType.commands.length > 0) {
           for (const command of sdType.commands) {
-            // Parse the command payload
             const parameters = parseCommandPayload(command.payload)
-
             if (parameters.length > 0) {
-              // This is a function with arguments
               functions.push({
                 type: 'unit_with_args',
                 group: 'iot',
-                label: command.label || command.name, // If label is not present, use the name
+                label: command.label || command.name,
                 icon: selectIconForCommand(),
                 backgroundColor: selectColorForDeviceType(),
                 foregroundColor: '#ffffff',
@@ -409,10 +364,8 @@ export default function AutomationsEditor() {
                   type: mapArgumentType(param.type) as 'str_opt' | 'num_opt' | 'boolean' | 'string' | 'number',
                   options: param.possibleValues
                     ? param.possibleValues.map(value => {
-                        // Handle the case where the value might be a string with quotes
                         let cleanValue = value;
                         if (typeof value === 'string') {
-                          // Remove quotes if they exist
                           if ((value.startsWith('"') && value.endsWith('"')) ||
                               (value.startsWith("'") && value.endsWith("'"))) {
                             cleanValue = value.substring(1, value.length - 1);
@@ -420,18 +373,17 @@ export default function AutomationsEditor() {
                         }
                         return {
                           id: cleanValue,
-                          label: formatLabel(cleanValue)
+                          label: cleanValue
                         };
                       })
                     : undefined
                 }))
               })
             } else {
-              // This is a simple function without arguments
               functions.push({
                 type: 'unit',
                 group: 'iot',
-                label: command.label || command.name, // If label is not present, use the name
+                label: command.label || command.name,
                 icon: selectIconForCommand(),
                 backgroundColor: selectColorForDeviceType(),
                 foregroundColor: '#ffffff'
@@ -440,13 +392,10 @@ export default function AutomationsEditor() {
           }
         }
 
-        // No default functions will be added if there are no commands
-        // This is intentional - we only want to show actual commands from the device
-
-        // Create the VPL device - use userIdentifier as the name, but fall back to UID if not available
+        // Create the VPL device
         vplDevices.push({
           deviceName: instance.userIdentifier || instance.uid,
-          deviceType: sdType.label || sdType.denotation, // If label is not present, use the denotation
+          deviceType: sdType.label || sdType.denotation,
           attributes,
           functions
         })
@@ -485,9 +434,6 @@ export default function AutomationsEditor() {
     }
   }
 
-  // No debug devices function - we only want to use real devices from the database
-
-  // First useEffect to set up the window.currentEditor property
   useEffect(() => {
     // Define the currentEditor property on the window object
     if (!(window as any).currentEditor) {
@@ -498,13 +444,11 @@ export default function AutomationsEditor() {
       })
     }
 
-    // Clean up when component unmounts
     return () => {
       (window as any).currentEditor = null
     }
   }, [])
 
-  // Track editor ready state
   const [isEditorReady, setIsEditorReady] = useState(false)
 
   // Effect to fetch procedures when the component mounts
@@ -635,8 +579,7 @@ export default function AutomationsEditor() {
 
       apolloClient.query({
         query: GET_VPL_PROGRAMS_FOR_PROCEDURE,
-        variables: { procedureId },
-        fetchPolicy: 'network-only' // Always fetch from network to get the latest data
+        variables: { procedureId }
       })
       .then(resolve)
       .catch(reject)
@@ -654,8 +597,7 @@ export default function AutomationsEditor() {
 
       apolloClient.query({
         query: GET_VPL_PROCEDURES_FOR_PROGRAM,
-        variables: { programId },
-        fetchPolicy: 'network-only' // Always fetch from network to get the latest data
+        variables: { programId }
       })
       .then(resolve)
       .catch(reject)
@@ -676,7 +618,6 @@ export default function AutomationsEditor() {
       console.log('Editor ready and instances loaded, updating devices')
       updateEditorDevices()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditorReady, instancesLoading, instancesData])
 
   // Function to check if a program with the given name already exists
@@ -688,10 +629,8 @@ export default function AutomationsEditor() {
     )
   }
 
-  // Function to generate a unique name has been removed as we no longer use incremented names
 
   const proceduresParsingForSave = async (program: any) => {
-    // access the header.userProcedures as json and parse each entry making it into new db entry. if the procedure already exists, update it but only if the data changed and warn the user via toast that existing procedure was updated and it might break functionality if it was used in other programs
     if (!program.header || !program.header.userProcedures) {
       console.log('DEBUG - No user procedures found in program:', program)
       return
@@ -912,8 +851,6 @@ export default function AutomationsEditor() {
             // Check if the procedure is used in any programs using our helper function
             const affectedProgramNames = getProgramsUsingProcedure(deletedProcedure.id)
             const isUsedInPrograms = isProcedureUsedInPrograms(deletedProcedure.id)
-
-            // Delete the procedure from the database without asking
             deleteVPLProcedure({
               variables: {
                 id: deletedProcedure.id
@@ -1144,9 +1081,12 @@ export default function AutomationsEditor() {
           setProgramName('') // Clear the name field after successful save
 
           // Get the procedures used in this program
-          const usedProcedureIds: string[] = []
           if (programCopy.header && programCopy.header.userProcedures) {
-            console.log(`DEBUG - Finding procedures to link to new program (ID: ${savedProgram.id})`)
+            // Use the ID directly from the creation response
+            const programId = savedProgram.id
+            console.log(`DEBUG - Using program ID from creation response: ${programId}`)
+
+            const usedProcedureIds: string[] = []
 
             // Find the procedure IDs for each procedure in the program
             for (const procedureName in programCopy.header.userProcedures) {
@@ -1161,29 +1101,49 @@ export default function AutomationsEditor() {
               }
             }
 
-            console.log(`DEBUG - Linking ${usedProcedureIds.length} procedures to new program (ID: ${savedProgram.id})`)
+            if (usedProcedureIds.length > 0) {
+              console.log(`DEBUG - Linking ${usedProcedureIds.length} procedures to program "${savedProgram.name}" (ID: ${programId})`)
 
-            // Link each procedure to the new program
-            for (const procedureId of usedProcedureIds) {
-              console.log(`DEBUG - Linking procedure ${procedureId} to new program ${savedProgram.id}`)
-              linkProgramToProcedure({
-                variables: {
-                  programId: savedProgram.id,
-                  procedureId
+              // Delay the linking process slightly to ensure the program is fully created
+              setTimeout(async () => {
+                try {
+                  // Link procedures sequentially
+                  for (const procedureId of usedProcedureIds) {
+                    try {
+                      console.log(`DEBUG - Linking procedure ${procedureId} to program ${programId}`)
+                      await linkProgramToProcedure({
+                        variables: {
+                          programId: programId,
+                          procedureId
+                        }
+                      })
+                      console.log(`DEBUG - Successfully linked procedure ${procedureId} to program ${programId}`)
+                    } catch (error) {
+                      console.error(`Error linking procedure ${procedureId} to program ${programId}:`, error)
+                      // Continue with the next procedure even if this one fails
+                    }
+                  }
+
+                  console.log('DEBUG - All procedure linking attempts completed')
+                } catch (error) {
+                  console.error('Error in procedure linking process:', error)
+                } finally {
+                  // Refresh the data after all linking attempts
+                  refetchPrograms()
+                  initializeProcedureLinks()
                 }
-              })
-              .then(() => {
-                console.log(`DEBUG - Successfully linked procedure ${procedureId} to new program ${savedProgram.id}`)
-              })
-              .catch(error => {
-                console.error(`Error linking procedure ${procedureId} to new program ${savedProgram.id}:`, error)
-              })
+              }, 200) // Small delay to ensure program creation is complete
+            } else {
+              console.log('DEBUG - No procedures to link')
+              refetchPrograms()
+              initializeProcedureLinks()
             }
+          } else {
+            // If there are no procedures, just refresh the data
+            console.log('DEBUG - No procedures to link')
+            refetchPrograms()
+            initializeProcedureLinks()
           }
-
-          refetchPrograms()
-          // Refresh the procedure links
-          initializeProcedureLinks()
         })
         .catch(error => {
           console.error('Save operation error:', error)
@@ -1629,6 +1589,20 @@ export default function AutomationsEditor() {
       console.log('DEBUG - Processing procedures for update')
       await proceduresParsingForSave(programCopy)
       console.log('DEBUG - Procedures processed successfully')
+
+      // Update the editor with the modified program to maintain the current state
+      if (typeof editor.updateProgram === 'function') {
+        // Create another copy to avoid reference issues
+        const updatedProgramCopy = JSON.parse(JSON.stringify(programCopy))
+        editor.updateProgram(updatedProgramCopy)
+        console.log('DEBUG - Updated editor with processed program')
+
+        // Update the current program data state
+        setCurrentProgramData(updatedProgramCopy)
+      } else {
+        console.error('No updateProgram function found on editor')
+      }
+
       toast.success('Procedures updated successfully')
 
       // Refresh the procedure links
