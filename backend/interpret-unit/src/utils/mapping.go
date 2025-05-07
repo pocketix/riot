@@ -7,7 +7,7 @@ import (
 )
 
 func ReferencedValue2StringMap(referencedValue map[string]models.ReferencedValue) map[string]string {
-	result := make(map[string]string)
+	result := make(map[string]string, 0)
 	for _, value := range referencedValue {
 		result[value.DeviceID] = value.ParameterName
 	}
