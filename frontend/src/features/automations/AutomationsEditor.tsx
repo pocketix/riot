@@ -851,37 +851,77 @@ export default function AutomationsEditor() {
             // Check if the procedure is used in any programs using our helper function
             const affectedProgramNames = getProgramsUsingProcedure(deletedProcedure.id)
             const isUsedInPrograms = isProcedureUsedInPrograms(deletedProcedure.id)
-            deleteVPLProcedure({
-              variables: {
-                id: deletedProcedure.id
-              }
-            })
-            .then(() => {
-              // If there are affected programs, show a warning with their names
-              if (isUsedInPrograms) {
-                const programNames = affectedProgramNames.join('\n')
-                toast.warning(
-                  <div>
-                    <p>⚠️ IMPORTANT: Procedure "{originalProcedureName}" was deleted. It might affect the following programs:</p>
-                    <pre style={{ maxHeight: '150px', overflow: 'auto', marginTop: '8px', padding: '8px', background: '#f0f0f0', borderRadius: '4px' }}>
-                      {programNames}
-                    </pre>
-                  </div>,
-                  { duration: 8000 }
-                )
-              } else {
-                toast.success(`Procedure "${originalProcedureName}" deleted successfully`)
-              }
+            const affectedProgramIds = Array.from(procedureLinks.get(deletedProcedure.id) || new Set())
 
-              // Refresh the procedures list to show the updated data
-              refetchProcedures()
-              // Refresh the procedure links
-              initializeProcedureLinks()
+            console.log(`DEBUG - Deleting procedure "${originalProcedureName}" (ID: ${deletedProcedure.id})`)
+            console.log(`DEBUG - Procedure is used in ${affectedProgramIds.length} programs:`, affectedProgramIds)
+
+            // First, manually unlink the procedure from all programs that use it
+            const unlinkPromises = affectedProgramIds.map((programId) => {
+              console.log(`DEBUG - Manually unlinking procedure ${deletedProcedure.id} from program ${programId}`)
+              return unlinkProgramFromProcedure({
+                variables: {
+                  programId,
+                  procedureId: deletedProcedure.id
+                }
+              })
+              .then(() => {
+                console.log(`DEBUG - Successfully unlinked procedure ${deletedProcedure.id} from program ${programId}`)
+              })
+              .catch(error => {
+                console.error(`Error unlinking procedure ${deletedProcedure.id} from program ${programId}:`, error)
+                // Continue with the next unlink even if this one fails
+              })
             })
-            .catch(error => {
-              console.error('Error deleting procedure:', error)
-              toast.error(`Failed to delete procedure "${originalProcedureName}": ${error.message || 'Unknown error'}`)
-            })
+
+            // Wait for all unlink operations to complete before deleting the procedure
+            Promise.all(unlinkPromises)
+              .then(() => {
+                console.log(`DEBUG - All unlink operations completed, now deleting procedure ${deletedProcedure.id}`)
+
+                // Now delete the procedure
+                return deleteVPLProcedure({
+                  variables: {
+                    id: deletedProcedure.id
+                  }
+                })
+              })
+              .then(() => {
+                // If there are affected programs, show a warning with their names
+                if (isUsedInPrograms) {
+                  const programNames = affectedProgramNames.join('\n')
+                  toast.warning(
+                    <div>
+                      <p>⚠️ IMPORTANT: Procedure "{originalProcedureName}" was deleted. It might affect the following programs:</p>
+                      <pre style={{ maxHeight: '150px', overflow: 'auto', marginTop: '8px', padding: '8px', background: '#f0f0f0', borderRadius: '4px' }}>
+                        {programNames}
+                      </pre>
+                    </div>,
+                    { duration: 8000 }
+                  )
+                } else {
+                  toast.success(`Procedure "${originalProcedureName}" deleted successfully`)
+                }
+
+                // Wait a moment to ensure the backend has processed all changes
+                setTimeout(() => {
+                  // Refresh the procedures list to show the updated data
+                  refetchProcedures()
+                  // Refresh the procedure links
+                  initializeProcedureLinks()
+                  // Refresh the programs list
+                  refetchPrograms()
+                }, 500)
+              })
+              .catch(error => {
+                console.error('Error in procedure deletion process:', error)
+                toast.error(`Failed to delete procedure "${originalProcedureName}": ${error.message || 'Unknown error'}`)
+
+                // Still refresh the data to ensure UI is consistent
+                refetchProcedures()
+                initializeProcedureLinks()
+                refetchPrograms()
+              })
           } catch (error) {
             console.error('Error fetching programs for procedure:', error)
             // Continue with the deletion even if we can't fetch the affected programs
@@ -894,12 +934,22 @@ export default function AutomationsEditor() {
               toast.warning(`⚠️ IMPORTANT: Procedure "${originalProcedureName}" was deleted from the database. If it was used in other programs, this might cause issues.`, {
                 duration: 8000 // 8 seconds
               })
-              refetchProcedures()
-              initializeProcedureLinks()
+
+              // Wait a moment to ensure the backend has processed all changes
+              setTimeout(() => {
+                refetchProcedures()
+                initializeProcedureLinks()
+                refetchPrograms()
+              }, 500)
             })
             .catch(error => {
               console.error('Error deleting procedure:', error)
               toast.error(`Failed to delete procedure "${originalProcedureName}": ${error.message || 'Unknown error'}`)
+
+              // Still refresh the data to ensure UI is consistent
+              refetchProcedures()
+              initializeProcedureLinks()
+              refetchPrograms()
             })
           }
         }
