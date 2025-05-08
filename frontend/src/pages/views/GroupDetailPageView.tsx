@@ -30,7 +30,7 @@ export const GroupDetailPageView = ({ groupData }: GroupDetailPageViewProps) => 
   }
 
   return (
-    <div className="mx-auto px-6 py-3">
+    <div className="px-6 py-3">
       <div className="mb-2 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="flex items-center gap-2">

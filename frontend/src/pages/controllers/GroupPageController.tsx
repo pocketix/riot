@@ -49,8 +49,6 @@ export const GroupPageController = () => {
         { total: 0, fulfilled: 0, notFulfilled: 0 }
       )
 
-      console.log('KPI stats in controller', kpiStats)
-
       return {
         groupID: group.id,
         userIdentifier: group.userIdentifier,

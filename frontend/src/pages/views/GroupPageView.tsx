@@ -35,7 +35,6 @@ export const GroupPageView = ({
   setSortDirection
 }: GroupPageViewProps) => {
   const [activeTab, setActiveTab] = useState<'all' | 'issues'>('all')
-  console.log('groups', groups)
 
   const displayedGroups = activeTab === 'issues' ? groups.filter((group) => group.kpiStats.notFulfilled > 0) : groups
 
