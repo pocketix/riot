@@ -6,7 +6,7 @@ import { ResponsiveBulletChart } from '../visualizations/ResponsiveBulletChart'
 import { SwitchVisualization } from '../visualizations/SwitchVisualization'
 import { ResponsiveEntityTable } from '../visualizations/ResponsiveEntityTable'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
-import { SequentialStatesVisualization } from '../devices/components/SequentialStatesVisualization'
+import { SequentialStatesVisualization } from '../visualizations/SequentialStatesVisualization'
 import { VisualizationTypes } from '@/types/dashboard/gridItem'
 
 export interface VisualizationGalleryProps {

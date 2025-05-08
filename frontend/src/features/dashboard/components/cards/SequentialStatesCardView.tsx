@@ -1,7 +1,7 @@
 import { SequentialStatesCardConfig } from '@/schemas/dashboard/visualizations/SequentialStatesBuilderSchema'
 import { BaseCard } from './BaseCard'
 import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
-import { SequentialStatesVisualization } from '../devices/components/SequentialStatesVisualization'
+import { SequentialStatesVisualization } from '../visualizations/SequentialStatesVisualization'
 import { Datum } from '@nivo/line'
 
 interface SequentialStatesCardViewProps extends BaseVisualizationCardProps<SequentialStatesCardConfig> {

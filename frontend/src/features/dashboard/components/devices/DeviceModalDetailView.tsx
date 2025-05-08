@@ -18,7 +18,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Serie } from '@nivo/line'
 import { SingleParameterCombobox } from '../builders/components/single-parameter-combobox'
-import { SequentialStatesVisualization } from './components/SequentialStatesVisualization'
+import { SequentialStatesVisualization } from '../visualizations/SequentialStatesVisualization'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { FC, useMemo } from 'react'

@@ -3,7 +3,7 @@ import { RiAlertFill } from 'react-icons/ri'
 import { Separator } from '@/components/ui/separator'
 import { GroupModalDetailView } from '../GroupModalDetailView'
 import { useState, useMemo } from 'react'
-import { GroupDetailWithKPIs } from '@/controllers/details/GroupDetailPageController'
+import { GroupDetailWithKPIs } from '@/pages/controllers/details/GroupDetailPageController'
 import '@/index.css'
 
 interface SmallGroupCardProps {

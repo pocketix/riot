@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { useSdInstanceGroupsWithKpiDataQuery } from '@/generated/graphql'
-import { GroupDetailPageView } from '@/views/GroupDetailPageView'
+import { GroupDetailPageView } from '@/pages/views/GroupDetailPageView'
 import { InstanceWithKPIs, KPIStats } from '@/context/stores/kpiStore'
 import { useKpiContext } from '@/context/KPIContext'
 import { getGroupKPIStats } from '@/features/dashboard/components/groups/utils/getGroupKPIStats'

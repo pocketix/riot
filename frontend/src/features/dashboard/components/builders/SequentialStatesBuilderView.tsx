@@ -12,7 +12,7 @@ import {
   SequentialStatesCardConfig
 } from '@/schemas/dashboard/visualizations/SequentialStatesBuilderSchema'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
-import { SequentialStatesVisualization } from '../devices/components/SequentialStatesVisualization'
+import { SequentialStatesVisualization } from '../visualizations/SequentialStatesVisualization'
 import { Datum } from '@nivo/line'
 import { useEffect, useMemo } from 'react'
 import { TimeFrameSelector } from './components/time-frame-selector'

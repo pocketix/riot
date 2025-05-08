@@ -1,5 +1,5 @@
 import { SmallGroupCard } from './components/SmallGroupCard'
-import { GroupDetailWithKPIs } from '@/controllers/details/GroupDetailPageController'
+import { GroupDetailWithKPIs } from '@/pages/controllers/details/GroupDetailPageController'
 
 interface GroupsViewProps {
   groups: GroupDetailWithKPIs[]
