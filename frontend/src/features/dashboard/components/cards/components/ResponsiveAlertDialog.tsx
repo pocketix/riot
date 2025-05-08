@@ -82,7 +82,7 @@ export function ResponsiveAlertDialog(props: ResponsiveAlertDialogProps) {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpen(false)}>Cancel</AlertDialogCancel>
             <Button variant="destructive" onClick={handleDelete}>
-              Continue
+              Confirm
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -112,7 +112,7 @@ export function ResponsiveAlertDialog(props: ResponsiveAlertDialogProps) {
               <Button variant="outline">Cancel</Button>
             </DrawerClose>
             <Button variant="destructive" onClick={handleDelete}>
-              Continue
+              Confirm
             </Button>
           </DrawerFooter>
         </div>
