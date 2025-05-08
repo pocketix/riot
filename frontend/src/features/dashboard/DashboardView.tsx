@@ -2,8 +2,8 @@
 import '@/../node_modules/react-grid-layout/css/styles.css'
 import '@/../node_modules/react-resizable/css/styles.css'
 
-import { Responsive, Layout, WidthProvider } from 'react-grid-layout'
-import { useMemo, useState, useLayoutEffect, useCallback } from 'react'
+import { Responsive, Layout } from 'react-grid-layout'
+import { useState, useLayoutEffect, useCallback, useEffect, useMemo } from 'react'
 import { DashboardRoot, Navbar, MainGrid } from '@/styles/dashboard/DashboardGlobal'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -28,6 +28,7 @@ import { ResponsiveTabs } from './components/ResponsiveTabs'
 import { useSwipeable } from 'react-swipeable'
 import { SwitchCardController } from './components/cards/SwitchCardController'
 import { SequentialStatesCardController } from './components/cards/SequentialStatesCardController'
+import './react-grid-layout.css'
 
 interface DashboardViewProps {
   layouts: { [key: string]: Layout[] }
@@ -61,7 +62,6 @@ interface DashboardViewProps {
 }
 
 const DashboardView = (props: DashboardViewProps) => {
-  const ResponsiveGridLayout = useMemo(() => WidthProvider(Responsive), [])
   const [resizeCardID, setResizeCardID] = useState<string | null>(null)
   const [currentBreakpoint, setCurrentBreakpoint] = useState('lg')
   const [width, setWidth] = useState<number>(0)
@@ -168,12 +168,49 @@ const DashboardView = (props: DashboardViewProps) => {
         props.onChangeTab(props.getPreviousTabId())
       }
     },
-    // TODO: maybe adjust?
     swipeDuration: 500,
     delta: 80
   })
 
-  if (!props.mounted || !props.layouts || !props.details || !props.instances || !ResponsiveGridLayout) {
+  // Alternative for the default RGL widthProvider,
+  // as widthProvider starts off with small width and increments.
+  // The default widthProvider also uses the window size, which is not ideal.
+  // Further described in: https://github.com/react-grid-layout/react-grid-layout/issues/1338
+  // This caused the elements to be smaller than expected and most of them were visible right
+  // after mounting. Causing all the InView components to trigger, thus fetch data as well.
+  // The code below is also from the issue mentioned above.
+  function useSize() {
+    const [rect, setRect] = useState<DOMRectReadOnly | null>(null)
+
+    const resizer = useMemo(
+      () =>
+        new ResizeObserver((entries) => {
+          entries && setRect(entries[0].contentRect)
+        }),
+      []
+    )
+
+    const ref = useCallback(
+      (node: HTMLElement | null) => {
+        if (node !== null) {
+          resizer.observe(node)
+          setRect(node.getBoundingClientRect())
+        }
+      },
+      [resizer]
+    )
+
+    useEffect(() => {
+      return () => resizer.disconnect()
+    }, [resizer])
+
+    return [rect, ref] as const
+  }
+
+  const [rect, widthRef] = useSize()
+  const gridWidth = rect ? rect.width : 10
+
+  if (!props.mounted || !props.layouts || !props.details || !props.instances || !gridWidth) {
     return (
       <div className="grid grid-cols-2 gap-4 overflow-hidden p-4">
         <Skeleton variant="rounded" width={'100%'} height={200} />
@@ -230,137 +267,140 @@ const DashboardView = (props: DashboardViewProps) => {
               </Button>
             </Card>
           ) : (
-            <ResponsiveGridLayout
-              key={currentBreakpoint}
-              className="layout"
-              layouts={props.layouts}
-              onLayoutChange={(currentLayout, allLayouts) =>
-                props.onLayoutChange(currentLayout, allLayouts, currentBreakpoint)
-              }
-              onBreakpointChange={handleBreakpointChanged}
-              breakpoints={{ lg: 1200, md: 996, xs: 480, xxs: 0 }}
-              cols={props.cols}
-              draggableHandle=".drag-handle"
-              rowHeight={props.rowHeight}
-              isDraggable={props.editMode}
-              isResizable={props.editMode}
-              isDroppable={props.editMode}
-              onResizeStart={handleResizeStart}
-              onResizeStop={handleResizeStop}
-              useCSSTransforms={false}
-              containerPadding={[10, 0]}
-              compactType={'vertical'}
-              verticalCompact={true}
-              resizeHandle={<MyHandle $editMode={props.editMode} />}
-            >
-              {props.layouts[currentBreakpoint]?.map((item: Layout) => {
-                const itemId = item.i
-                const detail = props.details ? props.details[itemId] : undefined
-
-                if (!detail) return null
-
-                const cardProps = {
-                  id: itemId,
-                  className: highlightedCardID === itemId ? 'z-10' : ''
+            <div ref={widthRef}>
+              <Responsive
+                width={gridWidth}
+                key={currentBreakpoint}
+                className="layout"
+                layouts={props.layouts}
+                onLayoutChange={(currentLayout, allLayouts) =>
+                  props.onLayoutChange(currentLayout, allLayouts, currentBreakpoint)
                 }
+                onBreakpointChange={handleBreakpointChanged}
+                breakpoints={{ lg: 1200, md: 996, xs: 480, xxs: 0 }}
+                cols={props.cols}
+                draggableHandle=".drag-handle"
+                rowHeight={props.rowHeight}
+                isDraggable={props.editMode}
+                isResizable={props.editMode}
+                isDroppable={props.editMode}
+                onResizeStart={handleResizeStart}
+                onResizeStop={handleResizeStop}
+                useCSSTransforms={true}
+                containerPadding={[10, 0]}
+                compactType={'vertical'}
+                verticalCompact={true}
+                resizeHandle={<MyHandle $editMode={props.editMode} />}
+              >
+                {props.layouts[currentBreakpoint]?.map((item: Layout) => {
+                  const itemId = item.i
+                  const detail = props.details ? props.details[itemId] : undefined
 
-                const visualizationProps = {
-                  cardID: itemId,
-                  layout: props.layouts[currentBreakpoint],
-                  setLayout: (newLayout: Layout[]) => {
-                    const updatedLayouts = {
-                      ...props.layouts,
-                      [currentBreakpoint]: newLayout
-                    }
-                    props.onLayoutChange(newLayout, updatedLayouts, currentBreakpoint)
-                  },
-                  editModeEnabled: props.editMode,
-                  breakPoint: currentBreakpoint,
-                  cols: props.cols,
-                  handleDeleteItem: props.onDeleteItem,
-                  height: props.rowHeight,
-                  width,
-                  setHighlightedCardID,
-                  configuration: props.details[itemId],
-                  beingResized: resizeCardID === itemId,
-                  handleSaveEdit: (config: BuilderResult<AllConfigTypes>) =>
-                    props.onSaveConfig(config, props.details[itemId], itemId)
-                }
+                  if (!detail) return null
 
-                const renderVisualization = () => {
-                  switch (detail.visualization) {
-                    case 'table':
-                      return (
-                        <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
-                          {({ inView, ref }) => (
-                            <div ref={ref} className="h-full w-full">
-                              <TableCardController {...visualizationProps} isVisible={inView} />
-                            </div>
-                          )}
-                        </InView>
-                      )
-                    case 'bullet':
-                      return (
-                        <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
-                          {({ inView, ref }) => (
-                            <div ref={ref} className="h-full w-full">
-                              <BulletCardController {...visualizationProps} isVisible={inView} />
-                            </div>
-                          )}
-                        </InView>
-                      )
-                    case 'line':
-                      return (
-                        <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
-                          {({ inView, ref }) => (
-                            <div ref={ref} className="h-full w-full">
-                              <ChartCardController {...visualizationProps} isVisible={inView} />
-                            </div>
-                          )}
-                        </InView>
-                      )
-                    case 'entitycard':
-                      return (
-                        <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
-                          {({ inView, ref }) => (
-                            <div ref={ref} className="h-full w-full">
-                              <EntityCardController {...visualizationProps} isVisible={inView} />
-                            </div>
-                          )}
-                        </InView>
-                      )
-                    case 'switch':
-                      return (
-                        <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
-                          {({ inView, ref }) => (
-                            <div ref={ref} className="h-full w-full">
-                              <SwitchCardController {...visualizationProps} isVisible={inView} />
-                            </div>
-                          )}
-                        </InView>
-                      )
-                    case 'seqstates':
-                      return (
-                        <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
-                          {({ inView, ref }) => (
-                            <div ref={ref} className="h-full w-full">
-                              <SequentialStatesCardController {...visualizationProps} isVisible={inView} />
-                            </div>
-                          )}
-                        </InView>
-                      )
-                    default:
-                      return null
+                  const cardProps = {
+                    id: itemId,
+                    className: highlightedCardID === itemId ? 'z-10' : ''
                   }
-                }
 
-                return (
-                  <Card key={itemId} {...cardProps}>
-                    {renderVisualization()}
-                  </Card>
-                )
-              })}
-            </ResponsiveGridLayout>
+                  const visualizationProps = {
+                    cardID: itemId,
+                    layout: props.layouts[currentBreakpoint],
+                    setLayout: (newLayout: Layout[]) => {
+                      const updatedLayouts = {
+                        ...props.layouts,
+                        [currentBreakpoint]: newLayout
+                      }
+                      props.onLayoutChange(newLayout, updatedLayouts, currentBreakpoint)
+                    },
+                    editModeEnabled: props.editMode,
+                    breakPoint: currentBreakpoint,
+                    cols: props.cols,
+                    handleDeleteItem: props.onDeleteItem,
+                    height: props.rowHeight,
+                    width,
+                    setHighlightedCardID,
+                    configuration: props.details[itemId],
+                    beingResized: resizeCardID === itemId,
+                    handleSaveEdit: (config: BuilderResult<AllConfigTypes>) =>
+                      props.onSaveConfig(config, props.details[itemId], itemId)
+                  }
+
+                  const renderVisualization = () => {
+                    switch (detail.visualization) {
+                      case 'table':
+                        return (
+                          <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
+                            {({ inView, ref }) => (
+                              <div ref={ref} className="h-full w-full">
+                                <TableCardController {...visualizationProps} isVisible={inView} />
+                              </div>
+                            )}
+                          </InView>
+                        )
+                      case 'bullet':
+                        return (
+                          <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
+                            {({ inView, ref }) => (
+                              <div ref={ref} className="h-full w-full">
+                                <BulletCardController {...visualizationProps} isVisible={inView} />
+                              </div>
+                            )}
+                          </InView>
+                        )
+                      case 'line':
+                        return (
+                          <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
+                            {({ inView, ref }) => (
+                              <div ref={ref} className="h-full w-full">
+                                <ChartCardController {...visualizationProps} isVisible={inView} />
+                              </div>
+                            )}
+                          </InView>
+                        )
+                      case 'entitycard':
+                        return (
+                          <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
+                            {({ inView, ref }) => (
+                              <div ref={ref} className="h-full w-full">
+                                <EntityCardController {...visualizationProps} isVisible={inView} />
+                              </div>
+                            )}
+                          </InView>
+                        )
+                      case 'switch':
+                        return (
+                          <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
+                            {({ inView, ref }) => (
+                              <div ref={ref} className="h-full w-full">
+                                <SwitchCardController {...visualizationProps} isVisible={inView} />
+                              </div>
+                            )}
+                          </InView>
+                        )
+                      case 'seqstates':
+                        return (
+                          <InView threshold={0} triggerOnce={true} rootMargin="100px" className="h-full w-full">
+                            {({ inView, ref }) => (
+                              <div ref={ref} className="h-full w-full">
+                                <SequentialStatesCardController {...visualizationProps} isVisible={inView} />
+                              </div>
+                            )}
+                          </InView>
+                        )
+                      default:
+                        return null
+                    }
+                  }
+
+                  return (
+                    <Card key={itemId} {...cardProps}>
+                      {renderVisualization()}
+                    </Card>
+                  )
+                })}
+              </Responsive>
+            </div>
           )}
         </div>
       </MainGrid>
