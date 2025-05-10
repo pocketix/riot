@@ -123,7 +123,7 @@ export const DeviceModalDetailView = (props: DeviceModalDetailViewProps) => {
     } else {
       return (
         <div className="mt-2 h-[60px] w-full min-w-0 overflow-hidden px-2">
-          <SequentialStatesVisualization data={props.processedData[0].data} />
+          <SequentialStatesVisualization data={props.processedData[0].data} disableDetailsOnClick />
         </div>
       )
     }

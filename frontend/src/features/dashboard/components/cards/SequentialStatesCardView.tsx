@@ -24,7 +24,14 @@ export const SequentialStatesCardView = (props: SequentialStatesCardViewProps) =
       configuration={props.cardConfig!}
     >
       <div className="h-full w-full">
-        <SequentialStatesVisualization data={props.data} dataInfo={props.dataInfo} />
+        <SequentialStatesVisualization
+          data={props.data}
+          dataInfo={{
+            ...props.dataInfo,
+            instanceID: props.cardConfig?.instance.id!,
+            parameterID: props.cardConfig?.parameter.id!
+          }}
+        />
       </div>
     </BaseCard>
   )

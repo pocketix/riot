@@ -151,7 +151,7 @@ export const DeviceDetailPageView = ({
     } else {
       return (
         <div className="flex h-[65px] w-full flex-col items-center justify-center">
-          <SequentialStatesVisualization data={data[0].data} />
+          <SequentialStatesVisualization data={data[0].data} disableDetailsOnClick />
         </div>
       )
     }

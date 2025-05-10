@@ -291,7 +291,7 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
         onClick={() => setSelectedVisualization('seqstates')}
       >
         <div className="absolute inset-0 z-10" />
-        <SequentialStatesVisualization data={seqStatesData} />
+        <SequentialStatesVisualization data={seqStatesData} disableDetailsOnClick />
       </Card>
     </div>
   )

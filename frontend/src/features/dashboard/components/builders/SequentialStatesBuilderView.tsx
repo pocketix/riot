@@ -79,6 +79,7 @@ export function SequentialStatesBuilderView(props: SequentialStatesBuilderViewPr
         <div className="h-[60px] w-full overflow-hidden">
           <SequentialStatesVisualization
             data={props.data}
+            disableDetailsOnClick
             dataInfo={{
               instanceName: wholeInstance?.userIdentifier || instance?.uid!,
               parameterName: wholeParameter?.label || wholeParameter?.denotation || parameter?.denotation
