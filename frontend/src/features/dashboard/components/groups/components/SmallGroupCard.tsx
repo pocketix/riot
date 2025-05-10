@@ -19,7 +19,7 @@ const SmallGroupCardContainer = styled.div<{ $hasFailingKPIs: boolean }>`
   max-width: 200px;
   padding: 4px 8px;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   align-items: center;
   justify-items: center;
   cursor: pointer;
