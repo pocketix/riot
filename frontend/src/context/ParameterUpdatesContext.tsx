@@ -32,7 +32,7 @@ export function ParameterSnapshotProvider({ children }: ParameterSnapshotProvide
   const { instances, getInstanceById } = useInstances()
 
   // Initialize from stored snapshots which are included in the instance data
-  // TODO: This wont work as the snapshot data does not update in useInstances
+  // The data may not be up-to-date as snapshot data does not update in useInstances
   const initializeInstance = useCallback(
     (instanceId: number) => {
       if (initialized[instanceId]) return
