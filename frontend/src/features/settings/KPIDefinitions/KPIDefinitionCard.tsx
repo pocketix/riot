@@ -87,7 +87,6 @@ export default function KPIDefinitionCard({ kpiDefinition, onDelete }: KPIDefini
         </Button>
       </ButtonGroup>
 
-      {/* Modal Window for Confirming Deletion */}
       <DeleteConfirmationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
