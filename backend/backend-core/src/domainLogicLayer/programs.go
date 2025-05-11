@@ -3,7 +3,6 @@ package domainLogicLayer
 import (
 	"errors"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
@@ -15,7 +14,6 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	amqp "github.com/rabbitmq/amqp091-go"
-	"golang.org/x/net/context"
 )
 
 func CreateVPLProgram(name string, data string) sharedUtils.Result[graphQLModel.VPLProgram] {
@@ -181,13 +179,6 @@ func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExec
 	correlationId := randomString(32)
 	outputChannel := make(chan sharedUtils.Result[sharedModel.VPLInterpretExecuteResultOrError])
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	go startSnapshotRequestListener(ctx, &wg)
-
 	go func() {
 		client := rabbitmq.NewClient()
 		defer client.Dispose()
@@ -240,8 +231,6 @@ func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExec
 	}
 
 	result := <-outputChannel
-	cancel()
-	wg.Wait()
 
 	if result.IsFailure() {
 		log.Printf("Execute program failed: %s", result.GetError())
@@ -252,25 +241,7 @@ func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExec
 	return sharedUtils.NewSuccessResult[graphQLModel.VPLProgramExecutionResult](dll2gql.ToGraphQLModelPLProgramExecutionResult(dllResult))
 }
 
-func ConvertExecuteResultToDLLModel(programExecutionResult sharedModel.VPLInterpretExecuteResultOrError, executedProgram dllModel.VPLProgram) dllModel.VPLProgramExecutionResult {
-	return dllModel.VPLProgramExecutionResult{
-		Program: executedProgram,
-		SDCommandInvocationList: sharedUtils.Map(programExecutionResult.SDCommandInvocations, func(sdCommandInvocation sharedModel.SDCommandToInvoke) dllModel.SDCommandInvocation {
-			return dllModel.SDCommandInvocation{
-				InvocationTime: programExecutionResult.ExecutionTime.Format(time.RFC3339),
-				Payload:        sdCommandInvocation.Payload,
-				CommandID:      sdCommandInvocation.CommandID,
-				SDInstanceID:   sdCommandInvocation.SDInstanceID,
-			}
-		}),
-		ExecutionTime: programExecutionResult.ExecutionTime.Format(time.RFC3339),
-		Enabled:       true,
-		Success:       true,
-	}
-}
-
-func startSnapshotRequestListener(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
+func StartDeviceInformationRequestConsumer() error {
 	databaseClient := dbClient.GetRelationalDatabaseClientInstance()
 
 	client := rabbitmq.NewClient()
@@ -281,13 +252,6 @@ func startSnapshotRequestListener(ctx context.Context, wg *sync.WaitGroup) {
 		sharedConstants.VPLInterpretGetSnapshotsResponseQueueName,
 		"",
 		func(messagePayload sharedModel.SDInstanceRequest, delivery amqp.Delivery) error {
-			select {
-			case <-ctx.Done():
-				log.Printf("Snapshot request listener stopped")
-				return nil
-			default:
-			}
-
 			log.Printf("Received snapshot request: %v\n", messagePayload)
 
 			var SDInstanceResultInformation sharedModel.VPLInterpretGetDeviceInformationResultOrError
@@ -351,7 +315,7 @@ func startSnapshotRequestListener(ctx context.Context, wg *sync.WaitGroup) {
 
 			err := client.PublishJSONMessageRPC(
 				sharedUtils.NewEmptyOptional[string](),
-				sharedUtils.NewOptionalOf(sharedConstants.VPLInterpretGetSnapshotsRequestQueueName),
+				sharedUtils.NewOptionalOf(delivery.ReplyTo),
 				serializedResponse.GetPayload(),
 				delivery.CorrelationId,
 				sharedUtils.NewOptionalOf(sharedConstants.VPLInterpretGetSnapshotsResponseQueueName),
@@ -367,6 +331,24 @@ func startSnapshotRequestListener(ctx context.Context, wg *sync.WaitGroup) {
 
 	if err != nil {
 		log.Printf("Received snapshot request failed: %s", err)
+	}
+	return err
+}
+
+func ConvertExecuteResultToDLLModel(programExecutionResult sharedModel.VPLInterpretExecuteResultOrError, executedProgram dllModel.VPLProgram) dllModel.VPLProgramExecutionResult {
+	return dllModel.VPLProgramExecutionResult{
+		Program: executedProgram,
+		SDCommandInvocationList: sharedUtils.Map(programExecutionResult.SDCommandInvocations, func(sdCommandInvocation sharedModel.SDCommandToInvoke) dllModel.SDCommandInvocation {
+			return dllModel.SDCommandInvocation{
+				InvocationTime: programExecutionResult.ExecutionTime.Format(time.RFC3339),
+				Payload:        sdCommandInvocation.Payload,
+				CommandID:      sdCommandInvocation.CommandID,
+				SDInstanceID:   sdCommandInvocation.SDInstanceID,
+			}
+		}),
+		ExecutionTime: programExecutionResult.ExecutionTime.Format(time.RFC3339),
+		Enabled:       true,
+		Success:       true,
 	}
 }
 
