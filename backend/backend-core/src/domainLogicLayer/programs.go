@@ -2,6 +2,7 @@ package domainLogicLayer
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -134,7 +135,7 @@ func ConvertSharedModelVPLProgramSaveToDLLModel(program sharedModel.VPLProgram) 
 
 		if sdInstance.IsFailure() || sdInstance.GetPayload().IsEmpty() || sdInstance.GetPayload().GetPayload().ID.IsEmpty() {
 			log.Printf("Could not find SD instance")
-			return dllModel.VPLProgram{}, errors.New("could not find SD instance")
+			return dllModel.VPLProgram{}, fmt.Errorf("could not find SD instance %s", key)
 		}
 
 		parameter := sharedUtils.FindFirst(sdInstance.GetPayload().GetPayload().SDType.Parameters, func(parameter dllModel.SDParameter) bool {
@@ -143,7 +144,7 @@ func ConvertSharedModelVPLProgramSaveToDLLModel(program sharedModel.VPLProgram) 
 
 		if parameter.IsEmpty() || parameter.GetPayload().ID.IsEmpty() {
 			log.Printf("Save program failed: %s", errors.New("parameter not found"))
-			return dllModel.VPLProgram{}, errors.New("parameter not found")
+			return dllModel.VPLProgram{}, fmt.Errorf("parameter %s not found", referencedValue)
 		}
 
 		SDParameterSnapshotLinkList = append(SDParameterSnapshotLinkList, dllModel.VPLProgramSDSnapshotLink{
@@ -293,7 +294,7 @@ func StartDeviceInformationRequestConsumer() error {
 				})
 				if sdParameter.IsEmpty() {
 					log.Printf("Received instance information request failed: %s", errors.New("parameter not found"))
-					return errors.New("parameter not found")
+					return fmt.Errorf("parameter not found for instance %s and parameter %s", messagePayload.SDInstanceUID, messagePayload.SDParameterID)
 				}
 
 				sdParameterSnapshot := sharedUtils.FindFirst(sdInstance.GetPayload().GetPayload().ParameterSnapshots, func(parameter dllModel.SDParameterSnapshot) bool {
@@ -301,7 +302,7 @@ func StartDeviceInformationRequestConsumer() error {
 				})
 				if sdParameterSnapshot.IsEmpty() {
 					log.Printf("Received instance information request failed: %s", errors.New("parameter snapshot not found"))
-					return errors.New("parameter snapshot not found")
+					return fmt.Errorf("parameter snapshot not found for instance %s and parameter %s", messagePayload.SDInstanceUID, messagePayload.SDParameterID)
 				}
 
 				SDInstanceResultInformation.SDInstanceResultInformation.SDParameterSnapshotToUpdate = sharedModel.SDParameterSnapshotToUpdate{
@@ -375,7 +376,7 @@ func toSharedModelVPLProgram(program dllModel.VPLProgram) (sharedModel.VPLProgra
 		})
 		if parameter.IsEmpty() {
 			log.Printf("Save program failed: %s", errors.New("parameter not found"))
-			return sharedModel.VPLProgram{}, errors.New("parameter not found")
+			return sharedModel.VPLProgram{}, fmt.Errorf("parameter %d not found", sdParameterSnapshot.ParameterID)
 		}
 		referencedValues[sdInstance.GetPayload().UID] = parameter.GetPayload().Denotation
 	}
