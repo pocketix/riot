@@ -186,6 +186,8 @@ func ExecuteVPLProgramRequest() error {
 
 			// Create a statement list to hold the parsed program
 			statementList := make([]statements.Statement, 0)
+			collector := &statements.ASTCollector{Target: &statementList}
+			err := parser.Parse([]byte(messagePayload.Data), variableStore, procedureStore, referencedValueStore, collector)
 			var parseErr error
 
 			// Load procedures from the VPLProgram struct if available
@@ -227,15 +229,23 @@ func ExecuteVPLProgramRequest() error {
 
 			for _, command := range statementList {
 				if deviceCommand, ok := command.(*statements.DeviceCommand); ok {
-					deviceCommand, err := deviceCommand.DeviceCommand2ModelsDeviceCommand()
-					if err != nil {
-						log.Printf("Failed to convert device command: %s\n", err.Error())
-						return sendExecutionError(rabbitMQClient, delivery, err)
+					deviceCommand, ok := deviceCommand.DeviceCommand2ModelsDeviceCommand()
+					if !ok {
+						log.Printf("Failed to convert device command")
+						return sendExecutionError(rabbitMQClient, delivery, errors.New("failed to convert device command"))
 					}
-					sdCommandInformation, err := referencedValueStore.ResolveDeviceInformationFunction(deviceCommand.DeviceUID, deviceCommand.CommandDenotation, "sdCommand")
-					if err != nil {
-						log.Printf("Failed to send command to device: %s\n", err.Error())
-						return sendExecutionError(rabbitMQClient, delivery, err)
+
+					var sdCommandInformation models.SDInformationFromBackend
+					if cmd, ok := collector.IsDeviceCommandCollected(deviceCommand); ok {
+						sdCommandInformation = cmd
+					} else {
+						sdCommandInfo, err := referencedValueStore.ResolveDeviceInformationFunction(deviceCommand.DeviceUID, deviceCommand.CommandDenotation, "sdCommand")
+						if err != nil {
+							log.Printf("Failed to send command to device: %s\n", err.Error())
+							return sendExecutionError(rabbitMQClient, delivery, err)
+						}
+						sdCommandInformation = sdCommandInfo
+						collector.CollectDeviceCommand(sdCommandInformation)
 					}
 					sdCommandInvocation, err := deviceCommand.PrepareCommandToSend(sdCommandInformation)
 					if err != nil {

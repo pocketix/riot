@@ -2,14 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/isc"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"log"
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/domainLogicLayer"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/isc"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
+	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 )
 
 func waitForDependencies() {
@@ -36,11 +38,21 @@ func kickstartISC() {
 	go isc.ProcessIncomingSDParameterSnapshotUpdates(&graphql.SDParameterSnapshotUpdateSubscriptionChannel)
 }
 
+func startDeviceInfoRequestConsumer() {
+	go func() {
+		err := domainLogicLayer.StartDeviceInformationRequestConsumer()
+		if err != nil {
+			log.Fatalf("Error starting device information request consumer: %v", err)
+		}
+	}()
+}
+
 func main() {
 	log.SetOutput(os.Stderr)
 	log.Println("Waiting for dependencies...")
 	waitForDependencies()
 	log.Println("Dependencies ready...")
+	startDeviceInfoRequestConsumer()
 	//sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
 	kickstartISC()
 	graphql.SetupGraphQLServer()

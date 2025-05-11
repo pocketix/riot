@@ -542,7 +542,13 @@ func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) sharedUtils.Res
 func (r *relationalDatabaseClientImpl) LoadSDInstanceBasedOnUID(uid string) sharedUtils.Result[sharedUtils.Optional[dllModel.SDInstance]] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](r.db, dbUtil.Preload("SDType"), dbUtil.Where("uid = ?", uid))
+	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](r.db,
+		dbUtil.Preload("SDType"),
+		dbUtil.Preload("SDType.Parameters"),
+		dbUtil.Preload("SDType.Commands"),
+		dbUtil.Preload("SDParameterSnapshot"),
+		dbUtil.Where("uid = ?", uid),
+	)
 	if sdInstanceEntityLoadResult.IsFailure() {
 		err := sdInstanceEntityLoadResult.GetError()
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -775,6 +781,11 @@ func (r *relationalDatabaseClientImpl) PersistSDParameterSnapshot(snapshot dllMo
 func (r *relationalDatabaseClientImpl) PersistVPLProgram(vplProgram dllModel.VPLProgram) sharedUtils.Result[dllModel.VPLProgram] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
+	vplProgramEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.VPLProgramsEntity](r.db, dbUtil.Where("name = ?", vplProgram.Name))
+	if vplProgramEntityLoadResult.IsSuccess() {
+		return sharedUtils.NewFailureResult[dllModel.VPLProgram](errors.New("VPL program with the same name already exists"))
+	}
 
 	vplProgramEntity := dll2db.ToDBModelEntityVPLProgram(vplProgram)
 
