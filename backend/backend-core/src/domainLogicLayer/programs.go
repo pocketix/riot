@@ -256,7 +256,7 @@ func StartDeviceInformationRequestConsumer() error {
 
 	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.SDInstanceRequest](
 		client,
-		sharedConstants.VPLInterpretGetSnapshotsResponseQueueName,
+		sharedConstants.VPLInterpretExecuteProgramRequestQueueName,
 		"",
 		func(messagePayload sharedModel.SDInstanceRequest, delivery amqp.Delivery) error {
 			log.Printf("Received snapshot request: %v\n", messagePayload)
