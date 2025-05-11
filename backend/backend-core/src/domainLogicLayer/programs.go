@@ -125,13 +125,7 @@ func ConvertSharedModelVPLProgramSaveToDLLModel(program sharedModel.VPLProgram) 
 			return dllModel.VPLProgram{}, errors.New("could not find SD instance")
 		}
 
-		sdType := databaseClient.LoadSDType(sdInstance.GetPayload().GetPayload().SDType.ID.GetPayload())
-		if sdType.IsFailure() || sdType.GetPayload().ID.IsEmpty() {
-			log.Printf("Could not find SD type")
-			return dllModel.VPLProgram{}, errors.New("could not find SD type")
-		}
-
-		parameter := sharedUtils.FindFirst(sdType.GetPayload().Parameters, func(parameter dllModel.SDParameter) bool {
+		parameter := sharedUtils.FindFirst(sdInstance.GetPayload().GetPayload().SDType.Parameters, func(parameter dllModel.SDParameter) bool {
 			return parameter.Denotation == referencedValue
 		})
 
