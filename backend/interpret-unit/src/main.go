@@ -187,8 +187,7 @@ func ExecuteVPLProgramRequest() error {
 			// Create a statement list to hold the parsed program
 			statementList := make([]statements.Statement, 0)
 			collector := &statements.ASTCollector{Target: &statementList}
-			err := parser.Parse([]byte(messagePayload.Data), variableStore, procedureStore, referencedValueStore, collector)
-			var parseErr error
+			parseErr := parser.Parse([]byte(messagePayload.Data), variableStore, procedureStore, referencedValueStore, collector)
 
 			// Load procedures from the VPLProgram struct if available
 			if messagePayload.Procedures != nil && len(messagePayload.Procedures) > 0 {
