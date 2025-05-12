@@ -210,7 +210,7 @@ const DashboardView = (props: DashboardViewProps) => {
   const [rect, widthRef] = useSize()
   const gridWidth = rect ? rect.width : 10
 
-  if (!props.mounted || !props.layouts || !props.details || !props.instances || !gridWidth) {
+  if (!props.mounted || !props.layouts || !props.details || !props.instances) {
     return (
       <div className="grid grid-cols-2 gap-4 overflow-hidden p-4">
         <Skeleton variant="rounded" width={'100%'} height={200} />
