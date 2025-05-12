@@ -81,7 +81,7 @@ func performVPLValidityCheckRequest() error {
 	return err
 }
 
-func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, infoType string) (models.SDInformationFromBackend, error) {
+func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, infoType string, deviceCommands *[]models.SDInformationFromBackend) (models.SDInformationFromBackend, error) {
 	log.Printf("Resolving device information for device UID: %s, parameter denotation: %s, info type: %s\n", deviceUID, paramDenotation, infoType)
 	rabbitMQClient := rabbitmq.NewClient()
 	defer rabbitMQClient.Dispose()
@@ -150,8 +150,10 @@ func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, 
 	switch infoType {
 	case "sdCommand":
 		return models.SDInformationFromBackend{
+			DeviceID:  responsePayload.SDCommandToInvoke.SDInstanceID,
 			DeviceUID: deviceUID,
 			Command: models.SDCommand{
+				CommandID:         responsePayload.SDCommandToInvoke.CommandID,
 				CommandDenotation: responsePayload.SDCommandToInvoke.CommandName,
 				Payload:           responsePayload.SDCommandToInvoke.Payload,
 			},
@@ -228,42 +230,19 @@ func ExecuteVPLProgramRequest() error {
 			}
 
 			var commandInvocationsToSend []sharedModel.SDCommandToInvoke
+			var interpretInvocationsToSend []models.SDCommandInvocation
 			// var snapshotsToUpdate []sharedModel.SDParameterSnapshotToUpdate
 
 			for _, command := range statementList {
-				if deviceCommand, ok := command.(*statements.DeviceCommand); ok {
-					deviceCommand, ok := deviceCommand.DeviceCommand2ModelsDeviceCommand()
-					if !ok {
-						log.Printf("Failed to convert device command")
-						return sendExecutionError(rabbitMQClient, delivery, errors.New("failed to convert device command"))
-					}
-
-					var sdCommandInformation models.SDInformationFromBackend
-					if cmd, ok := collector.IsDeviceCommandCollected(deviceCommand); ok {
-						sdCommandInformation = cmd
-					} else {
-						sdCommandInfo, err := referencedValueStore.ResolveDeviceInformationFunction(deviceCommand.DeviceUID, deviceCommand.CommandDenotation, "sdCommand")
-						if err != nil {
-							log.Printf("Failed to send command to device: %s\n", err.Error())
-							return sendExecutionError(rabbitMQClient, delivery, err)
-						}
-						sdCommandInformation = sdCommandInfo
-						collector.CollectDeviceCommand(sdCommandInformation)
-					}
-					sdCommandInvocation, err := deviceCommand.PrepareCommandToSend(sdCommandInformation)
-					if err != nil {
-						log.Printf("Failed to prepare command to send: %s\n", err.Error())
-						return sendExecutionError(rabbitMQClient, delivery, err)
-					}
-					commandInvocationsToSend = append(commandInvocationsToSend, utils.InterpretSDCommandInvocation2SharedModelCommandInvocation(sdCommandInvocation))
-					continue
-				}
-				_, err := command.Execute(variableStore, referencedValueStore)
+				_, err := command.Execute(variableStore, referencedValueStore, collector.DeviceCommands, func(deviceCommand models.SDCommandInvocation) {
+					interpretInvocationsToSend = append(interpretInvocationsToSend, deviceCommand)
+				})
 				if err != nil {
 					log.Printf("Failed to execute command: %s\n", err.Error())
 					return sendExecutionError(rabbitMQClient, delivery, err)
 				}
 			}
+			commandInvocationsToSend = utils.InterpretInvocationsSlice2BackendInvocations(interpretInvocationsToSend)
 			response := sharedModel.VPLInterpretExecuteResultOrError{
 				Program: messagePayload,
 				// SDParameterSnapshotsToUpdate: snapshotsToUpdate,
