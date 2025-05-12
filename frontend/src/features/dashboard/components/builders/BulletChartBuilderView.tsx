@@ -27,7 +27,7 @@ import { BulletRow } from '../cards/components/BulletRow'
 import { SdParameterType } from '@/generated/graphql'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
 import { ResponsiveDialog } from '../cards/components/ResponsiveDialog'
-import IconPicker from '@/ui/IconPicker'
+import { IconPicker } from './components/icon-picker'
 
 export interface BulletChartBuilderViewProps {
   chartData: (Datum | null)[]
@@ -350,6 +350,9 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
             <Accordion type="multiple" className="w-full" value={openAccordions} onValueChange={setOpenAccordions}>
               {fields.map((item, index) => (
                 <AccordionItem key={`${item.id}-${index}`} value={`instance-${index}`}>
+                  {/* This accordion trigger throws button nesting errors */}
+                  {/* The asChild property of the trigger does not seem to effect it */}
+                  {/* https://github.com/shadcn-ui/ui/issues/4732 */}
                   <AccordionTrigger className="flex w-full items-center justify-between">
                     <div className="flex flex-1 flex-wrap items-center">
                       <Button

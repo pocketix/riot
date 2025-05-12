@@ -12,11 +12,11 @@ import { Parameter } from '@/context/InstancesContext'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
 import { Info } from 'lucide-react'
-import IconPicker from '@/ui/IconPicker'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
 import { SdParameterType } from '@/generated/graphql'
 import { useState } from 'react'
 import { ResponsiveDialog } from '../cards/components/ResponsiveDialog'
+import { IconPicker } from './components/icon-picker'
 
 export interface SwitchBuilderViewProps {
   config?: SwitchCardConfig

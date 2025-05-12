@@ -20,9 +20,9 @@ import { Parameter } from '@/context/InstancesContext'
 import { ResponsiveTable } from '../visualizations/ResponsiveTable'
 import { useRef, useState } from 'react'
 import { TableColumnData } from '../cards/TableCardController'
-import IconPicker from '@/ui/IconPicker'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
 import { ValueSymbolPicker } from './components/value-symbol-picker'
+import { IconPicker } from './components/icon-picker'
 
 export interface TableCardBuilderViewProps {
   config?: TableCardConfig

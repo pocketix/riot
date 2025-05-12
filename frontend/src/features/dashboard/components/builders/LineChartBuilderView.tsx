@@ -26,7 +26,7 @@ import { useDebounce } from 'use-debounce'
 import { Parameter } from '@/context/InstancesContext'
 import { LineChartLegend } from '../visualizations/LineChartLegend'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
-import IconPicker from '@/ui/IconPicker'
+import { IconPicker } from './components/icon-picker'
 
 export interface LineChartBuilderViewProps {
   chartData: Serie[]
