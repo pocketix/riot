@@ -7,6 +7,7 @@ import { CalendarIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import { ScrollArea } from '@radix-ui/react-scroll-area'
 
 interface DateTimeRangePickerProps {
   value?: { start: Date | undefined; end: Date | undefined }
@@ -80,30 +81,29 @@ export function DateTimeRangePicker({ value, onValueChange, className, maxDate }
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-[100px] max-w-[95vw] p-0">
-        <div className="flex w-full flex-col gap-4 px-2 sm:max-h-[350px] sm:flex-row">
-          <div className="h-fit min-h-[180px] w-full min-w-0 max-w-full flex-1 sm:min-h-[200px] sm:w-[300px] sm:max-w-[400px]">
-            <Calendar
-              mode="range"
-              initialFocus
-              selected={{ from: range.start, to: range.end }}
-              onSelect={handleDateSelect}
-              toDate={maxDate}
-              className="w-full"
-              isOpen={isOpen}
-            />
-          </div>
-          <div className="flex min-w-[180px] flex-col justify-center gap-4">
-            {!showTimes ? (
-              <Button type="button" variant="outline" className="w-full" onClick={() => setShowTimes(true)}>
-                Add Times
-              </Button>
-            ) : (
-              <>
+      <PopoverContent className="min-w-[100px] max-w-[95vw] p-0">
+        <ScrollArea className="max-h-[350px] w-full overflow-y-auto">
+          <div className="flex w-full flex-col gap-4 px-2 py-2">
+            <div className="w-full min-w-0 max-w-full">
+              <Calendar
+                mode="range"
+                initialFocus
+                selected={{ from: range.start, to: range.end }}
+                onSelect={handleDateSelect}
+                toDate={maxDate}
+                className="w-full"
+              />
+            </div>
+            <div className="flex flex-col justify-center gap-4">
+              {!showTimes ? (
+                <Button type="button" variant="outline" className="w-full" onClick={() => setShowTimes(true)}>
+                  Add Times
+                </Button>
+              ) : (
                 <div className="flex w-full flex-col items-center gap-2">
                   <p className="font-semibold">Exact Times</p>
                   <Separator orientation="horizontal" className="w-full" />
-                  <div>
+                  <div className="w-full">
                     <p className="text-xs font-semibold">Start Time</p>
                     <Input
                       type="time"
@@ -113,23 +113,21 @@ export function DateTimeRangePicker({ value, onValueChange, className, maxDate }
                       disabled={!range.start}
                     />
                   </div>
-                  <div>
+                  <div className="w-full">
                     <p className="text-xs font-semibold">End Time</p>
-                    <div className="relative w-full">
-                      <Input
-                        type="time"
-                        value={getTimeString(range.end)}
-                        onChange={(e) => handleInputTimeChange('end', e.target.value)}
-                        className="invert-time-icon flex w-full items-center justify-center px-1 py-1 text-center"
-                        disabled={!range.end}
-                      />
-                    </div>
+                    <Input
+                      type="time"
+                      value={getTimeString(range.end)}
+                      onChange={(e) => handleInputTimeChange('end', e.target.value)}
+                      className="invert-time-icon flex w-full items-center justify-center px-1 py-1 text-center"
+                      disabled={!range.end}
+                    />
                   </div>
                 </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   )
