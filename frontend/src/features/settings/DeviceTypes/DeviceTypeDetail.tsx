@@ -181,6 +181,7 @@ export default function DeviceTypeDetail() {
     commands: [] as { name: string; payload: string }[]
   })
 
+  // using react-hook-form
   const {
     register,
     handleSubmit,
@@ -196,6 +197,7 @@ export default function DeviceTypeDetail() {
     mode: 'onSubmit'
   })
 
+  // Fetching the device type data
   const { loading, error } = useQuery<SdTypeQuery, SdTypeQueryVariables>(GET_PARAMETERS, {
     variables: { sdTypeId: sdTypeId! },
     skip: !sdTypeId || isAddingNew,
@@ -250,6 +252,7 @@ export default function DeviceTypeDetail() {
 
     if (hasDuplicate) return
 
+    // Check for commands errors
     let hasPayloadErrors = false
     data.commands.forEach((command: any, cmdIdx: number) => {
       try {
@@ -371,6 +374,7 @@ export default function DeviceTypeDetail() {
     }
   }
 
+  // Helper functions to get error messages
   function getPayloadParamError(errors: any, cmdIdx: number, paramIdx: number) {
     return (errors.root?.commands?.[cmdIdx]?.payloadParams as any)?.[paramIdx]?.possibleValues
   }
@@ -570,6 +574,7 @@ export default function DeviceTypeDetail() {
             </Button>
           )}
 
+          {/* PARAMETERS SECTION */}
           {watch('parameters').length > 0 && (
             <ParametersContainer>
               <ParamTable>
@@ -688,6 +693,7 @@ export default function DeviceTypeDetail() {
             </Button>
           )}
 
+          {/* COMMANDS SECTION */}
           {watch('commands').length > 0 && (
             <ParametersContainer>
               <ParamTable>
