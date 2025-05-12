@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { useMemo, useState } from 'react'
+import { forwardRef, useMemo, useState } from 'react'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Parameter } from '@/context/InstancesContext'
 import { SdParameterType } from '@/generated/graphql'
@@ -22,7 +22,7 @@ interface SingleParameterComboboxProps {
   className?: string
 }
 
-export function SingleParameterCombobox(props: SingleParameterComboboxProps) {
+export const SingleParameterCombobox = forwardRef<HTMLButtonElement, SingleParameterComboboxProps>((props, ref) => {
   const [open, setOpen] = useState(false)
   const sortedOptions = useMemo(() => {
     if (!props.options) return []
@@ -47,6 +47,7 @@ export function SingleParameterCombobox(props: SingleParameterComboboxProps) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          ref={ref}
           type="button"
           variant="outline"
           role="combobox"
@@ -96,4 +97,4 @@ export function SingleParameterCombobox(props: SingleParameterComboboxProps) {
       </PopoverContent>
     </Popover>
   )
-}
+})
