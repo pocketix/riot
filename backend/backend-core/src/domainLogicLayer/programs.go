@@ -267,15 +267,15 @@ func StartDeviceInformationRequestConsumer() error {
 			case "sdCommand":
 				sdInstance := databaseClient.LoadSDInstanceBasedOnUID(messagePayload.SDInstanceUID)
 				if sdInstance.IsFailure() || sdInstance.GetPayload().IsEmpty() || sdInstance.GetPayload().GetPayload().ID.IsEmpty() {
-					log.Printf("Received instance information request failed: %s", sdInstance.GetError())
-					return sdInstance.GetError()
+					log.Printf("Received instance information request failed: InstanceUID: %s, CommandName: %s, RequestType: %s", messagePayload.SDInstanceUID, messagePayload.SDParameterID, messagePayload.RequestType)
+					return fmt.Errorf("instance %s not found", messagePayload.SDInstanceUID)
 				}
 				sdCommand := sharedUtils.FindFirst(sdInstance.GetPayload().GetPayload().SDType.Commands, func(command dllModel.SDCommand) bool {
 					return command.Name == messagePayload.SDParameterID
 				})
 				if sdCommand.IsEmpty() {
-					log.Printf("Received instance information request failed: %s", errors.New("command not found"))
-					return errors.New("command not found")
+					log.Printf("Received instance information request failed: InstanceUID: %s, CommandName: %s, RequestType: %s", messagePayload.SDInstanceUID, messagePayload.SDParameterID, messagePayload.RequestType)
+					return fmt.Errorf("command %s not found for instance %s", messagePayload.SDParameterID, messagePayload.SDInstanceUID)
 				}
 
 				SDInstanceResultInformation.SDInstanceResultInformation.SDCommandToInvoke = sharedModel.SDCommandToInvoke{
@@ -286,14 +286,14 @@ func StartDeviceInformationRequestConsumer() error {
 			case "sdParameter":
 				sdInstance := databaseClient.LoadSDInstanceBasedOnUID(messagePayload.SDInstanceUID)
 				if sdInstance.IsFailure() || sdInstance.GetPayload().IsEmpty() || sdInstance.GetPayload().GetPayload().ID.IsEmpty() {
-					log.Printf("Received instance information request failed: %s", sdInstance.GetError())
-					return sdInstance.GetError()
+					log.Printf("Received instance information request failed: InstanceUID: %s, CommandName: %s, RequestType: %s", messagePayload.SDInstanceUID, messagePayload.SDParameterID, messagePayload.RequestType)
+					return fmt.Errorf("instance %s not found", messagePayload.SDInstanceUID)
 				}
 				sdParameter := sharedUtils.FindFirst(sdInstance.GetPayload().GetPayload().SDType.Parameters, func(parameter dllModel.SDParameter) bool {
 					return parameter.Denotation == messagePayload.SDParameterID
 				})
 				if sdParameter.IsEmpty() {
-					log.Printf("Received instance information request failed: %s", errors.New("parameter not found"))
+					log.Printf("Received instance information request failed: InstanceUID: %s, CommandName: %s, RequestType: %s", messagePayload.SDInstanceUID, messagePayload.SDParameterID, messagePayload.RequestType)
 					return fmt.Errorf("parameter not found for instance %s and parameter %s", messagePayload.SDInstanceUID, messagePayload.SDParameterID)
 				}
 
@@ -301,7 +301,7 @@ func StartDeviceInformationRequestConsumer() error {
 					return parameter.SDParameter == sdParameter.GetPayload().ID.GetPayload()
 				})
 				if sdParameterSnapshot.IsEmpty() {
-					log.Printf("Received instance information request failed: %s", errors.New("parameter snapshot not found"))
+					log.Printf("Received instance information request failed: InstanceUID: %s, CommandName: %s, RequestType: %s", messagePayload.SDInstanceUID, messagePayload.SDParameterID, messagePayload.RequestType)
 					return fmt.Errorf("parameter snapshot not found for instance %s and parameter %s", messagePayload.SDInstanceUID, messagePayload.SDParameterID)
 				}
 
@@ -335,10 +335,6 @@ func StartDeviceInformationRequestConsumer() error {
 			return nil
 		},
 	)
-
-	if err != nil {
-		log.Printf("Received snapshot request failed: %s", err)
-	}
 	return err
 }
 
@@ -367,15 +363,15 @@ func toSharedModelVPLProgram(program dllModel.VPLProgram) (sharedModel.VPLProgra
 		sdInstance := client.LoadSDInstance(sdParameterSnapshot.InstanceID)
 
 		if sdInstance.IsFailure() || sdInstance.GetPayload().ID.IsEmpty() {
-			log.Printf("Save program failed: %s", errors.New("instance not found"))
-			return sharedModel.VPLProgram{}, errors.New("instance not found")
+			log.Printf("Mapping program from DLL model to shared model failed: %d", sdParameterSnapshot.InstanceID)
+			return sharedModel.VPLProgram{}, fmt.Errorf("instance %d not found", sdParameterSnapshot.InstanceID)
 		}
 
 		parameter := sharedUtils.FindFirst(sdInstance.GetPayload().SDType.Parameters, func(parameter dllModel.SDParameter) bool {
 			return parameter.ID.GetPayload() == sdParameterSnapshot.ParameterID
 		})
 		if parameter.IsEmpty() {
-			log.Printf("Save program failed: %s", errors.New("parameter not found"))
+			log.Printf("Mapping program from DLL model to shared model failed: %d", sdParameterSnapshot.ParameterID)
 			return sharedModel.VPLProgram{}, fmt.Errorf("parameter %d not found", sdParameterSnapshot.ParameterID)
 		}
 		referencedValues[sdInstance.GetPayload().UID] = parameter.GetPayload().Denotation
