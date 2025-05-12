@@ -169,6 +169,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                         remove(index)
                       }}
                       className="mr-2 h-6 w-6"
+                      disabled={fields.length === 1}
                     >
                       <TbTrash size={14} />
                     </Button>

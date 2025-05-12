@@ -234,6 +234,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                             variant="destructive"
                             size="icon"
                             className="h-6 w-6"
+                            disabled={columnFields.length === 1}
                           >
                             <TbTrash size={14} />
                           </Button>
@@ -297,10 +298,6 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                 </AccordionContent>
               </AccordionItem>
 
-              {form.formState.errors?.columns?.length! > 0 && (
-                <FormMessage>One or more columns are invalid</FormMessage>
-              )}
-
               <AccordionItem value="rows">
                 <AccordionTrigger>Rows</AccordionTrigger>
                 <AccordionContent className="flex w-full flex-col gap-2 rounded-md border p-2 px-1">
@@ -345,6 +342,7 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                             variant="destructive"
                             size="icon"
                             className="h-6 w-6"
+                            disabled={rowFields.length === 1}
                           >
                             <TbTrash size={14} />
                           </Button>
@@ -516,8 +514,6 @@ export function TableCardBuilderView(props: TableCardBuilderViewProps) {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-
-            {form.formState.errors?.rows?.length! > 0 && <FormMessage>One or more rows are invalid</FormMessage>}
 
             <Button type="submit" className="ml-auto mt-4 flex">
               Submit

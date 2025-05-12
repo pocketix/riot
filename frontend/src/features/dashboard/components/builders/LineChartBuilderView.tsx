@@ -512,6 +512,7 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                     remove(index)
                   }}
                   className="absolute right-2 top-2 h-6 w-6"
+                  disabled={fields.length === 1}
                 >
                   <TbTrash size={14} />
                 </Button>

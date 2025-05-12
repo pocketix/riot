@@ -401,6 +401,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                         remove(index)
                       }}
                       className="mr-2 h-6 w-6"
+                      disabled={fields.length === 1}
                     >
                       <TbTrash size={14} />
                     </Button>
@@ -439,7 +440,9 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                                   value={field.value}
                                   filter={SdParameterType.Number}
                                   onValueChange={(value) => {
-                                    form.setValue(`rows.${index}.config.name`, value?.denotation!, {shouldValidate: true})
+                                    form.setValue(`rows.${index}.config.name`, value?.denotation!, {
+                                      shouldValidate: true
+                                    })
                                     automaticOffset(index, value?.denotation!)
 
                                     props.onBulletDataChange(index, { id: value?.denotation })
