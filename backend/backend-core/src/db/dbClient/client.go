@@ -530,6 +530,7 @@ func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) sharedUtils.Res
 	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](
 		r.db,
 		dbUtil.Preload("SDType"),
+		dbUtil.Preload("SDType.Parameters"),
 		dbUtil.Preload("SDParameterSnapshot"),
 		dbUtil.Where("id = ?", id),
 	)
