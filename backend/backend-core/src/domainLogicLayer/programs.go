@@ -195,8 +195,8 @@ func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExec
 			sharedConstants.VPLInterpretExecuteProgramResponseQueueName,
 			correlationId,
 			func(vplInterpretExecuteProgramResult sharedModel.VPLInterpretExecuteResultOrError, delivery amqp.Delivery) error {
-				if vplInterpretExecuteProgramResult.Error != "" {
-					outputChannel <- sharedUtils.NewFailureResult[sharedModel.VPLInterpretExecuteResultOrError](errors.New(vplInterpretExecuteProgramResult.Error))
+				if vplInterpretExecuteProgramResult.Error != nil {
+					outputChannel <- sharedUtils.NewFailureResult[sharedModel.VPLInterpretExecuteResultOrError](errors.New(*vplInterpretExecuteProgramResult.Error))
 				} else {
 					outputChannel <- sharedUtils.NewSuccessResult[sharedModel.VPLInterpretExecuteResultOrError](vplInterpretExecuteProgramResult)
 				}
@@ -325,7 +325,7 @@ func StartDeviceInformationRequestConsumer() error {
 				sharedUtils.NewOptionalOf(delivery.ReplyTo),
 				serializedResponse.GetPayload(),
 				delivery.CorrelationId,
-				sharedUtils.NewOptionalOf(sharedConstants.VPLInterpretGetSnapshotsResponseQueueName),
+				sharedUtils.NewEmptyOptional[string](),
 			)
 			if err != nil {
 				log.Printf("Received snapshot request failed: %s", err)
@@ -349,9 +349,11 @@ func ConvertExecuteResultToDLLModel(programExecutionResult sharedModel.VPLInterp
 				SDInstanceID:   sdCommandInvocation.SDInstanceID,
 			}
 		}),
-		ExecutionTime: programExecutionResult.ExecutionTime.Format(time.RFC3339),
-		Enabled:       true,
-		Success:       true,
+		ExecutionTime:    programExecutionResult.ExecutionTime.Format(time.RFC3339),
+		Enabled:          programExecutionResult.Enabled,
+		Success:          programExecutionResult.Success,
+		Error:            programExecutionResult.Error,
+		ExecutionReasion: programExecutionResult.ExecuingReason,
 	}
 }
 
