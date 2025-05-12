@@ -167,7 +167,7 @@ export function SequentialStatesBuilderView(props: SequentialStatesBuilderViewPr
                 </FormItem>
               )}
             />
-            <Button type="submit" className="mt-4">
+            <Button type="submit" className="ml-auto mt-4 flex">
               Submit
             </Button>
           </form>
