@@ -32,7 +32,10 @@ type VPLInterpretExecuteResultOrError struct {
 	// SDParameterSnapshotsToUpdate []SDParameterSnapshotToUpdate `json:"snapshots,omitempty"`
 	SDCommandInvocations []SDCommandToInvoke `json:"commands,omitempty"`
 	ExecutionTime        *time.Time          `json:"executionTime,omitempty"`
-	Error                string              `json:"error,omitempty"`
+	Enabled              bool                `json:"enabled"`
+	Success              bool                `json:"success"`
+	Error                *string             `json:"error,omitempty"`
+	ExecuingReason       *string             `json:"executionReason,omitempty"`
 }
 
 type VPLInterpretGetDeviceInformationResultOrError struct {

@@ -82,6 +82,7 @@ func performVPLValidityCheckRequest() error {
 }
 
 func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, infoType string) (models.SDInformationFromBackend, error) {
+	log.Printf("Resolving device information for device UID: %s, parameter denotation: %s, info type: %s\n", deviceUID, paramDenotation, infoType)
 	rabbitMQClient := rabbitmq.NewClient()
 	defer rabbitMQClient.Dispose()
 
@@ -126,6 +127,7 @@ func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, 
 		return models.SDInformationFromBackend{}, convertedRequest.GetError()
 	}
 
+	log.Printf("Sending VPL program get device information request: %s\n", convertedRequest.GetPayload())
 	err := rabbitMQClient.PublishJSONMessageRPC(
 		sharedUtils.NewEmptyOptional[string](),
 		sharedUtils.NewOptionalOf(sharedConstants.VPLInterpretGetSnapshotsRequestQueueName),
@@ -179,6 +181,8 @@ func ExecuteVPLProgramRequest() error {
 		sharedConstants.VPLInterpretExecuteProgramRequestQueueName,
 		"",
 		func(messagePayload sharedModel.VPLProgram, delivery amqp.Delivery) error {
+			log.Printf("Received VPL program execution request: %v\n", messagePayload)
+
 			variableStore := models.NewVariableStore()
 			procedureStore := models.NewProcedureStore()
 			referencedValueStore := models.NewReferencedValueStore()
@@ -264,6 +268,17 @@ func ExecuteVPLProgramRequest() error {
 				Program: messagePayload,
 				// SDParameterSnapshotsToUpdate: snapshotsToUpdate,
 				SDCommandInvocations: commandInvocationsToSend,
+				ExecutionTime: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+				Enabled: true,
+				Success: true,
+				Error:   nil,
+				ExecuingReason: func() *string {
+					reason := "Manual"
+					return &reason
+				}(),
 			}
 
 			jsonSerializationResult := sharedUtils.SerializeToJSON(response)
@@ -277,7 +292,7 @@ func ExecuteVPLProgramRequest() error {
 				sharedUtils.NewOptionalOf(delivery.ReplyTo),
 				jsonSerializationResult.GetPayload(),
 				delivery.CorrelationId,
-				sharedUtils.NewOptionalOf(sharedConstants.VPLInterpretExecuteProgramResponseQueueName),
+				sharedUtils.NewEmptyOptional[string](),
 			)
 			if publishErr != nil {
 				log.Printf("Failed to publish VPL program execution result: %s\n", publishErr.Error())
@@ -292,7 +307,10 @@ func ExecuteVPLProgramRequest() error {
 
 func sendExecutionError(rabbitMQClient rabbitmq.Client, delivery amqp.Delivery, err error) error {
 	response := sharedModel.VPLInterpretExecuteResultOrError{
-		Error: err.Error(),
+		Error: func() *string {
+			errMsg := err.Error()
+			return &errMsg
+		}(),
 	}
 	jsonSerializationResult := sharedUtils.SerializeToJSON(response)
 	if jsonSerializationResult.IsFailure() {
