@@ -52,7 +52,6 @@ export default function DeviceGroups() {
           />
         </TopBar>
 
-        {/* Content goes here */}
         <div className="text-lg text-[--color-grey-500]">
           <GroupPageController />
         </div>

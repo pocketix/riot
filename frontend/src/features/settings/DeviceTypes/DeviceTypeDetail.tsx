@@ -763,7 +763,6 @@ export default function DeviceTypeDetail() {
                             <div className="w-40">Possible Values</div>
                             <div className="flex-1" />
                           </div>
-                          {/* Render all payload parameters */}
                           {payloadParams.map((param, paramIdx) => (
                             <div key={paramIdx} className="mb-1 flex items-center gap-2">
                               <Tooltip.Provider>

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu' // Ensure correct import path
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { useMediaQuery } from 'react-responsive'
 import { breakpoints } from '@/styles/Breakpoints'
