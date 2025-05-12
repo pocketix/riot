@@ -518,17 +518,21 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                 </Button>
                 <FormField
                   control={form.control}
-                  name={`instances.${index}`}
+                  name={`instances.${index}.id`}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Instance</FormLabel>
                       <FormControl>
                         <SingleInstanceCombobox
-                          value={field.value.id}
+                          value={field.value}
                           onValueChange={(selectedInstance) => {
-                            props.onInstanceSelectionChange(index, field.value)
-                            field.onChange({ id: selectedInstance?.id, uid: selectedInstance?.uid, parameters: [] })
-                            form.setValue(`instances.${index}.parameters`, [])
+                            props.onInstanceSelectionChange(index, form.getValues(`instances.${index}`))
+                            form.setValue(`instances.${index}`, {
+                              id: selectedInstance?.id!,
+                              uid: selectedInstance?.uid!,
+                              parameters: []
+                            })
+                            field.onChange(selectedInstance?.id)
                           }}
                         />
                       </FormControl>
