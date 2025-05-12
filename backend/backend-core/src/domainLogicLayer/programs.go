@@ -39,7 +39,7 @@ func CreateVPLProgram(name string, data string) sharedUtils.Result[graphQLModel.
 		return sharedUtils.NewFailureResult[graphQLModel.VPLProgram](dbResult.GetError())
 	}
 
-	return sharedUtils.NewSuccessResult[graphQLModel.VPLProgram](dll2gql.ToGraphQLModelVPLProgram(result))
+	return sharedUtils.NewSuccessResult[graphQLModel.VPLProgram](dll2gql.ToGraphQLModelVPLProgram(dbResult.GetPayload()))
 }
 
 func UpdateVPLProgram(id uint32, name string, data string) sharedUtils.Result[graphQLModel.VPLProgram] {
@@ -66,7 +66,7 @@ func UpdateVPLProgram(id uint32, name string, data string) sharedUtils.Result[gr
 		return sharedUtils.NewFailureResult[graphQLModel.VPLProgram](dbResult.GetError())
 	}
 
-	return sharedUtils.NewSuccessResult[graphQLModel.VPLProgram](dll2gql.ToGraphQLModelVPLProgram(result))
+	return sharedUtils.NewSuccessResult[graphQLModel.VPLProgram](dll2gql.ToGraphQLModelVPLProgram(dbResult.GetPayload()))
 }
 
 func PerformVPLValidityCheckRequest(input sharedModel.VPLInterpretSaveRequestBody) (dllModel.VPLProgram, error) {
@@ -239,7 +239,7 @@ func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExec
 
 	result := <-outputChannel
 
-	if result.IsFailure() {
+	if result.IsFailure() || result.GetPayload().Error != nil {
 		log.Printf("Execute program failed: %s", result.GetError())
 		return sharedUtils.NewFailureResult[graphQLModel.VPLProgramExecutionResult](result.GetError())
 	}
@@ -256,7 +256,7 @@ func StartDeviceInformationRequestConsumer() error {
 
 	err := rabbitmq.ConsumeJSONMessagesWithAccessToDelivery[sharedModel.SDInstanceRequest](
 		client,
-		sharedConstants.VPLInterpretExecuteProgramRequestQueueName,
+		sharedConstants.VPLInterpretGetSnapshotsRequestQueueName,
 		"",
 		func(messagePayload sharedModel.SDInstanceRequest, delivery amqp.Delivery) error {
 			log.Printf("Received snapshot request: %v\n", messagePayload)
@@ -279,7 +279,9 @@ func StartDeviceInformationRequestConsumer() error {
 				}
 
 				SDInstanceResultInformation.SDInstanceResultInformation.SDCommandToInvoke = sharedModel.SDCommandToInvoke{
+					SDInstanceID:  sdInstance.GetPayload().GetPayload().ID.GetPayload(),
 					SDInstanceUID: messagePayload.SDInstanceUID,
+					CommandID:     sdCommand.GetPayload().ID,
 					CommandName:   sdCommand.GetPayload().Name,
 					Payload:       sdCommand.GetPayload().Payload,
 				}
