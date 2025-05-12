@@ -32,7 +32,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { GroupSchema, groupSchema } from '@/schemas/GroupSchema'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { ResponsiveAlertDialog } from '@/features/dashboard/components/cards/components/ResponsiveAlertDialog'
-import { DevTool } from '@hookform/devtools'
 
 interface AddEditGroupDialogViewProps {
   open: boolean
@@ -149,7 +148,6 @@ export const AddEditGroupDialogView = (props: AddEditGroupDialogViewProps) => {
           )}
         />
       </form>
-      <DevTool control={form.control} placement="top-right" />
     </Form>
   )
 
