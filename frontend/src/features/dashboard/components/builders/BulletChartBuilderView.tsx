@@ -139,7 +139,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
       })
       .filter((marker): marker is number => marker !== null)
 
-    form.setValue(`rows.${rowIndex}.config.markers`, newMarkers)
+    form.setValue(`rows.${rowIndex}.config.markers`, newMarkers, { shouldValidate: true })
     props.onBulletDataChange(rowIndex, { markers: newMarkers })
   }
 
@@ -148,7 +148,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
     if (!ranges) return
 
     const newRanges = ranges.filter((_, i) => i !== rangeIndex)
-    form.setValue(`rows.${rowIndex}.config.ranges`, newRanges)
+    form.setValue(`rows.${rowIndex}.config.ranges`, newRanges, { shouldValidate: true })
 
     setRangeInputs((prev) => ({
       ...prev,
@@ -439,7 +439,7 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                                   value={field.value}
                                   filter={SdParameterType.Number}
                                   onValueChange={(value) => {
-                                    form.setValue(`rows.${index}.config.name`, value?.denotation!)
+                                    form.setValue(`rows.${index}.config.name`, value?.denotation!, {shouldValidate: true})
                                     automaticOffset(index, value?.denotation!)
 
                                     props.onBulletDataChange(index, { id: value?.denotation })
@@ -585,14 +585,12 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                                       value={rangeInputs[index] || ''}
                                     />
                                   </FormControl>
+                                  <FormMessage />
                                 </FormItem>
                               )}
                             />
                           </AccordionContent>
                         </AccordionItem>
-                        {form.formState.errors?.rows?.[index]?.config?.ranges && (
-                          <FormMessage>{form.formState.errors.rows[index].config.ranges.message}</FormMessage>
-                        )}
                         <AccordionItem value={`markers-${index}`}>
                           <AccordionTrigger>Targets</AccordionTrigger>
                           <AccordionContent className="w-full">
@@ -618,14 +616,12 @@ export function BulletChartBuilderView(props: BulletChartBuilderViewProps) {
                                       value={markerInputs[index] || ''}
                                     />
                                   </FormControl>
+                                  <FormMessage />
                                 </FormItem>
                               )}
                             />
                           </AccordionContent>
                         </AccordionItem>
-                        {form.formState.errors?.rows?.[index]?.config?.markers && (
-                          <FormMessage>{form.formState.errors.rows[index].config.markers.message}</FormMessage>
-                        )}
                         <AccordionItem value={`advanced-${index}`}>
                           <AccordionTrigger>Advanced Options</AccordionTrigger>
                           <AccordionContent className="grid w-full grid-cols-1 gap-4 p-1 sm:grid-cols-2">

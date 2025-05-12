@@ -1,4 +1,5 @@
 // Original Source: https://github.com/sersavan/shadcn-multi-select-component
+// Initially AI modified, later manually adjusted
 
 import { cn } from '@/lib/utils'
 import { CheckIcon, XCircle, ChevronDown, XIcon } from 'lucide-react'
