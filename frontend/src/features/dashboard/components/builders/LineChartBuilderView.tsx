@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FieldErrors, useFieldArray, useForm } from 'react-hook-form'
 import { format, scaleLinear } from 'd3'
 import { z } from 'zod'
@@ -49,7 +49,6 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
   const leftAxisMarginMockRef = useRef<HTMLHeadingElement | null>(null)
   const [dataMaxValue, setDataMaxValue] = useState<number | null>(null)
   const [_dataMinValue, setDataMinValue] = useState<number | null>(null)
-  const isFirstRender = useRef(true)
   const [openAccordions, setOpenAccordions] = useState<string[]>(['row-0'])
 
   const form = useForm<z.infer<typeof lineChartBuilderSchema>>({
@@ -116,14 +115,6 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
   })
 
   const [debouncedDecimalPlaces] = useDebounce(form.watch('decimalPlaces'), 1000)
-
-  useLayoutEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      console.log('Set first render to false')
-      return
-    }
-  }, [])
 
   const calculateLeftAxisMargin = () => {
     if (leftAxisMarginMockRef.current) {

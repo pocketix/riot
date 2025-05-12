@@ -241,7 +241,6 @@ export function SwitchBuilderView(props: SwitchBuilderViewProps) {
                             <SingleInstanceCombobox
                               allowClear={true}
                               onValueChange={(instance) => {
-                                console.log('instance', instance)
                                 if (instance) {
                                   form.setValue('percentualSettings', {
                                     instanceID: instance.id,

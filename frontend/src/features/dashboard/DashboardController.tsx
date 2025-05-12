@@ -558,7 +558,6 @@ const DashboardController = () => {
     }
 
     if (saveConfigData) {
-      console.log('Saved to DB:', saveConfigData)
       toast.success('Changes saved!', { id: 'dashboard-config-save' })
     }
   }, [saveConfigLoading, saveConfigError, saveConfigData])

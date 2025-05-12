@@ -470,7 +470,6 @@ export const DeviceDetailPageView = ({
                               className="h-fit self-center"
                               onClick={() => {
                                 const mainRange = form.getValues().dateTimeRange
-                                console.log('mainRange', mainRange)
                                 if (mainRange?.start && mainRange?.end) {
                                   form.setValue('comparison.dateTimeRange', {
                                     start: mainRange.start,

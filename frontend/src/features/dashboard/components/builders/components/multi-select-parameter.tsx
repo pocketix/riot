@@ -78,7 +78,6 @@ export const ParameterMultiSelect = forwardRef<HTMLButtonElement, ParameterMulti
 
     useEffect(() => {
       if (reset) {
-        console.log('Ressetting the value')
         setTempValue([])
         onValueChange([])
       }

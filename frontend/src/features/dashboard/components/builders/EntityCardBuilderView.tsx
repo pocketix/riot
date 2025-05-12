@@ -434,9 +434,6 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
             <Button
               type="submit"
               className="ml-auto mt-4 flex"
-              onClick={() => {
-                console.log('Form errors', form.formState.errors)
-              }}
             >
               Submit
             </Button>
