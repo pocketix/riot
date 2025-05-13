@@ -784,11 +784,6 @@ func (r *relationalDatabaseClientImpl) PersistVPLProgram(vplProgram dllModel.VPL
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	vplProgramEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.VPLProgramsEntity](r.db, dbUtil.Where("name = ?", vplProgram.Name))
-	if vplProgramEntityLoadResult.IsSuccess() {
-		return sharedUtils.NewFailureResult[dllModel.VPLProgram](errors.New("VPL program with the same name already exists"))
-	}
-
 	vplProgramEntity := dll2db.ToDBModelEntityVPLProgram(vplProgram)
 
 	if err := dbUtil.PersistEntityIntoDB(r.db, &vplProgramEntity); err != nil {
