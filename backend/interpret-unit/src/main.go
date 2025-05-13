@@ -199,20 +199,17 @@ func ExecuteVPLProgramRequest() error {
 			if messagePayload.Procedures != nil && len(messagePayload.Procedures) > 0 {
 				log.Printf("Loading %d procedures from program\n", len(messagePayload.Procedures))
 
-				// Create a modified program data that includes the procedures
-				var programJSON map[string]interface{}
-				if err := json.Unmarshal([]byte(messagePayload.Data), &programJSON); err != nil {
-					log.Printf("Failed to parse program data: %s\n", err.Error())
+				// Convert procedures to json.RawMessage
+				proceduresJSON, err := json.Marshal(messagePayload.Procedures)
+				if err != nil {
+					log.Printf("Failed to marshal procedures: %s\n", err.Error())
 					return sendExecutionError(rabbitMQClient, delivery, err)
 				}
 
-				// Add the procedures to the program data
-				programJSON["userProcedures"] = messagePayload.Procedures
-
-				// Marshal the modified program data back to JSON
-				modifiedProgramData, err := json.Marshal(programJSON)
+				// Use the AddProceduresToProgram function to add procedures to the program
+				modifiedProgramData, err := services.AddProceduresToProgram([]byte(messagePayload.Data), proceduresJSON)
 				if err != nil {
-					log.Printf("Failed to marshal modified program data: %s\n", err.Error())
+					log.Printf("Failed to add procedures to program: %s\n", err.Error())
 					return sendExecutionError(rabbitMQClient, delivery, err)
 				}
 

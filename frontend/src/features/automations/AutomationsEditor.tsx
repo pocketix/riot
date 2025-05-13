@@ -203,7 +203,7 @@ export default function AutomationsEditor() {
       }
     }
 
-    return 'cpu' // Default icon
+    return 'lightbulb' // Default icon
   }
 
   // Function to select a color for the device type
