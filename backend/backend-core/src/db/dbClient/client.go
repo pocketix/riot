@@ -275,25 +275,29 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 		return err
 	}
 
-	operationTypeAccessPermissionEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.OperationTypeAccessPermissionEntity](r.db)
-	if operationTypeAccessPermissionEntitiesLoadResult.IsFailure() {
-		return operationTypeAccessPermissionEntitiesLoadResult.GetError()
+	operationTypeAccessPermissionTableEmptinessCheckResult := dbUtil.IsTableEmpty[dbModel.OperationTypeAccessPermissionEntity](r.db)
+	if operationTypeAccessPermissionTableEmptinessCheckResult.IsFailure() {
+		return operationTypeAccessPermissionTableEmptinessCheckResult.GetError()
 	}
-	operationTypeAccessPermissionEntities := operationTypeAccessPermissionEntitiesLoadResult.GetPayload()
-	missingOperationTypes := sharedUtils.NewSetFromSlice(sharedUtils.SliceOf("query", "mutation", "subscription")).GenerateDifferenceWith(
-		sharedUtils.NewSetFromSlice(sharedUtils.Map(operationTypeAccessPermissionEntities, func(operationTypeAccessPermissionEntity dbModel.OperationTypeAccessPermissionEntity) string {
-			return operationTypeAccessPermissionEntity.OperationType
-		}))).ToSlice()
+	isOperationTypeAccessPermissionTableEmpty := operationTypeAccessPermissionTableEmptinessCheckResult.GetPayload()
+	if !isOperationTypeAccessPermissionTableEmpty {
+		log.Println("Operation type access permission table is NOT empty: no more on-startup operations...")
+		return nil
+	}
+
+	permissionIDs := make([]uint32, 0)
 	err = r.db.Transaction(func(tx *gorm.DB) error {
-		for _, missingOperationType := range missingOperationTypes {
+		for _, operationType := range sharedUtils.SliceOf("query", "mutation", "subscription") {
 			permissionEntity := new(dbModel.PermissionEntity)
-			permissionEntity.Label = fmt.Sprintf("Permission to access the GraphQL operation type: %s.", missingOperationType)
+			permissionEntity.Label = fmt.Sprintf("Permission to access the GraphQL operation type: %s.", operationType)
 			if err := dbUtil.PersistEntityIntoDB[dbModel.PermissionEntity](tx, permissionEntity); err != nil {
 				return err
 			}
+			permissionID := permissionEntity.ID
+			permissionIDs = append(permissionIDs, permissionID)
 			operationTypeAccessPermissionEntity := new(dbModel.OperationTypeAccessPermissionEntity)
-			operationTypeAccessPermissionEntity.PermissionID = permissionEntity.ID
-			operationTypeAccessPermissionEntity.OperationType = missingOperationType
+			operationTypeAccessPermissionEntity.PermissionID = permissionID
+			operationTypeAccessPermissionEntity.OperationType = operationType
 			if err := dbUtil.PersistEntityIntoDB[dbModel.OperationTypeAccessPermissionEntity](tx, operationTypeAccessPermissionEntity); err != nil {
 				return err
 			}
@@ -301,6 +305,15 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 		return nil
 	})
 	if err != nil {
+		return err
+	}
+
+	rootAdministratorRoleEntity := new(dbModel.RoleEntity)
+	rootAdministratorRoleEntity.Label = "Root-Administrator"
+	rootAdministratorRoleEntity.Permissions = sharedUtils.Map(permissionIDs, func(permissionID uint32) dbModel.PermissionEntity {
+		return dbModel.PermissionEntity{ID: permissionID}
+	})
+	if err := dbUtil.PersistEntityIntoDB[dbModel.RoleEntity](r.db, rootAdministratorRoleEntity); err != nil {
 		return err
 	}
 
