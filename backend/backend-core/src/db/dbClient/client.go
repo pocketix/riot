@@ -226,6 +226,10 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.VPLProgramsEntity),
 		new(dbModel.SDParameterSnapshotEntity),
 		new(dbModel.GraphQLOperationEntity),
+		new(dbModel.RoleEntity),
+		new(dbModel.RolesPermissionsMappingEntity),
+		new(dbModel.PermissionEntity),
+		new(dbModel.OperationTypeAccessPermissionEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
 
@@ -249,7 +253,7 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 	}))
 	toDelete := (setOfIdentifiersOfGraphQLOperationsPersistedInTheDatabase.GenerateDifferenceWith(setOfIdentifiersOfCurrentlyDefinedGraphQLOperations)).ToSlice()
 	toAdd := setOfIdentifiersOfCurrentlyDefinedGraphQLOperations.GenerateDifferenceWith(setOfIdentifiersOfGraphQLOperationsPersistedInTheDatabase)
-	return r.db.Transaction(func(tx *gorm.DB) error {
+	err := r.db.Transaction(func(tx *gorm.DB) error {
 		if err := dbUtil.DeleteEntitiesBasedOnWhereClauses[dbModel.GraphQLOperationEntity](r.db, dbUtil.Where("identifier IN (?)", toDelete)); err != nil {
 			return err
 		}
@@ -267,6 +271,40 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	operationTypeAccessPermissionEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.OperationTypeAccessPermissionEntity](r.db)
+	if operationTypeAccessPermissionEntitiesLoadResult.IsFailure() {
+		return operationTypeAccessPermissionEntitiesLoadResult.GetError()
+	}
+	operationTypeAccessPermissionEntities := operationTypeAccessPermissionEntitiesLoadResult.GetPayload()
+	missingOperationTypes := sharedUtils.NewSetFromSlice(sharedUtils.SliceOf("query", "mutation", "subscription")).GenerateDifferenceWith(
+		sharedUtils.NewSetFromSlice(sharedUtils.Map(operationTypeAccessPermissionEntities, func(operationTypeAccessPermissionEntity dbModel.OperationTypeAccessPermissionEntity) string {
+			return operationTypeAccessPermissionEntity.OperationType
+		}))).ToSlice()
+	err = r.db.Transaction(func(tx *gorm.DB) error {
+		for _, missingOperationType := range missingOperationTypes {
+			permissionEntity := new(dbModel.PermissionEntity)
+			permissionEntity.Label = fmt.Sprintf("Permission to access the GraphQL operation type: %s.", missingOperationType)
+			if err := dbUtil.PersistEntityIntoDB[dbModel.PermissionEntity](tx, permissionEntity); err != nil {
+				return err
+			}
+			operationTypeAccessPermissionEntity := new(dbModel.OperationTypeAccessPermissionEntity)
+			operationTypeAccessPermissionEntity.PermissionID = permissionEntity.ID
+			operationTypeAccessPermissionEntity.OperationType = missingOperationType
+			if err := dbUtil.PersistEntityIntoDB[dbModel.OperationTypeAccessPermissionEntity](tx, operationTypeAccessPermissionEntity); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition sharedModel.KPIDefinition) sharedUtils.Result[uint32] {

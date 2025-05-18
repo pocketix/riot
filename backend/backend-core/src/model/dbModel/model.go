@@ -240,6 +240,8 @@ func (VPLProgramSDSnapshotLinkEntity) TableName() string {
 	return "vpl_program_sd_snapshot_link"
 }
 
+/* ----- R.-B.-A.-C. ----- */
+
 type GraphQLOperationEntity struct {
 	ID            uint32 `gorm:"column:id;primaryKey;not null"`
 	Identifier    string `gorm:"column:identifier;not null;uniqueIndex"`
@@ -248,4 +250,43 @@ type GraphQLOperationEntity struct {
 
 func (GraphQLOperationEntity) TableName() string {
 	return "graphql_operations"
+}
+
+type RoleEntity struct {
+	ID          uint32             `gorm:"column:id;primaryKey;not null"`
+	Label       string             `gorm:"column:label;not null;uniqueIndex"`
+	Permissions []PermissionEntity `gorm:"many2many:roles_permissions_mapping;joinForeignKey:RoleID;joinReferences:PermissionID"`
+}
+
+func (RoleEntity) TableName() string {
+	return "roles"
+}
+
+type RolesPermissionsMappingEntity struct {
+	RoleID       uint32 `gorm:"column:role_id;primaryKey;not null;index"`
+	PermissionID uint32 `gorm:"column:permission_id;primaryKey;not null"`
+}
+
+func (RolesPermissionsMappingEntity) TableName() string {
+	return "roles_permissions_mapping"
+}
+
+type PermissionEntity struct {
+	ID                            uint32                               `gorm:"column:id;primaryKey;not null"`
+	Label                         string                               `gorm:"column:label;not null;uniqueIndex"`
+	Roles                         []RoleEntity                         `gorm:"many2many:roles_permissions_mapping;joinForeignKey:PermissionID;joinReferences:RoleID"`
+	OperationTypeAccessPermission *OperationTypeAccessPermissionEntity `gorm:"foreignKey:PermissionID"`
+}
+
+func (PermissionEntity) TableName() string {
+	return "permissions"
+}
+
+type OperationTypeAccessPermissionEntity struct {
+	PermissionID  uint32 `gorm:"column:permission_id;primaryKey;not null"`
+	OperationType string `gorm:"column:operation_type;not null;check:operation_type IN ('query', 'mutation', 'subscription')"`
+}
+
+func (OperationTypeAccessPermissionEntity) TableName() string {
+	return "operation_type_access_permissions"
 }
