@@ -263,8 +263,8 @@ func (RoleEntity) TableName() string {
 }
 
 type RolesPermissionsMappingEntity struct {
-	RoleID       uint32 `gorm:"column:role_id;primaryKey;not null;index"`
-	PermissionID uint32 `gorm:"column:permission_id;primaryKey;not null"`
+	RoleID       uint32 `gorm:"column:role_id;primaryKey;not null;index;constraint:OnDelete:CASCADE"`
+	PermissionID uint32 `gorm:"column:permission_id;primaryKey;not null;constraint:OnDelete:CASCADE"`
 }
 
 func (RolesPermissionsMappingEntity) TableName() string {
@@ -275,7 +275,7 @@ type PermissionEntity struct {
 	ID                            uint32                               `gorm:"column:id;primaryKey;not null"`
 	Label                         string                               `gorm:"column:label;not null;uniqueIndex"`
 	Roles                         []RoleEntity                         `gorm:"many2many:roles_permissions_mapping;joinForeignKey:PermissionID;joinReferences:RoleID"`
-	OperationTypeAccessPermission *OperationTypeAccessPermissionEntity `gorm:"foreignKey:PermissionID"`
+	OperationTypeAccessPermission *OperationTypeAccessPermissionEntity `gorm:"foreignKey:PermissionID;constraint:OnDelete:CASCADE"`
 }
 
 func (PermissionEntity) TableName() string {
