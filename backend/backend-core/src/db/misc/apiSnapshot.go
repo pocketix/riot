@@ -17,8 +17,8 @@ const (
 )
 
 type GraphQLOperation struct {
-	Name   string
-	OpType graphQLOperationType
+	Identifier string
+	OpType     graphQLOperationType
 }
 
 func CreateGraphQLAPISnapshot() sharedUtils.Result[[]GraphQLOperation] {
@@ -45,8 +45,8 @@ func CreateGraphQLAPISnapshot() sharedUtils.Result[[]GraphQLOperation] {
 		}
 		sharedUtils.ForEach(definition.Fields, func(fieldDefinition *ast.FieldDefinition) {
 			graphQLOperations = append(graphQLOperations, GraphQLOperation{
-				Name:   fieldDefinition.Name,
-				OpType: opType,
+				Identifier: fieldDefinition.Name,
+				OpType:     opType,
 			})
 		})
 	}

@@ -235,11 +235,31 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 		return createGraphQLAPISnapshotResult.GetError()
 	}
 	graphQLAPISnapshot := createGraphQLAPISnapshotResult.GetPayload()
+	log.Println("Dumping the GraphQL API snapshot...")
 	sharedUtils.Dump(graphQLAPISnapshot)
+	setOfIdentifiersOfCurrentlyDefinedGraphQLOperations := sharedUtils.NewSetFromSlice(sharedUtils.Map(graphQLAPISnapshot, func(graphQLOperationSnapshot misc.GraphQLOperation) string {
+		return graphQLOperationSnapshot.Identifier
+	}))
+	graphQLOperationEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.GraphQLOperationEntity](r.db)
+	if graphQLOperationEntitiesLoadResult.IsFailure() {
+		return graphQLOperationEntitiesLoadResult.GetError()
+	}
+	setOfIdentifiersOfGraphQLOperationsPersistedInTheDatabase := sharedUtils.NewSetFromSlice(sharedUtils.Map(graphQLOperationEntitiesLoadResult.GetPayload(), func(graphQLOperationEntity dbModel.GraphQLOperationEntity) string {
+		return graphQLOperationEntity.Identifier
+	}))
+	toDelete := (setOfIdentifiersOfGraphQLOperationsPersistedInTheDatabase.GenerateDifferenceWith(setOfIdentifiersOfCurrentlyDefinedGraphQLOperations)).ToSlice()
+	toAdd := setOfIdentifiersOfCurrentlyDefinedGraphQLOperations.GenerateDifferenceWith(setOfIdentifiersOfGraphQLOperationsPersistedInTheDatabase)
 	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := dbUtil.DeleteEntitiesBasedOnWhereClauses[dbModel.GraphQLOperationEntity](r.db, dbUtil.Where("identifier IN (?)", toDelete)); err != nil {
+			return err
+		}
 		for _, graphQLOperationSnapshot := range graphQLAPISnapshot {
+			identifier := graphQLOperationSnapshot.Identifier
+			if !toAdd.Contains(identifier) {
+				continue
+			}
 			entity := new(dbModel.GraphQLOperationEntity)
-			entity.Identifier = graphQLOperationSnapshot.Name
+			entity.Identifier = identifier
 			entity.OperationType = string(graphQLOperationSnapshot.OpType)
 			if err := dbUtil.PersistEntityIntoDB[dbModel.GraphQLOperationEntity](tx, entity); err != nil {
 				return err
