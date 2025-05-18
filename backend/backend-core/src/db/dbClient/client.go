@@ -225,6 +225,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.UserConfigEntity),
 		new(dbModel.VPLProgramsEntity),
 		new(dbModel.SDParameterSnapshotEntity),
+		new(dbModel.GraphQLOperationEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
 
@@ -235,8 +236,17 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 	}
 	graphQLAPISnapshot := createGraphQLAPISnapshotResult.GetPayload()
 	sharedUtils.Dump(graphQLAPISnapshot)
-	// TODO: Proceed with database operations, using the API snapshot as a reference
-	return nil
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, graphQLOperationSnapshot := range graphQLAPISnapshot {
+			entity := new(dbModel.GraphQLOperationEntity)
+			entity.Identifier = graphQLOperationSnapshot.Name
+			entity.OperationType = string(graphQLOperationSnapshot.OpType)
+			if err := dbUtil.PersistEntityIntoDB[dbModel.GraphQLOperationEntity](tx, entity); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition sharedModel.KPIDefinition) sharedUtils.Result[uint32] {

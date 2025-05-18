@@ -239,3 +239,13 @@ type VPLProgramSDSnapshotLinkEntity struct {
 func (VPLProgramSDSnapshotLinkEntity) TableName() string {
 	return "vpl_program_sd_snapshot_link"
 }
+
+type GraphQLOperationEntity struct {
+	ID            uint32 `gorm:"column:id;primaryKey;not null"`
+	Identifier    string `gorm:"column:identifier;not null;uniqueIndex"`
+	OperationType string `gorm:"column:operation_type;not null;check:operation_type IN ('query', 'mutation', 'subscription')"`
+}
+
+func (GraphQLOperationEntity) TableName() string {
+	return "graphql_operations"
+}
