@@ -1,4 +1,4 @@
-// Inspired by https://github.com/denisemauldin/d3-timeline
+
 import { useRef, useEffect, useState, memo } from 'react'
 import { axisBottom } from 'd3-axis'
 import { timeFormat } from 'd3-time-format'
