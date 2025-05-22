@@ -72,28 +72,11 @@ interface SDInstance {
   }
 }
 
-type SDType = {
-  id: string
-  denotation: string
-  label?: string
-  icon?: string
-  parameters: SDParameter[]
-  commands: SDCommand[]
-}
-
 interface SDParameter {
   id: string
   denotation: string
   label?: string
   type: 'STRING' | 'NUMBER' | 'BOOLEAN'
-}
-
-interface SDCommand {
-  id: string
-  name: string
-  payload: string
-  sdTypeId: string
-  label?: string
 }
 
 declare global {
@@ -109,9 +92,7 @@ export default function AutomationsEditor() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isUpdatingProcedures, setIsUpdatingProcedures] = useState(false)
-  const [isRefetchingProcedures, setIsRefetchingProcedures] = useState(false)
   const [loadingProgram, setLoadingProgram] = useState(false)
-  const [isLoadingDevices, setIsLoadingDevices] = useState(false)
 
   const [editorKey, setEditorKey] = useState(0)
   const [isEditorReady, setIsEditorReady] = useState(false)
@@ -121,7 +102,7 @@ export default function AutomationsEditor() {
 
   const [procedureLinks, setProcedureLinks] = useState<Map<string, Set<string>>>(new Map())
 
-  const { data: programsData, loading: programsLoading, refetch: refetchPrograms } = useQuery(GET_VPL_PROGRAMS)
+  const { data: programsData, refetch: refetchPrograms } = useQuery(GET_VPL_PROGRAMS)
   const { data: proceduresData, loading: proceduresLoading, refetch: refetchProcedures } = useQuery(GET_VPL_PROCEDURES)
   const { data: instancesData, loading: instancesLoading } = useQuery(GET_INSTANCES)
   useQuery(GET_SD_TYPES)
@@ -339,8 +320,6 @@ export default function AutomationsEditor() {
    * Transforms device data, commands, and parameters into the structure required by the VPL editor
    */
   const convertToVplDevices = async (): Promise<Device[]> => {
-    setIsLoadingDevices(true)
-
     try {
       if (!instancesData?.sdInstances || instancesData.sdInstances.length === 0) {
         return []
@@ -434,8 +413,6 @@ export default function AutomationsEditor() {
       console.error('Error converting SD instances to VPL devices:', error)
       toast.error('Failed to load devices')
       return []
-    } finally {
-      setIsLoadingDevices(false)
     }
   }
 
@@ -1110,7 +1087,6 @@ export default function AutomationsEditor() {
     setLoadingProgram(true)
 
 
-    setIsRefetchingProcedures(true)
     refetchProcedures()
       .then(() => {
 
@@ -1182,14 +1158,12 @@ export default function AutomationsEditor() {
           toast.error('Failed to parse program data')
         } finally {
           setLoadingProgram(false)
-          setIsRefetchingProcedures(false)
         }
       })
       .catch(error => {
         console.error('Error refreshing procedures:', error)
         toast.error('Failed to refresh procedures before loading program')
         setLoadingProgram(false)
-        setIsRefetchingProcedures(false)
       })
   }
 
