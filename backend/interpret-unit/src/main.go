@@ -81,7 +81,8 @@ func performVPLValidityCheckRequest() error {
 	return err
 }
 
-func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, infoType string) (models.SDInformationFromBackend, error) {
+func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, infoType string, deviceCommands *[]models.SDInformationFromBackend) (models.SDInformationFromBackend, error) {
+	log.Printf("Resolving device information for device UID: %s, parameter denotation: %s, info type: %s\n", deviceUID, paramDenotation, infoType)
 	rabbitMQClient := rabbitmq.NewClient()
 	defer rabbitMQClient.Dispose()
 
@@ -126,6 +127,7 @@ func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, 
 		return models.SDInformationFromBackend{}, convertedRequest.GetError()
 	}
 
+	log.Printf("Sending VPL program get device information request: %s\n", convertedRequest.GetPayload())
 	err := rabbitMQClient.PublishJSONMessageRPC(
 		sharedUtils.NewEmptyOptional[string](),
 		sharedUtils.NewOptionalOf(sharedConstants.VPLInterpretGetSnapshotsRequestQueueName),
@@ -148,8 +150,10 @@ func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, 
 	switch infoType {
 	case "sdCommand":
 		return models.SDInformationFromBackend{
+			DeviceID:  responsePayload.SDCommandToInvoke.SDInstanceID,
 			DeviceUID: deviceUID,
 			Command: models.SDCommand{
+				CommandID:         responsePayload.SDCommandToInvoke.CommandID,
 				CommandDenotation: responsePayload.SDCommandToInvoke.CommandName,
 				Payload:           responsePayload.SDCommandToInvoke.Payload,
 			},
@@ -179,6 +183,8 @@ func ExecuteVPLProgramRequest() error {
 		sharedConstants.VPLInterpretExecuteProgramRequestQueueName,
 		"",
 		func(messagePayload sharedModel.VPLProgram, delivery amqp.Delivery) error {
+			log.Printf("Received VPL program execution request: %v\n", messagePayload)
+
 			variableStore := models.NewVariableStore()
 			procedureStore := models.NewProcedureStore()
 			referencedValueStore := models.NewReferencedValueStore()
@@ -186,34 +192,32 @@ func ExecuteVPLProgramRequest() error {
 
 			// Create a statement list to hold the parsed program
 			statementList := make([]statements.Statement, 0)
+			collector := &statements.ASTCollector{Target: &statementList}
 			var parseErr error
 
 			// Load procedures from the VPLProgram struct if available
 			if messagePayload.Procedures != nil && len(messagePayload.Procedures) > 0 {
 				log.Printf("Loading %d procedures from program\n", len(messagePayload.Procedures))
 
-				// Create a modified program data that includes the procedures
-				var programJSON map[string]interface{}
-				if err := json.Unmarshal([]byte(messagePayload.Data), &programJSON); err != nil {
-					log.Printf("Failed to parse program data: %s\n", err.Error())
+				// Convert procedures to json.RawMessage
+				proceduresJSON, err := json.Marshal(messagePayload.Procedures)
+				if err != nil {
+					log.Printf("Failed to marshal procedures: %s\n", err.Error())
 					return sendExecutionError(rabbitMQClient, delivery, err)
 				}
 
-				// Add the procedures to the program data
-				programJSON["userProcedures"] = messagePayload.Procedures
-
-				// Marshal the modified program data back to JSON
-				modifiedProgramData, err := json.Marshal(programJSON)
+				// Use the AddProceduresToProgram function to add procedures to the program
+				modifiedProgramData, err := services.AddProceduresToProgram([]byte(messagePayload.Data), proceduresJSON)
 				if err != nil {
-					log.Printf("Failed to marshal modified program data: %s\n", err.Error())
+					log.Printf("Failed to add procedures to program: %s\n", err.Error())
 					return sendExecutionError(rabbitMQClient, delivery, err)
 				}
 
 				// Use the modified program data for parsing
-				parseErr = parser.Parse(modifiedProgramData, variableStore, procedureStore, referencedValueStore, &statements.ASTCollector{Target: &statementList})
+				parseErr = parser.Parse(modifiedProgramData, variableStore, procedureStore, referencedValueStore, collector)
 			} else {
 				// Use the original program data for parsing
-				parseErr = parser.Parse([]byte(messagePayload.Data), variableStore, procedureStore, referencedValueStore, &statements.ASTCollector{Target: &statementList})
+				parseErr = parser.Parse([]byte(messagePayload.Data), variableStore, procedureStore, referencedValueStore, collector)
 			}
 
 			// Check for parsing errors
@@ -223,38 +227,34 @@ func ExecuteVPLProgramRequest() error {
 			}
 
 			var commandInvocationsToSend []sharedModel.SDCommandToInvoke
+			var interpretInvocationsToSend []models.SDCommandInvocation
 			// var snapshotsToUpdate []sharedModel.SDParameterSnapshotToUpdate
 
 			for _, command := range statementList {
-				if deviceCommand, ok := command.(*statements.DeviceCommand); ok {
-					deviceCommand, err := deviceCommand.DeviceCommand2ModelsDeviceCommand()
-					if err != nil {
-						log.Printf("Failed to convert device command: %s\n", err.Error())
-						return sendExecutionError(rabbitMQClient, delivery, err)
-					}
-					sdCommandInformation, err := referencedValueStore.ResolveDeviceInformationFunction(deviceCommand.DeviceUID, deviceCommand.CommandDenotation, "sdCommand")
-					if err != nil {
-						log.Printf("Failed to send command to device: %s\n", err.Error())
-						return sendExecutionError(rabbitMQClient, delivery, err)
-					}
-					sdCommandInvocation, err := deviceCommand.PrepareCommandToSend(sdCommandInformation)
-					if err != nil {
-						log.Printf("Failed to prepare command to send: %s\n", err.Error())
-						return sendExecutionError(rabbitMQClient, delivery, err)
-					}
-					commandInvocationsToSend = append(commandInvocationsToSend, utils.InterpretSDCommandInvocation2SharedModelCommandInvocation(sdCommandInvocation))
-					continue
-				}
-				_, err := command.Execute(variableStore, referencedValueStore)
+				_, err := command.Execute(variableStore, referencedValueStore, collector.DeviceCommands, func(deviceCommand models.SDCommandInvocation) {
+					interpretInvocationsToSend = append(interpretInvocationsToSend, deviceCommand)
+				})
 				if err != nil {
 					log.Printf("Failed to execute command: %s\n", err.Error())
 					return sendExecutionError(rabbitMQClient, delivery, err)
 				}
 			}
+			commandInvocationsToSend = utils.InterpretInvocationsSlice2BackendInvocations(interpretInvocationsToSend)
 			response := sharedModel.VPLInterpretExecuteResultOrError{
 				Program: messagePayload,
 				// SDParameterSnapshotsToUpdate: snapshotsToUpdate,
 				SDCommandInvocations: commandInvocationsToSend,
+				ExecutionTime: func() *time.Time {
+					t := time.Now()
+					return &t
+				}(),
+				Enabled: true,
+				Success: true,
+				Error:   nil,
+				ExecuingReason: func() *string {
+					reason := "Manual"
+					return &reason
+				}(),
 			}
 
 			jsonSerializationResult := sharedUtils.SerializeToJSON(response)
@@ -268,7 +268,7 @@ func ExecuteVPLProgramRequest() error {
 				sharedUtils.NewOptionalOf(delivery.ReplyTo),
 				jsonSerializationResult.GetPayload(),
 				delivery.CorrelationId,
-				sharedUtils.NewOptionalOf(sharedConstants.VPLInterpretExecuteProgramResponseQueueName),
+				sharedUtils.NewEmptyOptional[string](),
 			)
 			if publishErr != nil {
 				log.Printf("Failed to publish VPL program execution result: %s\n", publishErr.Error())
@@ -283,7 +283,10 @@ func ExecuteVPLProgramRequest() error {
 
 func sendExecutionError(rabbitMQClient rabbitmq.Client, delivery amqp.Delivery, err error) error {
 	response := sharedModel.VPLInterpretExecuteResultOrError{
-		Error: err.Error(),
+		Error: func() *string {
+			errMsg := err.Error()
+			return &errMsg
+		}(),
 	}
 	jsonSerializationResult := sharedUtils.SerializeToJSON(response)
 	if jsonSerializationResult.IsFailure() {

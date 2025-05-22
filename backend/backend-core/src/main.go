@@ -42,7 +42,7 @@ func startDeviceInfoRequestConsumer() {
 	go func() {
 		err := domainLogicLayer.StartDeviceInformationRequestConsumer()
 		if err != nil {
-			log.Fatalf("Error starting device information request consumer: %v", err)
+			log.Printf("Error starting device information request consumer: %v", err)
 		}
 	}()
 }

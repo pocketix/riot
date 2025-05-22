@@ -232,6 +232,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.VPLProgramsEntity),
 		new(dbModel.SDParameterSnapshotEntity),
 		new(dbModel.VPLProgramsEntity),
+		new(dbModel.VPLProgramSDSnapshotLinkEntity),
 		new(dbModel.VPLProceduresEntity),
 		new(dbModel.VPLProgramProcedureLinkEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
@@ -530,6 +531,7 @@ func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) sharedUtils.Res
 	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](
 		r.db,
 		dbUtil.Preload("SDType"),
+		dbUtil.Preload("SDType.Parameters"),
 		dbUtil.Preload("SDParameterSnapshot"),
 		dbUtil.Where("id = ?", id),
 	)
@@ -542,7 +544,13 @@ func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) sharedUtils.Res
 func (r *relationalDatabaseClientImpl) LoadSDInstanceBasedOnUID(uid string) sharedUtils.Result[sharedUtils.Optional[dllModel.SDInstance]] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](r.db, dbUtil.Preload("SDType"), dbUtil.Where("uid = ?", uid))
+	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](r.db,
+		dbUtil.Preload("SDType"),
+		dbUtil.Preload("SDType.Parameters"),
+		dbUtil.Preload("SDType.Commands"),
+		dbUtil.Preload("SDParameterSnapshot"),
+		dbUtil.Where("uid = ?", uid),
+	)
 	if sdInstanceEntityLoadResult.IsFailure() {
 		err := sdInstanceEntityLoadResult.GetError()
 		if errors.Is(err, gorm.ErrRecordNotFound) {
