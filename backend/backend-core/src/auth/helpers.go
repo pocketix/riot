@@ -60,22 +60,29 @@ func handleRedirectUrl(r *http.Request) (string, error) {
 
 func handleUserRecordUpsert(userData idTokenData, newRefreshToken string) sharedUtils.Result[dllModel.User] {
 	dbClientInstance := dbClient.GetRelationalDatabaseClientInstance()
-	userLoadResult := dbClientInstance.LoadUserBasedOnOAuth2ProviderIssuedID(userData.oauth2ProviderIssuedID)
+	oauth2Provider := "google" // TODO: Revisit this once more providers are supported
+	oauth2ProviderIssuedID := userData.oauth2ProviderIssuedID
+	userLoadResult := dbClientInstance.LoadUserBasedOnOAuth2ProviderIssuedID(oauth2ProviderIssuedID)
 	if userLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[dllModel.User](fmt.Errorf("user record upsert failure - failed to load user record: %s", userLoadResult.GetError().Error()))
 	}
 	user := userLoadResult.GetPayload().GetPayloadOrDefault(dllModel.User{
 		ID:                     sharedUtils.NewEmptyOptional[uint](),
-		Username:               fmt.Sprintf("google-user-%s", userData.oauth2ProviderIssuedID),
-		OAuth2Provider:         sharedUtils.NewOptionalOf("google"),
-		OAuth2ProviderIssuedID: sharedUtils.NewOptionalOf(userData.oauth2ProviderIssuedID),
+		Username:               fmt.Sprintf("%s-user-%s", oauth2Provider, oauth2ProviderIssuedID),
+		OAuth2Provider:         sharedUtils.NewOptionalOf(oauth2Provider),
+		OAuth2ProviderIssuedID: sharedUtils.NewOptionalOf(oauth2ProviderIssuedID),
 	})
 	user.Email = userData.email
 	user.Name = userData.name
 	user.ProfileImageURL = userData.profileImageURL
 	user.LastLoginAt = sharedUtils.NewOptionalOf(time.Now())
 
-	user.Sessions = append(user.Sessions, dllModel.UserSession{ // TODO: simply adding a new session... is that optimal?
+	// Ensure all previous sessions are revoked...
+	sharedUtils.ForEach(user.Sessions, func(session dllModel.UserSession) {
+		session.Revoked = true
+	})
+	// ...and establish a new one
+	user.Sessions = append(user.Sessions, dllModel.UserSession{
 		ID:               sharedUtils.NewEmptyOptional[uint](),
 		UserID:           user.ID.GetPayloadOrDefault(0),
 		RefreshTokenHash: sharedUtils.GenerateHexHash(newRefreshToken),

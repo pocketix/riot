@@ -163,6 +163,7 @@ type UserEntity struct {
 	Sessions               []UserSessionEntity         `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
 	Invocations            []SDCommandInvocationEntity `gorm:"foreignKey:UserId;constraint:OnDelete:CASCADE"`
 	UserConfig             UserConfigEntity            `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
+	Roles                  []RoleEntity                `gorm:"many2many:users_roles_mapping;joinForeignKey:UserID;joinReferences:RoleID"`
 }
 
 func (UserEntity) TableName() string { // TODO: Standardize table names, e.g. 'user' × 'users'
@@ -256,10 +257,20 @@ type RoleEntity struct {
 	ID          uint32             `gorm:"column:id;primaryKey;not null"`
 	Label       string             `gorm:"column:label;not null;uniqueIndex"`
 	Permissions []PermissionEntity `gorm:"many2many:roles_permissions_mapping;joinForeignKey:RoleID;joinReferences:PermissionID"`
+	Users       []UserEntity       `gorm:"many2many:users_roles_mapping;joinForeignKey:RoleID;joinReferences:UserID"`
 }
 
 func (RoleEntity) TableName() string {
 	return "roles"
+}
+
+type UsersRolesMappingEntity struct {
+	UserID uint32 `gorm:"column:user_id;primaryKey;not null;constraint:OnDelete:CASCADE"`
+	RoleID uint32 `gorm:"column:role_id;primaryKey;not null;index;constraint:OnDelete:CASCADE"`
+}
+
+func (UsersRolesMappingEntity) TableName() string {
+	return "users_roles_mapping"
 }
 
 type RolesPermissionsMappingEntity struct {

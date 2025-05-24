@@ -227,6 +227,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.SDParameterSnapshotEntity),
 		new(dbModel.GraphQLOperationEntity),
 		new(dbModel.RoleEntity),
+		new(dbModel.UsersRolesMappingEntity),
 		new(dbModel.RolesPermissionsMappingEntity),
 		new(dbModel.PermissionEntity),
 		new(dbModel.OperationTypeAccessPermissionEntity),
@@ -307,9 +308,9 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 		return nil
 	}
 
-	// Create a 'Root-Administrator' role along with the operation-type-access permission entries
-	// Anyone with the aforementioned role will be able to access all GraphQL operations (unless explicitly denied)
-	rootAdministratorRoleEntity := &dbModel.RoleEntity{
+	// Create a 'Root-Administrator' role along with the operation-type-access permission entries...
+	// ...then create a user (with predefined OAuth2 provider (-ID)) and assign said role to this user
+	rootAdministratorRoleEntity := dbModel.RoleEntity{
 		Label: "Root-Administrator",
 		Permissions: []dbModel.PermissionEntity{
 			{
@@ -332,9 +333,15 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 			},
 		},
 	}
-	return dbUtil.PersistEntityIntoDB[dbModel.RoleEntity](r.db, rootAdministratorRoleEntity)
-
-	// TODO: Give the 'Root-Administrator' role to a selected user (likely provided by .env)
+	oauth2Provider := "google"
+	oauth2ProviderIssuedID := sharedUtils.GetEnvironmentVariableValue("SUPER_USER_OAUTH2_PROVIDER_ISSUED_ID").GetPayload()
+	userEntity := &dbModel.UserEntity{
+		Username:               fmt.Sprintf("%s-user-%s", oauth2Provider, oauth2ProviderIssuedID),
+		OAuth2Provider:         &oauth2Provider,
+		OAuth2ProviderIssuedID: &oauth2ProviderIssuedID,
+		Roles:                  []dbModel.RoleEntity{rootAdministratorRoleEntity},
+	}
+	return dbUtil.PersistEntityIntoDB[dbModel.UserEntity](r.db, userEntity)
 }
 
 func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition sharedModel.KPIDefinition) sharedUtils.Result[uint32] {
