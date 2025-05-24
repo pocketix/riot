@@ -108,7 +108,7 @@ type SDParameterSnapshotEntity struct {
 	Number        *float64                         `gorm:"column:number"`
 	Boolean       *bool                            `gorm:"column:boolean"`
 	UpdatedAt     time.Time                        `gorm:"column:updated_at;autoUpdateTime"`
-	VPLPrograms   []VPLProgramSDSnapshotLinkEntity `gorm:"many2many:link;joinForeignKey:SDInstanceID,SDParameterID;joinReferences:ProgramID"`
+	VPLPrograms   []VPLProgramSDSnapshotLinkEntity `gorm:"foreignKey:SDInstanceID,SDParameterID;references:SDInstanceID,SDParameterID;constraint:OnDelete:CASCADE"`
 }
 
 func (SDParameterSnapshotEntity) TableName() string {
@@ -223,11 +223,21 @@ type VPLProgramsEntity struct {
 	Data                 string                           `gorm:"column:data;type:jsonb;not null"`
 	LastRun              *time.Time                       `gorm:"column:last_run"`
 	Enabled              bool                             `gorm:"column:enabled;not null"`
-	SDParameterSnapshots []VPLProgramSDSnapshotLinkEntity `gorm:"many2many:link;joinForeignKey:ProgramID;joinReferences:SDInstanceID,SDParameterID"`
+	SDParameterSnapshots []VPLProgramSDSnapshotLinkEntity `gorm:"foreignKey:ProgramID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 func (VPLProgramsEntity) TableName() string {
 	return "vpl_programs"
+}
+
+type VPLProceduresEntity struct {
+	ID   uint32 `gorm:"column:id;primaryKey;not null"`
+	Name string `gorm:"column:name;not null;uniqueIndex"`
+	Data string `gorm:"column:data;type:jsonb;not null"`
+}
+
+func (VPLProceduresEntity) TableName() string {
+	return "vpl_procedures"
 }
 
 type VPLProgramSDSnapshotLinkEntity struct {
@@ -238,4 +248,13 @@ type VPLProgramSDSnapshotLinkEntity struct {
 
 func (VPLProgramSDSnapshotLinkEntity) TableName() string {
 	return "vpl_program_sd_snapshot_link"
+}
+
+type VPLProgramProcedureLinkEntity struct {
+	ProgramID   uint32 `gorm:"column:program_id;primaryKey;not null"`
+	ProcedureID uint32 `gorm:"column:procedure_id;primaryKey;not null"`
+}
+
+func (VPLProgramProcedureLinkEntity) TableName() string {
+	return "vpl_program_procedure_link"
 }
