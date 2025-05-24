@@ -18,13 +18,13 @@ const Card = styled.div`
   display: flex;
   flex-direction: column;
   box-shadow: 0px 2px 6px var(--color-grey-200);
-  gap: 0.1rem;
 `
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: 0.5rem;
 `
 
 const Title = styled.h3`
@@ -43,13 +43,14 @@ const Detail = styled.p`
   color: var(--color-grey-600);
 
   @media (min-width: ${breakpoints.sm}) {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 `
 
 const ButtonGroup = styled.div`
   display: flex;
   justify-content: space-between;
+  margin-top: auto;
 `
 
 type KPIDefinitionCardProps = {
@@ -86,7 +87,6 @@ export default function KPIDefinitionCard({ kpiDefinition, onDelete }: KPIDefini
         </Button>
       </ButtonGroup>
 
-      {/* Modal Window for Confirming Deletion */}
       <DeleteConfirmationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

@@ -2,7 +2,6 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Button } from '@/components/ui/button'
 import { getIcon } from '@/utils/getIcon'
 
-// Subset of available icons
 const iconOptions = [
   {
     category: 'Devices & Connectivity',

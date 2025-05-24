@@ -1,0 +1,11 @@
+/* These properties solve the initial animation of the layout upon mounting the dashboard view component */
+/* Without these adjustments, all of the items fly-in from 0,0 coordinate, which is the top-left corner, */
+/* causing all of the items to be visible upon mounting and thus triggering the InView components of individual cards. */
+/* https://github.com/react-grid-layout/react-grid-layout/issues/103 */
+
+.react-grid-item.cssTransforms {
+    transition-property: none;
+  }
+.animated .react-grid-item.cssTransforms {
+    transition-property: transform;
+  }

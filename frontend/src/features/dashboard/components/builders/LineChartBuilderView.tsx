@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FieldErrors, useFieldArray, useForm } from 'react-hook-form'
 import { format, scaleLinear } from 'd3'
 import { z } from 'zod'
@@ -26,7 +26,7 @@ import { useDebounce } from 'use-debounce'
 import { Parameter } from '@/context/InstancesContext'
 import { LineChartLegend } from '../visualizations/LineChartLegend'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
-import IconPicker from '@/ui/IconPicker'
+import { IconPicker } from './components/icon-picker'
 
 export interface LineChartBuilderViewProps {
   chartData: Serie[]
@@ -49,7 +49,6 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
   const leftAxisMarginMockRef = useRef<HTMLHeadingElement | null>(null)
   const [dataMaxValue, setDataMaxValue] = useState<number | null>(null)
   const [_dataMinValue, setDataMinValue] = useState<number | null>(null)
-  const isFirstRender = useRef(true)
   const [openAccordions, setOpenAccordions] = useState<string[]>(['row-0'])
 
   const form = useForm<z.infer<typeof lineChartBuilderSchema>>({
@@ -116,14 +115,6 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
   })
 
   const [debouncedDecimalPlaces] = useDebounce(form.watch('decimalPlaces'), 1000)
-
-  useLayoutEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      console.log('Set first render to false')
-      return
-    }
-  }, [])
 
   const calculateLeftAxisMargin = () => {
     if (leftAxisMarginMockRef.current) {
@@ -512,22 +503,27 @@ export function LineChartBuilderView(props: LineChartBuilderViewProps) {
                     remove(index)
                   }}
                   className="absolute right-2 top-2 h-6 w-6"
+                  disabled={fields.length === 1}
                 >
                   <TbTrash size={14} />
                 </Button>
                 <FormField
                   control={form.control}
-                  name={`instances.${index}`}
+                  name={`instances.${index}.id`}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Instance</FormLabel>
                       <FormControl>
                         <SingleInstanceCombobox
-                          value={field.value.id}
+                          value={field.value}
                           onValueChange={(selectedInstance) => {
-                            props.onInstanceSelectionChange(index, field.value)
-                            field.onChange({ id: selectedInstance?.id, uid: selectedInstance?.uid, parameters: [] })
-                            form.setValue(`instances.${index}.parameters`, [])
+                            props.onInstanceSelectionChange(index, form.getValues(`instances.${index}`))
+                            form.setValue(`instances.${index}`, {
+                              id: selectedInstance?.id!,
+                              uid: selectedInstance?.uid!,
+                              parameters: []
+                            })
+                            field.onChange(selectedInstance?.id)
                           }}
                         />
                       </FormControl>

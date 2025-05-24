@@ -91,43 +91,33 @@ export const lineChartBuilderSchema = z.object({
     .optional(),
   instances: z
     .array(
-      z
-        .object({
-          uid: z.string().min(1, { message: 'Instance is required' }),
-          id: z
-            .number()
-            .min(0, { message: 'Instance ID is required' })
-            .nullable()
-            .superRefine((data, ctx) => {
-              if (data === null) {
-                ctx.addIssue({
-                  code: z.ZodIssueCode.invalid_type,
-                  expected: 'number',
-                  received: 'null',
-                  message: 'Instance ID is required'
-                })
-                return z.NEVER
-              }
-              return data
-            }),
-          parameters: z
-            .array(
-              z.object({
-                id: z.number().min(1, { message: 'Parameter ID is required' }),
-                denotation: z.string().min(1, { message: 'Parameter denotation is required' })
+      z.object({
+        uid: z.string().min(1, { message: 'Instance is required' }),
+        id: z
+          .number()
+          .min(0, { message: 'Instance is required' })
+          .nullable()
+          .superRefine((data, ctx) => {
+            if (data === null) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.invalid_type,
+                expected: 'number',
+                received: 'null',
+                message: 'Instance is required',
               })
-            )
-            .min(1, { message: 'At least one parameter is required' })
-        })
-        .superRefine((data, ctx) => {
-          if (!data.uid || data.uid.length === 0 || data.id === null) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: 'Instance is required',
-              path: []
+              return z.NEVER
+            }
+            return data
+          }),
+        parameters: z
+          .array(
+            z.object({
+              id: z.number().min(1, { message: 'Parameter ID is required' }),
+              denotation: z.string().min(1, { message: 'Parameter denotation is required' })
             })
-          }
-        })
+          )
+          .min(1, { message: 'At least one parameter is required' })
+      })
     )
     .min(1, { message: 'At least one instance is required' })
 })

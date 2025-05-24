@@ -409,7 +409,6 @@ const DashboardController = () => {
     if (fetchedConfigError) {
       // I came across this error, when the deleteUserConfig mutation was called
       // this should be rechecked whether new users are created with empty config or '{}'
-      // TODO
       const isNewUserError = fetchedConfigError.message.includes('record not found')
 
       if (isNewUserError) {
@@ -427,7 +426,6 @@ const DashboardController = () => {
         toast.dismiss('dashboard-config-load')
         toast.success('Welcome! Your dashboard is ready.')
       } else {
-        // TODO: Handle failed to fetch error ? backend down
         console.log('Error : ', fetchedConfigError.message)
         toast.error('Failed to fetch from database', { id: 'dashboard-config-load' })
         console.error('Failed to fetch from database:', fetchedConfigError)
@@ -454,7 +452,6 @@ const DashboardController = () => {
           toast.error('Invalid dashboard config format', { id: 'dashboard-config-load' })
           console.warn('Config validation error:', parsedResult.error)
 
-          // TODO: handle this somehow better ?
           // Create a default tab when config format is invalid
           const defaultLayouts: Layouts = {}
           Object.keys(COLS_CONST).forEach((key) => {
@@ -561,7 +558,6 @@ const DashboardController = () => {
     }
 
     if (saveConfigData) {
-      console.log('Saved to DB:', saveConfigData)
       toast.success('Changes saved!', { id: 'dashboard-config-save' })
     }
   }, [saveConfigLoading, saveConfigError, saveConfigData])

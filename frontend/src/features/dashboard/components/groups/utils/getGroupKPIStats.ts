@@ -1,5 +1,5 @@
 import { InstanceWithKPIs } from '@/context/stores/kpiStore'
-import { GroupDetailWithKPIs } from '@/controllers/details/GroupDetailPageController'
+import { GroupDetailWithKPIs } from '@/pages/controllers/details/GroupDetailPageController'
 import { SdInstanceGroupsWithKpiDataQuery } from '@/generated/graphql'
 
 export function getGroupKPIStats(

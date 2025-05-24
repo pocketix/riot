@@ -115,7 +115,7 @@ export const AddEditGroupDialogView = (props: AddEditGroupDialogViewProps) => {
 
   const formContent = (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(props.onSubmit)} className="mt-4 space-y-4">
+      <form id="group-form" onSubmit={form.handleSubmit(props.onSubmit)} className="mt-4 space-y-4">
         <FormField
           control={form.control}
           name="userIdentifier"
@@ -175,7 +175,7 @@ export const AddEditGroupDialogView = (props: AddEditGroupDialogViewProps) => {
             <Button type="button" variant="ghost" onClick={() => props.setOpen(false)} disabled={props.isLoading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={props.isLoading} onClick={() => props.onSubmit(form.getValues())}>
+            <Button form="group-form" type="submit" disabled={props.isLoading}>
               {props.initial ? 'Save Changes' : 'Create Group'}
             </Button>
           </div>
@@ -209,12 +209,7 @@ export const AddEditGroupDialogView = (props: AddEditGroupDialogViewProps) => {
                   Cancel
                 </Button>
               </DrawerClose>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={props.isLoading}
-                onClick={() => props.onSubmit(form.getValues())}
-              >
+              <Button form="group-form" type="submit" className="w-full" disabled={props.isLoading}>
                 {props.initial ? 'Save Changes' : 'Create Group'}
               </Button>
             </DrawerFooter>

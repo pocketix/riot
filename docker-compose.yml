@@ -18,12 +18,12 @@ services:
     environment:
       POSTGRES_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB_NAME}
       RABBITMQ_URL: ${RABBITMQ_URL}
-      GOOGLE_OAUTH2_CLIENT_ID: 939239491866-unqfnuoqc0loboqoq9l4shji2i1atpei.apps.googleusercontent.com
-      GOOGLE_OAUTH2_CLIENT_SECRET: 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
-      JWT_SECRET: laaiqVgdmnurM4hC
-      ALLOWED_ORIGINS: http://localhost:8080,http://localhost:1234 # Essentially a API client whitelist TODO: Configure this as needed...
+      # GOOGLE_OAUTH2_CLIENT_ID: abcdef contact @xjohnp00 if you need user pool details
+      # GOOGLE_OAUTH2_CLIENT_SECRET: abcdef
+      # JWT_SECRET: abcdef but more secret-y
+      # ALLOWED_ORIGINS: http://localhost:8080,http://localhost:1234 # Essentially a API client whitelist TODO: Configure this as needed...
       # SECURE_COOKIES: "" # Comment this out if you are using http instead of https
-      JWT_AUTHENTICATION_MIDDLEWARE_ENABLED: "" # Comment this out if you need unrestricted API access without authentication
+      # JWT_AUTHENTICATION_MIDDLEWARE_ENABLED: "" # Comment this out if you need unrestricted API access without authentication
     depends_on:
       - rabbitmq
       - postgres

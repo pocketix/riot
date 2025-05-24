@@ -1,7 +1,7 @@
 import { SequentialStatesCardConfig } from '@/schemas/dashboard/visualizations/SequentialStatesBuilderSchema'
 import { BaseCard } from './BaseCard'
 import { BaseVisualizationCardProps } from '@/types/dashboard/cards/cardGeneral'
-import { SequentialStatesVisualization } from '../devices/components/SequentialStatesVisualization'
+import { SequentialStatesVisualization } from '../visualizations/SequentialStatesVisualization'
 import { Datum } from '@nivo/line'
 
 interface SequentialStatesCardViewProps extends BaseVisualizationCardProps<SequentialStatesCardConfig> {
@@ -24,7 +24,14 @@ export const SequentialStatesCardView = (props: SequentialStatesCardViewProps) =
       configuration={props.cardConfig!}
     >
       <div className="h-full w-full">
-        <SequentialStatesVisualization data={props.data} dataInfo={props.dataInfo} />
+        <SequentialStatesVisualization
+          data={props.data}
+          dataInfo={{
+            ...props.dataInfo,
+            instanceID: props.cardConfig?.instance.id!,
+            parameterID: props.cardConfig?.parameter.id!
+          }}
+        />
       </div>
     </BaseCard>
   )

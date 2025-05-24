@@ -1,7 +1,0 @@
-/* https://www.radix-ui.com/primitives/docs/components/popover#constrain-the-content-size */
-/* TODO: mozno dat do tailwindu */
-
-.PopoverContent {
-    width: var(--radix-popover-trigger-width);
-    max-height: var(--radix-popover-content-available-height);
-}

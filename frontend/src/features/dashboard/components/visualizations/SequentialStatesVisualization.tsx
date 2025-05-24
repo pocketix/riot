@@ -5,21 +5,26 @@ import { timeFormat } from 'd3-time-format'
 import { ScaleTime, scaleTime } from 'd3-scale'
 import { select, Selection, pointer } from 'd3-selection'
 import { useDarkMode } from '@/context/DarkModeContext'
-import { darkTheme, lightTheme } from '../../cards/components/ChartThemes'
+import { darkTheme, lightTheme } from '../cards/components/ChartThemes'
 import { Datum } from '@nivo/line'
 import { Card } from '@/components/ui/card'
 import { Portal } from '@radix-ui/react-portal'
-import { getColorBlindSchemeWithBW } from '../../visualizations/color-schemes/color-impaired'
+import { getColorBlindSchemeWithBW } from './color-schemes/color-impaired'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
 import { Skeleton } from '@/components/ui/skeleton'
 import { isEqual } from 'lodash'
+import { useDeviceDetail } from '@/context/DeviceDetailContext'
+import { cn } from '@/lib/utils'
 
 interface SequentialStatesProps {
   data: readonly Datum[]
   dataInfo?: {
+    instanceID?: number
+    parameterID?: number
     instanceName: string
     parameterName: string
   }
+  disableDetailsOnClick?: boolean
 }
 
 interface StateDataSegment {
@@ -47,7 +52,7 @@ const formatDuration = (millis: number): string => {
   return `${seconds}s`
 }
 
-export const SequentialStatesVisualizationBase = ({ data, dataInfo }: SequentialStatesProps) => {
+export const SequentialStatesVisualizationBase = ({ data, dataInfo, disableDetailsOnClick }: SequentialStatesProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const svgRef = useRef<SVGSVGElement | null>(null)
 
@@ -78,6 +83,14 @@ export const SequentialStatesVisualizationBase = ({ data, dataInfo }: Sequential
     show: boolean
     x: number | null // x is independent of the tooltip card position
   }>({ show: false, x: null })
+  const { setDetailsSelectedDevice } = useDeviceDetail()
+
+  const handleClick = () => {
+    if (disableDetailsOnClick) return
+    if (dataInfo && dataInfo.instanceID && dataInfo.parameterID) {
+      setDetailsSelectedDevice(dataInfo.instanceID, dataInfo.parameterID)
+    }
+  }
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -498,10 +511,11 @@ export const SequentialStatesVisualizationBase = ({ data, dataInfo }: Sequential
     <div ref={containerRef} className="relative h-full w-full">
       <svg
         ref={svgRef}
-        className="block w-full overflow-visible"
+        className={cn('block w-full overflow-visible', disableDetailsOnClick ? '' : 'cursor-pointer')}
         width={width}
         height={height}
         style={{ touchAction: 'none' }}
+        onClick={handleClick}
       >
         <g ref={stableContainerRef} transform={`translate(${marginRef.current.left},${marginRef.current.top})`} />
 
