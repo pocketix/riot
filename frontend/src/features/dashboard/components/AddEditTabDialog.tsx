@@ -17,8 +17,8 @@ import { useMediaQuery } from '@uidotdev/usehooks'
 import { getIcon } from '@/utils/getIcon'
 import { Button } from '@/components/ui/button'
 import { LucidePlus, Pencil } from 'lucide-react'
-import IconPicker from '@/ui/IconPicker'
 import { Tab } from '@/schemas/dashboard/DashboardSchema'
+import { IconPicker } from './builders/components/icon-picker'
 
 interface AddEditTabDialogProps {
   onAddTab?: (values: AddTabFormSchemaType) => void
@@ -63,8 +63,8 @@ export function AddEditTabDialog(props: AddEditTabDialogProps) {
 
   const TabPreview = () => {
     return (
-      <div className="my-2 flex h-8 items-center gap-2">
-        <p className="text-muted-foreground">Preview:</p>
+      <div className="mx-auto my-2 flex h-8 items-center gap-2">
+        <p className="text-xs text-muted-foreground">Preview:</p>
         <div className="flex h-9 items-center gap-1 rounded-md border border-border px-2 py-2 pl-2">
           {form.watch('icon') && (
             <span className="text-muted-foreground">{IconComponent ? <IconComponent /> : null}</span>
@@ -77,8 +77,12 @@ export function AddEditTabDialog(props: AddEditTabDialogProps) {
 
   const FormContent = (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col items-center justify-center space-y-2">
-        <div className="flex w-full gap-2">
+      <form
+        id="add-tab-form"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="mx-auto flex flex-col items-center justify-center space-y-2"
+      >
+        <div className="mb-2 flex w-full flex-wrap gap-2">
           <FormField
             control={form.control}
             name="userIdentifier"
@@ -105,11 +109,6 @@ export function AddEditTabDialog(props: AddEditTabDialogProps) {
               </FormItem>
             )}
           />
-        </div>
-        <div className="flex w-full justify-end pt-2">
-          <Button type="submit" className="w-full">
-            {props.initialTab ? 'Update Tab' : 'Create Tab'}
-          </Button>
         </div>
       </form>
     </Form>
@@ -141,6 +140,9 @@ export function AddEditTabDialog(props: AddEditTabDialogProps) {
           </DialogHeader>
           <TabPreview />
           {FormContent}
+          <Button type="submit" className="w-full" form="add-tab-form">
+            {props.initialTab ? 'Update Tab' : 'Create Tab'}
+          </Button>
         </DialogContent>
       </Dialog>
     )
@@ -161,6 +163,9 @@ export function AddEditTabDialog(props: AddEditTabDialogProps) {
         <TabPreview />
         {FormContent}
         <DrawerFooter className="px-0">
+          <Button type="submit" className="w-full" form="add-tab-form">
+            {props.initialTab ? 'Update Tab' : 'Create Tab'}
+          </Button>
           <Button variant="outline" onClick={() => setOpen(false)} className="w-full px-0">
             Cancel
           </Button>

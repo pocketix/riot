@@ -10,7 +10,7 @@ import {
   useStatisticsQuerySensorsWithFieldsLazyQuery,
   useUpdateUserIdentifierOfSdInstanceMutation
 } from '@/generated/graphql'
-import { DeviceDetailPageProps, DeviceDetailPageView } from '@/views/DeviceDetailView'
+import { DeviceDetailPageProps, DeviceDetailPageView } from '@/pages/views/DeviceDetailView'
 import { Instance, useInstances } from '@/context/InstancesContext'
 import { useInstanceWithKPIs } from '@/hooks/useInstanceWithKPIs'
 import { useFormattedLastUpdated } from '@/hooks/useLastUpdated'

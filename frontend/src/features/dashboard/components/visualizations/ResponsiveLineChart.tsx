@@ -211,7 +211,6 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
             yScale={
               {
                 ...mergedConfig.yScale,
-                // TODO
                 // min: mergedConfig.yScale?.min === 'auto' ? getMinValue(data) * 0.99 : Number(mergedConfig.yScale?.min),
                 // max: mergedConfig.yScale?.max === 'auto' ? getMaxValue(data) * 1.01 : Number(mergedConfig.yScale?.max),
                 min: mergedConfig.yScale?.min,
@@ -247,10 +246,6 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
               }
             ]}
             axisBottom={{ ...mergedConfig.axisBottom, tickValues: 0 }}
-            // axisLeft={{
-            //   ...mergedConfig.axisLeft,
-            //   tickValues: tickValues
-            // }}
             axisLeft={axisLeftConfig}
             layers={[
               (props: CustomLayerProps) =>
@@ -271,8 +266,6 @@ const ResponsiveLineChartBase = forwardRef<HTMLDivElement, ResponsiveLineChartPr
               'points',
               'areas',
               'mesh' // must be last for tooltip to work
-              // TODO: maybe use slices instead
-              // TODO: add legends
             ]}
             markers={mergedConfig.markers}
             pointSize={mergedConfig.pointSize}

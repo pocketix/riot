@@ -24,8 +24,8 @@ export default defineConfig({
         name: 'RIoT',
         short_name: 'RIoT',
         description: 'RIoT Web App',
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
+        theme_color: '#121212',
+        background_color: '#121212',
         display: 'standalone',
         icons: [
           {

@@ -20,6 +20,8 @@ const NavbarContainer = styled.div`
   bottom: 0;
   width: 100%;
   background-color: var(--color-grey-50);
+  // Iphone bottom tab switcher
+  /* padding-bottom: env(safe-area-inset-bottom, 0); */
 
   @media (min-width: ${breakpoints.md}) {
     flex-direction: column;
@@ -29,6 +31,7 @@ const NavbarContainer = styled.div`
     border-top: none;
     gap: 0.6rem;
     background-color: transparent;
+    padding-bottom: 0;
   }
 `
 

@@ -1,4 +1,4 @@
-import { DeviceDetailPageController } from '@/controllers/details/DeviceDetailPageController'
+import { DeviceDetailPageController } from '@/pages/controllers/details/DeviceDetailPageController'
 
 export const DeviceDetailPage = () => {
   return <DeviceDetailPageController />

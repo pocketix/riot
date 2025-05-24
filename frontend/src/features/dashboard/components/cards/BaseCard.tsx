@@ -62,8 +62,7 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
 
   if (props.isLoading || props.beingResized) {
     return (
-      <>
-        <Skeleton className="h-full w-full" />
+      <Skeleton className="relative h-full w-full">
         {props.editModeEnabled && (
           <DeleteEditContainer>
             <ResponsiveAlertDialog onSuccess={() => props.handleDeleteItem(props.cardID, props.breakPoint)} />
@@ -115,7 +114,7 @@ export function BaseCard<ConfigType extends AllConfigTypes>(props: BaseCardProps
             )}
           </>
         )}
-      </>
+      </Skeleton>
     )
   }
 

@@ -14,6 +14,7 @@ interface SwitchCardViewProps extends BaseVisualizationCardProps<SwitchCardConfi
     instanceName: string
     parameterName: string
   }
+  allowPercentualChange?: boolean
   onPercentualChange: (value: number) => void
   onStateChange: (value: boolean) => void
 }
@@ -34,6 +35,7 @@ export const SwitchCardView = (props: SwitchCardViewProps) => {
         percentage={props.percentage}
         icon={IconComponent}
         title={props.switchConfig?.title}
+        allowPercentualChange={props.allowPercentualChange}
         isLoading={props.isLoading}
         isError={!!props.error}
         booleanInfo={{

@@ -12,11 +12,11 @@ import { Parameter } from '@/context/InstancesContext'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { ResponsiveTooltip } from '@/components/responsive-tooltip'
 import { Info } from 'lucide-react'
-import IconPicker from '@/ui/IconPicker'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
 import { SdParameterType } from '@/generated/graphql'
 import { useState } from 'react'
 import { ResponsiveDialog } from '../cards/components/ResponsiveDialog'
+import { IconPicker } from './components/icon-picker'
 
 export interface SwitchBuilderViewProps {
   config?: SwitchCardConfig
@@ -241,7 +241,6 @@ export function SwitchBuilderView(props: SwitchBuilderViewProps) {
                             <SingleInstanceCombobox
                               allowClear={true}
                               onValueChange={(instance) => {
-                                console.log('instance', instance)
                                 if (instance) {
                                   form.setValue('percentualSettings', {
                                     instanceID: instance.id,
@@ -399,7 +398,7 @@ export function SwitchBuilderView(props: SwitchBuilderViewProps) {
                 )
               }
             />
-            <Button type="submit" className="mt-4">
+            <Button type="submit" className="ml-auto mt-4 flex">
               Submit
             </Button>
           </form>

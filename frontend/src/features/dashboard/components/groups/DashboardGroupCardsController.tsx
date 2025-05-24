@@ -6,7 +6,7 @@ import {
 import { useMemo } from 'react'
 import { GroupsView } from './GroupsView'
 import { useKpiContext } from '@/context/KPIContext'
-import { GroupDetailWithKPIs } from '@/controllers/details/GroupDetailPageController'
+import { GroupDetailWithKPIs } from '@/pages/controllers/details/GroupDetailPageController'
 import { getGroupKPIStats } from './utils/getGroupKPIStats'
 
 type KPIDefinition = SdInstanceGroupsWithKpiDataQuery['kpiDefinitions'][0]

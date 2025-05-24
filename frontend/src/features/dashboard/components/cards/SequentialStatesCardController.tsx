@@ -35,7 +35,6 @@ export const SequentialStatesCardController = (props: SequentialStatesCardProps)
     parameterName: wholeParameter?.label || cardConfig?.parameter.denotation!
   }
 
-  //   TODO: consts
   const pollInterval = cardConfig?.timeFrame ? Number(cardConfig.timeFrame) * 60 * 60 * 1000 : 0
   const FETCHES_PER_TIMEFRAME = 4
 

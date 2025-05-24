@@ -181,6 +181,7 @@ export default function DeviceTypeDetail() {
     commands: [] as { name: string; payload: string }[]
   })
 
+  // using react-hook-form
   const {
     register,
     handleSubmit,
@@ -196,6 +197,7 @@ export default function DeviceTypeDetail() {
     mode: 'onSubmit'
   })
 
+  // Fetching the device type data
   const { loading, error } = useQuery<SdTypeQuery, SdTypeQueryVariables>(GET_PARAMETERS, {
     variables: { sdTypeId: sdTypeId! },
     skip: !sdTypeId || isAddingNew,
@@ -250,6 +252,7 @@ export default function DeviceTypeDetail() {
 
     if (hasDuplicate) return
 
+    // Check for commands errors
     let hasPayloadErrors = false
     data.commands.forEach((command: any, cmdIdx: number) => {
       try {
@@ -371,6 +374,7 @@ export default function DeviceTypeDetail() {
     }
   }
 
+  // Helper functions to get error messages
   function getPayloadParamError(errors: any, cmdIdx: number, paramIdx: number) {
     return (errors.root?.commands?.[cmdIdx]?.payloadParams as any)?.[paramIdx]?.possibleValues
   }
@@ -570,6 +574,7 @@ export default function DeviceTypeDetail() {
             </Button>
           )}
 
+          {/* PARAMETERS SECTION */}
           {watch('parameters').length > 0 && (
             <ParametersContainer>
               <ParamTable>
@@ -688,6 +693,7 @@ export default function DeviceTypeDetail() {
             </Button>
           )}
 
+          {/* COMMANDS SECTION */}
           {watch('commands').length > 0 && (
             <ParametersContainer>
               <ParamTable>
@@ -733,6 +739,9 @@ export default function DeviceTypeDetail() {
                   return editMode ? (
                     <ParamRow key={cmdIdx}>
                       <ParamCell>
+                        <div className="mb-2 flex gap-2 text-sm font-semibold text-muted-foreground">
+                          <div className="w-28">Command Name</div>
+                        </div>
                         <Tooltip.Provider>
                           <Tooltip.Root open={!!errors.commands?.[cmdIdx]?.name}>
                             <Tooltip.Trigger asChild>
@@ -754,7 +763,12 @@ export default function DeviceTypeDetail() {
                       </ParamCell>
                       <ParamCell>
                         <div className="flex flex-col gap-2">
-                          {/* Render all payload parameters */}
+                          <div className="flex gap-2 text-sm font-semibold text-muted-foreground">
+                            <div className="w-28">Param Name</div>
+                            <div className="w-28">Type</div>
+                            <div className="w-40">Possible Values</div>
+                            <div className="flex-1" />
+                          </div>
                           {payloadParams.map((param, paramIdx) => (
                             <div key={paramIdx} className="mb-1 flex items-center gap-2">
                               <Tooltip.Provider>
@@ -766,7 +780,7 @@ export default function DeviceTypeDetail() {
                                         clearErrors(`root.commands.${cmdIdx}.payloadParams.${paramIdx}.name`)
                                         updatePayloadParam(paramIdx, 'name', e.target.value)
                                       }}
-                                      placeholder="Param name"
+                                      placeholder="state"
                                       className={`w-28 ${
                                         getParamNameError(errors, cmdIdx, paramIdx) ? 'border-red-500' : ''
                                       }`}
@@ -784,7 +798,7 @@ export default function DeviceTypeDetail() {
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="outline" className="w-28">
-                                    {param.type || 'Type'}
+                                    {param.type || 'NUMBER'}
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
@@ -805,7 +819,9 @@ export default function DeviceTypeDetail() {
                                       <Input
                                         defaultValue={
                                           Array.isArray(param.possibleValues)
-                                            ? JSON.stringify(param.possibleValues)
+                                            ? isAddingNew
+                                              ? param.possibleBalues
+                                              : JSON.stringify(param.possibleValues)
                                             : (param.possibleValues ?? '')
                                         }
                                         onBlur={(e) => {
