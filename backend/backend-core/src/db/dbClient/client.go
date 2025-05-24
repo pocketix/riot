@@ -230,17 +230,19 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.RolesPermissionsMappingEntity),
 		new(dbModel.PermissionEntity),
 		new(dbModel.OperationTypeAccessPermissionEntity),
+		new(dbModel.SingleOperationPermissionEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
 }
 
 func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
+	// Begin by creating a snapshot of the GraphQL API based on the 'schema.graphqls' file
 	createGraphQLAPISnapshotResult := misc.CreateGraphQLAPISnapshot()
 	if createGraphQLAPISnapshotResult.IsFailure() {
 		return createGraphQLAPISnapshotResult.GetError()
 	}
 	graphQLAPISnapshot := createGraphQLAPISnapshotResult.GetPayload()
-	log.Println("Dumping the GraphQL API snapshot...")
-	sharedUtils.Dump(graphQLAPISnapshot)
+
+	// Determine which operations are missing and which are redundant
 	setOfIdentifiersOfCurrentlyDefinedGraphQLOperations := sharedUtils.NewSetFromSlice(sharedUtils.Map(graphQLAPISnapshot, func(graphQLOperationSnapshot misc.GraphQLOperation) string {
 		return graphQLOperationSnapshot.Identifier
 	}))
@@ -253,6 +255,10 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 	}))
 	toDelete := (setOfIdentifiersOfGraphQLOperationsPersistedInTheDatabase.GenerateDifferenceWith(setOfIdentifiersOfCurrentlyDefinedGraphQLOperations)).ToSlice()
 	toAdd := setOfIdentifiersOfCurrentlyDefinedGraphQLOperations.GenerateDifferenceWith(setOfIdentifiersOfGraphQLOperationsPersistedInTheDatabase)
+
+	// 1. Delete redundant GraphQL operation entries
+	// 2. Insert missing GraphQL operation entries
+	// 3. For each newly added GraphQL operation entry: add two single operation permission entries --> both effects
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		if err := dbUtil.DeleteEntitiesBasedOnWhereClauses[dbModel.GraphQLOperationEntity](r.db, dbUtil.Where("identifier IN (?)", toDelete)); err != nil {
 			return err
@@ -262,11 +268,27 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 			if !toAdd.Contains(identifier) {
 				continue
 			}
-			entity := new(dbModel.GraphQLOperationEntity)
-			entity.Identifier = identifier
-			entity.OperationType = string(graphQLOperationSnapshot.OpType)
-			if err := dbUtil.PersistEntityIntoDB[dbModel.GraphQLOperationEntity](tx, entity); err != nil {
+
+			graphQLOperationEntity := &dbModel.GraphQLOperationEntity{
+				Identifier:    identifier,
+				OperationType: string(graphQLOperationSnapshot.OpType),
+			}
+			if err := dbUtil.PersistEntityIntoDB[dbModel.GraphQLOperationEntity](tx, graphQLOperationEntity); err != nil {
 				return err
+			}
+			graphQLOperationID := graphQLOperationEntity.ID
+
+			for _, effect := range sharedUtils.SliceOf("allow", "deny") {
+				singleOperationPermissionEntity := &dbModel.PermissionEntity{
+					Label: fmt.Sprintf("GraphQL operation: %s | Effect: %s", identifier, effect),
+					SingleOperationPermission: &dbModel.SingleOperationPermissionEntity{
+						GraphQLOperationID: graphQLOperationID,
+						Effect:             effect,
+					},
+				}
+				if err := dbUtil.PersistEntityIntoDB[dbModel.PermissionEntity](tx, singleOperationPermissionEntity); err != nil {
+					return err
+				}
 			}
 		}
 		return nil
@@ -275,49 +297,44 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 		return err
 	}
 
-	operationTypeAccessPermissionTableEmptinessCheckResult := dbUtil.IsTableEmpty[dbModel.OperationTypeAccessPermissionEntity](r.db)
-	if operationTypeAccessPermissionTableEmptinessCheckResult.IsFailure() {
-		return operationTypeAccessPermissionTableEmptinessCheckResult.GetError()
+	// The 'migration' will proceed only if the 'Role' table is empty (= has no rows)
+	roleTableEmptinessCheckResult := dbUtil.IsTableEmpty[dbModel.RoleEntity](r.db)
+	if roleTableEmptinessCheckResult.IsFailure() {
+		return roleTableEmptinessCheckResult.GetError()
 	}
-	isOperationTypeAccessPermissionTableEmpty := operationTypeAccessPermissionTableEmptinessCheckResult.GetPayload()
-	if !isOperationTypeAccessPermissionTableEmpty {
-		log.Println("Operation type access permission table is NOT empty: no more on-startup operations...")
+	if isRoleTableEmpty := roleTableEmptinessCheckResult.GetPayload(); !isRoleTableEmpty {
+		log.Println("Role table is NOT empty: no more on-startup operations...")
 		return nil
 	}
 
-	permissionIDs := make([]uint32, 0)
-	err = r.db.Transaction(func(tx *gorm.DB) error {
-		for _, operationType := range sharedUtils.SliceOf("query", "mutation", "subscription") {
-			permissionEntity := new(dbModel.PermissionEntity)
-			permissionEntity.Label = fmt.Sprintf("Permission to access the GraphQL operation type: %s.", operationType)
-			if err := dbUtil.PersistEntityIntoDB[dbModel.PermissionEntity](tx, permissionEntity); err != nil {
-				return err
-			}
-			permissionID := permissionEntity.ID
-			permissionIDs = append(permissionIDs, permissionID)
-			operationTypeAccessPermissionEntity := new(dbModel.OperationTypeAccessPermissionEntity)
-			operationTypeAccessPermissionEntity.PermissionID = permissionID
-			operationTypeAccessPermissionEntity.OperationType = operationType
-			if err := dbUtil.PersistEntityIntoDB[dbModel.OperationTypeAccessPermissionEntity](tx, operationTypeAccessPermissionEntity); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return err
+	// Create a 'Root-Administrator' role along with the operation-type-access permission entries
+	// Anyone with the aforementioned role will be able to access all GraphQL operations (unless explicitly denied)
+	rootAdministratorRoleEntity := &dbModel.RoleEntity{
+		Label: "Root-Administrator",
+		Permissions: []dbModel.PermissionEntity{
+			{
+				Label: "Permission to access the GraphQL operation type: query.",
+				OperationTypeAccessPermission: &dbModel.OperationTypeAccessPermissionEntity{
+					OperationType: "query",
+				},
+			},
+			{
+				Label: "Permission to access the GraphQL operation type: mutation.",
+				OperationTypeAccessPermission: &dbModel.OperationTypeAccessPermissionEntity{
+					OperationType: "mutation",
+				},
+			},
+			{
+				Label: "Permission to access the GraphQL operation type: subscription.",
+				OperationTypeAccessPermission: &dbModel.OperationTypeAccessPermissionEntity{
+					OperationType: "subscription",
+				},
+			},
+		},
 	}
+	return dbUtil.PersistEntityIntoDB[dbModel.RoleEntity](r.db, rootAdministratorRoleEntity)
 
-	rootAdministratorRoleEntity := new(dbModel.RoleEntity)
-	rootAdministratorRoleEntity.Label = "Root-Administrator"
-	rootAdministratorRoleEntity.Permissions = sharedUtils.Map(permissionIDs, func(permissionID uint32) dbModel.PermissionEntity {
-		return dbModel.PermissionEntity{ID: permissionID}
-	})
-	if err := dbUtil.PersistEntityIntoDB[dbModel.RoleEntity](r.db, rootAdministratorRoleEntity); err != nil {
-		return err
-	}
-
-	return nil
+	// TODO: Give the 'Root-Administrator' role to a selected user (likely provided by .env)
 }
 
 func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition sharedModel.KPIDefinition) sharedUtils.Result[uint32] {

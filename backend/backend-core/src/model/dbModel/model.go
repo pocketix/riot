@@ -276,6 +276,7 @@ type PermissionEntity struct {
 	Label                         string                               `gorm:"column:label;not null;uniqueIndex"`
 	Roles                         []RoleEntity                         `gorm:"many2many:roles_permissions_mapping;joinForeignKey:PermissionID;joinReferences:RoleID"`
 	OperationTypeAccessPermission *OperationTypeAccessPermissionEntity `gorm:"foreignKey:PermissionID;constraint:OnDelete:CASCADE"`
+	SingleOperationPermission     *SingleOperationPermissionEntity     `gorm:"foreignKey:PermissionID;constraint:OnDelete:CASCADE"`
 }
 
 func (PermissionEntity) TableName() string {
@@ -289,4 +290,11 @@ type OperationTypeAccessPermissionEntity struct {
 
 func (OperationTypeAccessPermissionEntity) TableName() string {
 	return "operation_type_access_permissions"
+}
+
+type SingleOperationPermissionEntity struct {
+	PermissionID       uint32                 `gorm:"column:permission_id;primaryKey;not null"`
+	GraphQLOperationID uint32                 `gorm:"column:graphql_operation_id;primaryKey;not null;uniqueIndex:idx_op_effect,priority:1"`
+	GraphQLOperation   GraphQLOperationEntity `gorm:"foreignKey:GraphQLOperationID;references:ID;constraint:OnDelete:CASCADE"`
+	Effect             string                 `gorm:"column:effect;not null;check:effect IN ('allow', 'deny');uniqueIndex:idx_op_effect,priority:2"`
 }
