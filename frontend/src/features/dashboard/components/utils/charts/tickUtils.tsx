@@ -56,28 +56,6 @@ export const timeTicksLayer = ({
       return pos >= minRange && pos <= maxRange
     })
 
-    // TODO? doesnt seem to be an issue anymore ? 
-    // if (visibleTicks[0].getMonth() !== visibleTicks[visibleTicks.length - 1].getMonth()) {
-    //   // if not all the ticks are within the same month,
-    //   // D3 displays the last day of the first month and the first day of the second month
-    //   // only keep the first day of the second month in these cases
-
-    //   for (let i = 0; i < visibleTicks.length - 1; i++) {
-    //     const currentDate = visibleTicks[i]
-    //     const nextDate = visibleTicks[i + 1]
-
-    //     if (
-    //       currentDate.getDate() === new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() &&
-    //       nextDate.getDate() === 1
-    //     ) {
-    //       if (currentDate.getMonth() !== nextDate.getMonth()) {
-    //         visibleTicks.splice(i, 1)
-    //         i--
-    //       }
-    //     }
-    //   }
-    // }
-
     timeTicksCache.set(cacheKey, visibleTicks)
     return visibleTicks
   }, [cacheKey, startDate, endDate, xScale, minRange, maxRange, width])

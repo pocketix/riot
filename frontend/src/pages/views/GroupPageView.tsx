@@ -3,22 +3,13 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  SearchIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  X,
-  PlusIcon,
-  Pencil
-} from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, SearchIcon, CheckCircleIcon, XCircleIcon, X, PlusIcon, Pencil } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TbDeviceTablet } from 'react-icons/tb'
-import { WholeKPIGroupDetails } from '@/controllers/GroupPageController'
+import { WholeKPIGroupDetails } from '@/pages/controllers/GroupPageController'
 import { useNavigate } from 'react-router-dom'
 import { AddEditGroupDialogController } from './components/AddEditGroupController'
 
@@ -44,7 +35,6 @@ export const GroupPageView = ({
   setSortDirection
 }: GroupPageViewProps) => {
   const [activeTab, setActiveTab] = useState<'all' | 'issues'>('all')
-  console.log('groups', groups)
 
   const displayedGroups = activeTab === 'issues' ? groups.filter((group) => group.kpiStats.notFulfilled > 0) : groups
 
@@ -194,7 +184,11 @@ const GroupCard = ({ group }: GroupCardProps) => {
             )}
 
             <AddEditGroupDialogController
-              initial={{ userIdentifier: group.userIdentifier, sdInstanceIDs: group.instances.map((i) => i.id) , groupID: group.groupID }}
+              initial={{
+                userIdentifier: group.userIdentifier,
+                sdInstanceIDs: group.instances.map((i) => i.id),
+                groupID: group.groupID
+              }}
             >
               <Button type="button" size="icon" variant="ghost" className="m-0 p-0">
                 <Pencil className="h-4 w-4" />

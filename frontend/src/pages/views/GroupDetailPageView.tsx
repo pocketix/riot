@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { GroupDetailWithKPIs } from '@/controllers/details/GroupDetailPageController'
+import { GroupDetailWithKPIs } from '@/pages/controllers/details/GroupDetailPageController'
 import { RiDashboardLine, RiErrorWarningLine } from 'react-icons/ri'
 import { useMemo } from 'react'
 import { Separator } from '@/components/ui/separator'
@@ -30,7 +30,7 @@ export const GroupDetailPageView = ({ groupData }: GroupDetailPageViewProps) => 
   }
 
   return (
-    <div className="mx-auto px-6 py-3">
+    <div className="px-6 py-3">
       <div className="mb-2 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="flex items-center gap-2">

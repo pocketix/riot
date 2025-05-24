@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
 import { SingleInstanceCombobox } from './components/single-instance-combobox'
 import { SingleParameterCombobox } from './components/single-parameter-combobox'
-import IconPicker from '@/ui/IconPicker'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import {
@@ -12,11 +11,12 @@ import {
   SequentialStatesCardConfig
 } from '@/schemas/dashboard/visualizations/SequentialStatesBuilderSchema'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
-import { SequentialStatesVisualization } from '../devices/components/SequentialStatesVisualization'
+import { SequentialStatesVisualization } from '../visualizations/SequentialStatesVisualization'
 import { Datum } from '@nivo/line'
 import { useEffect, useMemo } from 'react'
 import { TimeFrameSelector } from './components/time-frame-selector'
 import { useInstances } from '@/context/InstancesContext'
+import { IconPicker } from './components/icon-picker'
 
 interface SequentialStatesBuilderViewProps {
   data: Datum[]
@@ -79,6 +79,7 @@ export function SequentialStatesBuilderView(props: SequentialStatesBuilderViewPr
         <div className="h-[60px] w-full overflow-hidden">
           <SequentialStatesVisualization
             data={props.data}
+            disableDetailsOnClick
             dataInfo={{
               instanceName: wholeInstance?.userIdentifier || instance?.uid!,
               parameterName: wholeParameter?.label || wholeParameter?.denotation || parameter?.denotation
@@ -97,7 +98,7 @@ export function SequentialStatesBuilderView(props: SequentialStatesBuilderViewPr
                   <FormItem className="w-full">
                     <FormLabel>Card Title</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input value={field.value} onChange={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -158,7 +159,7 @@ export function SequentialStatesBuilderView(props: SequentialStatesBuilderViewPr
               name="timeFrame"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>timeFrame</FormLabel>
+                  <FormLabel>Time Frame</FormLabel>
                   <FormControl>
                     <TimeFrameSelector value={field.value} onValueChange={field.onChange} />
                   </FormControl>
@@ -166,7 +167,7 @@ export function SequentialStatesBuilderView(props: SequentialStatesBuilderViewPr
                 </FormItem>
               )}
             />
-            <Button type="submit" className="mt-4">
+            <Button type="submit" className="ml-auto mt-4 flex">
               Submit
             </Button>
           </form>

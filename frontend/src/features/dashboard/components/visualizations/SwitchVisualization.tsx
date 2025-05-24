@@ -4,7 +4,8 @@ import { Card } from '@/components/ui/card'
 import { IconType } from 'react-icons'
 import { useLongPress } from '@/hooks/useLongPress'
 import { SwitchDetailDialog } from './SwitchDetailDialog'
-import '@/index.css'
+import { useDeviceDetail } from '@/context/DeviceDetailContext'
+import { toast } from 'sonner'
 
 export interface SwitchVisualizationProps {
   isOn: boolean
@@ -14,6 +15,7 @@ export interface SwitchVisualizationProps {
     instanceID: number
     parameterID: number
   }
+  allowPercentualChange?: boolean
   icon?: IconType | null
   isLoading?: boolean
   isError?: boolean
@@ -25,9 +27,16 @@ export interface SwitchVisualizationProps {
 
 const SwitchVisualizationBase = (props: SwitchVisualizationProps) => {
   const [dialogOpen, setDialogOpen] = useState(false)
+  const { setDetailsSelectedDevice } = useDeviceDetail()
 
   const longPressAttrs = useLongPress(
     () => {
+      if (!props.allowPercentualChange) {
+        toast.info('Percentual configuration was not provided for this switch, only the history can be viewed')
+        setDetailsSelectedDevice(props.booleanInfo?.instanceID!, props.booleanInfo?.parameterID!)
+        return
+      }
+
       setDialogOpen(true)
     },
     () => {
@@ -57,7 +66,7 @@ const SwitchVisualizationBase = (props: SwitchVisualizationProps) => {
         <div
           className="absolute left-0 top-0 z-0 h-full bg-yellow-200 transition-all duration-500 ease-in-out"
           style={{
-            width: props.isOn && props.percentage! > 0 ? `${props.percentage}%` : '0%'
+            width: props.isOn ? (props.percentage !== null ? `${props.percentage}%` : '100%') : '0%'
           }}
         />
         <div className="z-[1] flex h-full w-full items-center gap-2 px-4 py-2">

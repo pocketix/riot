@@ -21,9 +21,9 @@ import { SdParameterType } from '@/generated/graphql'
 import { useRef, useState } from 'react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
-import IconPicker from '@/ui/IconPicker'
 import { ValueSymbolPicker } from './components/value-symbol-picker'
 import { Checkbox } from '@/components/ui/checkbox'
+import { IconPicker } from './components/icon-picker'
 
 export interface EntityCardBuilderViewProps {
   config?: EntityCardConfig
@@ -169,6 +169,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
                         remove(index)
                       }}
                       className="mr-2 h-6 w-6"
+                      disabled={fields.length === 1}
                     >
                       <TbTrash size={14} />
                     </Button>
@@ -430,13 +431,7 @@ export function EntityCardBuilderView(props: EntityCardBuilderViewProps) {
               <IoAdd /> Add Row
             </Button>
 
-            <Button
-              type="submit"
-              className="ml-auto mt-4 flex"
-              onClick={() => {
-                console.log('Form errors', form.formState.errors)
-              }}
-            >
+            <Button type="submit" className="ml-auto mt-4 flex">
               Submit
             </Button>
           </form>

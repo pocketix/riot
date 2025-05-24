@@ -2,7 +2,7 @@ import styled from 'styled-components'
 import Heading from '@/ui/Heading'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useTranslation } from 'react-i18next'
-import { GroupPageController } from '@/controllers/GroupPageController'
+import { GroupPageController } from '@/pages/controllers/GroupPageController'
 import Tabs from '@/ui/Tabs'
 
 const PageWrapper = styled.div`
@@ -52,7 +52,6 @@ export default function DeviceGroups() {
           />
         </TopBar>
 
-        {/* Content goes here */}
         <div className="text-lg text-[--color-grey-500]">
           <GroupPageController />
         </div>

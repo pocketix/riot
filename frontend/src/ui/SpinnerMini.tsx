@@ -1,3 +1,6 @@
+// Adapted from: https://github.com/jonasschmedtmann/ultimate-react-course/blob/main/17-the-wild-oasis/final-6-final/src/ui/SpinnerMini.jsx
+// Author: Jonas Schmedtmann
+
 import styled, { keyframes } from 'styled-components'
 import { BiLoaderAlt } from 'react-icons/bi'
 

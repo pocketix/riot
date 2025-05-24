@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { forwardRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
@@ -41,7 +41,7 @@ interface ValueSymbolPickerProps {
   className?: string
 }
 
-export function ValueSymbolPicker(props: ValueSymbolPickerProps) {
+export const ValueSymbolPicker = forwardRef<HTMLButtonElement, ValueSymbolPickerProps>((props, ref) => {
   const [open, setOpen] = useState(false)
 
   return (
@@ -49,6 +49,7 @@ export function ValueSymbolPicker(props: ValueSymbolPickerProps) {
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            ref={ref}
             type="button"
             variant="outline"
             role="combobox"
@@ -110,4 +111,4 @@ export function ValueSymbolPicker(props: ValueSymbolPickerProps) {
       />
     </div>
   )
-}
+})

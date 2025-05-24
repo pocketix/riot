@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { useState } from 'react'
+import { forwardRef, useState } from 'react'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 
 export interface TimeFrameOption {
@@ -30,13 +30,15 @@ const options: TimeFrameOption[] = [
   { value: '720', label: '30 days' }
 ]
 
-export function TimeFrameSelector({ onValueChange, value, disabled = false, className }: TimeFrameSelectorProps) {
-  const [open, setOpen] = useState(false)
+export const TimeFrameSelector = forwardRef<HTMLButtonElement, TimeFrameSelectorProps>(
+  ({ onValueChange, value, disabled = false, className }, ref) => {
+    const [open, setOpen] = useState(false)
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          ref={ref}
           type="button"
           variant="outline"
           role="combobox"
@@ -80,4 +82,4 @@ export function TimeFrameSelector({ onValueChange, value, disabled = false, clas
       </PopoverContent>
     </Popover>
   )
-}
+})

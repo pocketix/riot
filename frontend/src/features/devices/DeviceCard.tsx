@@ -166,11 +166,9 @@ export default function DeviceCard({
           )}
         </TitleWrapper>
 
-        {/* Checkbox for confirmation */}
         {!confirmed && onSelectChange && (
           <Checkbox checked={selectedConfirm} onCheckedChange={(v) => onSelectChange(Boolean(v))} />
         )}
-        {/* Checkbox for creating a group */}
         {confirmed && onSelectChange && (
           <Checkbox checked={selectedGroups} onCheckedChange={(v) => onSelectChange(Boolean(v))} />
         )}

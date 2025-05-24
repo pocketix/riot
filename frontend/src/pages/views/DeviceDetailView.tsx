@@ -2,7 +2,7 @@ import { SdParameterType } from '@/generated/graphql'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { SequentialStatesVisualization } from '@/features/dashboard/components/devices/components/SequentialStatesVisualization'
+import { SequentialStatesVisualization } from '@/features/dashboard/components/visualizations/SequentialStatesVisualization'
 import { SingleParameterCombobox } from '@/features/dashboard/components/builders/components/single-parameter-combobox'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Group, Parameter } from '@/context/InstancesContext'
@@ -151,7 +151,7 @@ export const DeviceDetailPageView = ({
     } else {
       return (
         <div className="flex h-[65px] w-full flex-col items-center justify-center">
-          <SequentialStatesVisualization data={data[0].data} />
+          <SequentialStatesVisualization data={data[0].data} disableDetailsOnClick />
         </div>
       )
     }
@@ -470,7 +470,6 @@ export const DeviceDetailPageView = ({
                               className="h-fit self-center"
                               onClick={() => {
                                 const mainRange = form.getValues().dateTimeRange
-                                console.log('mainRange', mainRange)
                                 if (mainRange?.start && mainRange?.end) {
                                   form.setValue('comparison.dateTimeRange', {
                                     start: mainRange.start,

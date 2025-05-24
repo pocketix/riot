@@ -38,7 +38,6 @@ class InstanceKPIStore {
     const currentData = this.instanceData[key]
 
     // Deep compare KPIs to avoid unnecessary updates
-    // TODO: Check if lodash equal is enough
     const kpisChanged = isEqual(currentData?.kpis, instance.kpis)
 
     if (kpisChanged) {

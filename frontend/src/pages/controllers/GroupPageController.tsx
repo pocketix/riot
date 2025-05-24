@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSdInstanceGroupsWithKpiDataQuery } from '@/generated/graphql'
-import { GroupPageView } from '@/views/GroupPageView'
+import { GroupPageView } from '@/pages/views/GroupPageView'
 import { InstanceWithKPIs } from '@/context/stores/kpiStore'
 import { useKpiContext } from '@/context/KPIContext'
 
@@ -48,8 +48,6 @@ export const GroupPageController = () => {
         },
         { total: 0, fulfilled: 0, notFulfilled: 0 }
       )
-
-      console.log('KPI stats in controller', kpiStats)
 
       return {
         groupID: group.id,

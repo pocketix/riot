@@ -6,7 +6,7 @@ import { ResponsiveBulletChart } from '../visualizations/ResponsiveBulletChart'
 import { SwitchVisualization } from '../visualizations/SwitchVisualization'
 import { ResponsiveEntityTable } from '../visualizations/ResponsiveEntityTable'
 import { getCustomizableIcon } from '@/utils/getCustomizableIcon'
-import { SequentialStatesVisualization } from '../devices/components/SequentialStatesVisualization'
+import { SequentialStatesVisualization } from '../visualizations/SequentialStatesVisualization'
 import { VisualizationTypes } from '@/types/dashboard/gridItem'
 
 export interface VisualizationGalleryProps {
@@ -291,7 +291,7 @@ export function VisualizationGallery({ setSelectedVisualization, selectedVisuali
         onClick={() => setSelectedVisualization('seqstates')}
       >
         <div className="absolute inset-0 z-10" />
-        <SequentialStatesVisualization data={seqStatesData} />
+        <SequentialStatesVisualization data={seqStatesData} disableDetailsOnClick />
       </Card>
     </div>
   )
