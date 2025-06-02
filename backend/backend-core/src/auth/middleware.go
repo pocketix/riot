@@ -169,7 +169,7 @@ type FieldAccessAuthorizationCheckResult struct {
 
 func IsFieldAccessAuthorized(userID uint, fieldIdentifier string) FieldAccessAuthorizationCheckResult {
 	return FieldAccessAuthorizationCheckResult{ // TODO: Implement
-		UserAuthorized:               false,
+		UserAuthorized:               true,
 		AccessDenialType:             nil,
 		SourceOfExplicitAccessDenial: nil,
 	}
