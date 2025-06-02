@@ -8,6 +8,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"golang.org/x/sync/singleflight"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -23,7 +24,7 @@ var (
 func JWTAuthenticationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !jwtAuthenticationMiddlewareEnabled {
-			ctx := context.WithValue(r.Context(), UserIdContextIdentifier, "1")
+			ctx := context.WithValue(r.Context(), UserIdContextIdentifier, uint(1))
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
@@ -42,7 +43,8 @@ func JWTAuthenticationMiddleware(next http.Handler) http.Handler {
 					return
 				}
 
-				ctx := context.WithValue(r.Context(), UserIdContextIdentifier, subject.GetPayload())
+				u64, _ := strconv.ParseUint(subject.GetPayload(), 10, 32)
+				ctx := context.WithValue(r.Context(), UserIdContextIdentifier, uint(u64))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -88,7 +90,8 @@ func JWTAuthenticationMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "failed to parse session JWT", http.StatusUnauthorized)
 			return
 		}
-		ctx := context.WithValue(r.Context(), UserIdContextIdentifier, subject.GetPayload())
+		u64, _ := strconv.ParseUint(subject.GetPayload(), 10, 32)
+		ctx := context.WithValue(r.Context(), UserIdContextIdentifier, uint(u64))
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -144,4 +147,30 @@ func performSessionRefresh(refreshTokenHash string) (*sessionRefreshResult, erro
 		newRefreshToken:       newRefreshToken,
 		refreshTokenExpiresAt: userSession.ExpiresAt,
 	}, nil
+}
+
+type AccessDenialType string
+
+const (
+	Implicit AccessDenialType = "implicit"
+	Explicit AccessDenialType = "explicit"
+)
+
+type SourceOfExplicitAccessDenial struct {
+	PermissionID uint32
+	RoleIDs      []uint32
+}
+
+type FieldAccessAuthorizationCheckResult struct {
+	UserAuthorized               bool
+	AccessDenialType             *AccessDenialType
+	SourceOfExplicitAccessDenial *SourceOfExplicitAccessDenial
+}
+
+func IsFieldAccessAuthorized(userID uint, fieldIdentifier string) FieldAccessAuthorizationCheckResult {
+	return FieldAccessAuthorizationCheckResult{ // TODO: Implement
+		UserAuthorized:               false,
+		AccessDenialType:             nil,
+		SourceOfExplicitAccessDenial: nil,
+	}
 }

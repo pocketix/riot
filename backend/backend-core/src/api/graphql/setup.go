@@ -1,6 +1,9 @@
 package graphql
 
 import (
+	"context"
+	"fmt"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
@@ -37,6 +40,29 @@ func SetupGraphQLServer() {
 		},
 	})
 	graphQLServer.Use(extension.Introspection{})
+	graphQLServer.AroundFields(func(ctx context.Context, next graphql.Resolver) (res any, err error) {
+		fieldContext := graphql.GetFieldContext(ctx)
+		if fieldContext == nil {
+			return nil, fmt.Errorf("couldn't obtain GraphQL field context")
+		}
+		astField := fieldContext.Field.Field
+		if astField == nil {
+			return nil, fmt.Errorf("couldn't obtain 'ast.Field' struct instance")
+		}
+		userID, _ := ctx.Value(auth.UserIdContextIdentifier).(uint)
+		fieldAccessAuthorizationCheckResult := auth.IsFieldAccessAuthorized(userID, astField.Name)
+		if fieldAccessAuthorizationCheckResult.UserAuthorized {
+			return next(ctx)
+		}
+		if *fieldAccessAuthorizationCheckResult.AccessDenialType == auth.Implicit {
+			return nil, fmt.Errorf("field access denied - user %d is not authorized (implicit access denial)", userID)
+		}
+		sourceOfExplicitAccessDenial := *fieldAccessAuthorizationCheckResult.SourceOfExplicitAccessDenial
+		permissionID := sourceOfExplicitAccessDenial.PermissionID
+		roleIDs := sourceOfExplicitAccessDenial.RoleIDs
+		errorMessageDetail := fmt.Sprint("permission ", permissionID, " applied through roles ", roleIDs)
+		return nil, fmt.Errorf("field access denied - user %d is not authorized (explicit access denial - %s)", userID, errorMessageDetail)
+	})
 	router := chi.NewRouter()
 	router.Use(cors.New(cors.Options{
 		AllowedOrigins:   allowedOrigins.ToSlice(),
