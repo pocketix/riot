@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"log"
 	"net/http"
 	"strings"
@@ -57,14 +58,22 @@ func SetupGraphQLServer() {
 		if fieldAccessAuthorizationCheckResult.UserAuthorized {
 			return next(ctx)
 		}
+		var errorMessage string
 		if *fieldAccessAuthorizationCheckResult.AuthorizationDenialType == auth.Implicit {
-			return nil, fmt.Errorf("field access denied - user %d is not authorized (implicit authorization denial)", userID)
+			errorMessage = fmt.Sprintf("field access denied - user %d is not authorized (implicit authorization denial)", userID)
+		} else {
+			sourceOfExplicitAuthorizationDenial := *fieldAccessAuthorizationCheckResult.SourceOfExplicitAuthorizationDenial
+			permissionID := sourceOfExplicitAuthorizationDenial.PermissionID
+			roleIDs := sourceOfExplicitAuthorizationDenial.RoleIDs
+			errorMessageDetail := fmt.Sprint("permission ", permissionID, " applied through roles ", roleIDs)
+			errorMessage = fmt.Sprintf("field access denied - user %d is not authorized (explicit authorization denial - %s)", userID, errorMessageDetail)
 		}
-		sourceOfExplicitAuthorizationDenial := *fieldAccessAuthorizationCheckResult.SourceOfExplicitAuthorizationDenial
-		permissionID := sourceOfExplicitAuthorizationDenial.PermissionID
-		roleIDs := sourceOfExplicitAuthorizationDenial.RoleIDs
-		errorMessageDetail := fmt.Sprint("permission ", permissionID, " applied through roles ", roleIDs)
-		return nil, fmt.Errorf("field access denied - user %d is not authorized (explicit authorization denial - %s)", userID, errorMessageDetail)
+		graphql.AddError(ctx, &gqlerror.Error{
+			Message:    errorMessage,
+			Path:       graphql.GetPath(ctx),
+			Extensions: map[string]any{"code": "UNAUTHORIZED"},
+		})
+		return nil, nil
 	})
 	router := chi.NewRouter()
 	router.Use(cors.New(cors.Options{
