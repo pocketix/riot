@@ -72,6 +72,7 @@ type RelationalDatabaseClient interface {
 	LoadVPLProgram(id uint32) sharedUtils.Result[dllModel.VPLProgram]
 	LoadVPLPrograms() sharedUtils.Result[[]dllModel.VPLProgram]
 	DeleteVPLProgram(id uint32) error
+	LoadGraphQLOperations() sharedUtils.Result[[]misc.GraphQLOperation]
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -789,7 +790,12 @@ func (r *relationalDatabaseClientImpl) PersistUser(user dllModel.User) sharedUti
 func (r *relationalDatabaseClientImpl) LoadUserBasedOnOAuth2ProviderIssuedID(oauth2ProviderIssuedID string) sharedUtils.Result[sharedUtils.Optional[dllModel.User]] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	userEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.UserEntity](r.db, dbUtil.Where("oauth2_provider_issued_id = ?", oauth2ProviderIssuedID))
+	userEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.UserEntity](
+		r.db,
+		dbUtil.Preload("Roles.Permissions.SingleOperationPermission.GraphQLOperation"),
+		dbUtil.Preload("Roles.Permissions.OperationTypeAccessPermission"),
+		dbUtil.Where("oauth2_provider_issued_id = ?", oauth2ProviderIssuedID),
+	)
 	if userEntityLoadResult.IsFailure() {
 		userEntityLoadError := userEntityLoadResult.GetError()
 		if errors.Is(userEntityLoadError, gorm.ErrRecordNotFound) {
@@ -804,8 +810,16 @@ func (r *relationalDatabaseClientImpl) LoadUserBasedOnOAuth2ProviderIssuedID(oau
 func (r *relationalDatabaseClientImpl) LoadUser(id uint) sharedUtils.Result[dllModel.User] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	// TODO: Implement
-	return sharedUtils.NewFailureResult[dllModel.User](errors.New("[RDB client (GORM)]: not implemented"))
+	userEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.UserEntity](
+		r.db,
+		dbUtil.Where("id = ?", id),
+		dbUtil.Preload("Roles.Permissions.SingleOperationPermission.GraphQLOperation"),
+		dbUtil.Preload("Roles.Permissions.OperationTypeAccessPermission"),
+	)
+	if userEntityLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[dllModel.User](userEntityLoadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelUser(userEntityLoadResult.GetPayload()))
 }
 
 func (r *relationalDatabaseClientImpl) LoadUserSessionBasedOnRefreshTokenHash(refreshTokenHash string) sharedUtils.Result[sharedUtils.Optional[dllModel.UserSession]] {
@@ -923,4 +937,20 @@ func (r *relationalDatabaseClientImpl) DeleteVPLProgram(id uint32) error {
 	defer r.mu.Unlock()
 
 	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.VPLProgramsEntity](r.db, id)
+}
+
+func (r *relationalDatabaseClientImpl) LoadGraphQLOperations() sharedUtils.Result[[]misc.GraphQLOperation] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	graphQLOperationEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.GraphQLOperationEntity](r.db)
+	if graphQLOperationEntitiesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]misc.GraphQLOperation](graphQLOperationEntitiesLoadResult.GetError())
+	}
+	graphQLOperationEntities := graphQLOperationEntitiesLoadResult.GetPayload()
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(graphQLOperationEntities, func(graphQLOperationEntity dbModel.GraphQLOperationEntity) misc.GraphQLOperation {
+		return misc.GraphQLOperation{
+			Identifier: graphQLOperationEntity.Identifier,
+			OpType:     misc.GraphQLOperationType(graphQLOperationEntity.OperationType),
+		}
+	}))
 }

@@ -8,17 +8,17 @@ import (
 	"path/filepath"
 )
 
-type graphQLOperationType string
+type GraphQLOperationType string
 
 const (
-	graphQLOperationTypeQuery        graphQLOperationType = "query"
-	graphQLOperationTypeMutation     graphQLOperationType = "mutation"
-	graphQLOperationTypeSubscription graphQLOperationType = "subscription"
+	GraphQLOperationTypeQuery        GraphQLOperationType = "query"
+	GraphQLOperationTypeMutation     GraphQLOperationType = "mutation"
+	GraphQLOperationTypeSubscription GraphQLOperationType = "subscription"
 )
 
-type GraphQLOperation struct {
+type GraphQLOperation struct { // TODO: Consider moving this elsewhere
 	Identifier string
-	OpType     graphQLOperationType
+	OpType     GraphQLOperationType
 }
 
 func CreateGraphQLAPISnapshot() sharedUtils.Result[[]GraphQLOperation] {
@@ -39,7 +39,7 @@ func CreateGraphQLAPISnapshot() sharedUtils.Result[[]GraphQLOperation] {
 		return sharedUtils.NewFailureResult[[]GraphQLOperation](err)
 	}
 	graphQLOperations := make([]GraphQLOperation, 0)
-	procesTLDefinition := func(definition *ast.Definition, opType graphQLOperationType) {
+	procesTLDefinition := func(definition *ast.Definition, opType GraphQLOperationType) {
 		if definition == nil {
 			return
 		}
@@ -50,8 +50,8 @@ func CreateGraphQLAPISnapshot() sharedUtils.Result[[]GraphQLOperation] {
 			})
 		})
 	}
-	procesTLDefinition(schema.Query, graphQLOperationTypeQuery)
-	procesTLDefinition(schema.Mutation, graphQLOperationTypeMutation)
-	procesTLDefinition(schema.Subscription, graphQLOperationTypeSubscription)
+	procesTLDefinition(schema.Query, GraphQLOperationTypeQuery)
+	procesTLDefinition(schema.Mutation, GraphQLOperationTypeMutation)
+	procesTLDefinition(schema.Subscription, GraphQLOperationTypeSubscription)
 	return sharedUtils.NewSuccessResult(graphQLOperations)
 }

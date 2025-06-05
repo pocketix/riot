@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/misc"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"google.golang.org/api/idtoken"
@@ -27,6 +28,11 @@ type idTokenData struct {
 	email                  string
 	name                   sharedUtils.Optional[string]
 	profileImageURL        sharedUtils.Optional[string]
+}
+
+type APIAccessSummary struct {
+	authorizedFieldSet   *sharedUtils.Set[string]
+	unauthorizedFieldMap map[string]sharedUtils.Pair[uint32, []uint32]
 }
 
 // ----- functions -----
@@ -121,4 +127,73 @@ func extractIDTokenData(idTokenPayload *idtoken.Payload) sharedUtils.Result[idTo
 
 func generateRefreshToken() string {
 	return sharedUtils.GenerateRandomAlphanumericString(16)
+}
+
+func determineAPIAccess(userID uint) sharedUtils.Result[APIAccessSummary] {
+	dbClientInstance := dbClient.GetRelationalDatabaseClientInstance()
+	loadUserResult := dbClientInstance.LoadUser(userID)
+	if loadUserResult.IsFailure() {
+		return sharedUtils.NewFailureResult[APIAccessSummary](loadUserResult.GetError())
+	}
+	graphQLOperationsLoadResult := dbClientInstance.LoadGraphQLOperations()
+	if graphQLOperationsLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[APIAccessSummary](graphQLOperationsLoadResult.GetError())
+	}
+	user := loadUserResult.GetPayload()
+	graphQLOperations := graphQLOperationsLoadResult.GetPayload()
+
+	unauthorizedFieldMap := map[string]sharedUtils.Pair[uint32, []uint32]{}
+	authorizedFields := sharedUtils.EmptySlice[string]()
+
+	handleSingleOperationDenial := func(operationIdentifier string, permissionID uint32, roleID uint32) {
+		authorizationDenialSource, exists := unauthorizedFieldMap[operationIdentifier]
+		if !exists {
+			authorizationDenialSource = sharedUtils.NewPairOf(permissionID, []uint32{roleID})
+		} else {
+			roleIDs := authorizationDenialSource.GetSecond()
+			roleIDs = append(roleIDs, roleID)
+			authorizationDenialSource = sharedUtils.NewPairOf(authorizationDenialSource.GetFirst(), roleIDs)
+		}
+		unauthorizedFieldMap[operationIdentifier] = authorizationDenialSource
+	}
+
+	for _, role := range user.Roles {
+		roleID := role.ID.GetPayload()
+		for _, permission := range role.Permissions {
+			permissionID := permission.ID.GetPayload()
+			if permission.SingleOperationPermission.IsPresent() {
+				singleOperationPermission := permission.SingleOperationPermission.GetPayload()
+				operationIdentifier := singleOperationPermission.GraphQLOperationIdentifier
+				effect := singleOperationPermission.Effect
+				if effect == "allow" {
+					authorizedFields = append(authorizedFields, operationIdentifier)
+				} else if effect == "deny" {
+					handleSingleOperationDenial(operationIdentifier, permissionID, roleID)
+				} else {
+					panic(fmt.Sprintf("single-operation permission entry (id: %d): effect outside enum scope ('allow' | 'deny'): %s", permissionID, effect))
+				}
+			} else if permission.OperationTypeAccessPermission.IsPresent() {
+				operationType := permission.OperationTypeAccessPermission.GetPayload().OperationType
+				graphQLOperationsOfTargetType := sharedUtils.Filter(graphQLOperations, func(graphQLOperation misc.GraphQLOperation) bool {
+					return graphQLOperation.OpType == operationType
+				})
+				identifiersOfGraphQLOperationsOfTargetType := sharedUtils.Map(graphQLOperationsOfTargetType, func(graphQLOperation misc.GraphQLOperation) string {
+					return graphQLOperation.Identifier
+				})
+				authorizedFields = append(authorizedFields, identifiersOfGraphQLOperationsOfTargetType...)
+			} else {
+				panic(fmt.Sprintf("permission entry (id: %d): no subtype present", permissionID))
+			}
+		}
+	}
+
+	authorizedFieldSet := sharedUtils.NewSetFromSlice(authorizedFields)
+	for unauthorizedFieldIdentifier := range unauthorizedFieldMap {
+		authorizedFieldSet.Delete(unauthorizedFieldIdentifier)
+	}
+
+	return sharedUtils.NewSuccessResult(APIAccessSummary{
+		authorizedFieldSet:   authorizedFieldSet,
+		unauthorizedFieldMap: unauthorizedFieldMap,
+	})
 }

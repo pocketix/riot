@@ -1,6 +1,7 @@
 package db2dll
 
 import (
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/misc"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dbModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
@@ -18,6 +19,33 @@ func ToDLLModelUser(userEntity dbModel.UserEntity) dllModel.User {
 		OAuth2ProviderIssuedID: sharedUtils.NewOptionalFromPointer[string](userEntity.OAuth2ProviderIssuedID),
 		LastLoginAt:            sharedUtils.NewOptionalFromPointer[time.Time](userEntity.LastLoginAt),
 		Sessions:               sharedUtils.Map(userEntity.Sessions, ToDLLModelUserSession),
+		Roles: sharedUtils.Map(userEntity.Roles, func(roleEntity dbModel.RoleEntity) dllModel.Role {
+			return dllModel.Role{
+				ID:    sharedUtils.NewOptionalOf[uint32](roleEntity.ID),
+				Label: roleEntity.Label,
+				Permissions: sharedUtils.Map(roleEntity.Permissions, func(permissionEntity dbModel.PermissionEntity) dllModel.Permission {
+					var operationTypeAccessPermission *dllModel.OperationTypeAccessPermission
+					if p := permissionEntity.OperationTypeAccessPermission; p != nil {
+						operationTypeAccessPermission = &dllModel.OperationTypeAccessPermission{
+							OperationType: misc.GraphQLOperationType(p.OperationType),
+						}
+					}
+					var singleOperationPermission *dllModel.SingleOperationPermission
+					if p := permissionEntity.SingleOperationPermission; p != nil {
+						singleOperationPermission = &dllModel.SingleOperationPermission{
+							GraphQLOperationIdentifier: p.GraphQLOperation.Identifier,
+							Effect:                     p.Effect,
+						}
+					}
+					return dllModel.Permission{
+						ID:                            sharedUtils.NewOptionalOf(permissionEntity.ID),
+						Label:                         permissionEntity.Label,
+						OperationTypeAccessPermission: sharedUtils.NewOptionalFromPointer(operationTypeAccessPermission),
+						SingleOperationPermission:     sharedUtils.NewOptionalFromPointer(singleOperationPermission),
+					}
+				}),
+			}
+		}),
 		// TODO: Implement 'Invocations', 'UserConfig' and other possibly missing fields as needed
 	}
 }

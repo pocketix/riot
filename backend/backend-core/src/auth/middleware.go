@@ -149,28 +149,53 @@ func performSessionRefresh(refreshTokenHash string) (*sessionRefreshResult, erro
 	}, nil
 }
 
-type AccessDenialType string
+type AuthorizationDenialType string
 
 const (
-	Implicit AccessDenialType = "implicit"
-	Explicit AccessDenialType = "explicit"
+	Implicit AuthorizationDenialType = "implicit"
+	Explicit AuthorizationDenialType = "explicit"
 )
 
-type SourceOfExplicitAccessDenial struct {
+type SourceOfExplicitAuthorizationDenial struct {
 	PermissionID uint32
 	RoleIDs      []uint32
 }
 
 type FieldAccessAuthorizationCheckResult struct {
-	UserAuthorized               bool
-	AccessDenialType             *AccessDenialType
-	SourceOfExplicitAccessDenial *SourceOfExplicitAccessDenial
+	UserAuthorized                      bool
+	AuthorizationDenialType             *AuthorizationDenialType
+	SourceOfExplicitAuthorizationDenial *SourceOfExplicitAuthorizationDenial
 }
 
-func IsFieldAccessAuthorized(userID uint, fieldIdentifier string) FieldAccessAuthorizationCheckResult {
-	return FieldAccessAuthorizationCheckResult{ // TODO: Implement
-		UserAuthorized:               true,
-		AccessDenialType:             nil,
-		SourceOfExplicitAccessDenial: nil,
+func IsFieldAccessAuthorized(userID uint, fieldIdentifier string) sharedUtils.Result[FieldAccessAuthorizationCheckResult] {
+	apiAccessDeterminationResult := determineAPIAccess(userID)
+	if apiAccessDeterminationResult.IsFailure() {
+		return sharedUtils.NewFailureResult[FieldAccessAuthorizationCheckResult](apiAccessDeterminationResult.GetError())
+	}
+	apiAccessSummary := apiAccessDeterminationResult.GetPayload()
+	userAuthorized := apiAccessSummary.authorizedFieldSet.Contains(fieldIdentifier)
+	if userAuthorized {
+		return sharedUtils.NewSuccessResult(FieldAccessAuthorizationCheckResult{
+			UserAuthorized:                      true,
+			AuthorizationDenialType:             nil,
+			SourceOfExplicitAuthorizationDenial: nil,
+		})
+	}
+	rawSourceOfExplicitAuthorizationDenial, keyExists := apiAccessSummary.unauthorizedFieldMap[fieldIdentifier]
+	if !keyExists {
+		return sharedUtils.NewSuccessResult(FieldAccessAuthorizationCheckResult{
+			UserAuthorized:                      false,
+			AuthorizationDenialType:             sharedUtils.NewOptionalOf(Implicit).ToPointer(),
+			SourceOfExplicitAuthorizationDenial: nil,
+		})
+	} else {
+		return sharedUtils.NewSuccessResult(FieldAccessAuthorizationCheckResult{
+			UserAuthorized:          false,
+			AuthorizationDenialType: sharedUtils.NewOptionalOf(Explicit).ToPointer(),
+			SourceOfExplicitAuthorizationDenial: &SourceOfExplicitAuthorizationDenial{
+				PermissionID: rawSourceOfExplicitAuthorizationDenial.GetFirst(),
+				RoleIDs:      rawSourceOfExplicitAuthorizationDenial.GetSecond(),
+			},
+		})
 	}
 }

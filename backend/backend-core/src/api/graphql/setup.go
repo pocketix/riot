@@ -50,18 +50,21 @@ func SetupGraphQLServer() {
 			return nil, fmt.Errorf("couldn't obtain 'ast.Field' struct instance")
 		}
 		userID, _ := ctx.Value(auth.UserIdContextIdentifier).(uint)
-		fieldAccessAuthorizationCheckResult := auth.IsFieldAccessAuthorized(userID, astField.Name)
+		fieldAccessAuthorizationCheckResult, err := auth.IsFieldAccessAuthorized(userID, astField.Name).Unwrap()
+		if err != nil {
+			return nil, err
+		}
 		if fieldAccessAuthorizationCheckResult.UserAuthorized {
 			return next(ctx)
 		}
-		if *fieldAccessAuthorizationCheckResult.AccessDenialType == auth.Implicit {
-			return nil, fmt.Errorf("field access denied - user %d is not authorized (implicit access denial)", userID)
+		if *fieldAccessAuthorizationCheckResult.AuthorizationDenialType == auth.Implicit {
+			return nil, fmt.Errorf("field access denied - user %d is not authorized (implicit authorization denial)", userID)
 		}
-		sourceOfExplicitAccessDenial := *fieldAccessAuthorizationCheckResult.SourceOfExplicitAccessDenial
-		permissionID := sourceOfExplicitAccessDenial.PermissionID
-		roleIDs := sourceOfExplicitAccessDenial.RoleIDs
+		sourceOfExplicitAuthorizationDenial := *fieldAccessAuthorizationCheckResult.SourceOfExplicitAuthorizationDenial
+		permissionID := sourceOfExplicitAuthorizationDenial.PermissionID
+		roleIDs := sourceOfExplicitAuthorizationDenial.RoleIDs
 		errorMessageDetail := fmt.Sprint("permission ", permissionID, " applied through roles ", roleIDs)
-		return nil, fmt.Errorf("field access denied - user %d is not authorized (explicit access denial - %s)", userID, errorMessageDetail)
+		return nil, fmt.Errorf("field access denied - user %d is not authorized (explicit authorization denial - %s)", userID, errorMessageDetail)
 	})
 	router := chi.NewRouter()
 	router.Use(cors.New(cors.Options{

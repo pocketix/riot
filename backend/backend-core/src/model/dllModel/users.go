@@ -15,6 +15,7 @@ type User struct {
 	OAuth2ProviderIssuedID sharedUtils.Optional[string]
 	LastLoginAt            sharedUtils.Optional[time.Time]
 	Sessions               []UserSession
+	Roles                  []Role
 	// TODO: Implement 'Invocations', 'UserConfig' and other possibly missing fields as needed
 }
 
