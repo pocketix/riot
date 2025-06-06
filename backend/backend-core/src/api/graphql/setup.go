@@ -51,7 +51,11 @@ func SetupGraphQLServer() {
 			return nil, fmt.Errorf("couldn't obtain 'ast.Field' struct instance")
 		}
 		userID, _ := ctx.Value(auth.UserIdContextIdentifier).(uint)
-		fieldAccessAuthorizationCheckResult, err := auth.IsFieldAccessAuthorized(userID, astField.Name).Unwrap()
+		if userID == 0 { // Authentication is disabled: skip authorization as well... TODO: Revisit this once time allows...
+			return next(ctx)
+		}
+		apiAccessSummary, _ := ctx.Value(auth.APIAccessSummaryContextIdentifier).(auth.APIAccessSummary)
+		fieldAccessAuthorizationCheckResult, err := auth.IsFieldAccessAuthorized(apiAccessSummary, astField.Name).Unwrap()
 		if err != nil {
 			return nil, err
 		}

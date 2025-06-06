@@ -141,7 +141,12 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	user := userRecordUpsertResult.GetPayload()
 
-	sessionJWT, err := createSessionJWT(fmt.Sprintf("%d", user.ID.GetPayload()))
+	userID := user.ID.GetPayload()
+	apiAccessSummary, err := determineAPIAccess(userID).Unwrap()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("user %d - failed to determine API access: %s", userID, err.Error()), http.StatusInternalServerError)
+	}
+	sessionJWT, err := createSessionJWT(userID, apiAccessSummary)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to create session JWT: %s", err.Error()), http.StatusInternalServerError)
 		return

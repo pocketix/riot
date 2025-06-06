@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/sync/singleflight"
 	"net/http"
 	"strconv"
@@ -13,7 +14,8 @@ import (
 )
 
 const (
-	UserIdContextIdentifier = "userId"
+	UserIdContextIdentifier           = "userID"
+	APIAccessSummaryContextIdentifier = "apiAccessSummary"
 )
 
 var (
@@ -23,8 +25,14 @@ var (
 
 func JWTAuthenticationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !jwtAuthenticationMiddlewareEnabled {
-			ctx := context.WithValue(r.Context(), UserIdContextIdentifier, uint(1))
+		setupContextThenProceed := func(jwtPayload JWTPayload) {
+			ctx := context.WithValue(r.Context(), UserIdContextIdentifier, jwtPayload.UserID)
+			ctx = context.WithValue(ctx, APIAccessSummaryContextIdentifier, jwtPayload.APIAccessSummary)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		}
+
+		if !jwtAuthenticationMiddlewareEnabled { // TODO: Should we disable both authentication and authorization at once?!
+			ctx := context.WithValue(r.Context(), UserIdContextIdentifier, uint(0))
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
@@ -37,15 +45,12 @@ func JWTAuthenticationMiddleware(next http.Handler) http.Handler {
 			}
 
 			if isJWTValid(sessionJWT) {
-				subject := extractSubjectFromJWT(getSessionJWTCookieValue(r).GetPayload())
-				if subject.IsFailure() {
-					http.Error(w, "failed to parse session JWT", http.StatusUnauthorized)
+				jwtPayloadExtractionResult := extractJWTPayload(sessionJWT.Raw)
+				if jwtPayloadExtractionResult.IsFailure() {
+					http.Error(w, "failed to extract JWT payload", http.StatusUnauthorized)
 					return
 				}
-
-				u64, _ := strconv.ParseUint(subject.GetPayload(), 10, 32)
-				ctx := context.WithValue(r.Context(), UserIdContextIdentifier, uint(u64))
-				next.ServeHTTP(w, r.WithContext(ctx))
+				setupContextThenProceed(jwtPayloadExtractionResult.GetPayload())
 				return
 			}
 
@@ -85,34 +90,52 @@ func JWTAuthenticationMiddleware(next http.Handler) http.Handler {
 
 		setupRefreshTokenCookie(w, sessionRefreshResultObject.newRefreshToken, time.Until(sessionRefreshResultObject.refreshTokenExpiresAt))
 
-		subject := extractSubjectFromJWT(sessionRefreshResultObject.newSessionJWT)
-		if subject.IsFailure() {
-			http.Error(w, "failed to parse session JWT", http.StatusUnauthorized)
+		jwtPayloadExtractionResult := extractJWTPayload(sessionRefreshResultObject.newSessionJWT)
+		if jwtPayloadExtractionResult.IsFailure() {
+			http.Error(w, "failed to extract JWT payload", http.StatusUnauthorized)
 			return
 		}
-		u64, _ := strconv.ParseUint(subject.GetPayload(), 10, 32)
-		ctx := context.WithValue(r.Context(), UserIdContextIdentifier, uint(u64))
-		next.ServeHTTP(w, r.WithContext(ctx))
+		setupContextThenProceed(jwtPayloadExtractionResult.GetPayload())
 	})
 }
 
-func extractSubjectFromJWT(jwt string) sharedUtils.Result[string] {
-	sessionJWT, err := parseJWT(jwt)
+func extractJWTPayload(jwtString string) sharedUtils.Result[JWTPayload] {
+	sessionJWT, err := parseJWT(jwtString)
 	if err != nil {
-		return sharedUtils.NewFailureResult[string](err)
+		return sharedUtils.NewFailureResult[JWTPayload](err)
 	}
-
 	subject, err := sessionJWT.Claims.GetSubject()
 	if err != nil {
-		return sharedUtils.NewFailureResult[string](err)
+		return sharedUtils.NewFailureResult[JWTPayload](err)
 	}
-	return sharedUtils.NewSuccessResult(subject)
-}
-
-type sessionRefreshResult struct {
-	newSessionJWT         string
-	newRefreshToken       string
-	refreshTokenExpiresAt time.Time
+	u64, err := strconv.ParseUint(subject, 10, 32)
+	if err != nil {
+		return sharedUtils.NewFailureResult[JWTPayload](err)
+	}
+	userID := uint(u64)
+	mapClaims, ok := sessionJWT.Claims.(jwt.MapClaims)
+	if !ok {
+		return sharedUtils.NewFailureResult[JWTPayload](errors.New("couldn't cast Claims to MapClaims"))
+	}
+	rawAPIAccessSummary, exists := mapClaims["apiAccessSummary"] // any (interface{}) type
+	if !exists {
+		return sharedUtils.NewFailureResult[JWTPayload](errors.New("apiAccessSummary claim not found"))
+	}
+	// TODO: Two options here: either use custom claims struct or re-serialize - choosing the latter now...
+	apiAccessSummaryReSerializationResult := sharedUtils.SerializeToJSON(rawAPIAccessSummary)
+	if apiAccessSummaryReSerializationResult.IsFailure() {
+		return sharedUtils.NewFailureResult[JWTPayload](apiAccessSummaryReSerializationResult.GetError())
+	}
+	reSerializedAPIAccessSummary := apiAccessSummaryReSerializationResult.GetPayload()
+	apiAccessSummaryDeserializationResult := sharedUtils.DeserializeFromJSON[APIAccessSummary](reSerializedAPIAccessSummary)
+	if apiAccessSummaryDeserializationResult.IsFailure() {
+		return sharedUtils.NewFailureResult[JWTPayload](apiAccessSummaryDeserializationResult.GetError())
+	}
+	apiAccessSummary := apiAccessSummaryDeserializationResult.GetPayload()
+	return sharedUtils.NewSuccessResult(JWTPayload{
+		UserID:           userID,
+		APIAccessSummary: apiAccessSummary,
+	})
 }
 
 func performSessionRefresh(refreshTokenHash string) (*sessionRefreshResult, error) {
@@ -132,7 +155,12 @@ func performSessionRefresh(refreshTokenHash string) (*sessionRefreshResult, erro
 	if time.Until(userSession.ExpiresAt) <= 0 {
 		return nil, errors.New("the session has expired")
 	}
-	newSessionJWT, err := createSessionJWT(fmt.Sprintf("%d", userSession.UserID))
+	userID := userSession.UserID
+	apiAccessSummary, err := determineAPIAccess(userID).Unwrap()
+	if err != nil {
+		return nil, err
+	}
+	newSessionJWT, err := createSessionJWT(userID, apiAccessSummary)
 	if err != nil {
 		return nil, err
 	}
@@ -149,31 +177,8 @@ func performSessionRefresh(refreshTokenHash string) (*sessionRefreshResult, erro
 	}, nil
 }
 
-type AuthorizationDenialType string
-
-const (
-	Implicit AuthorizationDenialType = "implicit"
-	Explicit AuthorizationDenialType = "explicit"
-)
-
-type SourceOfExplicitAuthorizationDenial struct {
-	PermissionID uint32
-	RoleIDs      []uint32
-}
-
-type FieldAccessAuthorizationCheckResult struct {
-	UserAuthorized                      bool
-	AuthorizationDenialType             *AuthorizationDenialType
-	SourceOfExplicitAuthorizationDenial *SourceOfExplicitAuthorizationDenial
-}
-
-func IsFieldAccessAuthorized(userID uint, fieldIdentifier string) sharedUtils.Result[FieldAccessAuthorizationCheckResult] {
-	apiAccessDeterminationResult := determineAPIAccess(userID)
-	if apiAccessDeterminationResult.IsFailure() {
-		return sharedUtils.NewFailureResult[FieldAccessAuthorizationCheckResult](apiAccessDeterminationResult.GetError())
-	}
-	apiAccessSummary := apiAccessDeterminationResult.GetPayload()
-	userAuthorized := apiAccessSummary.authorizedFieldSet.Contains(fieldIdentifier)
+func IsFieldAccessAuthorized(apiAccessSummary APIAccessSummary, fieldIdentifier string) sharedUtils.Result[FieldAccessAuthorizationCheckResult] {
+	userAuthorized := sharedUtils.NewSetFromSlice(apiAccessSummary.AuthorizedFieldSet).Contains(fieldIdentifier)
 	if userAuthorized {
 		return sharedUtils.NewSuccessResult(FieldAccessAuthorizationCheckResult{
 			UserAuthorized:                      true,
@@ -181,7 +186,7 @@ func IsFieldAccessAuthorized(userID uint, fieldIdentifier string) sharedUtils.Re
 			SourceOfExplicitAuthorizationDenial: nil,
 		})
 	}
-	rawSourceOfExplicitAuthorizationDenial, keyExists := apiAccessSummary.unauthorizedFieldMap[fieldIdentifier]
+	sourceOfExplicitAuthorizationDenial, keyExists := apiAccessSummary.UnauthorizedFieldMap[fieldIdentifier]
 	if !keyExists {
 		return sharedUtils.NewSuccessResult(FieldAccessAuthorizationCheckResult{
 			UserAuthorized:                      false,
@@ -190,12 +195,9 @@ func IsFieldAccessAuthorized(userID uint, fieldIdentifier string) sharedUtils.Re
 		})
 	} else {
 		return sharedUtils.NewSuccessResult(FieldAccessAuthorizationCheckResult{
-			UserAuthorized:          false,
-			AuthorizationDenialType: sharedUtils.NewOptionalOf(Explicit).ToPointer(),
-			SourceOfExplicitAuthorizationDenial: &SourceOfExplicitAuthorizationDenial{
-				PermissionID: rawSourceOfExplicitAuthorizationDenial.GetFirst(),
-				RoleIDs:      rawSourceOfExplicitAuthorizationDenial.GetSecond(),
-			},
+			UserAuthorized:                      false,
+			AuthorizationDenialType:             sharedUtils.NewOptionalOf(Explicit).ToPointer(),
+			SourceOfExplicitAuthorizationDenial: &sourceOfExplicitAuthorizationDenial,
 		})
 	}
 }

@@ -16,27 +16,6 @@ import (
 
 var allowedOrigins = sharedUtils.NewSetFromSlice(strings.Split(sharedUtils.GetEnvironmentVariableValue("ALLOWED_ORIGINS").GetPayloadOrDefault("http://localhost:8080,http://localhost:1234"), ","))
 
-// ----- types -----
-
-type oauth2OIDCFlowState struct {
-	RandomState string `json:"randomState"`
-	RedirectUrl string `json:"redirectUrl"`
-}
-
-type idTokenData struct {
-	oauth2ProviderIssuedID string
-	email                  string
-	name                   sharedUtils.Optional[string]
-	profileImageURL        sharedUtils.Optional[string]
-}
-
-type APIAccessSummary struct {
-	authorizedFieldSet   *sharedUtils.Set[string]
-	unauthorizedFieldMap map[string]sharedUtils.Pair[uint32, []uint32]
-}
-
-// ----- functions -----
-
 func handleRedirectUrl(r *http.Request) (string, error) {
 	query := r.URL.Query()
 	rawRedirectUrl := query.Get("redirect")
@@ -142,17 +121,18 @@ func determineAPIAccess(userID uint) sharedUtils.Result[APIAccessSummary] {
 	user := loadUserResult.GetPayload()
 	graphQLOperations := graphQLOperationsLoadResult.GetPayload()
 
-	unauthorizedFieldMap := map[string]sharedUtils.Pair[uint32, []uint32]{}
+	unauthorizedFieldMap := map[string]SourceOfExplicitAuthorizationDenial{}
 	authorizedFields := sharedUtils.EmptySlice[string]()
 
 	handleSingleOperationDenial := func(operationIdentifier string, permissionID uint32, roleID uint32) {
 		authorizationDenialSource, exists := unauthorizedFieldMap[operationIdentifier]
 		if !exists {
-			authorizationDenialSource = sharedUtils.NewPairOf(permissionID, []uint32{roleID})
+			authorizationDenialSource = SourceOfExplicitAuthorizationDenial{
+				PermissionID: permissionID,
+				RoleIDs:      sharedUtils.SliceOf(roleID),
+			}
 		} else {
-			roleIDs := authorizationDenialSource.GetSecond()
-			roleIDs = append(roleIDs, roleID)
-			authorizationDenialSource = sharedUtils.NewPairOf(authorizationDenialSource.GetFirst(), roleIDs)
+			authorizationDenialSource.RoleIDs = append(authorizationDenialSource.RoleIDs, roleID)
 		}
 		unauthorizedFieldMap[operationIdentifier] = authorizationDenialSource
 	}
@@ -193,7 +173,7 @@ func determineAPIAccess(userID uint) sharedUtils.Result[APIAccessSummary] {
 	}
 
 	return sharedUtils.NewSuccessResult(APIAccessSummary{
-		authorizedFieldSet:   authorizedFieldSet,
-		unauthorizedFieldMap: unauthorizedFieldMap,
+		AuthorizedFieldSet:   authorizedFieldSet.ToSlice(),
+		UnauthorizedFieldMap: unauthorizedFieldMap,
 	})
 }
