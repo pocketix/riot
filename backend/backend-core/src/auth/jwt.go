@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"github.com/golang-jwt/jwt/v5"
-	"strconv"
 	"time"
 )
 
@@ -15,7 +14,7 @@ func createSessionJWT(userID uint, apiAccessSummary APIAccessSummary) (string, e
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":              fmt.Sprintf("%d", userID),
 		"iat":              now.Unix(),
-		"exp":              now.Add(10 * time.Minute).Unix(),
+		"exp":              now.Add(1 * time.Minute).Unix(),
 		"apiAccessSummary": apiAccessSummary,
 	})
 	return token.SignedString(jwtSecret)
@@ -28,16 +27,6 @@ func parseJWT(jwtString string) (*jwt.Token, error) {
 
 func isJWTValid(token *jwt.Token) bool {
 	if !token.Valid {
-		return false
-	}
-	subject, err := token.Claims.GetSubject()
-	if err != nil {
-		return false
-	}
-	if subject == "" {
-		return false
-	}
-	if _, err = strconv.ParseUint(subject, 10, 64); err != nil {
 		return false
 	}
 	return true

@@ -20,7 +20,7 @@ type idTokenData struct {
 type sessionRefreshResult struct {
 	newSessionJWT         string
 	newRefreshToken       string
-	refreshTokenExpiresAt time.Time
+	refreshTokenExpiresIn time.Duration
 }
 
 type APIAccessSummary struct {
