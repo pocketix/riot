@@ -53,6 +53,7 @@ type RelationalDatabaseClient interface {
 	PersistUser(user dllModel.User) sharedUtils.Result[uint]
 	LoadUserBasedOnOAuth2ProviderIssuedID(oauth2ProviderIssuedID string) sharedUtils.Result[sharedUtils.Optional[dllModel.User]]
 	LoadUser(id uint) sharedUtils.Result[dllModel.User]
+	LoadUsers() sharedUtils.Result[[]dllModel.User]
 	LoadUserSessionBasedOnRefreshTokenHash(refreshTokenHash string) sharedUtils.Result[sharedUtils.Optional[dllModel.UserSession]]
 	PersistUserSession(userSession dllModel.UserSession) sharedUtils.Result[uint]
 	PersistUserConfig(userConfig dllModel.UserConfig) sharedUtils.Result[uint32]
@@ -73,6 +74,13 @@ type RelationalDatabaseClient interface {
 	LoadVPLPrograms() sharedUtils.Result[[]dllModel.VPLProgram]
 	DeleteVPLProgram(id uint32) error
 	LoadGraphQLOperations() sharedUtils.Result[[]misc.GraphQLOperation]
+
+	PersistRole(role dllModel.Role) sharedUtils.Result[uint32]
+	DeleteRole(role uint32) error
+	LoadRole(id uint32) sharedUtils.Result[dllModel.Role]
+	LoadRoles() sharedUtils.Result[[]dllModel.Role]
+	LoadPermission(id uint32) sharedUtils.Result[dllModel.Permission]
+	LoadPermissions() sharedUtils.Result[[]dllModel.Permission]
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -825,6 +833,21 @@ func (r *relationalDatabaseClientImpl) LoadUser(id uint) sharedUtils.Result[dllM
 	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelUser(userEntityLoadResult.GetPayload()))
 }
 
+func (r *relationalDatabaseClientImpl) LoadUsers() sharedUtils.Result[[]dllModel.User] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	userEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.UserEntity](
+		r.db,
+		dbUtil.Preload("Sessions"),
+		dbUtil.Preload("Roles.Permissions.SingleOperationPermission.GraphQLOperation"),
+		dbUtil.Preload("Roles.Permissions.OperationTypeAccessPermission"),
+	)
+	if userEntitiesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]dllModel.User](userEntitiesLoadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(userEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelUser))
+}
+
 func (r *relationalDatabaseClientImpl) LoadUserSessionBasedOnRefreshTokenHash(refreshTokenHash string) sharedUtils.Result[sharedUtils.Optional[dllModel.UserSession]] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -956,4 +979,60 @@ func (r *relationalDatabaseClientImpl) LoadGraphQLOperations() sharedUtils.Resul
 			OpType:     misc.GraphQLOperationType(graphQLOperationEntity.OperationType),
 		}
 	}))
+}
+
+func (r *relationalDatabaseClientImpl) PersistRole(role dllModel.Role) sharedUtils.Result[uint32] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	roleEntity := dll2db.ToDBModelRole(role)
+	if err := dbUtil.PersistEntityIntoDB[dbModel.RoleEntity](r.db, &roleEntity); err != nil {
+		return sharedUtils.NewFailureResult[uint32](err)
+	}
+	return sharedUtils.NewSuccessResult[uint32](roleEntity.ID)
+}
+
+func (r *relationalDatabaseClientImpl) DeleteRole(id uint32) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.RoleEntity](r.db, id)
+}
+
+func (r *relationalDatabaseClientImpl) LoadRole(id uint32) sharedUtils.Result[dllModel.Role] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	roleEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.RoleEntity](r.db, dbUtil.Where("id = ?", id))
+	if roleEntityLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[dllModel.Role](roleEntityLoadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelRole(roleEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) LoadRoles() sharedUtils.Result[[]dllModel.Role] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	roleEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.RoleEntity](r.db)
+	if roleEntitiesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]dllModel.Role](roleEntitiesLoadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(roleEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelRole))
+}
+
+func (r *relationalDatabaseClientImpl) LoadPermission(id uint32) sharedUtils.Result[dllModel.Permission] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	permissionEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.PermissionEntity](r.db, dbUtil.Where("id = ?", id))
+	if permissionEntityLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[dllModel.Permission](permissionEntityLoadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelPermission(permissionEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) LoadPermissions() sharedUtils.Result[[]dllModel.Permission] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	permissionEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.PermissionEntity](r.db)
+	if permissionEntitiesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]dllModel.Permission](permissionEntitiesLoadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(permissionEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelPermission))
 }
