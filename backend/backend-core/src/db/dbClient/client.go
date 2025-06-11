@@ -205,6 +205,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 	}
 	session := new(gorm.Session)
 	session.Logger = logger.Default.LogMode(logger.Warn)
+	session.FullSaveAssociations = true
 	r.db = db.Session(session)
 	sharedUtils.TerminateOnError(r.db.AutoMigrate(
 		new(dbModel.KPIDefinitionEntity),
@@ -792,6 +793,7 @@ func (r *relationalDatabaseClientImpl) LoadUserBasedOnOAuth2ProviderIssuedID(oau
 	defer r.mu.Unlock()
 	userEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.UserEntity](
 		r.db,
+		dbUtil.Preload("Sessions"),
 		dbUtil.Preload("Roles.Permissions.SingleOperationPermission.GraphQLOperation"),
 		dbUtil.Preload("Roles.Permissions.OperationTypeAccessPermission"),
 		dbUtil.Where("oauth2_provider_issued_id = ?", oauth2ProviderIssuedID),
@@ -813,6 +815,7 @@ func (r *relationalDatabaseClientImpl) LoadUser(id uint) sharedUtils.Result[dllM
 	userEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.UserEntity](
 		r.db,
 		dbUtil.Where("id = ?", id),
+		dbUtil.Preload("Sessions"),
 		dbUtil.Preload("Roles.Permissions.SingleOperationPermission.GraphQLOperation"),
 		dbUtil.Preload("Roles.Permissions.OperationTypeAccessPermission"),
 	)

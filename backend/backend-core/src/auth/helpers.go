@@ -63,9 +63,10 @@ func handleUserRecordUpsert(userData idTokenData, newRefreshToken string) shared
 	user.LastLoginAt = sharedUtils.NewOptionalOf(time.Now())
 
 	// Ensure all previous sessions are revoked...
-	sharedUtils.ForEach(user.Sessions, func(session dllModel.UserSession) {
-		session.Revoked = true
-	})
+	for i, _ := range user.Sessions {
+		user.Sessions[i].Revoked = true
+	}
+
 	// ...and establish a new one
 	user.Sessions = append(user.Sessions, dllModel.UserSession{
 		ID:               sharedUtils.NewEmptyOptional[uint](),
