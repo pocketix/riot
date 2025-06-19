@@ -15,7 +15,7 @@ import (
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if isCookieSet(r, SessionJWTCookieIdentifier) || isCookieSet(r, RefreshTokenCookieIdentifier) {
-		http.Error(w, "cannot initiate OAuth2 | OIDC flow while authentication-related cookies set", http.StatusBadRequest)
+		http.Error(w, "cannot initiate OAuth2 | OIDC flow while authentication-related cookies are set", http.StatusBadRequest)
 		return
 	}
 	redirectUrl, err := handleRedirectUrl(r)
