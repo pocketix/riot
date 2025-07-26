@@ -277,6 +277,12 @@ type SDInstanceGroupInput struct {
 	SdInstanceIDs  []uint32 `json:"sdInstanceIDs"`
 }
 
+type SDInstanceQueryFilterInput struct {
+	Ids             []uint32 `json:"ids,omitempty"`
+	SdTypeIDs       []uint32 `json:"sdTypeIDs,omitempty"`
+	ConfirmedByUser *bool    `json:"confirmedByUser,omitempty"`
+}
+
 type SDInstanceUpdateInput struct {
 	UserIdentifier  *string `json:"userIdentifier,omitempty"`
 	ConfirmedByUser *bool   `json:"confirmedByUser,omitempty"`

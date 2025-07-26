@@ -208,8 +208,8 @@ func (r *queryResolver) SdTypes(ctx context.Context) ([]graphQLModel.SDType, err
 	return getSDTypesResult.Unwrap()
 }
 
-func (r *queryResolver) SdInstances(ctx context.Context) ([]graphQLModel.SDInstance, error) {
-	getSDInstancesResult := domainLogicLayer.GetSDInstances()
+func (r *queryResolver) SdInstances(ctx context.Context, filter *graphQLModel.SDInstanceQueryFilterInput) ([]graphQLModel.SDInstance, error) {
+	getSDInstancesResult := domainLogicLayer.GetSDInstances(filter)
 	if getSDInstancesResult.IsFailure() {
 		log.Printf("Error occurred (get SD instances): %s\n", getSDInstancesResult.GetError().Error())
 	}

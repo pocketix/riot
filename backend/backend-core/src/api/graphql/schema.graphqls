@@ -379,12 +379,20 @@ type VPLProgramExecutionResult {
     executionReason: String
 }
 
+# ----- Query filters -----
+
+input SDInstanceQueryFilterInput { # Omitted fields | nulls | empty lists: ignored TODO: Expand as needed
+  ids: [ID!]            # Return only instances specified by their IDs
+  sdTypeIDs: [ID!]      # Return all instances of the ID-specified types
+  confirmedByUser: Boolean  # Filter by user confirmation status: true | false
+}
+
 # ----- Queries, mutations and subscriptions -----
 
 type Query {
   sdType(id: ID!): SDType!
   sdTypes: [SDType!]!
-  sdInstances: [SDInstance!]!
+  sdInstances(filter: SDInstanceQueryFilterInput): [SDInstance!]! # Omitted or null filter: no filtering - returns all instances
   kpiDefinition(id: ID!): KPIDefinition!
   kpiDefinitions: [KPIDefinition!]!
   kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!

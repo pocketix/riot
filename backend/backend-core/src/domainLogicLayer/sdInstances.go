@@ -5,11 +5,13 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/isc"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/modelMapping/dll2gql"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/modelMapping/gql2dll"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 )
 
-func GetSDInstances() sharedUtils.Result[[]graphQLModel.SDInstance] {
-	loadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstances()
+func GetSDInstances(filter *graphQLModel.SDInstanceQueryFilterInput) sharedUtils.Result[[]graphQLModel.SDInstance] {
+	sdInstanceFilter := gql2dll.ToDLLModelSdInstanceFilter(filter)
+	loadResult := dbClient.GetRelationalDatabaseClientInstance().LoadSDInstances(sdInstanceFilter)
 	if loadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[[]graphQLModel.SDInstance](loadResult.GetError())
 	}

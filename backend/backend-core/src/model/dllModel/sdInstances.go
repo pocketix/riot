@@ -2,6 +2,12 @@ package dllModel
 
 import "github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 
+type SDInstanceFilter struct {
+	IDs             []uint32
+	SDTypeIDs       []uint32
+	ConfirmedByUser *bool
+}
+
 type SDInstance struct {
 	ID                 sharedUtils.Optional[uint32]
 	UID                string

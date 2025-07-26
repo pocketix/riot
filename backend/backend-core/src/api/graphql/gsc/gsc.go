@@ -77,7 +77,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error)
 	SdTypes(ctx context.Context) ([]graphQLModel.SDType, error)
-	SdInstances(ctx context.Context) ([]graphQLModel.SDInstance, error)
+	SdInstances(ctx context.Context, filter *graphQLModel.SDInstanceQueryFilterInput) ([]graphQLModel.SDInstance, error)
 	KpiDefinition(ctx context.Context, id uint32) (graphQLModel.KPIDefinition, error)
 	KpiDefinitions(ctx context.Context) ([]graphQLModel.KPIDefinition, error)
 	KpiFulfillmentCheckResults(ctx context.Context) ([]graphQLModel.KPIFulfillmentCheckResult, error)
@@ -133,6 +133,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSDCommandInputWithoutType,
 		ec.unmarshalInputSDCommandInvocationInput,
 		ec.unmarshalInputSDInstanceGroupInput,
+		ec.unmarshalInputSDInstanceQueryFilterInput,
 		ec.unmarshalInputSDInstanceUpdateInput,
 		ec.unmarshalInputSDParameterInput,
 		ec.unmarshalInputSDTypeInput,
@@ -636,12 +637,20 @@ type VPLProgramExecutionResult {
     executionReason: String
 }
 
+# ----- Query filters -----
+
+input SDInstanceQueryFilterInput { # Omitted or null fields: ignored
+  ids: [ID!]            # Return only instances specified by their IDs
+  sdTypeIDs: [ID!]      # Return all instances of the ID-specified types
+  confirmedByUser: Boolean  # Filter by user confirmation status: true | false
+}
+
 # ----- Queries, mutations and subscriptions -----
 
 type Query {
   sdType(id: ID!): SDType!
   sdTypes: [SDType!]!
-  sdInstances: [SDInstance!]!
+  sdInstances(filter: SDInstanceQueryFilterInput): [SDInstance!]! # Omitted or null filter: no filtering - returns all instances
   kpiDefinition(id: ID!): KPIDefinition!
   kpiDefinitions: [KPIDefinition!]!
   kpiFulfillmentCheckResults: [KPIFulfillmentCheckResult!]!
@@ -1681,6 +1690,34 @@ func (ec *executionContext) field_Query_sdInstanceGroup_argsID(
 	}
 
 	var zeroVal uint32
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_sdInstances_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_sdInstances_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_sdInstances_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*graphQLModel.SDInstanceQueryFilterInput, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal *graphQLModel.SDInstanceQueryFilterInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+	if tmp, ok := rawArgs["filter"]; ok {
+		return ec.unmarshalOSDInstanceQueryFilterInput2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceQueryFilterInput(ctx, tmp)
+	}
+
+	var zeroVal *graphQLModel.SDInstanceQueryFilterInput
 	return zeroVal, nil
 }
 
@@ -5923,7 +5960,7 @@ func (ec *executionContext) _Query_sdInstances(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().SdInstances(rctx)
+		return ec.resolvers.Query().SdInstances(rctx, fc.Args["filter"].(*graphQLModel.SDInstanceQueryFilterInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5940,7 +5977,7 @@ func (ec *executionContext) _Query_sdInstances(ctx context.Context, field graphq
 	return ec.marshalNSDInstance2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_sdInstances(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_sdInstances(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -5965,6 +6002,17 @@ func (ec *executionContext) fieldContext_Query_sdInstances(_ context.Context, fi
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SDInstance", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_sdInstances_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -12351,6 +12399,47 @@ func (ec *executionContext) unmarshalInputSDInstanceGroupInput(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSDInstanceQueryFilterInput(ctx context.Context, obj any) (graphQLModel.SDInstanceQueryFilterInput, error) {
+	var it graphQLModel.SDInstanceQueryFilterInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"ids", "sdTypeIDs", "confirmedByUser"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "ids":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+			data, err := ec.unmarshalOID2ᚕuint32ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Ids = data
+		case "sdTypeIDs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sdTypeIDs"))
+			data, err := ec.unmarshalOID2ᚕuint32ᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SdTypeIDs = data
+		case "confirmedByUser":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("confirmedByUser"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ConfirmedByUser = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSDInstanceUpdateInput(ctx context.Context, obj any) (graphQLModel.SDInstanceUpdateInput, error) {
 	var it graphQLModel.SDInstanceUpdateInput
 	asMap := map[string]any{}
@@ -16279,6 +16368,42 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
+func (ec *executionContext) unmarshalOID2ᚕuint32ᚄ(ctx context.Context, v any) ([]uint32, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]uint32, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNID2uint32(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOID2ᚕuint32ᚄ(ctx context.Context, sel ast.SelectionSet, v []uint32) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2uint32(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalOID2ᚖuint32(ctx context.Context, v any) (*uint32, error) {
 	if v == nil {
 		return nil, nil
@@ -16325,6 +16450,14 @@ func (ec *executionContext) marshalOLogicalOperationType2ᚖgithubᚗcomᚋMicha
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOSDInstanceQueryFilterInput2ᚖgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDInstanceQueryFilterInput(ctx context.Context, v any) (*graphQLModel.SDInstanceQueryFilterInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputSDInstanceQueryFilterInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOSDParameterSnapshot2ᚕgithubᚗcomᚋMichalBuresᚑOGᚋbpᚑburesᚑRIoTᚑbackendᚑcoreᚋsrcᚋmodelᚋgraphQLModelᚐSDParameterSnapshotᚄ(ctx context.Context, sel ast.SelectionSet, v []graphQLModel.SDParameterSnapshot) graphql.Marshaler {

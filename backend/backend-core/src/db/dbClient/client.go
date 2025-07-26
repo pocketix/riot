@@ -40,7 +40,7 @@ type RelationalDatabaseClient interface {
 	PersistNewSDInstance(uid string, sdTypeSpecification string) sharedUtils.Result[dllModel.SDInstance]
 	LoadSDInstance(id uint32) sharedUtils.Result[dllModel.SDInstance]
 	LoadSDInstanceBasedOnUID(uid string) sharedUtils.Result[sharedUtils.Optional[dllModel.SDInstance]]
-	LoadSDInstances() sharedUtils.Result[[]dllModel.SDInstance]
+	LoadSDInstances(filter *dllModel.SDInstanceFilter) sharedUtils.Result[[]dllModel.SDInstance]
 	PersistKPIFulFulfillmentCheckResultTuple(sdInstanceUID string, kpiDefinitionIDs []uint32, fulfillmentStatuses []bool) sharedUtils.Result[[]dllModel.KPIFulfillmentCheckResult]
 	LoadKPIFulFulfillmentCheckResult(kpiDefinitionID uint32, sdInstanceID uint32) sharedUtils.Result[sharedUtils.Optional[dllModel.KPIFulfillmentCheckResult]]
 	LoadKPIFulFulfillmentCheckResults() sharedUtils.Result[[]dllModel.KPIFulfillmentCheckResult]
@@ -543,16 +543,27 @@ func (r *relationalDatabaseClientImpl) LoadSDInstanceBasedOnUID(uid string) shar
 	return sharedUtils.NewSuccessResult[sharedUtils.Optional[dllModel.SDInstance]](sharedUtils.NewOptionalOf(db2dll.ToDLLModelSDInstance(sdInstanceEntityLoadResult.GetPayload())))
 }
 
-func (r *relationalDatabaseClientImpl) LoadSDInstances() sharedUtils.Result[[]dllModel.SDInstance] {
+func (r *relationalDatabaseClientImpl) LoadSDInstances(filter *dllModel.SDInstanceFilter) sharedUtils.Result[[]dllModel.SDInstance] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	sdInstanceEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDInstanceEntity](
-		r.db,
+	args := []any{
 		dbUtil.Preload("SDType"),
 		dbUtil.Preload("SDType.Parameters"),
 		dbUtil.Preload("SDType.Commands"),
 		dbUtil.Preload("SDParameterSnapshot"),
-	)
+	}
+	if filter != nil {
+		if ids := filter.IDs; len(ids) > 0 {
+			args = append(args, dbUtil.Where("id IN (?)", ids))
+		}
+		if sdTypeIDs := filter.SDTypeIDs; len(sdTypeIDs) > 0 {
+			args = append(args, dbUtil.Where("sd_type_id IN (?)", sdTypeIDs))
+		}
+		if confirmedByUser := filter.ConfirmedByUser; confirmedByUser != nil {
+			args = append(args, dbUtil.Where("confirmed_by_user = ?", *confirmedByUser))
+		}
+	}
+	sdInstanceEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDInstanceEntity](r.db, args...)
 	if sdInstanceEntitiesLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[[]dllModel.SDInstance](sdInstanceEntitiesLoadResult.GetError())
 	}
