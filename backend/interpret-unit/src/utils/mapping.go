@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"time"
+
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"github.com/pocketix/pocketix-go/src/models"
@@ -9,7 +11,7 @@ import (
 func ReferencedValue2StringMap(referencedValue map[string]models.ReferencedValue) map[string]string {
 	result := make(map[string]string, 0)
 	for _, value := range referencedValue {
-		result[value.DeviceID] = value.ParameterName
+		result[value.DeviceUID] = value.ParameterName
 	}
 	return result
 }
@@ -24,4 +26,15 @@ func InterpretInvocationsSlice2BackendInvocations(invocations []models.SDCommand
 			Payload:       invocation.Payload,
 		}
 	})
+}
+
+func SetReferencedValue2SDParameterSnapshot(referencedValue models.ReferencedValue) sharedModel.SDParameterSnapshotsResult {
+	return sharedModel.SDParameterSnapshotsResult{
+		InstanceID:  referencedValue.DeviceID,
+		ParameterID: referencedValue.ParameterID,
+		String:      sharedModel.SDParameterSnapshotString{String: referencedValue.Value.(models.SnapshotString).Value, Set: true},
+		Number:      sharedModel.SDParameterSnapshotNumber{Number: referencedValue.Value.(models.SnapshotNumber).Value, Set: true},
+		Boolean:     sharedModel.SDParameterSnapshotBoolean{Boolean: referencedValue.Value.(models.SnapshotBoolean).Value, Set: true},
+		UpdatedAt:   time.Now(),
+	}
 }

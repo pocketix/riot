@@ -312,14 +312,27 @@ func StartDeviceInformationRequestConsumer() error {
 					break
 				}
 
+				log.Printf("Received parameter snapshot: %v", sdParameterSnapshot.GetPayload())
+
 				SDInstanceResultInformation.SDInstanceResultInformation.SDParameterSnapshotToUpdate = sharedModel.SDParameterSnapshotToUpdate{
+					SDInstanceID:  sdInstance.GetPayload().GetPayload().ID.GetPayload(),
 					SDInstanceUID: messagePayload.SDInstanceUID,
-					SDParameterID: sdParameter.GetPayload().Denotation,
-					String:        sdParameterSnapshot.GetPayload().String.ToPointer(),
-					Number:        sdParameterSnapshot.GetPayload().Number.ToPointer(),
-					Boolean:       sdParameterSnapshot.GetPayload().Boolean.ToPointer(),
+					SDParameterID: sdParameterSnapshot.GetPayload().SDParameter,
+					String: sharedModel.SDParameterSnapshotString{
+						String: sdParameterSnapshot.GetPayload().String.GetPayloadOrDefault(""),
+						Set:    sdParameterSnapshot.GetPayload().String.IsPresent(),
+					},
+					Number: sharedModel.SDParameterSnapshotNumber{
+						Number: sdParameterSnapshot.GetPayload().Number.GetPayloadOrDefault(0),
+						Set:    sdParameterSnapshot.GetPayload().Number.IsPresent(),
+					},
+					Boolean: sharedModel.SDParameterSnapshotBoolean{
+						Boolean: sdParameterSnapshot.GetPayload().Boolean.GetPayloadOrDefault(false),
+						Set:     sdParameterSnapshot.GetPayload().Boolean.IsPresent(),
+					},
 				}
 			}
+			log.Printf("Sending parameter snapshot update: %v", SDInstanceResultInformation.SDInstanceResultInformation.SDParameterSnapshotToUpdate)
 
 			serializedResponse := sharedUtils.SerializeToJSON(SDInstanceResultInformation)
 			if serializedResponse.IsFailure() {
@@ -348,6 +361,16 @@ func StartDeviceInformationRequestConsumer() error {
 func ConvertExecuteResultToDLLModel(programExecutionResult sharedModel.VPLInterpretExecuteResultOrError, executedProgram dllModel.VPLProgram) dllModel.VPLProgramExecutionResult {
 	return dllModel.VPLProgramExecutionResult{
 		Program: executedProgram,
+		SDParameterSnapshotList: sharedUtils.Map(programExecutionResult.SDParameterSnapshotsToUpdate, func(sdParameterSnapshot sharedModel.SDParameterSnapshotsResult) dllModel.SDParameterSnapshot {
+			return dllModel.SDParameterSnapshot{
+				SDInstance:  sdParameterSnapshot.InstanceID,
+				SDParameter: sdParameterSnapshot.ParameterID,
+				String:      sharedUtils.NewOptionalOf(sdParameterSnapshot.String.String),
+				Number:      sharedUtils.NewOptionalOf(sdParameterSnapshot.Number.Number),
+				Boolean:     sharedUtils.NewOptionalOf(sdParameterSnapshot.Boolean.Boolean),
+				UpdatedAt:   sdParameterSnapshot.UpdatedAt,
+			}
+		}),
 		SDCommandInvocationList: sharedUtils.Map(programExecutionResult.SDCommandInvocations, func(sdCommandInvocation sharedModel.SDCommandToInvoke) dllModel.SDCommandInvocation {
 			return dllModel.SDCommandInvocation{
 				InvocationTime: programExecutionResult.ExecutionTime.Format(time.RFC3339),
