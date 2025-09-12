@@ -28,6 +28,7 @@ func ToGraphQLModelVPLProgram(vplProgram dllModel.VPLProgram) graphQLModel.VPLPr
 				}),
 			}
 		}),
+		Procedures: []graphQLModel.VPLProcedure{}, // Empty slice, will be populated by resolver
 	}
 }
 

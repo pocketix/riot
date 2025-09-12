@@ -428,6 +428,20 @@ type UserConfigInput struct {
 	Config string `json:"config"`
 }
 
+type VPLProcedure struct {
+	ID        uint32       `json:"id"`
+	Name      string       `json:"name"`
+	Data      string       `json:"data"`
+	CreatedAt string       `json:"createdAt"`
+	UpdatedAt string       `json:"updatedAt"`
+	Programs  []VPLProgram `json:"programs"`
+}
+
+type VPLProcedureInput struct {
+	Name string `json:"name"`
+	Data string `json:"data"`
+}
+
 type VPLProgram struct {
 	ID                   uint32                `json:"id"`
 	Name                 string                `json:"name"`
@@ -435,6 +449,7 @@ type VPLProgram struct {
 	LastRun              *string               `json:"lastRun,omitempty"`
 	Enabled              bool                  `json:"enabled"`
 	SdParameterSnapshots []SDParameterSnapshot `json:"sdParameterSnapshots"`
+	Procedures           []VPLProcedure        `json:"procedures"`
 }
 
 type VPLProgramExecutionResult struct {
