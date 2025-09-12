@@ -10,7 +10,7 @@ const webSocketBackendCoreURL = (() => {
   return parsedBackendCoreURL.toString()
 })()
 
-let userRedirectedAlready: boolean = false
+let userRedirectedAlready: boolean = window.location.href.includes("redirect");
 
 const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   link: split(
