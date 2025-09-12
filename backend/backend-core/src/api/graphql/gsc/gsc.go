@@ -73,6 +73,11 @@ type MutationResolver interface {
 	UpdateVPLProgram(ctx context.Context, id uint32, name string, data string) (graphQLModel.VPLProgram, error)
 	DeleteVPLProgram(ctx context.Context, id uint32) (bool, error)
 	ExecuteVPLProgram(ctx context.Context, id uint32) (graphQLModel.VPLProgramExecutionResult, error)
+	CreateVPLProcedure(ctx context.Context, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error)
+	UpdateVPLProcedure(ctx context.Context, id uint32, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error)
+	DeleteVPLProcedure(ctx context.Context, id uint32) (bool, error)
+	LinkProgramToProcedure(ctx context.Context, programID uint32, procedureID uint32) (bool, error)
+	UnlinkProgramFromProcedure(ctx context.Context, programID uint32, procedureID uint32) (bool, error)
 	CreateRole(ctx context.Context, input graphQLModel.RoleCreationInput) (graphQLModel.Role, error)
 	UpdateRole(ctx context.Context, id uint32, input graphQLModel.RoleUpdateInput) (graphQLModel.Role, error)
 	DeleteRole(ctx context.Context, id uint32) (bool, error)
@@ -80,11 +85,6 @@ type MutationResolver interface {
 	UnassignRoleFromUser(ctx context.Context, userID uint32, roleID uint32) (bool, error)
 	AssignPermissionToRole(ctx context.Context, roleID uint32, permissionID uint32) (bool, error)
 	UnassignPermissionFromRole(ctx context.Context, roleID uint32, permissionID uint32) (bool, error)
-	CreateVPLProcedure(ctx context.Context, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error)
-	UpdateVPLProcedure(ctx context.Context, id uint32, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error)
-	DeleteVPLProcedure(ctx context.Context, id uint32) (bool, error)
-	LinkProgramToProcedure(ctx context.Context, programID uint32, procedureID uint32) (bool, error)
-	UnlinkProgramFromProcedure(ctx context.Context, programID uint32, procedureID uint32) (bool, error)
 }
 type QueryResolver interface {
 	SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error)
@@ -16251,6 +16251,41 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createVPLProcedure":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createVPLProcedure(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateVPLProcedure":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateVPLProcedure(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteVPLProcedure":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteVPLProcedure(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "linkProgramToProcedure":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_linkProgramToProcedure(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "unlinkProgramFromProcedure":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_unlinkProgramFromProcedure(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createRole":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createRole(ctx, field)
@@ -16296,41 +16331,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "unassignPermissionFromRole":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_unassignPermissionFromRole(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "createVPLProcedure":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createVPLProcedure(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "updateVPLProcedure":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateVPLProcedure(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "deleteVPLProcedure":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteVPLProcedure(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "linkProgramToProcedure":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_linkProgramToProcedure(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "unlinkProgramFromProcedure":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_unlinkProgramFromProcedure(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
