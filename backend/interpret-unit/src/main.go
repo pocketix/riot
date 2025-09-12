@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/url"
 	"os"
@@ -147,6 +146,8 @@ func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, 
 	}
 
 	responsePayload := response.GetPayload()
+
+	log.Printf("Received device information response: %+v\n", responsePayload)
 	switch infoType {
 	case "sdCommand":
 		return models.SDInformationFromBackend{
@@ -162,10 +163,20 @@ func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, 
 		return models.SDInformationFromBackend{
 			DeviceUID: deviceUID,
 			Snapshot: models.SDParameterSnapshot{
+				DeviceID:    responsePayload.SDParameterSnapshotToUpdate.SDInstanceID,
 				SDParameter: responsePayload.SDParameterSnapshotToUpdate.SDParameterID,
-				String:      responsePayload.SDParameterSnapshotToUpdate.String,
-				Number:      responsePayload.SDParameterSnapshotToUpdate.Number,
-				Boolean:     responsePayload.SDParameterSnapshotToUpdate.Boolean,
+				String: models.SnapshotString{
+					Value: responsePayload.SDParameterSnapshotToUpdate.String.String,
+					Set:   responsePayload.SDParameterSnapshotToUpdate.String.Set,
+				},
+				Number: models.SnapshotNumber{
+					Value: responsePayload.SDParameterSnapshotToUpdate.Number.Number,
+					Set:   responsePayload.SDParameterSnapshotToUpdate.Number.Set,
+				},
+				Boolean: models.SnapshotBoolean{
+					Value: responsePayload.SDParameterSnapshotToUpdate.Boolean.Boolean,
+					Set:   responsePayload.SDParameterSnapshotToUpdate.Boolean.Set,
+				},
 			},
 		}, nil
 	default:
@@ -239,11 +250,18 @@ func ExecuteVPLProgramRequest() error {
 					return sendExecutionError(rabbitMQClient, delivery, err)
 				}
 			}
+
+			var snapshotsToUpdate []sharedModel.SDParameterSnapshotsResult
+			for _, refVal := range referencedValueStore.GetSetReferencedValues() {
+				snapshot := utils.SetReferencedValue2SDParameterSnapshot(refVal)
+				snapshotsToUpdate = append(snapshotsToUpdate, snapshot)
+			}
+
 			commandInvocationsToSend = utils.InterpretInvocationsSlice2BackendInvocations(interpretInvocationsToSend)
 			response := sharedModel.VPLInterpretExecuteResultOrError{
-				Program: messagePayload,
-				// SDParameterSnapshotsToUpdate: snapshotsToUpdate,
-				SDCommandInvocations: commandInvocationsToSend,
+				Program:                      messagePayload,
+				SDParameterSnapshotsToUpdate: snapshotsToUpdate,
+				SDCommandInvocations:         commandInvocationsToSend,
 				ExecutionTime: func() *time.Time {
 					t := time.Now()
 					return &t
@@ -310,10 +328,10 @@ func sendExecutionError(rabbitMQClient rabbitmq.Client, delivery amqp.Delivery, 
 func main() {
 	log.SetOutput(os.Stderr)
 	log.Println("Interpret Unit started")
-	services.SetOutput(io.Discard)
+	// services.SetOutput(io.Discard)
 
 	// Backend Core
-	rawBackendCoreURL := sharedUtils.GetEnvironmentVariableValue("BACKEND_CORE_URL").GetPayloadOrDefault("http://riot-backend-core:9090")
+	rawBackendCoreURL := sharedUtils.GetEnvironmentVariableValue("BACKEND_CORE_URL").GetPayloadOrDefault("http://localhost:9090")
 	parsedBackendCoreURL, err := url.Parse(rawBackendCoreURL)
 	sharedUtils.TerminateOnError(err, fmt.Sprintf("Unable to parse the backend-core URL: %s", rawBackendCoreURL))
 

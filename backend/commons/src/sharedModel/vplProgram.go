@@ -28,14 +28,14 @@ type VPLInterpretSaveResultOrError struct {
 }
 
 type VPLInterpretExecuteResultOrError struct {
-	Program VPLProgram `json:"program"`
-	// SDParameterSnapshotsToUpdate []SDParameterSnapshotToUpdate `json:"snapshots,omitempty"`
-	SDCommandInvocations []SDCommandToInvoke `json:"commands,omitempty"`
-	ExecutionTime        *time.Time          `json:"executionTime,omitempty"`
-	Enabled              bool                `json:"enabled"`
-	Success              bool                `json:"success"`
-	Error                *string             `json:"error,omitempty"`
-	ExecuingReason       *string             `json:"executionReason,omitempty"`
+	Program                      VPLProgram                   `json:"program"`
+	SDParameterSnapshotsToUpdate []SDParameterSnapshotsResult `json:"snapshots,omitempty"`
+	SDCommandInvocations         []SDCommandToInvoke          `json:"commands,omitempty"`
+	ExecutionTime                *time.Time                   `json:"executionTime,omitempty"`
+	Enabled                      bool                         `json:"enabled"`
+	Success                      bool                         `json:"success"`
+	Error                        *string                      `json:"error,omitempty"`
+	ExecuingReason               *string                      `json:"executionReason,omitempty"`
 }
 
 type VPLInterpretGetDeviceInformationResultOrError struct {
@@ -44,11 +44,35 @@ type VPLInterpretGetDeviceInformationResultOrError struct {
 }
 
 type SDParameterSnapshotToUpdate struct {
-	SDInstanceUID string   `json:"sdInstanceUID"`
-	SDParameterID string   `json:"sdParameterID"`
-	String        *string  `json:"string,omitempty"`
-	Number        *float64 `json:"number,omitempty"`
-	Boolean       *bool    `json:"boolean,omitempty"`
+	SDInstanceID  uint32                     `json:"sdInstanceID"`
+	SDInstanceUID string                     `json:"sdInstanceUID"`
+	SDParameterID uint32                     `json:"sdParameterID"`
+	String        SDParameterSnapshotString  `json:"string,omitempty"`
+	Number        SDParameterSnapshotNumber  `json:"number,omitempty"`
+	Boolean       SDParameterSnapshotBoolean `json:"boolean,omitempty"`
+}
+
+type SDParameterSnapshotsResult struct {
+	InstanceID  uint32                     `json:"instanceID"`
+	ParameterID uint32                     `json:"parameterID"`
+	String      SDParameterSnapshotString  `json:"string,omitempty"`
+	Number      SDParameterSnapshotNumber  `json:"number,omitempty"`
+	Boolean     SDParameterSnapshotBoolean `json:"boolean,omitempty"`
+	UpdatedAt   time.Time                  `json:"updatedAt"`
+}
+type SDParameterSnapshotString struct {
+	String string `json:"string"`
+	Set    bool   `json:"set"`
+}
+
+type SDParameterSnapshotNumber struct {
+	Number float64 `json:"number"`
+	Set    bool    `json:"set"`
+}
+
+type SDParameterSnapshotBoolean struct {
+	Boolean bool `json:"boolean"`
+	Set     bool `json:"set"`
 }
 
 type SDCommandToInvoke struct {
