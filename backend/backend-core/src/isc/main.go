@@ -134,6 +134,7 @@ func triggerVPLProgramsForSDParameterSnapshotUpdate(SDInstanceID uint32, paramet
 		log.Printf("Found %d programs to trigger for SD parameter snapshot update\n", len(vplPrograms.GetPayload()))
 	} else {
 		log.Printf("Error fetching programs to trigger for SD parameter snapshot update: %v\n", vplPrograms.GetError())
+		return
 	}
 
 	for _, program := range vplPrograms.GetPayload() {
