@@ -175,13 +175,7 @@ func str2Time(str *string) *time.Time {
 	return nil
 }
 
-func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExecutionResult] {
-	programToExecute := dbClient.GetRelationalDatabaseClientInstance().LoadVPLProgram(id)
-	if programToExecute.IsFailure() {
-		log.Printf("Execute program failed: %s", programToExecute.GetError())
-		return sharedUtils.NewFailureResult[graphQLModel.VPLProgramExecutionResult](programToExecute.GetError())
-	}
-
+func ExecuteVPLProgram(program dllModel.VPLProgram) sharedUtils.Result[graphQLModel.VPLProgramExecutionResult] {
 	rabbitMQClient := getDLLRabbitMQClient()
 	correlationId := randomString(32)
 	outputChannel := make(chan sharedUtils.Result[sharedModel.VPLInterpretExecuteResultOrError])
@@ -213,7 +207,7 @@ func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExec
 		}
 	}()
 
-	convertedProgramToExecute, err := toSharedModelVPLProgram(programToExecute.GetPayload())
+	convertedProgramToExecute, err := toSharedModelVPLProgram(program)
 	if err != nil {
 		log.Printf("Execute program failed: %s", err)
 		return sharedUtils.NewFailureResult[graphQLModel.VPLProgramExecutionResult](err)
@@ -244,7 +238,7 @@ func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExec
 		return sharedUtils.NewFailureResult[graphQLModel.VPLProgramExecutionResult](result.GetError())
 	}
 
-	dllResult := ConvertExecuteResultToDLLModel(result.GetPayload(), programToExecute.GetPayload())
+	dllResult := ConvertExecuteResultToDLLModel(result.GetPayload(), program)
 	return sharedUtils.NewSuccessResult[graphQLModel.VPLProgramExecutionResult](dll2gql.ToGraphQLModelPLProgramExecutionResult(dllResult))
 }
 
