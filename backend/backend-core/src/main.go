@@ -47,6 +47,12 @@ func startDeviceInfoRequestConsumer() {
 	}()
 }
 
+func setUpExecuteVPLProgramFunc() {
+	if isc.ExecuteVPLProgramFunc == nil {
+		isc.ExecuteVPLProgramFunc = domainLogicLayer.ExecuteVPLProgram
+	}
+}
+
 func main() {
 	log.SetOutput(os.Stderr)
 	log.Println("Waiting for dependencies...")
@@ -55,5 +61,6 @@ func main() {
 	startDeviceInfoRequestConsumer()
 	//sharedUtils.StartLoggingProfilingInformationPeriodically(time.Minute)
 	kickstartISC()
+	setUpExecuteVPLProgramFunc()
 	graphql.SetupGraphQLServer()
 }
