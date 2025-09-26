@@ -78,6 +78,7 @@ type RelationalDatabaseClient interface {
 	UnlinkProgramFromProcedure(programID uint32, procedureID uint32) error
 	GetProceduresForProgram(programID uint32) sharedUtils.Result[[]dllModel.VPLProcedure]
 	GetProgramsForProcedure(procedureID uint32) sharedUtils.Result[[]dllModel.VPLProgram]
+	GetProgramsForSDParameterSnapshot(instanceID uint32, parameterID uint32) sharedUtils.Result[[]dllModel.VPLProgram]
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -999,4 +1000,27 @@ func (r *relationalDatabaseClientImpl) GetProgramsForProcedure(procedureID uint3
 	}
 
 	return sharedUtils.NewSuccessResult(result)
+}
+
+func (r *relationalDatabaseClientImpl) GetProgramsForSDParameterSnapshot(instanceID uint32, parameterID uint32) sharedUtils.Result[[]dllModel.VPLProgram] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	var links []dbModel.VPLProgramSDSnapshotLinkEntity
+	err := r.db.Where("sd_instance_id = ? AND sd_parameter_id = ?", instanceID, parameterID).Find(&links).Error
+	if err != nil {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](err)
+	}
+
+	programs := make([]dllModel.VPLProgram, 0, len(links))
+	for _, link := range links {
+		var programEntity dbModel.VPLProgramsEntity
+		err := r.db.First(&programEntity, link.ProgramID).Error
+		if err != nil {
+			return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](err)
+		}
+		programs = append(programs, db2dll.ToDLLModelVplProgram(programEntity))
+	}
+
+	return sharedUtils.NewSuccessResult(programs)
 }
