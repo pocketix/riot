@@ -292,7 +292,6 @@ func ExecuteVPLProgramRequest() error {
 				log.Printf("Failed to publish VPL program execution result: %s\n", publishErr.Error())
 				return sendExecutionError(rabbitMQClient, delivery, publishErr)
 			}
-			log.Printf("VPL program execution result sent: %s\n", jsonSerializationResult.GetPayload())
 			return nil
 		},
 	)
