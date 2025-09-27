@@ -20,6 +20,15 @@ func NewOptionalFromPointer[T any](pointer *T) Optional[T] {
 	}
 }
 
+func NewEmptyOptionalBasedOnValue[T comparable](value T) Optional[T] {
+	var zeroValue T
+	if value == zeroValue {
+		return NewEmptyOptional[T]()
+	} else {
+		return NewOptionalOf[T](value)
+	}
+}
+
 func NewEmptyOptional[T any]() Optional[T] {
 	return Optional[T]{
 		isPresent: false,
