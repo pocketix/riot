@@ -6,6 +6,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"github.com/pocketix/pocketix-go/src/models"
+	"github.com/pocketix/pocketix-go/src/types"
 )
 
 func ReferencedValue2StringMap(referencedValue map[string]models.ReferencedValue) map[string]string {
@@ -16,8 +17,8 @@ func ReferencedValue2StringMap(referencedValue map[string]models.ReferencedValue
 	return result
 }
 
-func InterpretInvocationsSlice2BackendInvocations(invocations []models.SDCommandInvocation) []sharedModel.SDCommandToInvoke {
-	return sharedUtils.Map(invocations, func(invocation models.SDCommandInvocation) sharedModel.SDCommandToInvoke {
+func InterpretInvocationsSlice2BackendInvocations(invocations []types.SDCommandInvocation) []sharedModel.SDCommandToInvoke {
+	return sharedUtils.Map(invocations, func(invocation types.SDCommandInvocation) sharedModel.SDCommandToInvoke {
 		return sharedModel.SDCommandToInvoke{
 			SDInstanceID:  invocation.InstanceID,
 			SDInstanceUID: invocation.InstanceUID,
