@@ -3,6 +3,11 @@ package graphql
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -15,10 +20,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"log"
-	"net/http"
-	"strings"
-	"time"
 )
 
 var (
@@ -42,6 +43,9 @@ func SetupGraphQLServer() {
 	})
 	graphQLServer.Use(extension.Introspection{})
 	graphQLServer.AroundFields(func(ctx context.Context, next graphql.Resolver) (res any, err error) {
+
+		log.Println("In per-GraphQL field authorization middleware.")
+
 		fieldContext := graphql.GetFieldContext(ctx)
 		if fieldContext == nil {
 			return nil, fmt.Errorf("couldn't obtain GraphQL field context")
@@ -52,6 +56,7 @@ func SetupGraphQLServer() {
 		}
 		userIDOptional := auth.GetUserID(ctx)
 		if userIDOptional.IsEmpty() {
+			log.Println("Bypassing per-GraphQL field authorization middleware due to unknown user ID.")
 			return next(ctx)
 		}
 		userID := userIDOptional.GetPayload()
@@ -60,6 +65,8 @@ func SetupGraphQLServer() {
 		if err != nil {
 			return nil, err
 		}
+		log.Println("Field access authorization check result dump:")
+		sharedUtils.Dump(fieldAccessAuthorizationCheckResult)
 		if fieldAccessAuthorizationCheckResult.UserAuthorized {
 			return next(ctx)
 		}

@@ -3,11 +3,12 @@ package dbClient
 import (
 	"errors"
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/misc"
 	"log"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/misc"
 
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbUtil"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dbModel"
@@ -258,6 +259,9 @@ func (r *relationalDatabaseClientImpl) setup() {
 }
 
 func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
+
+	log.Println("Updating the DB representation of GraphQL operations and adjusting permissions...")
+
 	// Begin by creating a snapshot of the GraphQL API based on the 'schema.graphqls' file
 	createGraphQLAPISnapshotResult := misc.CreateGraphQLAPISnapshot()
 	if createGraphQLAPISnapshotResult.IsFailure() {
@@ -329,6 +333,9 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 		log.Println("Role table is NOT empty: no more on-startup operations...")
 		return nil
 	}
+
+	log.Println("Role table is empty: continuing...")
+	log.Println("Trying to persist an user stub along with the 'Root-Administrator' role assigned to it...")
 
 	// Create a 'Root-Administrator' role along with the operation-type-access permission entries...
 	// ...then create a user (with predefined OAuth2 provider (-ID)) and assign said role to this user

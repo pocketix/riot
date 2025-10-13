@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/idtoken"
-	"log"
-	"net/http"
-	"time"
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -144,8 +145,13 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	userID := user.ID.GetPayload()
 	apiAccessSummary, err := determineAPIAccess(userID).Unwrap()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("user %d - failed to determine API access: %s", userID, err.Error()), http.StatusInternalServerError)
+		errorMessage := fmt.Sprintf("user %d - failed to determine API access: %s", userID, err.Error())
+		log.Println(errorMessage)
+		http.Error(w, errorMessage, http.StatusInternalServerError)
 	}
+	log.Println("API access summary object dump [CallbackHandler]:")
+	sharedUtils.Dump(apiAccessSummary)
+
 	sessionJWT, err := createSessionJWT(userID, apiAccessSummary)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to create session JWT: %s", err.Error()), http.StatusInternalServerError)

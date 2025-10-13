@@ -3,15 +3,17 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
 	"github.com/maypok86/otter"
 	"golang.org/x/sync/singleflight"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 var (
@@ -31,10 +33,15 @@ func setupTTLCache() otter.Cache[string, struct{}] {
 func JWTAuthenticationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		log.Println("In JWT authentication middleware.")
+
 		if !jwtAuthenticationMiddlewareEnabled || websocket.IsWebSocketUpgrade(r) {
+			log.Println("Bypassing JWT authentication middleware - it is either disabled or this is a special WebSocket-related request.")
 			next.ServeHTTP(w, r)
 			return
 		}
+
+		log.Println("Continuing through the JWT authentication middleware - it is enabled.")
 
 		if isCookieSet(r, SessionJWTCookieIdentifier) {
 			sessionJWT, err := parseJWT(getSessionJWTCookieValue(r).GetPayload())
@@ -168,6 +175,8 @@ func performSessionRefresh(refreshTokenHash string) (*sessionRefreshResult, erro
 	if err != nil {
 		return nil, err
 	}
+	log.Println("API access summary object dump [performSessionRefresh]:")
+	sharedUtils.Dump(apiAccessSummary)
 	newSessionJWT, err := createSessionJWT(userID, apiAccessSummary)
 	if err != nil {
 		return nil, err
@@ -186,6 +195,11 @@ func performSessionRefresh(refreshTokenHash string) (*sessionRefreshResult, erro
 }
 
 func IsFieldAccessAuthorized(apiAccessSummary APIAccessSummary, fieldIdentifier string) sharedUtils.Result[FieldAccessAuthorizationCheckResult] {
+
+	log.Printf("Checking field access authorization for field %s\n", fieldIdentifier)
+	log.Println("API access summary object dump [IsFieldAccessAuthorized]:")
+	sharedUtils.Dump(apiAccessSummary)
+
 	userAuthorized := sharedUtils.NewSetFromSlice(apiAccessSummary.AuthorizedFieldSet).Contains(fieldIdentifier)
 	if userAuthorized {
 		return sharedUtils.NewSuccessResult(FieldAccessAuthorizationCheckResult{
