@@ -1,0 +1,45 @@
+name: "Cypress tests"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cypress-tests:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: frontend
+
+      - name: Start frontend preview server (port 8080)
+        run: |
+          npm run preview -- --port 8080 &
+          echo "started preview"
+        working-directory: frontend
+
+      - name: Wait for frontend to be ready
+        run: npx wait-on http://localhost:8080
+
+      - name: Install Cypress dependencies
+        run: |
+          if [ -f cypress_tests/package.json ]; then npm ci --prefix cypress_tests; fi
+          npm install cypress --prefix cypress_tests --no-audit --no-fund --silent
+
+      - name: Run Cypress tests
+        run: npx cypress run --headless --spec "cypress/e2e/**/*.cy.js" --config baseUrl=http://localhost:8080
+        working-directory: cypress_tests
+        env:
+          CYPRESS_username: ${{ secrets.TEST_LOGIN_USERNAME }}
+          CYPRESS_password: ${{ secrets.TEST_LOGIN_PASSWORD }}
