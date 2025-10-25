@@ -9,6 +9,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql/gsc"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/domainLogicLayer"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/modelMapping/gql2dll"
 )
 
 func (r *mutationResolver) CreateSDType(ctx context.Context, input graphQLModel.SDTypeInput) (graphQLModel.SDType, error) {
@@ -184,12 +185,65 @@ func (r *mutationResolver) DeleteVPLProgram(ctx context.Context, id uint32) (boo
 }
 
 func (r *mutationResolver) ExecuteVPLProgram(ctx context.Context, id uint32) (graphQLModel.VPLProgramExecutionResult, error) {
-	executeVPLProgramResult := domainLogicLayer.ExecuteVPLProgram(id)
+	getResult := domainLogicLayer.GetVPLProgram(id)
+	if getResult.IsFailure() {
+		log.Printf("Error occurred (get VPL program before execution): %s\n", getResult.GetError().Error())
+		return graphQLModel.VPLProgramExecutionResult{}, getResult.GetError()
+	}
+
+	executeVPLProgramResult := domainLogicLayer.ExecuteVPLProgram(gql2dll.ToDLLModelVPLProgram(getResult.GetPayload()))
 	if executeVPLProgramResult.IsFailure() {
 		log.Printf("Error occurred (execute VPL program): %s\n", executeVPLProgramResult.GetError().Error())
 		return graphQLModel.VPLProgramExecutionResult{}, executeVPLProgramResult.GetError()
 	}
 	return executeVPLProgramResult.Unwrap()
+}
+
+func (r *mutationResolver) CreateVPLProcedure(ctx context.Context, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error) {
+	createVPLProcedureResult := domainLogicLayer.CreateVPLProcedure(input)
+	if createVPLProcedureResult.IsFailure() {
+		log.Printf("Error occurred (create VPL procedure): %s\n", createVPLProcedureResult.GetError().Error())
+		return graphQLModel.VPLProcedure{}, createVPLProcedureResult.GetError()
+	}
+
+	return createVPLProcedureResult.Unwrap()
+}
+
+func (r *mutationResolver) UpdateVPLProcedure(ctx context.Context, id uint32, input graphQLModel.VPLProcedureInput) (graphQLModel.VPLProcedure, error) {
+	updateVPLProcedureResult := domainLogicLayer.UpdateVPLProcedure(id, input)
+	if updateVPLProcedureResult.IsFailure() {
+		log.Printf("Error occurred (update VPL procedure): %s\n", updateVPLProcedureResult.GetError().Error())
+		return graphQLModel.VPLProcedure{}, updateVPLProcedureResult.GetError()
+	}
+
+	return updateVPLProcedureResult.Unwrap()
+}
+
+func (r *mutationResolver) DeleteVPLProcedure(ctx context.Context, id uint32) (bool, error) {
+	err := domainLogicLayer.DeleteVPLProcedure(id)
+	if err != nil {
+		log.Printf("Error occurred (delete VPL procedure): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) LinkProgramToProcedure(ctx context.Context, programID uint32, procedureID uint32) (bool, error) {
+	err := domainLogicLayer.LinkProgramToProcedure(programID, procedureID)
+	if err != nil {
+		log.Printf("Error occurred (link program to procedure): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) UnlinkProgramFromProcedure(ctx context.Context, programID uint32, procedureID uint32) (bool, error) {
+	err := domainLogicLayer.UnlinkProgramFromProcedure(programID, procedureID)
+	if err != nil {
+		log.Printf("Error occurred (unlink program from procedure): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
@@ -340,6 +394,42 @@ func (r *queryResolver) VplProgram(ctx context.Context, id uint32) (graphQLModel
 		return graphQLModel.VPLProgram{}, getVPLProgramResult.GetError()
 	}
 	return getVPLProgramResult.Unwrap()
+}
+
+func (r *queryResolver) VplProcedure(ctx context.Context, id uint32) (graphQLModel.VPLProcedure, error) {
+	getVPLProcedureResult := domainLogicLayer.GetVPLProcedure(id)
+	if getVPLProcedureResult.IsFailure() {
+		log.Printf("Error occurred (get VPL procedure): %s\n", getVPLProcedureResult.GetError().Error())
+		return graphQLModel.VPLProcedure{}, getVPLProcedureResult.GetError()
+	}
+	return getVPLProcedureResult.Unwrap()
+}
+
+func (r *queryResolver) VplProcedures(ctx context.Context) ([]graphQLModel.VPLProcedure, error) {
+	getVPLProceduresResult := domainLogicLayer.GetVPLProcedures()
+	if getVPLProceduresResult.IsFailure() {
+		log.Printf("Error occurred (get VPL procedures): %s\n", getVPLProceduresResult.GetError().Error())
+		return nil, getVPLProceduresResult.GetError()
+	}
+	return getVPLProceduresResult.Unwrap()
+}
+
+func (r *queryResolver) VplProceduresForProgram(ctx context.Context, programID uint32) ([]graphQLModel.VPLProcedure, error) {
+	getProceduresForProgramResult := domainLogicLayer.GetProceduresForProgram(programID)
+	if getProceduresForProgramResult.IsFailure() {
+		log.Printf("Error occurred (get VPL procedures for program): %s\n", getProceduresForProgramResult.GetError().Error())
+		return nil, getProceduresForProgramResult.GetError()
+	}
+	return getProceduresForProgramResult.Unwrap()
+}
+
+func (r *queryResolver) VplProgramsForProcedure(ctx context.Context, procedureID uint32) ([]graphQLModel.VPLProgram, error) {
+	getProgramsForProcedureResult := domainLogicLayer.GetProgramsForProcedure(procedureID)
+	if getProgramsForProcedureResult.IsFailure() {
+		log.Printf("Error occurred (get VPL programs for procedure): %s\n", getProgramsForProcedureResult.GetError().Error())
+		return nil, getProgramsForProcedureResult.GetError()
+	}
+	return getProgramsForProcedureResult.Unwrap()
 }
 
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {
