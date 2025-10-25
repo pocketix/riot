@@ -9,6 +9,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql/gsc"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/domainLogicLayer"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/modelMapping/gql2dll"
 )
 
 func (r *mutationResolver) CreateSDType(ctx context.Context, input graphQLModel.SDTypeInput) (graphQLModel.SDType, error) {
@@ -184,7 +185,13 @@ func (r *mutationResolver) DeleteVPLProgram(ctx context.Context, id uint32) (boo
 }
 
 func (r *mutationResolver) ExecuteVPLProgram(ctx context.Context, id uint32) (graphQLModel.VPLProgramExecutionResult, error) {
-	executeVPLProgramResult := domainLogicLayer.ExecuteVPLProgram(id)
+	getResult := domainLogicLayer.GetVPLProgram(id)
+	if getResult.IsFailure() {
+		log.Printf("Error occurred (get VPL program before execution): %s\n", getResult.GetError().Error())
+		return graphQLModel.VPLProgramExecutionResult{}, getResult.GetError()
+	}
+
+	executeVPLProgramResult := domainLogicLayer.ExecuteVPLProgram(gql2dll.ToDLLModelVPLProgram(getResult.GetPayload()))
 	if executeVPLProgramResult.IsFailure() {
 		log.Printf("Error occurred (execute VPL program): %s\n", executeVPLProgramResult.GetError().Error())
 		return graphQLModel.VPLProgramExecutionResult{}, executeVPLProgramResult.GetError()
