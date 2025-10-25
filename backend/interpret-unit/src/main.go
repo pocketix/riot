@@ -18,6 +18,7 @@ import (
 	"github.com/pocketix/pocketix-go/src/parser"
 	"github.com/pocketix/pocketix-go/src/services"
 	"github.com/pocketix/pocketix-go/src/statements"
+	"github.com/pocketix/pocketix-go/src/types"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -80,7 +81,7 @@ func performVPLValidityCheckRequest() error {
 	return err
 }
 
-func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, infoType string, deviceCommands *[]models.SDInformationFromBackend) (models.SDInformationFromBackend, error) {
+func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, infoType string, deviceCommands *[]types.SDInformationFromBackend) (types.SDInformationFromBackend, error) {
 	log.Printf("Resolving device information for device UID: %s, parameter denotation: %s, info type: %s\n", deviceUID, paramDenotation, infoType)
 	rabbitMQClient := rabbitmq.NewClient()
 	defer rabbitMQClient.Dispose()
@@ -123,7 +124,7 @@ func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, 
 	convertedRequest := sharedUtils.SerializeToJSON(request)
 	if convertedRequest.IsFailure() {
 		log.Printf("Failed to serialize the object representing a VPL program get snapshot request into JSON: %s\n", convertedRequest.GetError().Error())
-		return models.SDInformationFromBackend{}, convertedRequest.GetError()
+		return types.SDInformationFromBackend{}, convertedRequest.GetError()
 	}
 
 	log.Printf("Sending VPL program get device information request: %s\n", convertedRequest.GetPayload())
@@ -137,12 +138,12 @@ func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, 
 
 	if err != nil {
 		log.Printf("Failed to publish VPL program get snapshot request: %s\n", err.Error())
-		return models.SDInformationFromBackend{}, err
+		return types.SDInformationFromBackend{}, err
 	}
 	response := <-responseChannel
 	if response.IsFailure() {
 		log.Printf("Failed to get snapshot: %s\n", response.GetError().Error())
-		return models.SDInformationFromBackend{}, response.GetError()
+		return types.SDInformationFromBackend{}, response.GetError()
 	}
 
 	responsePayload := response.GetPayload()
@@ -150,37 +151,37 @@ func ResolveDeviceInformationFunction(deviceUID string, paramDenotation string, 
 	log.Printf("Received device information response: %+v\n", responsePayload)
 	switch infoType {
 	case "sdCommand":
-		return models.SDInformationFromBackend{
+		return types.SDInformationFromBackend{
 			DeviceID:  responsePayload.SDCommandToInvoke.SDInstanceID,
 			DeviceUID: deviceUID,
-			Command: models.SDCommand{
+			Command: types.SDCommand{
 				CommandID:         responsePayload.SDCommandToInvoke.CommandID,
 				CommandDenotation: responsePayload.SDCommandToInvoke.CommandName,
 				Payload:           responsePayload.SDCommandToInvoke.Payload,
 			},
 		}, nil
 	case "sdParameter":
-		return models.SDInformationFromBackend{
+		return types.SDInformationFromBackend{
 			DeviceUID: deviceUID,
-			Snapshot: models.SDParameterSnapshot{
+			Snapshot: types.SDParameterSnapshot{
 				DeviceID:    responsePayload.SDParameterSnapshotToUpdate.SDInstanceID,
 				SDParameter: responsePayload.SDParameterSnapshotToUpdate.SDParameterID,
-				String: models.SnapshotString{
+				String: types.SnapshotString{
 					Value: responsePayload.SDParameterSnapshotToUpdate.String.String,
 					Set:   responsePayload.SDParameterSnapshotToUpdate.String.Set,
 				},
-				Number: models.SnapshotNumber{
+				Number: types.SnapshotNumber{
 					Value: responsePayload.SDParameterSnapshotToUpdate.Number.Number,
 					Set:   responsePayload.SDParameterSnapshotToUpdate.Number.Set,
 				},
-				Boolean: models.SnapshotBoolean{
+				Boolean: types.SnapshotBoolean{
 					Value: responsePayload.SDParameterSnapshotToUpdate.Boolean.Boolean,
 					Set:   responsePayload.SDParameterSnapshotToUpdate.Boolean.Set,
 				},
 			},
 		}, nil
 	default:
-		return models.SDInformationFromBackend{}, fmt.Errorf("unknown request type: %s", infoType)
+		return types.SDInformationFromBackend{}, fmt.Errorf("unknown request type: %s", infoType)
 	}
 }
 
@@ -238,11 +239,11 @@ func ExecuteVPLProgramRequest() error {
 			}
 
 			var commandInvocationsToSend []sharedModel.SDCommandToInvoke
-			var interpretInvocationsToSend []models.SDCommandInvocation
+			var interpretInvocationsToSend []types.SDCommandInvocation
 			// var snapshotsToUpdate []sharedModel.SDParameterSnapshotToUpdate
 
 			for _, command := range statementList {
-				_, err := command.Execute(variableStore, referencedValueStore, collector.DeviceCommands, func(deviceCommand models.SDCommandInvocation) {
+				_, err := command.Execute(variableStore, referencedValueStore, collector.DeviceCommands, func(deviceCommand types.SDCommandInvocation) {
 					interpretInvocationsToSend = append(interpretInvocationsToSend, deviceCommand)
 				})
 				if err != nil {
@@ -292,7 +293,6 @@ func ExecuteVPLProgramRequest() error {
 				log.Printf("Failed to publish VPL program execution result: %s\n", publishErr.Error())
 				return sendExecutionError(rabbitMQClient, delivery, publishErr)
 			}
-			log.Printf("VPL program execution result sent: %s\n", jsonSerializationResult.GetPayload())
 			return nil
 		},
 	)

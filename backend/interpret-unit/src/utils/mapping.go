@@ -6,6 +6,7 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"github.com/pocketix/pocketix-go/src/models"
+	"github.com/pocketix/pocketix-go/src/types"
 )
 
 func ReferencedValue2StringMap(referencedValue map[string]models.ReferencedValue) map[string]string {
@@ -16,8 +17,8 @@ func ReferencedValue2StringMap(referencedValue map[string]models.ReferencedValue
 	return result
 }
 
-func InterpretInvocationsSlice2BackendInvocations(invocations []models.SDCommandInvocation) []sharedModel.SDCommandToInvoke {
-	return sharedUtils.Map(invocations, func(invocation models.SDCommandInvocation) sharedModel.SDCommandToInvoke {
+func InterpretInvocationsSlice2BackendInvocations(invocations []types.SDCommandInvocation) []sharedModel.SDCommandToInvoke {
+	return sharedUtils.Map(invocations, func(invocation types.SDCommandInvocation) sharedModel.SDCommandToInvoke {
 		return sharedModel.SDCommandToInvoke{
 			SDInstanceID:  invocation.InstanceID,
 			SDInstanceUID: invocation.InstanceUID,
@@ -29,12 +30,37 @@ func InterpretInvocationsSlice2BackendInvocations(invocations []models.SDCommand
 }
 
 func SetReferencedValue2SDParameterSnapshot(referencedValue models.ReferencedValue) sharedModel.SDParameterSnapshotsResult {
-	return sharedModel.SDParameterSnapshotsResult{
-		InstanceID:  referencedValue.DeviceID,
-		ParameterID: referencedValue.ParameterID,
-		String:      sharedModel.SDParameterSnapshotString{String: referencedValue.Value.(models.SnapshotString).Value, Set: true},
-		Number:      sharedModel.SDParameterSnapshotNumber{Number: referencedValue.Value.(models.SnapshotNumber).Value, Set: true},
-		Boolean:     sharedModel.SDParameterSnapshotBoolean{Boolean: referencedValue.Value.(models.SnapshotBoolean).Value, Set: true},
-		UpdatedAt:   time.Now(),
+	now := time.Now()
+	deviceID := referencedValue.DeviceID
+	parameterID := referencedValue.ParameterID
+
+	switch referencedValue.Type {
+	case "string":
+		return sharedModel.SDParameterSnapshotsResult{
+			InstanceID:  deviceID,
+			ParameterID: parameterID,
+			UpdatedAt:   now,
+			String:      sharedModel.SDParameterSnapshotString{String: referencedValue.Value.(string), Set: true},
+		}
+	case "number":
+		return sharedModel.SDParameterSnapshotsResult{
+			InstanceID:  deviceID,
+			ParameterID: parameterID,
+			UpdatedAt:   now,
+			Number:      sharedModel.SDParameterSnapshotNumber{Number: referencedValue.Value.(float64), Set: true},
+		}
+	case "boolean":
+		return sharedModel.SDParameterSnapshotsResult{
+			InstanceID:  deviceID,
+			ParameterID: parameterID,
+			UpdatedAt:   now,
+			Boolean:     sharedModel.SDParameterSnapshotBoolean{Boolean: referencedValue.Value.(bool), Set: true},
+		}
+	default:
+		return sharedModel.SDParameterSnapshotsResult{
+			InstanceID:  deviceID,
+			ParameterID: parameterID,
+			UpdatedAt:   now,
+		}
 	}
 }

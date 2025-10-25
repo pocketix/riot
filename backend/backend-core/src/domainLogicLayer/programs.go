@@ -175,13 +175,7 @@ func str2Time(str *string) *time.Time {
 	return nil
 }
 
-func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExecutionResult] {
-	programToExecute := dbClient.GetRelationalDatabaseClientInstance().LoadVPLProgram(id)
-	if programToExecute.IsFailure() {
-		log.Printf("Execute program failed: %s", programToExecute.GetError())
-		return sharedUtils.NewFailureResult[graphQLModel.VPLProgramExecutionResult](programToExecute.GetError())
-	}
-
+func ExecuteVPLProgram(program dllModel.VPLProgram) sharedUtils.Result[graphQLModel.VPLProgramExecutionResult] {
 	rabbitMQClient := getDLLRabbitMQClient()
 	correlationId := randomString(32)
 	outputChannel := make(chan sharedUtils.Result[sharedModel.VPLInterpretExecuteResultOrError])
@@ -213,7 +207,7 @@ func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExec
 		}
 	}()
 
-	convertedProgramToExecute, err := toSharedModelVPLProgram(programToExecute.GetPayload())
+	convertedProgramToExecute, err := toSharedModelVPLProgram(program)
 	if err != nil {
 		log.Printf("Execute program failed: %s", err)
 		return sharedUtils.NewFailureResult[graphQLModel.VPLProgramExecutionResult](err)
@@ -244,8 +238,29 @@ func ExecuteVPLProgram(id uint32) sharedUtils.Result[graphQLModel.VPLProgramExec
 		return sharedUtils.NewFailureResult[graphQLModel.VPLProgramExecutionResult](result.GetError())
 	}
 
-	dllResult := ConvertExecuteResultToDLLModel(result.GetPayload(), programToExecute.GetPayload())
+	saveSDParameterSnapshots(result.GetPayload().SDParameterSnapshotsToUpdate)
+	dllResult := ConvertExecuteResultToDLLModel(result.GetPayload(), program)
 	return sharedUtils.NewSuccessResult[graphQLModel.VPLProgramExecutionResult](dll2gql.ToGraphQLModelPLProgramExecutionResult(dllResult))
+}
+
+func saveSDParameterSnapshots(snapshots []sharedModel.SDParameterSnapshotsResult) {
+	databaseClient := dbClient.GetRelationalDatabaseClientInstance()
+
+	for _, snapshot := range snapshots {
+		dllSnapshot := dllModel.SDParameterSnapshot{
+			SDInstance:  snapshot.InstanceID,
+			SDParameter: snapshot.ParameterID,
+			String:      sharedUtils.NewEmptyOptionalBasedOnValue[string](snapshot.String.String),
+			Number:      sharedUtils.NewEmptyOptionalBasedOnValue[float64](snapshot.Number.Number),
+			Boolean:     sharedUtils.NewEmptyOptionalBasedOnValue[bool](snapshot.Boolean.Boolean),
+			UpdatedAt:   time.Now(),
+		}
+
+		result := databaseClient.PersistSDParameterSnapshot(dllSnapshot)
+		if result.IsFailure() {
+			log.Printf("Error saving SD parameter snapshot: %v\n", result.GetError())
+		}
+	}
 }
 
 func StartDeviceInformationRequestConsumer() error {
@@ -290,7 +305,7 @@ func StartDeviceInformationRequestConsumer() error {
 			case "sdParameter":
 				sdInstance := databaseClient.LoadSDInstanceBasedOnUID(messagePayload.SDInstanceUID)
 				if sdInstance.IsFailure() || sdInstance.GetPayload().IsEmpty() || sdInstance.GetPayload().GetPayload().ID.IsEmpty() {
-					log.Printf("Received instance information request failed: InstanceUID: %s, CommandName: %s, RequestType: %s", messagePayload.SDInstanceUID, messagePayload.SDParameterID, messagePayload.RequestType)
+					log.Printf("SDInstance not found: %s", messagePayload.SDInstanceUID)
 					SDInstanceResultInformation.Error = fmt.Sprintf("instance %s not found", messagePayload.SDInstanceUID)
 					break
 				}
@@ -298,7 +313,7 @@ func StartDeviceInformationRequestConsumer() error {
 					return parameter.Denotation == messagePayload.SDParameterID
 				})
 				if sdParameter.IsEmpty() {
-					log.Printf("Received instance information request failed: InstanceUID: %s, CommandName: %s, RequestType: %s", messagePayload.SDInstanceUID, messagePayload.SDParameterID, messagePayload.RequestType)
+					log.Printf("SDParameter not found: %s", messagePayload.SDParameterID)
 					SDInstanceResultInformation.Error = fmt.Sprintf("parameter %s not found for instance %s", messagePayload.SDParameterID, messagePayload.SDInstanceUID)
 					break
 				}
@@ -307,8 +322,8 @@ func StartDeviceInformationRequestConsumer() error {
 					return parameter.SDParameter == sdParameter.GetPayload().ID.GetPayload()
 				})
 				if sdParameterSnapshot.IsEmpty() {
-					log.Printf("Received instance information request failed: InstanceUID: %s, CommandName: %s, RequestType: %s", messagePayload.SDInstanceUID, messagePayload.SDParameterID, messagePayload.RequestType)
-					SDInstanceResultInformation.Error = fmt.Sprintf("parameter %s not found for instance %s", messagePayload.SDParameterID, messagePayload.SDInstanceUID)
+					log.Printf("SDParameterSnapshot not found: %s", messagePayload.SDParameterID)
+					SDInstanceResultInformation.Error = fmt.Sprintf("No snapshot found for parameter %s of instance %s", messagePayload.SDParameterID, messagePayload.SDInstanceUID)
 					break
 				}
 
@@ -317,7 +332,7 @@ func StartDeviceInformationRequestConsumer() error {
 				SDInstanceResultInformation.SDInstanceResultInformation.SDParameterSnapshotToUpdate = sharedModel.SDParameterSnapshotToUpdate{
 					SDInstanceID:  sdInstance.GetPayload().GetPayload().ID.GetPayload(),
 					SDInstanceUID: messagePayload.SDInstanceUID,
-					SDParameterID: sdParameterSnapshot.GetPayload().SDParameter,
+					SDParameterID: sdParameter.GetPayload().ID.GetPayload(),
 					String: sharedModel.SDParameterSnapshotString{
 						String: sdParameterSnapshot.GetPayload().String.GetPayloadOrDefault(""),
 						Set:    sdParameterSnapshot.GetPayload().String.IsPresent(),
