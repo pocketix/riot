@@ -13,10 +13,14 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        maximumFileSizeToCacheInBytes: 6000000
-      },
-      injectManifest: {
-        maximumFileSizeToCacheInBytes: 6000000
+        maximumFileSizeToCacheInBytes: 6000000,
+        runtimeCaching: [
+          {
+            // Always go to network for /api/auth/**
+            urlPattern: ({ url }) => url.pathname.startsWith('/api/auth'),
+            handler: 'NetworkOnly',
+          }
+        ],
       },
       injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'robots.txt'],
