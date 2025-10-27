@@ -1,0 +1,13 @@
+namespace: riot
+resources:
+  - ../../base
+  - ingress.yaml
+  - ../../base/prometheus.yaml
+  - ../../base/grafana.yaml
+  - ../../base/mqtt-exporter.yaml
+  - pgadmin.yaml
+patchesStrategicMerge:
+  - patches/images.yaml
+  - patches/frontend-service-nodeport.yaml
+  - patches/mosquitto-service-nodeport.yaml
+  - patches/backend-core-configmap.yaml

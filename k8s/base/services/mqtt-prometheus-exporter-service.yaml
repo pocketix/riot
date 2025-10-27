@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mqtt-prometheus-exporter
+  namespace: riot
+spec:
+  selector:
+    app: mqtt-prometheus-exporter
+  ports:
+    - port: 9000
+      targetPort: 9000
+      name: http

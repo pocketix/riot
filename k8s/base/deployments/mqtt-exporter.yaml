@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-prometheus-exporter
+  namespace: riot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-prometheus-exporter
+  template:
+    metadata:
+      labels:
+        app: mqtt-prometheus-exporter
+    spec:
+      containers:
+        - name: mqtt-prometheus-exporter
+          image: kpetrem/mqtt-exporter
+          env:
+            - name: MQTT_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: MQTT_ADDRESS
+            - name: MQTT_TOPIC
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: MQTT_TOPIC
+            - name: MQTT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MQTT_USER
+            - name: MQTT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MQTT_PASSWORD
+          ports:
+            - containerPort: 9000
+              protocol: TCP
+              name: http
