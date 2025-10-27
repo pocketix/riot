@@ -20,9 +20,9 @@ resources:
   - deployments/riot-frontend.yaml
   - deployments/mosquitto.yaml
   - deployments/pgadmin.yaml
-  - deployments/grafana.yaml
-  - deployments/prometheus.yaml
-  - deployments/mqtt-exporter.yaml
+  # - deployments/grafana.yaml
+  # - deployments/prometheus.yaml
+  # - deployments/mqtt-exporter.yaml
   - deployments/riot-message-processing-unit.yaml
   - deployments/riot-mqtt-preprocessor.yaml
   - deployments/riot-time-series-store.yaml
@@ -37,8 +37,8 @@ resources:
   - services/riot-frontend-service.yaml
   - services/mosquitto-service.yaml
   - services/pgadmin-service.yaml
-  - services/grafana-service.yaml
-  - services/prometheus-service.yaml
+  # - services/grafana-service.yamlf
+  # - services/prometheus-service.yaml
   - services/influxdb-service.yaml
   - services/rabbitmq-service.yaml
   - services/postgres-service.yaml
@@ -48,14 +48,14 @@ resources:
   - storage/rabbitmq-pvc.yaml
   - storage/mosquitto-data-pvc.yaml
   - storage/mosquitto-log-pvc.yaml
-  - storage/grafana-pvc.yaml
-  - storage/prometheus-pvc.yaml
+  # - storage/grafana-pvc.yaml
+  # - storage/prometheus-pvc.yaml
 
   # ConfigMaps
   - configmaps/app-configmap.yaml
   - configmaps/mosquitto-configmap.yaml
-  - configmaps/prometheus-configmap.yaml
-  - configmaps/grafana-configmap.yaml
+  # - configmaps/prometheus-configmap.yaml
+  # - configmaps/grafana-configmap.yaml
 
   # Ingress
   - ingress/ingress.yaml
