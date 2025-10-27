@@ -1,0 +1,73 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: riot
+
+commonLabels:
+  app.kubernetes.io/name: riot
+  app.kubernetes.io/managed-by: kustomize
+
+resources:
+  # Namespace
+  - namespace.yaml
+
+  # Secrets
+  - secrets/app-secrets.yaml
+  - secrets/mosquitto-password.yaml
+
+  # Deployments
+  - deployments/riot-backend-core.yaml
+  - deployments/riot-frontend.yaml
+  - deployments/mosquitto.yaml
+  - deployments/pgadmin.yaml
+  - deployments/grafana.yaml
+  - deployments/prometheus.yaml
+  - deployments/mqtt-exporter.yaml
+  - deployments/riot-message-processing-unit.yaml
+  - deployments/riot-mqtt-preprocessor.yaml
+  - deployments/riot-time-series-store.yaml
+
+  # StatefulSets
+  - statefulsets/postgres.yaml
+  - statefulsets/rabbitmq.yaml
+  - statefulsets/influxdb.yaml
+
+  # Services
+  - services/riot-backend-core-service.yaml
+  - services/riot-frontend-service.yaml
+  - services/mosquitto-service.yaml
+  - services/pgadmin-service.yaml
+  - services/grafana-service.yaml
+  - services/prometheus-service.yaml
+  - services/influxdb-service.yaml
+  - services/rabbitmq-service.yaml
+  - services/postgres-service.yaml
+
+  # Persistent Volume Claims
+  - storage/postgres-pvc.yaml
+  - storage/rabbitmq-pvc.yaml
+  - storage/mosquitto-data-pvc.yaml
+  - storage/mosquitto-log-pvc.yaml
+  - storage/grafana-pvc.yaml
+  - storage/prometheus-pvc.yaml
+
+  # ConfigMaps
+  - configmaps/app-configmap.yaml
+  - configmaps/mosquitto-configmap.yaml
+  - configmaps/prometheus-configmap.yaml
+  - configmaps/grafana-configmap.yaml
+
+  # Ingress
+  - ingress/ingress.yaml
+
+images:
+  - name: riot-frontend
+    newTag: local
+  - name: riot-backend-core
+    newTag: local
+  - name: riot-message-processing-unit
+    newTag: local
+  - name: riot-mqtt-preprocessor
+    newTag: local
+  - name: riot-time-series-store
+    newTag: local

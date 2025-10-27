@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: riot-frontend
+  namespace: riot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: riot-frontend
+  template:
+    metadata:
+      labels:
+        app: riot-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: riot-frontend:local
+          ports:
+            - containerPort: 80
+          env:
+            - name: REACT_APP_GRAPHQL_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: GRAPHQL_ENDPOINT
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5

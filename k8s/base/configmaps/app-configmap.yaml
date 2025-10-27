@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: riot
+data:
+  MQTT_BROKER_URL: mqtt://mosquitto:1883
+  MQTT_TOPIC: topic
+  MQTT_ADDRESS: mosquitto
+  BACKEND_CORE_URL: http://riot-backend-core:9090
+  GRAPHQL_ENDPOINT: /api/query
+  ALLOWED_ORIGINS: http://localhost:8080
+  INFLUXDB_URL: http://influxdb:8086

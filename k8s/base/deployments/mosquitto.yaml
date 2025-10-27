@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto
+  namespace: riot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mosquitto
+  template:
+    metadata:
+      labels:
+        app: mosquitto
+    spec:
+      containers:
+        - name: mosquitto
+          image: eclipse-mosquitto:latest
+          ports:
+            - containerPort: 1883
+              name: mqtt
+          volumeMounts:
+            - name: config
+              mountPath: /mosquitto/config
+            - name: data
+              mountPath: /mosquitto/data
+            - name: log
+              mountPath: /mosquitto/log
+      volumes:
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: mosquitto-config
+                  items:
+                    - key: mosquitto.conf
+                      path: mosquitto.conf
+              - secret:
+                  name: mosquitto-password
+                  items:
+                    - key: password.txt
+                      path: password.txt
+        - name: data
+          persistentVolumeClaim:
+            claimName: mosquitto-data
+        - name: log
+          persistentVolumeClaim:
+            claimName: mosquitto-log

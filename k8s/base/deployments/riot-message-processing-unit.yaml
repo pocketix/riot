@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: riot-message-processing-unit
+  namespace: riot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: riot-message-processing-unit
+  template:
+    metadata:
+      labels:
+        app: riot-message-processing-unit
+    spec:
+      containers:
+        - name: riot-message-processing-unit
+          image: riot-message-processing-unit:local
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: BACKEND_CORE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: BACKEND_CORE_URL
+            - name: RABBITMQ_URL
+              value: amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rabbitmq:5672/
+            - name: RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: RABBITMQ_USER
+            - name: RABBITMQ_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: RABBITMQ_PASSWORD
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

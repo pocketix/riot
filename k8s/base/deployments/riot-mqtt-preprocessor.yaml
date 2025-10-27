@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: riot-mqtt-preprocessor
+  namespace: riot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: riot-mqtt-preprocessor
+  template:
+    metadata:
+      labels:
+        app: riot-mqtt-preprocessor
+    spec:
+      containers:
+        - name: riot-mqtt-preprocessor
+          image: riot-mqtt-preprocessor:local
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MQTT_BROKER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: MQTT_BROKER_URL
+            - name: MQTT_BROKER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MQTT_USER
+            - name: MQTT_BROKER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MQTT_PASSWORD
+            - name: MQTT_TOPIC
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: MQTT_TOPIC
+            - name: BACKEND_CORE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: BACKEND_CORE_URL
+            - name: RABBITMQ_URL
+              value: amqp://$(RABBITMQ_USER):$(RABBITMQ_PASS)@rabbitmq:5672/
+            - name: RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: RABBITMQ_USER
+            - name: RABBITMQ_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: RABBITMQ_PASSWORD
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
