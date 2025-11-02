@@ -41,7 +41,7 @@ From https://jmeter.apache.org/download_jmeter.cgi and locate in the Binaries se
     /apache-jmeter-5.6.3/bin/jmeter.bat
 
 
-### Run in GUI mode
+## Run in GUI mode
 ##### It is advised NOT to run tests from the GUI, as it can lead to performance issues.
 Open the `/apache-jmeter-5.6.3/bin` folder.
 And run:
@@ -51,11 +51,11 @@ And run:
 ##### Windows 
     jmeter.bat
 
-### Test scenarios
+## Test scenarios
 You can prepare test scenarios either in the JMeter GUI or by editing the `.jmx` file in a text editor.
 An example test can be found at: `frontend/frontend_tests/ApacheJmeter_tests/example.jmx`
 
-### JMeter help
+## JMeter help
 Run `jmeter -?`
 
 ## Run JMeter with Docker (no local install)
@@ -82,7 +82,7 @@ Notes:
 
 
 
-### Running the test
+## Running the test
 ##### It is advised to run tests from the command line.
 To run the test located at `ApacheJmeter_tests/example.jmx`:
 
