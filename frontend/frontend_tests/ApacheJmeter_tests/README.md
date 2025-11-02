@@ -1,52 +1,50 @@
-# Test definitions for ApacheJmeter tests 
-
-Definition of tests scenarios for Apache Jmeter test framework
-
-### Requirements:   
+# Apache-Jmeter tests for RIOT app
+---
+## Requirements:   
     Java 8+
-    ApacheJMeter installed
+    Apache JMeter installed
 
 
-### Installation of Jmeter
-#### Verify that you have install Java version 8 or above on your system
+## Installation of JMeter
+#### Verify that you have Java version 8 or above installed on your system
     java -version
 
-#### Install on linux 
+#### Install on Linux 
 
 ##### 1. Download source file
 
-###### For Jmeter version 5.6.3
+###### For JMeter version 5.6.3
 
-    $ wget https://downloads.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz
+    wget https://downloads.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz
 
 ##### or
 
-Download from https://jmeter.apache.org/download_jmeter.cgi and locate in Binaries portion your desired version
+Download from https://jmeter.apache.org/download_jmeter.cgi and locate in the Binaries section your desired version
 
-##### 2. Unpack downloaded 
+##### 2. Unpack the downloaded archive
 
     tar -xvf apache-jmeter-5.6.3.tgz
 
 ##### or from GUI
-##### 3. move unpacked folder to your desired folder
-##### locate binary executable file in 
+##### 3. Move the unpacked folder to your desired location
+##### Locate the executable in 
     apache-jmeter-5.6.3/bin/jmeter
 
 
 #### Install on Windows
-##### 1. Download binaries file 
+##### 1. Download binary file 
 ##### Download 
-From https://jmeter.apache.org/download_jmeter.cgi and locate in Binaries portion your desired version
+From https://jmeter.apache.org/download_jmeter.cgi and locate in the Binaries section your desired version
 
 ##### 2. Unpack 
-##### 3. Locate you execution .exe file
+##### 3. Locate your executable .bat file
     /apache-jmeter-5.6.3/bin/jmeter.bat
 
 
 ### Run in GUI mode
-##### It is advised NOT to run tests itself from GUI mode, because it can lead to performance issues!!!
-Open your `` /apache-jmeter-5.6.3/bin `` folder.
-And run: 
+##### It is advised NOT to run tests from the GUI, as it can lead to performance issues.
+Open the `/apache-jmeter-5.6.3/bin` folder.
+And run:
 
 ##### Linux
     ./jmeter
@@ -54,11 +52,11 @@ And run:
     jmeter.bat
 
 ### Test scenarios
-You can prepare test scenarios either in GUI mode of Jmeter application or you can edit .jmx file in your text editor.
-Example test can be found in the: `` frontend/frontend_tests/ApacheJmeter_tests/example.jmx ``
+You can prepare test scenarios either in the JMeter GUI or by editing the `.jmx` file in a text editor.
+An example test can be found at: `frontend/frontend_tests/ApacheJmeter_tests/example.jmx`
 
-### Jmeter help
-Run `` jmeter -? ``
+### JMeter help
+Run `jmeter -?`
 
 ## Run JMeter with Docker (no local install)
 
@@ -85,15 +83,19 @@ Notes:
 
 
 ### Running the test
-##### It is advised to run tests itself from command line!!
-To run test located in `` ApacheJmeter_tests/example.jmx ``:
-    `` jmeter -n -t ApacheJmeter_tests/example.jmx -l result.csv -e -o report ``
-Where
-``-n`` specifies run in non-Gui mode
-``-t`` specifies location of test scenario
-``-l`` specifies name of raw data output
-``-e`` tells Jmeter to generate HTML report
-``-o`` specifies folder where HTML report should be generated
+##### It is advised to run tests from the command line.
+To run the test located at `ApacheJmeter_tests/example.jmx`:
+
+```bash
+jmeter -n -t ApacheJmeter_tests/example.jmx -l result.csv -e -o report
+```
+
+Where:
+- `-n` specifies run in non-GUI mode
+- `-t` specifies the location of the test scenario
+- `-l` specifies the name of the raw data output file
+- `-e` tells JMeter to generate an HTML report
+- `-o` specifies the directory where the HTML report should be generated (must be empty or non-existent)
 
 ## Quick start (CLI, recommended)
 
@@ -173,6 +175,6 @@ Reference in your requests with `${username}` and `${password}`.
 
 ---
 
-### Now follows text summary of test scenarios in ``frontend/frontend_tests/ApacheJmeter_tests`` 
+### Summary of test scenarios in `frontend/frontend_tests/ApacheJmeter_tests` 
 #### 1. example.jmx
 Basic test to access localhost:8080
