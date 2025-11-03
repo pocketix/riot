@@ -12,15 +12,14 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw-custom.js',
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+      },
       workbox: {
-        maximumFileSizeToCacheInBytes: 6000000,
-        runtimeCaching: [
-          {
-            // Always go to network for /api/auth/**
-            urlPattern: ({ url }) => url.pathname.startsWith('/api/auth'),
-            handler: 'NetworkOnly',
-          }
-        ],
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024
       },
       injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'robots.txt'],
