@@ -8,6 +8,7 @@ import DarkModeToggle from '@/ui/DarkModeToggle'
 import LanguageSwitcher from '@/ui/LanguageSwitcher'
 import { FaArrowRight } from 'react-icons/fa'
 import UserAccountDetail from '@/features/settings/PersonalInfo/UserAccountDetail'
+import {BACKEND_CORE_URL} from "@/utils/backendCoreUrl.ts";
 
 const PageWrapper = styled.div`
   display: flex;
@@ -63,14 +64,12 @@ const SettingsSection = styled.div`
 `
 
 export default function Settings() {
-  const backendCoreURL = process.env.BACKEND_CORE_URL || 'https://tyrion.fit.vutbr.cz/riot/api'
-
   const { t } = useTranslation()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
     try {
-      await fetch(`${backendCoreURL}/auth/logout`, {
+      await fetch(`${BACKEND_CORE_URL}/auth/logout`, {
         method: 'GET',
         credentials: 'include'
       })

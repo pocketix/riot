@@ -2,8 +2,10 @@ import { WebSocketLink } from '@apollo/client/link/ws'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { ApolloClient, InMemoryCache, HttpLink, split, NormalizedCacheObject, from, ApolloLink } from '@apollo/client'
 import { ErrorResponse, onError } from '@apollo/client/link/error'
+import {BACKEND_CORE_URL} from "@/utils/backendCoreUrl.ts";
 
-const backendCoreURL = process.env.BACKEND_CORE_URL || 'https://tyrion.fit.vutbr.cz/riot/api'
+const backendCoreURL = BACKEND_CORE_URL;
+
 const webSocketBackendCoreURL = (() => {
   const parsedBackendCoreURL = new URL(backendCoreURL)
   parsedBackendCoreURL.protocol = parsedBackendCoreURL.protocol.endsWith('s:') ? 'wss:' : 'ws:'

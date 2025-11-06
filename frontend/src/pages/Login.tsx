@@ -4,6 +4,7 @@ import Heading from '../ui/Heading'
 // import LoginForm from '@/features/authentication/LoginForm'
 import { breakpoints } from '@/styles/Breakpoints'
 import { useSearchParams } from 'react-router-dom'
+import {BACKEND_CORE_URL} from "@/utils/backendCoreUrl.ts";
 
 const LoginLayout = styled.main`
   min-height: 100vh;
@@ -18,14 +19,13 @@ const LoginLayout = styled.main`
     gap: 1.8rem;
   }
 `
-const backendCoreURL = import.meta.env.VITE_BACKEND_CORE_URL || 'https://tyrion.fit.vutbr.cz/riot/api'
 
 function Login() {
   const [searchParams] = useSearchParams()
   const redirect = searchParams.get('redirect') || `${location.origin}`
 
   const handleOAuthLogin = () => {
-    window.location.href = `${backendCoreURL}/auth/login?redirect=${encodeURIComponent(redirect)}`
+    window.location.href = `${BACKEND_CORE_URL}/auth/login?redirect=${encodeURIComponent(redirect)}`
   }
 
   return (
