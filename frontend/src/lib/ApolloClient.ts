@@ -1,9 +1,11 @@
 import { WebSocketLink } from '@apollo/client/link/ws'
 import { getMainDefinition } from '@apollo/client/utilities'
-import { ApolloClient, InMemoryCache, HttpLink, split, NormalizedCacheObject, from } from '@apollo/client'
+import { ApolloClient, InMemoryCache, HttpLink, split, NormalizedCacheObject, from, ApolloLink } from '@apollo/client'
 import { ErrorResponse, onError } from '@apollo/client/link/error'
+import {BACKEND_CORE_URL} from "@/utils/backendCoreUrl.ts";
 
-const backendCoreURL = process.env.BACKEND_CORE_URL || 'https://tyrion.fit.vutbr.cz/riot/api'
+const backendCoreURL = BACKEND_CORE_URL;
+
 const webSocketBackendCoreURL = (() => {
   const parsedBackendCoreURL = new URL(backendCoreURL)
   parsedBackendCoreURL.protocol = parsedBackendCoreURL.protocol.endsWith('s:') ? 'wss:' : 'ws:'
@@ -11,6 +13,17 @@ const webSocketBackendCoreURL = (() => {
 })()
 
 let userRedirectedAlready: boolean = window.location.href.includes("redirect");
+
+const noCacheLink = new ApolloLink((operation, forward) => {
+  const uri = operation.getContext().uri || backendCoreURL
+  if (uri.includes('/auth')) {
+    operation.setContext(({ headers = {} }) => ({
+      fetchOptions: { cache: 'no-store' },
+      headers: { ...headers, 'Cache-Control': 'no-store' },
+    }))
+  }
+  return forward(operation)
+});
 
 const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   link: split(
@@ -27,7 +40,8 @@ const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
           window.location.href = `/login?redirect=${encodeURIComponent(window.location.href)}`
         }
       }),
-      new HttpLink({ uri: backendCoreURL, credentials: 'include' })
+      noCacheLink,
+      new HttpLink({ uri: backendCoreURL, credentials: 'include' }),
     ])
   ),
   cache: new InMemoryCache(),
@@ -39,6 +53,6 @@ const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
       fetchPolicy: 'network-only'
     }
   }
-})
+});
 
 export default client

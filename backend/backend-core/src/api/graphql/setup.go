@@ -28,6 +28,15 @@ var (
 	SDParameterSnapshotUpdateSubscriptionChannel            = make(chan graphQLModel.SDParameterSnapshot)
 )
 
+func NoCacheMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, private")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func SetupGraphQLServer() {
 	allowedOrigins := sharedUtils.NewSetFromSlice(strings.Split(sharedUtils.GetEnvironmentVariableValue("ALLOWED_ORIGINS").GetPayloadOrDefault("http://localhost:8080,http://localhost:1234"), ","))
 	graphQLServer := handler.New(gsc.NewExecutableSchema(gsc.Config{Resolvers: new(Resolver)}))
@@ -94,8 +103,12 @@ func SetupGraphQLServer() {
 		Debug:            false,
 	}).Handler)
 	router.Handle("/", auth.JWTAuthenticationMiddleware(graphQLServer))
-	router.Get("/auth/login", auth.LoginHandler)
-	router.Get("/auth/logout", auth.LogoutHandler)
-	router.Get("/auth/callback", auth.CallbackHandler)
+	router.Route("/auth", func(r chi.Router) {
+		r.Use(NoCacheMiddleware)
+
+		r.Get("/login", auth.LoginHandler)
+		r.Get("/logout", auth.LogoutHandler)
+		r.Get("/callback", auth.CallbackHandler)
+	})
 	log.Fatal(http.ListenAndServe(":9090", router))
 }
