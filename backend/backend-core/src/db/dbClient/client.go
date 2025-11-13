@@ -3,6 +3,7 @@ package dbClient
 import (
 	"errors"
 	"fmt"
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/misc"
 	"log"
 	"strings"
 	"sync"
@@ -27,6 +28,7 @@ var (
 
 type RelationalDatabaseClient interface {
 	setup()
+	PerformOnStartupOperations() error
 	PersistKPIDefinition(kpiDefinition sharedModel.KPIDefinition) sharedUtils.Result[uint32]
 	LoadKPIDefinition(id uint32) sharedUtils.Result[sharedModel.KPIDefinition]
 	LoadKPIDefinitions() sharedUtils.Result[[]sharedModel.KPIDefinition]
@@ -70,6 +72,15 @@ type RelationalDatabaseClient interface {
 	LoadVPLProgram(id uint32) sharedUtils.Result[dllModel.VPLProgram]
 	LoadVPLPrograms() sharedUtils.Result[[]dllModel.VPLProgram]
 	DeleteVPLProgram(id uint32) error
+	PersistVPLProcedure(vplProcedure dllModel.VPLProcedure) sharedUtils.Result[dllModel.VPLProcedure]
+	LoadVPLProcedure(id uint32) sharedUtils.Result[dllModel.VPLProcedure]
+	LoadVPLProcedures() sharedUtils.Result[[]dllModel.VPLProcedure]
+	DeleteVPLProcedure(id uint32) error
+	LinkProgramToProcedure(programID uint32, procedureID uint32) error
+	UnlinkProgramFromProcedure(programID uint32, procedureID uint32) error
+	GetProceduresForProgram(programID uint32) sharedUtils.Result[[]dllModel.VPLProcedure]
+	GetProgramsForProcedure(procedureID uint32) sharedUtils.Result[[]dllModel.VPLProgram]
+	GetProgramsForSDParameterSnapshot(instanceID uint32, parameterID uint32) sharedUtils.Result[[]dllModel.VPLProgram]
 }
 
 var ErrOperationWouldLeadToForeignKeyIntegrityBreach = errors.New("operation would lead to foreign key integrity breach")
@@ -223,7 +234,120 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.UserConfigEntity),
 		new(dbModel.VPLProgramsEntity),
 		new(dbModel.SDParameterSnapshotEntity),
+		new(dbModel.VPLProgramsEntity),
+		new(dbModel.VPLProgramSDSnapshotLinkEntity),
+		new(dbModel.VPLProceduresEntity),
+		new(dbModel.VPLProgramProcedureLinkEntity),
+		new(dbModel.GraphQLOperationEntity),
+		new(dbModel.RoleEntity),
+		new(dbModel.RolesPermissionsMappingEntity),
+		new(dbModel.PermissionEntity),
+		new(dbModel.OperationTypeAccessPermissionEntity),
+		new(dbModel.SingleOperationPermissionEntity),
 	), "[RDB client (GORM)]: auto-migration failed")
+}
+
+func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
+	// Begin by creating a snapshot of the GraphQL API based on the 'schema.graphqls' file
+	createGraphQLAPISnapshotResult := misc.CreateGraphQLAPISnapshot()
+	if createGraphQLAPISnapshotResult.IsFailure() {
+		return createGraphQLAPISnapshotResult.GetError()
+	}
+	graphQLAPISnapshot := createGraphQLAPISnapshotResult.GetPayload()
+
+	// Determine which operations are missing and which are redundant
+	setOfIdentifiersOfCurrentlyDefinedGraphQLOperations := sharedUtils.NewSetFromSlice(sharedUtils.Map(graphQLAPISnapshot, func(graphQLOperationSnapshot misc.GraphQLOperation) string {
+		return graphQLOperationSnapshot.Identifier
+	}))
+	graphQLOperationEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.GraphQLOperationEntity](r.db)
+	if graphQLOperationEntitiesLoadResult.IsFailure() {
+		return graphQLOperationEntitiesLoadResult.GetError()
+	}
+	setOfIdentifiersOfGraphQLOperationsPersistedInTheDatabase := sharedUtils.NewSetFromSlice(sharedUtils.Map(graphQLOperationEntitiesLoadResult.GetPayload(), func(graphQLOperationEntity dbModel.GraphQLOperationEntity) string {
+		return graphQLOperationEntity.Identifier
+	}))
+	toDelete := (setOfIdentifiersOfGraphQLOperationsPersistedInTheDatabase.GenerateDifferenceWith(setOfIdentifiersOfCurrentlyDefinedGraphQLOperations)).ToSlice()
+	toAdd := setOfIdentifiersOfCurrentlyDefinedGraphQLOperations.GenerateDifferenceWith(setOfIdentifiersOfGraphQLOperationsPersistedInTheDatabase)
+
+	// 1. Delete redundant GraphQL operation entries
+	// 2. Insert missing GraphQL operation entries
+	// 3. For each newly added GraphQL operation entry: add two single operation permission entries --> both effects
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := dbUtil.DeleteEntitiesBasedOnWhereClauses[dbModel.GraphQLOperationEntity](r.db, dbUtil.Where("identifier IN (?)", toDelete)); err != nil {
+			return err
+		}
+		for _, graphQLOperationSnapshot := range graphQLAPISnapshot {
+			identifier := graphQLOperationSnapshot.Identifier
+			if !toAdd.Contains(identifier) {
+				continue
+			}
+
+			graphQLOperationEntity := &dbModel.GraphQLOperationEntity{
+				Identifier:    identifier,
+				OperationType: string(graphQLOperationSnapshot.OpType),
+			}
+			if err := dbUtil.PersistEntityIntoDB[dbModel.GraphQLOperationEntity](tx, graphQLOperationEntity); err != nil {
+				return err
+			}
+			graphQLOperationID := graphQLOperationEntity.ID
+
+			for _, effect := range sharedUtils.SliceOf("allow", "deny") {
+				singleOperationPermissionEntity := &dbModel.PermissionEntity{
+					Label: fmt.Sprintf("GraphQL operation: %s | Effect: %s", identifier, effect),
+					SingleOperationPermission: &dbModel.SingleOperationPermissionEntity{
+						GraphQLOperationID: graphQLOperationID,
+						Effect:             effect,
+					},
+				}
+				if err := dbUtil.PersistEntityIntoDB[dbModel.PermissionEntity](tx, singleOperationPermissionEntity); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// The 'migration' will proceed only if the 'Role' table is empty (= has no rows)
+	roleTableEmptinessCheckResult := dbUtil.IsTableEmpty[dbModel.RoleEntity](r.db)
+	if roleTableEmptinessCheckResult.IsFailure() {
+		return roleTableEmptinessCheckResult.GetError()
+	}
+	if isRoleTableEmpty := roleTableEmptinessCheckResult.GetPayload(); !isRoleTableEmpty {
+		log.Println("Role table is NOT empty: no more on-startup operations...")
+		return nil
+	}
+
+	// Create a 'Root-Administrator' role along with the operation-type-access permission entries
+	// Anyone with the aforementioned role will be able to access all GraphQL operations (unless explicitly denied)
+	rootAdministratorRoleEntity := &dbModel.RoleEntity{
+		Label: "Root-Administrator",
+		Permissions: []dbModel.PermissionEntity{
+			{
+				Label: "Permission to access the GraphQL operation type: query.",
+				OperationTypeAccessPermission: &dbModel.OperationTypeAccessPermissionEntity{
+					OperationType: "query",
+				},
+			},
+			{
+				Label: "Permission to access the GraphQL operation type: mutation.",
+				OperationTypeAccessPermission: &dbModel.OperationTypeAccessPermissionEntity{
+					OperationType: "mutation",
+				},
+			},
+			{
+				Label: "Permission to access the GraphQL operation type: subscription.",
+				OperationTypeAccessPermission: &dbModel.OperationTypeAccessPermissionEntity{
+					OperationType: "subscription",
+				},
+			},
+		},
+	}
+	return dbUtil.PersistEntityIntoDB[dbModel.RoleEntity](r.db, rootAdministratorRoleEntity)
+
+	// TODO: Give the 'Root-Administrator' role to a selected user (likely provided by .env)
 }
 
 func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition sharedModel.KPIDefinition) sharedUtils.Result[uint32] {
@@ -519,6 +643,7 @@ func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) sharedUtils.Res
 	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](
 		r.db,
 		dbUtil.Preload("SDType"),
+		dbUtil.Preload("SDType.Parameters"),
 		dbUtil.Preload("SDParameterSnapshot"),
 		dbUtil.Where("id = ?", id),
 	)
@@ -531,7 +656,13 @@ func (r *relationalDatabaseClientImpl) LoadSDInstance(id uint32) sharedUtils.Res
 func (r *relationalDatabaseClientImpl) LoadSDInstanceBasedOnUID(uid string) sharedUtils.Result[sharedUtils.Optional[dllModel.SDInstance]] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](r.db, dbUtil.Preload("SDType"), dbUtil.Where("uid = ?", uid))
+	sdInstanceEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.SDInstanceEntity](r.db,
+		dbUtil.Preload("SDType"),
+		dbUtil.Preload("SDType.Parameters"),
+		dbUtil.Preload("SDType.Commands"),
+		dbUtil.Preload("SDParameterSnapshot"),
+		dbUtil.Where("uid = ?", uid),
+	)
 	if sdInstanceEntityLoadResult.IsFailure() {
 		err := sdInstanceEntityLoadResult.GetError()
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -778,7 +909,7 @@ func (r *relationalDatabaseClientImpl) LoadVPLProgram(id uint32) sharedUtils.Res
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	vplProgramEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.VPLProgramsEntity](r.db, dbUtil.Where("id = ?", id))
+	vplProgramEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.VPLProgramsEntity](r.db, dbUtil.Where("id = ?", id), dbUtil.Preload("SDParameterSnapshots"))
 
 	if vplProgramEntityLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[dllModel.VPLProgram](vplProgramEntityLoadResult.GetError())
@@ -791,7 +922,7 @@ func (r *relationalDatabaseClientImpl) LoadVPLPrograms() sharedUtils.Result[[]dl
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	vplProgramEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.VPLProgramsEntity](r.db)
+	vplProgramEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.VPLProgramsEntity](r.db, dbUtil.Preload("SDParameterSnapshots"))
 
 	if vplProgramEntitiesLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](vplProgramEntitiesLoadResult.GetError())
@@ -805,4 +936,202 @@ func (r *relationalDatabaseClientImpl) DeleteVPLProgram(id uint32) error {
 	defer r.mu.Unlock()
 
 	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.VPLProgramsEntity](r.db, id)
+}
+
+func (r *relationalDatabaseClientImpl) PersistVPLProcedure(vplProcedure dllModel.VPLProcedure) sharedUtils.Result[dllModel.VPLProcedure] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	vplProcedureEntity := dll2db.ToDBModelEntityVPLProcedure(vplProcedure)
+
+	if err := dbUtil.PersistEntityIntoDB(r.db, &vplProcedureEntity); err != nil {
+		return sharedUtils.NewFailureResult[dllModel.VPLProcedure](err)
+	}
+
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProcedure(vplProcedureEntity))
+}
+
+func (r *relationalDatabaseClientImpl) LoadVPLProcedure(id uint32) sharedUtils.Result[dllModel.VPLProcedure] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	vplProcedureEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.VPLProceduresEntity](r.db, dbUtil.Where("id = ?", id))
+
+	if vplProcedureEntityLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[dllModel.VPLProcedure](vplProcedureEntityLoadResult.GetError())
+	}
+
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelVplProcedure(vplProcedureEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) LoadVPLProcedures() sharedUtils.Result[[]dllModel.VPLProcedure] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	vplProcedureEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.VPLProceduresEntity](r.db)
+
+	if vplProcedureEntitiesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProcedure](vplProcedureEntitiesLoadResult.GetError())
+	}
+
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(vplProcedureEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelVplProcedure))
+}
+
+func (r *relationalDatabaseClientImpl) DeleteVPLProcedure(id uint32) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.VPLProceduresEntity](r.db, id)
+}
+
+// LinkProgramToProcedure creates a link between a program and a procedure
+func (r *relationalDatabaseClientImpl) LinkProgramToProcedure(programID uint32, procedureID uint32) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Check if program exists
+	var program dbModel.VPLProgramsEntity
+	if err := r.db.First(&program, programID).Error; err != nil {
+		return fmt.Errorf("program with ID %d not found: %w", programID, err)
+	}
+
+	// Check if procedure exists
+	var procedure dbModel.VPLProceduresEntity
+	if err := r.db.First(&procedure, procedureID).Error; err != nil {
+		return fmt.Errorf("procedure with ID %d not found: %w", procedureID, err)
+	}
+
+	// Check if link already exists
+	var existingLink dbModel.VPLProgramProcedureLinkEntity
+	result := r.db.Where("program_id = ? AND procedure_id = ?", programID, procedureID).First(&existingLink)
+	if result.Error == nil {
+		// Link already exists, nothing to do
+		return nil
+	} else if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		// Some other error occurred
+		return result.Error
+	}
+
+	// Create the link
+	link := dbModel.VPLProgramProcedureLinkEntity{
+		ProgramID:   programID,
+		ProcedureID: procedureID,
+	}
+
+	if err := dbUtil.PersistEntityIntoDB(r.db, &link); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UnlinkProgramFromProcedure removes a link between a program and a procedure
+func (r *relationalDatabaseClientImpl) UnlinkProgramFromProcedure(programID uint32, procedureID uint32) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Delete the link
+	result := r.db.Where("program_id = ? AND procedure_id = ?", programID, procedureID).Delete(&dbModel.VPLProgramProcedureLinkEntity{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
+// GetProceduresForProgram returns all procedures linked to a program
+func (r *relationalDatabaseClientImpl) GetProceduresForProgram(programID uint32) sharedUtils.Result[[]dllModel.VPLProcedure] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Get all procedure IDs linked to the program
+	var links []dbModel.VPLProgramProcedureLinkEntity
+	if err := r.db.Where("program_id = ?", programID).Find(&links).Error; err != nil {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProcedure](err)
+	}
+
+	// If no links found, return an empty slice
+	if len(links) == 0 {
+		return sharedUtils.NewSuccessResult([]dllModel.VPLProcedure{})
+	}
+
+	// Extract procedure IDs
+	procedureIDs := make([]uint32, len(links))
+	for i, link := range links {
+		procedureIDs[i] = link.ProcedureID
+	}
+
+	// Get all procedures with the extracted IDs
+	var procedures []dbModel.VPLProceduresEntity
+	if err := r.db.Where("id IN ?", procedureIDs).Find(&procedures).Error; err != nil {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProcedure](err)
+	}
+
+	// Convert to DLL model
+	result := make([]dllModel.VPLProcedure, len(procedures))
+	for i, procedure := range procedures {
+		result[i] = db2dll.ToDLLModelVplProcedure(procedure)
+	}
+
+	return sharedUtils.NewSuccessResult(result)
+}
+
+// GetProgramsForProcedure returns all programs linked to a procedure
+func (r *relationalDatabaseClientImpl) GetProgramsForProcedure(procedureID uint32) sharedUtils.Result[[]dllModel.VPLProgram] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Get all program IDs linked to the procedure
+	var links []dbModel.VPLProgramProcedureLinkEntity
+	if err := r.db.Where("procedure_id = ?", procedureID).Find(&links).Error; err != nil {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](err)
+	}
+
+	// If no links found, return an empty slice
+	if len(links) == 0 {
+		return sharedUtils.NewSuccessResult([]dllModel.VPLProgram{})
+	}
+
+	// Extract program IDs
+	programIDs := make([]uint32, len(links))
+	for i, link := range links {
+		programIDs[i] = link.ProgramID
+	}
+
+	// Get all programs with the extracted IDs
+	var programs []dbModel.VPLProgramsEntity
+	if err := r.db.Where("id IN ?", programIDs).Find(&programs).Error; err != nil {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](err)
+	}
+
+	// Convert to DLL model
+	result := make([]dllModel.VPLProgram, len(programs))
+	for i, program := range programs {
+		result[i] = db2dll.ToDLLModelVplProgram(program)
+	}
+
+	return sharedUtils.NewSuccessResult(result)
+}
+
+func (r *relationalDatabaseClientImpl) GetProgramsForSDParameterSnapshot(instanceID uint32, parameterID uint32) sharedUtils.Result[[]dllModel.VPLProgram] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	var links []dbModel.VPLProgramSDSnapshotLinkEntity
+	err := r.db.Where("sd_instance_id = ? AND sd_parameter_id = ?", instanceID, parameterID).Find(&links).Error
+	if err != nil {
+		return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](err)
+	}
+
+	programs := make([]dllModel.VPLProgram, 0, len(links))
+	for _, link := range links {
+		var programEntity dbModel.VPLProgramsEntity
+		err := r.db.First(&programEntity, link.ProgramID).Error
+		if err != nil {
+			return sharedUtils.NewFailureResult[[]dllModel.VPLProgram](err)
+		}
+		programs = append(programs, db2dll.ToDLLModelVplProgram(programEntity))
+	}
+
+	return sharedUtils.NewSuccessResult(programs)
 }

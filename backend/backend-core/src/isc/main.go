@@ -3,6 +3,9 @@ package isc
 import (
 	"errors"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
@@ -11,9 +14,9 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
-	"log"
-	"time"
 )
+
+var ExecuteVPLProgramFunc func(dllModel.VPLProgram) sharedUtils.Result[graphQLModel.VPLProgramExecutionResult]
 
 func ProcessIncomingMessageProcessingUnitConnectionNotifications() {
 	rabbitMQClient := rabbitmq.NewClient()
@@ -89,7 +92,9 @@ func ProcessIncomingSDParameterSnapshotUpdates(parameterSnapshotUpdateSubscripti
 
 		SDInstanceID := SDInstance.GetPayload().GetPayload().ID.GetPayload()
 
+		log.Printf("Info message: %+v\n", parameterSnapshotInfoMessage)
 		for _, snapshot := range parameterSnapshotInfoMessage.SDParameterSnapshots {
+			log.Printf("Processing snapshot: %+v\n", snapshot)
 			parameter := sharedUtils.FindFirst(SDType.GetPayload().Parameters, func(parameter dllModel.SDParameter) bool {
 				return parameter.Denotation == snapshot.SDParameter
 			})
@@ -107,8 +112,10 @@ func ProcessIncomingSDParameterSnapshotUpdates(parameterSnapshotUpdateSubscripti
 				UpdatedAt:   time.Unix(int64(parameterSnapshotInfoMessage.UpdatedAt), 0),
 			}
 
+			log.Printf("Persisting SD parameter snapshot: %+v\n", dllSnapshot)
 			snapshotTuplePersistResult := dbClient.GetRelationalDatabaseClientInstance().PersistSDParameterSnapshot(dllSnapshot)
 			if snapshotTuplePersistResult.IsSuccess() {
+				triggerVPLProgramsForSDParameterSnapshotUpdate(SDInstanceID, parameter.GetPayload().ID.GetPayload())
 				select {
 				case *parameterSnapshotUpdateSubscriptionChannel <- dll2gql.ToGraphQLModelSdParameterSnapshot(dllSnapshot):
 				default:
@@ -119,6 +126,27 @@ func ProcessIncomingSDParameterSnapshotUpdates(parameterSnapshotUpdateSubscripti
 		}
 		return nil
 	}, rabbitMQClient)
+}
+
+func triggerVPLProgramsForSDParameterSnapshotUpdate(SDInstanceID uint32, parameterID uint32) {
+	vplPrograms := dbClient.GetRelationalDatabaseClientInstance().GetProgramsForSDParameterSnapshot(SDInstanceID, parameterID)
+	if vplPrograms.IsSuccess() {
+		log.Printf("Found %d programs to trigger for SD parameter snapshot update\n", len(vplPrograms.GetPayload()))
+	} else {
+		log.Printf("Error fetching programs to trigger for SD parameter snapshot update: %v\n", vplPrograms.GetError())
+		return
+	}
+
+	for _, program := range vplPrograms.GetPayload() {
+		if ExecuteVPLProgramFunc != nil {
+			result := ExecuteVPLProgramFunc(program)
+			if result.IsSuccess() {
+				log.Printf("Successfully executed VPL program %d\n", program.ID)
+			} else {
+				log.Printf("Error executing VPL program %d: %v\n", program.ID, result.GetError())
+			}
+		}
+	}
 }
 
 func EnqueueMessageRepresentingCurrentSDTypeConfiguration(rabbitMQClient rabbitmq.Client) {

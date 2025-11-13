@@ -108,7 +108,7 @@ type SDParameterSnapshotEntity struct {
 	Number        *float64                         `gorm:"column:number"`
 	Boolean       *bool                            `gorm:"column:boolean"`
 	UpdatedAt     time.Time                        `gorm:"column:updated_at;autoUpdateTime"`
-	VPLPrograms   []VPLProgramSDSnapshotLinkEntity `gorm:"many2many:link;joinForeignKey:SDInstanceID,SDParameterID;joinReferences:ProgramID"`
+	VPLPrograms   []VPLProgramSDSnapshotLinkEntity `gorm:"foreignKey:SDInstanceID,SDParameterID;references:SDInstanceID,SDParameterID;constraint:OnDelete:CASCADE"`
 }
 
 func (SDParameterSnapshotEntity) TableName() string {
@@ -223,11 +223,21 @@ type VPLProgramsEntity struct {
 	Data                 string                           `gorm:"column:data;type:jsonb;not null"`
 	LastRun              *time.Time                       `gorm:"column:last_run"`
 	Enabled              bool                             `gorm:"column:enabled;not null"`
-	SDParameterSnapshots []VPLProgramSDSnapshotLinkEntity `gorm:"many2many:link;joinForeignKey:ProgramID;joinReferences:SDInstanceID,SDParameterID"`
+	SDParameterSnapshots []VPLProgramSDSnapshotLinkEntity `gorm:"foreignKey:ProgramID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 func (VPLProgramsEntity) TableName() string {
 	return "vpl_programs"
+}
+
+type VPLProceduresEntity struct {
+	ID   uint32 `gorm:"column:id;primaryKey;not null"`
+	Name string `gorm:"column:name;not null;uniqueIndex"`
+	Data string `gorm:"column:data;type:jsonb;not null"`
+}
+
+func (VPLProceduresEntity) TableName() string {
+	return "vpl_procedures"
 }
 
 type VPLProgramSDSnapshotLinkEntity struct {
@@ -238,4 +248,72 @@ type VPLProgramSDSnapshotLinkEntity struct {
 
 func (VPLProgramSDSnapshotLinkEntity) TableName() string {
 	return "vpl_program_sd_snapshot_link"
+}
+
+type VPLProgramProcedureLinkEntity struct {
+	ProgramID   uint32 `gorm:"column:program_id;primaryKey;not null"`
+	ProcedureID uint32 `gorm:"column:procedure_id;primaryKey;not null"`
+}
+
+func (VPLProgramProcedureLinkEntity) TableName() string {
+	return "vpl_program_procedure_link"
+}
+
+/* ----- R.-B.-A.-C. ----- */
+
+type GraphQLOperationEntity struct {
+	ID            uint32 `gorm:"column:id;primaryKey;not null"`
+	Identifier    string `gorm:"column:identifier;not null;uniqueIndex"`
+	OperationType string `gorm:"column:operation_type;not null;check:operation_type IN ('query', 'mutation', 'subscription')"`
+}
+
+func (GraphQLOperationEntity) TableName() string {
+	return "graphql_operations"
+}
+
+type RoleEntity struct {
+	ID          uint32             `gorm:"column:id;primaryKey;not null"`
+	Label       string             `gorm:"column:label;not null;uniqueIndex"`
+	Permissions []PermissionEntity `gorm:"many2many:roles_permissions_mapping;joinForeignKey:RoleID;joinReferences:PermissionID"`
+}
+
+func (RoleEntity) TableName() string {
+	return "roles"
+}
+
+type RolesPermissionsMappingEntity struct {
+	RoleID       uint32 `gorm:"column:role_id;primaryKey;not null;index;constraint:OnDelete:CASCADE"`
+	PermissionID uint32 `gorm:"column:permission_id;primaryKey;not null;constraint:OnDelete:CASCADE"`
+}
+
+func (RolesPermissionsMappingEntity) TableName() string {
+	return "roles_permissions_mapping"
+}
+
+type PermissionEntity struct {
+	ID                            uint32                               `gorm:"column:id;primaryKey;not null"`
+	Label                         string                               `gorm:"column:label;not null;uniqueIndex"`
+	Roles                         []RoleEntity                         `gorm:"many2many:roles_permissions_mapping;joinForeignKey:PermissionID;joinReferences:RoleID"`
+	OperationTypeAccessPermission *OperationTypeAccessPermissionEntity `gorm:"foreignKey:PermissionID;constraint:OnDelete:CASCADE"`
+	SingleOperationPermission     *SingleOperationPermissionEntity     `gorm:"foreignKey:PermissionID;constraint:OnDelete:CASCADE"`
+}
+
+func (PermissionEntity) TableName() string {
+	return "permissions"
+}
+
+type OperationTypeAccessPermissionEntity struct {
+	PermissionID  uint32 `gorm:"column:permission_id;primaryKey;not null"`
+	OperationType string `gorm:"column:operation_type;not null;check:operation_type IN ('query', 'mutation', 'subscription')"`
+}
+
+func (OperationTypeAccessPermissionEntity) TableName() string {
+	return "operation_type_access_permissions"
+}
+
+type SingleOperationPermissionEntity struct {
+	PermissionID       uint32                 `gorm:"column:permission_id;primaryKey;not null"`
+	GraphQLOperationID uint32                 `gorm:"column:graphql_operation_id;primaryKey;not null;uniqueIndex:idx_op_effect,priority:1"`
+	GraphQLOperation   GraphQLOperationEntity `gorm:"foreignKey:GraphQLOperationID;references:ID;constraint:OnDelete:CASCADE"`
+	Effect             string                 `gorm:"column:effect;not null;check:effect IN ('allow', 'deny');uniqueIndex:idx_op_effect,priority:2"`
 }

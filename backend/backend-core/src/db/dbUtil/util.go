@@ -69,6 +69,14 @@ func DoesSuchEntityExist[T any](g *gorm.DB, whereClauses ...WhereClause) sharedU
 	return sharedUtils.NewSuccessResult[bool](entityCount > 0)
 }
 
+func IsTableEmpty[T any](g *gorm.DB) sharedUtils.Result[bool] {
+	recordCount := int64(0)
+	if err := g.Model(new(T)).Count(&recordCount).Error; err != nil {
+		return sharedUtils.NewFailureResult[bool](err)
+	}
+	return sharedUtils.NewSuccessResult[bool](recordCount == 0)
+}
+
 func DoIDsExist[T any](g *gorm.DB, ids []uint32) sharedUtils.Result[bool] {
 	idsPresentCount := int64(0)
 	if err := g.Model(new(T)).Where("id IN (?)", ids).Count(&idsPresentCount).Error; err != nil {
