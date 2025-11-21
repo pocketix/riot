@@ -5,8 +5,6 @@ metadata:
   namespace: riot
 spec:
   type: LoadBalancer
-  selector:
-    app: mosquitto
   ports:
     - name: mqtt
       port: 1883

@@ -1,7 +1,7 @@
 resources:
   - ../../base
 
-namespace: riot-dev
+namespace: riot-prod
 
 images:
   - name: riot-frontend

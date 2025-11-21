@@ -4,8 +4,6 @@ metadata:
   name: pgadmin-service
   namespace: riot
 spec:
-  selector:
-    app: pgadmin
   type: NodePort
   ports:
     - protocol: TCP

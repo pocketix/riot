@@ -8,8 +8,6 @@ metadata:
     prometheus.io/port: "9090"
 spec:
   type: NodePort
-  selector:
-    app: prometheus
   ports:
     - port: 9091
       targetPort: 9090

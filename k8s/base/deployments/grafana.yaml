@@ -4,9 +4,6 @@ metadata:
   name: grafana
   namespace: riot
 spec:
-  selector:
-    matchLabels:
-      app: grafana
   template:
     metadata:
       labels:
