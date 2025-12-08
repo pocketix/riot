@@ -59,6 +59,13 @@ func SetupGraphQLServer() {
 		if fieldContext == nil {
 			return nil, fmt.Errorf("couldn't obtain GraphQL field context")
 		}
+
+		objectTypeName := fieldContext.Object
+		if !(objectTypeName == "Query" || objectTypeName == "Mutation" || objectTypeName == "Subscription") {
+			log.Println("Nested field: skipping authorization")
+			return next(ctx)
+		}
+
 		astField := fieldContext.Field.Field
 		if astField == nil {
 			return nil, fmt.Errorf("couldn't obtain 'ast.Field' struct instance")
