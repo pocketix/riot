@@ -1,13 +1,17 @@
 package sharedUtils
 
 import (
-	"bytes"
-	"github.com/davecgh/go-spew/spew"
 	"log"
+	"testing"
+
+	"github.com/sanity-io/litter"
 )
 
 func Dump(a ...any) {
-	buffer := new(bytes.Buffer)
-	spew.Fdump(buffer, a)
-	log.Println(buffer.String())
+	log.Println(litter.Sdump(a...))
+}
+
+func TDump(t *testing.T, a ...any) {
+	t.Helper()
+	t.Log(litter.Sdump(a...))
 }

@@ -10,6 +10,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/go-cmp v0.7.0
 	github.com/gorilla/websocket v1.5.3
+	github.com/maypok86/otter v1.2.4
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/rs/cors v1.11.1
 	github.com/vektah/gqlparser/v2 v2.5.23
@@ -28,7 +29,6 @@ require (
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/uniuri v1.2.0 // indirect
 	github.com/dolthub/maphash v0.1.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -47,9 +47,9 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/maypok86/otter v1.2.4 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/sanity-io/litter v1.5.8 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/urfave/cli/v2 v2.27.6 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
