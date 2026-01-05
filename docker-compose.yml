@@ -24,6 +24,7 @@ services:
       # ALLOWED_ORIGINS: http://localhost:8080,http://localhost:1234 # Essentially a API client whitelist TODO: Configure this as needed...
       # SECURE_COOKIES: "" # Comment this out if you are using http instead of https
       # JWT_AUTHENTICATION_MIDDLEWARE_ENABLED: "" # Comment this out if you need unrestricted API access without authentication
+      # COOKIES_SAME_SITE: omit this to set default | lax for SameSiteLaxMode | strict for SameSiteStrictMode | none for SameSiteNoneMode
     depends_on:
       - rabbitmq
       - postgres

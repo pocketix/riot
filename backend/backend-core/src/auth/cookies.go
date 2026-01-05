@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -18,6 +19,8 @@ const (
 )
 
 var secureCookies = sharedUtils.GetFlagEnvironmentVariableValue("SECURE_COOKIES").GetPayloadOrDefault(false) // TODO: Ensure this variable evaluates to 'true' in production (requires HTTPS)
+var sameSiteString = sharedUtils.GetEnvironmentVariableValue("COOKIES_SAME_SITE").GetPayloadOrDefault("")
+var sameSite = parseSameSite(sameSiteString)
 
 func getCallbackPathOf(redirectURL string) string {
 	u, _ := url.Parse(redirectURL)
@@ -47,7 +50,7 @@ func setupHttpOnlyCookie(w http.ResponseWriter, identifier string, value string,
 		Path:     path,
 		HttpOnly: true,
 		Secure:   secureCookies,
-		SameSite: http.SameSiteDefaultMode,
+		SameSite: sameSite,
 		Expires:  time.Now().Add(expiresIn),
 		MaxAge:   int(expiresIn.Seconds()),
 	})
@@ -133,4 +136,22 @@ func clearRefreshTokenCookie(w http.ResponseWriter) {
 
 func isCookieSet(r *http.Request, identifier string) bool {
 	return getCookieValue(r, identifier).IsPresent()
+}
+
+func parseSameSite(sameSiteString string) http.SameSite {
+	sameSiteString = strings.TrimSpace(strings.ToLower(sameSiteString))
+
+	switch sameSiteString {
+	case "":
+		return http.SameSiteDefaultMode
+	case "lax":
+		return http.SameSiteLaxMode
+	case "strict":
+		return http.SameSiteStrictMode
+	case "none":
+		return http.SameSiteNoneMode
+	default:
+		log.Printf("Warning: invalid SameSite value '%s', using SameSiteDefaultMode", sameSiteString)
+		return http.SameSiteDefaultMode
+	}
 }
