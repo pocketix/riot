@@ -12,11 +12,14 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      workbox: {
-        maximumFileSizeToCacheInBytes: 6000000
-      },
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw-custom.js',
       injectManifest: {
-        maximumFileSizeToCacheInBytes: 6000000
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+      },
+      workbox: {
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024
       },
       injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'robots.txt'],

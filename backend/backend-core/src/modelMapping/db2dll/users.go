@@ -18,7 +18,8 @@ func ToDLLModelUser(userEntity dbModel.UserEntity) dllModel.User {
 		OAuth2ProviderIssuedID: sharedUtils.NewOptionalFromPointer[string](userEntity.OAuth2ProviderIssuedID),
 		LastLoginAt:            sharedUtils.NewOptionalFromPointer[time.Time](userEntity.LastLoginAt),
 		Sessions:               sharedUtils.Map(userEntity.Sessions, ToDLLModelUserSession),
-		// TODO: Implement 'Invocations', 'UserConfig' and other possibly missing fields as needed
+		Roles:                  sharedUtils.Map(userEntity.Roles, ToDLLModelRole),
+		// TODO: Implement the mapping of 'Invocations', 'UserConfig' and other possibly missing fields as needed
 	}
 }
 

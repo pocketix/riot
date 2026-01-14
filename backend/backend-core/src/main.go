@@ -55,6 +55,7 @@ func setUpExecuteVPLProgramFunc() {
 
 func main() {
 	log.SetOutput(os.Stderr)
+	log.SetFlags(log.Llongfile | log.Ldate | log.Ltime | log.Lmicroseconds)
 	log.Println("Waiting for dependencies...")
 	waitForDependencies()
 	log.Println("Dependencies ready...")

@@ -3,11 +3,12 @@ package dbClient
 import (
 	"errors"
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/misc"
 	"log"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/misc"
 
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbUtil"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dbModel"
@@ -53,6 +54,7 @@ type RelationalDatabaseClient interface {
 	PersistUser(user dllModel.User) sharedUtils.Result[uint]
 	LoadUserBasedOnOAuth2ProviderIssuedID(oauth2ProviderIssuedID string) sharedUtils.Result[sharedUtils.Optional[dllModel.User]]
 	LoadUser(id uint) sharedUtils.Result[dllModel.User]
+	LoadUsers() sharedUtils.Result[[]dllModel.User]
 	LoadUserSessionBasedOnRefreshTokenHash(refreshTokenHash string) sharedUtils.Result[sharedUtils.Optional[dllModel.UserSession]]
 	PersistUserSession(userSession dllModel.UserSession) sharedUtils.Result[uint]
 	PersistUserConfig(userConfig dllModel.UserConfig) sharedUtils.Result[uint32]
@@ -72,6 +74,14 @@ type RelationalDatabaseClient interface {
 	LoadVPLProgram(id uint32) sharedUtils.Result[dllModel.VPLProgram]
 	LoadVPLPrograms() sharedUtils.Result[[]dllModel.VPLProgram]
 	DeleteVPLProgram(id uint32) error
+	LoadGraphQLOperations() sharedUtils.Result[[]misc.GraphQLOperation]
+
+	PersistRole(role dllModel.Role) sharedUtils.Result[uint32]
+	DeleteRole(role uint32) error
+	LoadRole(id uint32) sharedUtils.Result[dllModel.Role]
+	LoadRoles() sharedUtils.Result[[]dllModel.Role]
+	LoadPermission(id uint32) sharedUtils.Result[dllModel.Permission]
+	LoadPermissions() sharedUtils.Result[[]dllModel.Permission]
 	PersistVPLProcedure(vplProcedure dllModel.VPLProcedure) sharedUtils.Result[dllModel.VPLProcedure]
 	LoadVPLProcedure(id uint32) sharedUtils.Result[dllModel.VPLProcedure]
 	LoadVPLProcedures() sharedUtils.Result[[]dllModel.VPLProcedure]
@@ -213,6 +223,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 	}
 	session := new(gorm.Session)
 	session.Logger = logger.Default.LogMode(logger.Warn)
+	session.FullSaveAssociations = true
 	r.db = db.Session(session)
 	sharedUtils.TerminateOnError(r.db.AutoMigrate(
 		new(dbModel.KPIDefinitionEntity),
@@ -240,6 +251,7 @@ func (r *relationalDatabaseClientImpl) setup() {
 		new(dbModel.VPLProgramProcedureLinkEntity),
 		new(dbModel.GraphQLOperationEntity),
 		new(dbModel.RoleEntity),
+		new(dbModel.UsersRolesMappingEntity),
 		new(dbModel.RolesPermissionsMappingEntity),
 		new(dbModel.PermissionEntity),
 		new(dbModel.OperationTypeAccessPermissionEntity),
@@ -248,6 +260,9 @@ func (r *relationalDatabaseClientImpl) setup() {
 }
 
 func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
+
+	log.Println("Updating the DB representation of GraphQL operations and adjusting permissions...")
+
 	// Begin by creating a snapshot of the GraphQL API based on the 'schema.graphqls' file
 	createGraphQLAPISnapshotResult := misc.CreateGraphQLAPISnapshot()
 	if createGraphQLAPISnapshotResult.IsFailure() {
@@ -320,9 +335,12 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 		return nil
 	}
 
-	// Create a 'Root-Administrator' role along with the operation-type-access permission entries
-	// Anyone with the aforementioned role will be able to access all GraphQL operations (unless explicitly denied)
-	rootAdministratorRoleEntity := &dbModel.RoleEntity{
+	log.Println("Role table is empty: continuing...")
+	log.Println("Trying to persist an user stub along with the 'Root-Administrator' role assigned to it...")
+
+	// Create a 'Root-Administrator' role along with the operation-type-access permission entries...
+	// ...then create a user (with predefined OAuth2 provider (-ID)) and assign said role to this user
+	rootAdministratorRoleEntity := dbModel.RoleEntity{
 		Label: "Root-Administrator",
 		Permissions: []dbModel.PermissionEntity{
 			{
@@ -345,9 +363,15 @@ func (r *relationalDatabaseClientImpl) PerformOnStartupOperations() error {
 			},
 		},
 	}
-	return dbUtil.PersistEntityIntoDB[dbModel.RoleEntity](r.db, rootAdministratorRoleEntity)
-
-	// TODO: Give the 'Root-Administrator' role to a selected user (likely provided by .env)
+	oauth2Provider := "google"
+	oauth2ProviderIssuedID := sharedUtils.GetEnvironmentVariableValue("SUPER_USER_OAUTH2_PROVIDER_ISSUED_ID").GetPayload()
+	userEntity := &dbModel.UserEntity{
+		Username:               fmt.Sprintf("%s-user-%s", oauth2Provider, oauth2ProviderIssuedID),
+		OAuth2Provider:         &oauth2Provider,
+		OAuth2ProviderIssuedID: &oauth2ProviderIssuedID,
+		Roles:                  []dbModel.RoleEntity{rootAdministratorRoleEntity},
+	}
+	return dbUtil.PersistEntityIntoDB[dbModel.UserEntity](r.db, userEntity)
 }
 
 func (r *relationalDatabaseClientImpl) PersistKPIDefinition(kpiDefinition sharedModel.KPIDefinition) sharedUtils.Result[uint32] {
@@ -802,7 +826,13 @@ func (r *relationalDatabaseClientImpl) PersistUser(user dllModel.User) sharedUti
 func (r *relationalDatabaseClientImpl) LoadUserBasedOnOAuth2ProviderIssuedID(oauth2ProviderIssuedID string) sharedUtils.Result[sharedUtils.Optional[dllModel.User]] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	userEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.UserEntity](r.db, dbUtil.Where("oauth2_provider_issued_id = ?", oauth2ProviderIssuedID))
+	userEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.UserEntity](
+		r.db,
+		dbUtil.Preload("Sessions"),
+		dbUtil.Preload("Roles.Permissions.SingleOperationPermission.GraphQLOperation"),
+		dbUtil.Preload("Roles.Permissions.OperationTypeAccessPermission"),
+		dbUtil.Where("oauth2_provider_issued_id = ?", oauth2ProviderIssuedID),
+	)
 	if userEntityLoadResult.IsFailure() {
 		userEntityLoadError := userEntityLoadResult.GetError()
 		if errors.Is(userEntityLoadError, gorm.ErrRecordNotFound) {
@@ -817,8 +847,32 @@ func (r *relationalDatabaseClientImpl) LoadUserBasedOnOAuth2ProviderIssuedID(oau
 func (r *relationalDatabaseClientImpl) LoadUser(id uint) sharedUtils.Result[dllModel.User] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	// TODO: Implement
-	return sharedUtils.NewFailureResult[dllModel.User](errors.New("[RDB client (GORM)]: not implemented"))
+	userEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.UserEntity](
+		r.db,
+		dbUtil.Where("id = ?", id),
+		dbUtil.Preload("Sessions"),
+		dbUtil.Preload("Roles.Permissions.SingleOperationPermission.GraphQLOperation"),
+		dbUtil.Preload("Roles.Permissions.OperationTypeAccessPermission"),
+	)
+	if userEntityLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[dllModel.User](userEntityLoadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelUser(userEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) LoadUsers() sharedUtils.Result[[]dllModel.User] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	userEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.UserEntity](
+		r.db,
+		dbUtil.Preload("Sessions"),
+		dbUtil.Preload("Roles.Permissions.SingleOperationPermission.GraphQLOperation"),
+		dbUtil.Preload("Roles.Permissions.OperationTypeAccessPermission"),
+	)
+	if userEntitiesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]dllModel.User](userEntitiesLoadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(userEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelUser))
 }
 
 func (r *relationalDatabaseClientImpl) LoadUserSessionBasedOnRefreshTokenHash(refreshTokenHash string) sharedUtils.Result[sharedUtils.Optional[dllModel.UserSession]] {
@@ -936,6 +990,78 @@ func (r *relationalDatabaseClientImpl) DeleteVPLProgram(id uint32) error {
 	defer r.mu.Unlock()
 
 	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.VPLProgramsEntity](r.db, id)
+}
+
+func (r *relationalDatabaseClientImpl) LoadGraphQLOperations() sharedUtils.Result[[]misc.GraphQLOperation] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	graphQLOperationEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.GraphQLOperationEntity](r.db)
+	if graphQLOperationEntitiesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]misc.GraphQLOperation](graphQLOperationEntitiesLoadResult.GetError())
+	}
+	graphQLOperationEntities := graphQLOperationEntitiesLoadResult.GetPayload()
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(graphQLOperationEntities, func(graphQLOperationEntity dbModel.GraphQLOperationEntity) misc.GraphQLOperation {
+		return misc.GraphQLOperation{
+			Identifier: graphQLOperationEntity.Identifier,
+			OpType:     misc.GraphQLOperationType(graphQLOperationEntity.OperationType),
+		}
+	}))
+}
+
+func (r *relationalDatabaseClientImpl) PersistRole(role dllModel.Role) sharedUtils.Result[uint32] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	roleEntity := dll2db.ToDBModelRole(role)
+	if err := dbUtil.PersistEntityIntoDB[dbModel.RoleEntity](r.db, &roleEntity); err != nil {
+		return sharedUtils.NewFailureResult[uint32](err)
+	}
+	return sharedUtils.NewSuccessResult[uint32](roleEntity.ID)
+}
+
+func (r *relationalDatabaseClientImpl) DeleteRole(id uint32) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return dbUtil.DeleteCertainEntityBasedOnId[dbModel.RoleEntity](r.db, id)
+}
+
+func (r *relationalDatabaseClientImpl) LoadRole(id uint32) sharedUtils.Result[dllModel.Role] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	roleEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.RoleEntity](r.db, dbUtil.Where("id = ?", id))
+	if roleEntityLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[dllModel.Role](roleEntityLoadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelRole(roleEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) LoadRoles() sharedUtils.Result[[]dllModel.Role] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	roleEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.RoleEntity](r.db)
+	if roleEntitiesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]dllModel.Role](roleEntitiesLoadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(roleEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelRole))
+}
+
+func (r *relationalDatabaseClientImpl) LoadPermission(id uint32) sharedUtils.Result[dllModel.Permission] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	permissionEntityLoadResult := dbUtil.LoadEntityFromDB[dbModel.PermissionEntity](r.db, dbUtil.Where("id = ?", id))
+	if permissionEntityLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[dllModel.Permission](permissionEntityLoadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(db2dll.ToDLLModelPermission(permissionEntityLoadResult.GetPayload()))
+}
+
+func (r *relationalDatabaseClientImpl) LoadPermissions() sharedUtils.Result[[]dllModel.Permission] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	permissionEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.PermissionEntity](r.db)
+	if permissionEntitiesLoadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]dllModel.Permission](permissionEntitiesLoadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(permissionEntitiesLoadResult.GetPayload(), db2dll.ToDLLModelPermission))
 }
 
 func (r *relationalDatabaseClientImpl) PersistVPLProcedure(vplProcedure dllModel.VPLProcedure) sharedUtils.Result[dllModel.VPLProcedure] {

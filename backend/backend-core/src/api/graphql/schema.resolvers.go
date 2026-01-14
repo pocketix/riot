@@ -246,6 +246,62 @@ func (r *mutationResolver) UnlinkProgramFromProcedure(ctx context.Context, progr
 	return true, nil
 }
 
+func (r *mutationResolver) CreateRole(ctx context.Context, input graphQLModel.RoleCreationInput) (graphQLModel.Role, error) {
+	createRoleResult := domainLogicLayer.CreateRole(input)
+	if createRoleResult.IsFailure() {
+		log.Printf("Error occurred (create role): %s\n", createRoleResult.GetError().Error())
+	}
+	return createRoleResult.Unwrap()
+}
+
+func (r *mutationResolver) UpdateRole(ctx context.Context, id uint32, input graphQLModel.RoleUpdateInput) (graphQLModel.Role, error) {
+	updateRoleResult := domainLogicLayer.UpdateRole(id, input)
+	if updateRoleResult.IsFailure() {
+		log.Printf("Error occurred (update role): %s\n", updateRoleResult.GetError().Error())
+	}
+	return updateRoleResult.Unwrap()
+}
+
+func (r *mutationResolver) DeleteRole(ctx context.Context, id uint32) (bool, error) {
+	if err := domainLogicLayer.DeleteRole(id); err != nil {
+		log.Printf("Error occurred (delete role): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) AssignRoleToUser(ctx context.Context, userID uint32, roleID uint32) (bool, error) {
+	if err := domainLogicLayer.AssignRoleToUser(uint(userID), roleID); err != nil {
+		log.Printf("Error occurred (assign role to user): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) UnassignRoleFromUser(ctx context.Context, userID uint32, roleID uint32) (bool, error) {
+	if err := domainLogicLayer.UnassignRoleFromUser(uint(userID), roleID); err != nil {
+		log.Printf("Error occurred (unassign role from user): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) AssignPermissionToRole(ctx context.Context, roleID uint32, permissionID uint32) (bool, error) {
+	if err := domainLogicLayer.AssignPermissionToRole(roleID, permissionID); err != nil {
+		log.Printf("Error occurred (assign permission to role): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *mutationResolver) UnassignPermissionFromRole(ctx context.Context, roleID uint32, permissionID uint32) (bool, error) {
+	if err := domainLogicLayer.UnassignPermissionFromRole(roleID, permissionID); err != nil {
+		log.Printf("Error occurred (unassign permission from role): %s\n", err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
 func (r *queryResolver) SdType(ctx context.Context, id uint32) (graphQLModel.SDType, error) {
 	getSDTypeResult := domainLogicLayer.GetSDType(id)
 	if getSDTypeResult.IsFailure() {
@@ -320,6 +376,14 @@ func (r *queryResolver) StatisticsQuerySensorsWithFields(ctx context.Context, re
 	convertedRequest, _ := domainLogicLayer.MapStatisticsInputToReadRequestBody(request, nil, &sensors)
 	data := domainLogicLayer.Query(*convertedRequest)
 	return data.Unwrap()
+}
+
+func (r *queryResolver) Users(ctx context.Context) ([]graphQLModel.User, error) {
+	getUsersResult := domainLogicLayer.GetUsers()
+	if getUsersResult.IsFailure() {
+		log.Printf("Error occurred (get users): %s\n", getUsersResult.GetError().Error())
+	}
+	return getUsersResult.Unwrap()
 }
 
 func (r *queryResolver) UserConfig(ctx context.Context, id uint32) (graphQLModel.UserConfig, error) {
@@ -430,6 +494,22 @@ func (r *queryResolver) VplProgramsForProcedure(ctx context.Context, procedureID
 		return nil, getProgramsForProcedureResult.GetError()
 	}
 	return getProgramsForProcedureResult.Unwrap()
+}
+
+func (r *queryResolver) Roles(ctx context.Context) ([]graphQLModel.Role, error) {
+	getRolesResult := domainLogicLayer.GetRoles()
+	if getRolesResult.IsFailure() {
+		log.Printf("Error occurred (get roles): %s\n", getRolesResult.GetError().Error())
+	}
+	return getRolesResult.Unwrap()
+}
+
+func (r *queryResolver) Permissions(ctx context.Context) ([]graphQLModel.Permission, error) {
+	getPermissionsResult := domainLogicLayer.GetPermissions()
+	if getPermissionsResult.IsFailure() {
+		log.Printf("Error occurred (get permissions): %s\n", getPermissionsResult.GetError().Error())
+	}
+	return getPermissionsResult.Unwrap()
 }
 
 func (r *subscriptionResolver) OnSDInstanceRegistered(ctx context.Context) (<-chan graphQLModel.SDInstance, error) {

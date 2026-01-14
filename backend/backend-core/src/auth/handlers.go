@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/idtoken"
-	"log"
-	"net/http"
-	"time"
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +67,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) { // TODO: Clear all 
 				return
 			}
 		} else {
-			log.Println("Warning: (logout): refresh token is present but no database record corresponds to it based on hash lookup...")
+			log.Println("Warning (logout handler): refresh token was present but with no corresponding user session record based on hash lookup...")
 		}
 	}
 
@@ -117,18 +118,18 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	idToken, ok := token.Extra("id_token").(string)
 	if !ok || idToken == "" {
-		http.Error(w, "no id token found in authorization server's response", http.StatusBadRequest)
+		http.Error(w, "no ID token found in authorization server's response", http.StatusBadRequest)
 		return
 	}
 	idTokenPayload, err := idtoken.Validate(context.Background(), idToken, GoogleOAuth2Config.ClientID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("invalid id token: %s", err.Error()), http.StatusUnauthorized)
+		http.Error(w, fmt.Sprintf("invalid ID token: %s", err.Error()), http.StatusUnauthorized)
 		return
 	}
 
 	idTokenDataExtractionResult := extractIDTokenData(idTokenPayload)
 	if idTokenDataExtractionResult.IsFailure() {
-		http.Error(w, fmt.Sprintf("the id token does not seem to contain the necessary data: %s", idTokenDataExtractionResult.GetError().Error()), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("the ID token does not seem to contain the necessary data: %s", idTokenDataExtractionResult.GetError().Error()), http.StatusBadRequest)
 		return
 	}
 	userData := idTokenDataExtractionResult.GetPayload()
@@ -141,7 +142,17 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	user := userRecordUpsertResult.GetPayload()
 
-	sessionJWT, err := createSessionJWT(fmt.Sprintf("%d", user.ID.GetPayload()))
+	userID := user.ID.GetPayload()
+	apiAccessSummary, err := determineAPIAccess(userID).Unwrap()
+	if err != nil {
+		errorMessage := fmt.Sprintf("user %d - failed to determine API access: %s", userID, err.Error())
+		log.Println(errorMessage)
+		http.Error(w, errorMessage, http.StatusInternalServerError)
+	}
+	log.Println("API access summary object dump [CallbackHandler]:")
+	sharedUtils.Dump(apiAccessSummary)
+
+	sessionJWT, err := createSessionJWT(userID, apiAccessSummary)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to create session JWT: %s", err.Error()), http.StatusInternalServerError)
 		return

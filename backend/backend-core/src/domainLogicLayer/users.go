@@ -8,6 +8,14 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 )
 
+func GetUsers() sharedUtils.Result[[]graphQLModel.User] {
+	loadResult := dbClient.GetRelationalDatabaseClientInstance().LoadUsers()
+	if loadResult.IsFailure() {
+		return sharedUtils.NewFailureResult[[]graphQLModel.User](loadResult.GetError())
+	}
+	return sharedUtils.NewSuccessResult(sharedUtils.Map(loadResult.GetPayload(), dll2gql.ToGraphQLModelUser))
+}
+
 func GetUserConfig(id uint32) sharedUtils.Result[graphQLModel.UserConfig] {
 	loadResult := dbClient.GetRelationalDatabaseClientInstance().LoadUserConfig(id)
 	if loadResult.IsFailure() {

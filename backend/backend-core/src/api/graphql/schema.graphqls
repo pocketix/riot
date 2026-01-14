@@ -348,6 +348,15 @@ input InputData {
 
 # ----- Users and their configurations ----
 
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  name: String
+  profileImageURL: String
+  roles: [Role!]!
+}
+
 type UserConfig {
   userId: ID!
   config: JSON!
@@ -355,6 +364,51 @@ type UserConfig {
 
 input UserConfigInput {
   config: JSON!
+}
+
+# ----- RBAC ----
+
+type Role {
+  id: ID!
+  label: String!
+  permissions: [Permission!]!
+}
+
+type Permission {
+  id: ID!
+  label: String!
+  operationTypeAccessPermission: OperationTypeAccessPermission
+  singleOperationPermission: SingleOperationPermission
+}
+
+enum GraphQLOperationType {
+  QUERY
+  MUTATION
+  SUBSCRIPTION
+}
+
+type OperationTypeAccessPermission {
+  operationType: GraphQLOperationType!
+}
+
+enum PermissionEffect {
+  ALLOW
+  DENY
+}
+
+type SingleOperationPermission {
+  graphQLOperationIdentifier: String!
+  effect: PermissionEffect!
+}
+
+input RoleCreationInput {
+  label: String!
+  permissionIDs: [ID!]!
+}
+
+input RoleUpdateInput {
+  label: String
+  permissionIDs: [ID!]
 }
 
 # ----- VPL Programs -----
@@ -409,6 +463,7 @@ type Query {
   sdInstanceGroups: [SDInstanceGroup!]!
   statisticsQuerySimpleSensors(request: StatisticsInput sensors: SimpleSensors!): [OutputData!]!
   statisticsQuerySensorsWithFields(request: StatisticsInput sensors: SensorsWithFields!): [OutputData!]!
+  users: [User!]!
   userConfig(id: ID!): UserConfig!
   myUserConfig: UserConfig!
   sdCommand(id: ID!): SDCommand! # Returns a specific SDCommand by its ID
@@ -421,6 +476,8 @@ type Query {
   vplProcedures: [VPLProcedure!]! # Returns all VPLProcedures
   vplProceduresForProgram(programId: ID!): [VPLProcedure!]! # Returns all procedures used by a program
   vplProgramsForProcedure(procedureId: ID!): [VPLProgram!]! # Returns all programs that use a procedure
+  roles: [Role!]!
+  permissions: [Permission!]!
 }
 
 type Mutation {
@@ -451,6 +508,14 @@ type Mutation {
   deleteVPLProcedure(id: ID!): Boolean! # Deleting a procedure
   linkProgramToProcedure(programId: ID!, procedureId: ID!): Boolean! # Link a program to a procedure
   unlinkProgramFromProcedure(programId: ID!, procedureId: ID!): Boolean! # Unlink a program from a procedure
+  # ----- RBAC -----
+  createRole(input: RoleCreationInput!): Role!
+  updateRole(id: ID!, input: RoleUpdateInput!): Role!
+  deleteRole(id: ID!): Boolean!
+  assignRoleToUser(userId: ID!, roleId: ID!): Boolean!
+  unassignRoleFromUser(userId: ID!, roleId: ID!): Boolean!
+  assignPermissionToRole(roleId: ID!, permissionId: ID!): Boolean!
+  unassignPermissionFromRole(roleId: ID!, permissionId: ID!): Boolean!
 }
 
 type Subscription {

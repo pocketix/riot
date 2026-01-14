@@ -3,7 +3,10 @@ package auth
 import (
 	"errors"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"log"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -12,11 +15,33 @@ const (
 	SessionJWTCookieIdentifier          = "sessionJWT"
 	RefreshTokenCookieIdentifier        = "refreshToken"
 
-	RootPath     = "/"
-	CallbackPath = "/auth/callback"
+	callbackPathSuffix = "/auth/callback"
 )
 
 var secureCookies = sharedUtils.GetFlagEnvironmentVariableValue("SECURE_COOKIES").GetPayloadOrDefault(false) // TODO: Ensure this variable evaluates to 'true' in production (requires HTTPS)
+var sameSiteString = sharedUtils.GetEnvironmentVariableValue("COOKIES_SAME_SITE").GetPayloadOrDefault("")
+var sameSite = parseSameSite(sameSiteString)
+
+func getCallbackPathOf(redirectURL string) string {
+	u, _ := url.Parse(redirectURL)
+	return u.Path
+}
+
+func getCallbackPath() string {
+	return getCallbackPathOf(GoogleOAuth2Config.RedirectURL)
+}
+
+func getRootPathOf(callbackPath string) string {
+	root := strings.TrimSuffix(callbackPath, callbackPathSuffix)
+	if root == "" {
+		return "/"
+	}
+	return root
+}
+
+func getRootPath() string {
+	return getRootPathOf(getCallbackPath())
+}
 
 func setupHttpOnlyCookie(w http.ResponseWriter, identifier string, value string, path string, expiresIn time.Duration) {
 	http.SetCookie(w, &http.Cookie{
@@ -25,7 +50,7 @@ func setupHttpOnlyCookie(w http.ResponseWriter, identifier string, value string,
 		Path:     path,
 		HttpOnly: true,
 		Secure:   secureCookies,
-		SameSite: http.SameSiteDefaultMode,
+		SameSite: sameSite,
 		Expires:  time.Now().Add(expiresIn),
 		MaxAge:   int(expiresIn.Seconds()),
 	})
@@ -55,7 +80,7 @@ func clearHttpOnlyCookie(w http.ResponseWriter, identifier string, path string) 
 // ----- OAuth2 | OIDC flow state -----
 
 func setupOauth2OIDCFlowStateCookie(w http.ResponseWriter, base64EncodedOAuth2OIDCFlowState string) {
-	setupHttpOnlyCookie(w, OAuth2OIDCFlowStateCookieIdentifier, base64EncodedOAuth2OIDCFlowState, CallbackPath, 5*time.Minute)
+	setupHttpOnlyCookie(w, OAuth2OIDCFlowStateCookieIdentifier, base64EncodedOAuth2OIDCFlowState, getCallbackPath(), 5*time.Minute)
 }
 
 func getOauth2OIDCFlowStateCookieValue(r *http.Request) sharedUtils.Optional[string] {
@@ -63,7 +88,7 @@ func getOauth2OIDCFlowStateCookieValue(r *http.Request) sharedUtils.Optional[str
 }
 
 func clearOauth2OIDCFlowStateCookie(w http.ResponseWriter) {
-	clearHttpOnlyCookie(w, OAuth2OIDCFlowStateCookieIdentifier, CallbackPath)
+	clearHttpOnlyCookie(w, OAuth2OIDCFlowStateCookieIdentifier, getCallbackPath())
 }
 
 // ----- session JWT -----
@@ -81,7 +106,7 @@ func setupSessionJWTCookie(w http.ResponseWriter, sessionJWTString string) error
 	if sessionJWTExpiresIn <= 0 {
 		return errors.New("session JWT is already expired")
 	}
-	setupHttpOnlyCookie(w, SessionJWTCookieIdentifier, sessionJWTString, RootPath, sessionJWTExpiresIn)
+	setupHttpOnlyCookie(w, SessionJWTCookieIdentifier, sessionJWTString, getRootPath(), sessionJWTExpiresIn)
 	return nil
 }
 
@@ -90,13 +115,13 @@ func getSessionJWTCookieValue(r *http.Request) sharedUtils.Optional[string] {
 }
 
 func clearSessionJWTCookie(w http.ResponseWriter) {
-	clearHttpOnlyCookie(w, SessionJWTCookieIdentifier, RootPath)
+	clearHttpOnlyCookie(w, SessionJWTCookieIdentifier, getRootPath())
 }
 
 // ----- refresh token -----
 
 func setupRefreshTokenCookie(w http.ResponseWriter, refreshToken string, expiresIn time.Duration) {
-	setupHttpOnlyCookie(w, RefreshTokenCookieIdentifier, refreshToken, RootPath, expiresIn)
+	setupHttpOnlyCookie(w, RefreshTokenCookieIdentifier, refreshToken, getRootPath(), expiresIn)
 }
 
 func getRefreshTokenCookieValue(r *http.Request) sharedUtils.Optional[string] {
@@ -104,11 +129,29 @@ func getRefreshTokenCookieValue(r *http.Request) sharedUtils.Optional[string] {
 }
 
 func clearRefreshTokenCookie(w http.ResponseWriter) {
-	clearHttpOnlyCookie(w, RefreshTokenCookieIdentifier, RootPath)
+	clearHttpOnlyCookie(w, RefreshTokenCookieIdentifier, getRootPath())
 }
 
 // ----- aux -----
 
 func isCookieSet(r *http.Request, identifier string) bool {
 	return getCookieValue(r, identifier).IsPresent()
+}
+
+func parseSameSite(sameSiteString string) http.SameSite {
+	sameSiteString = strings.TrimSpace(strings.ToLower(sameSiteString))
+
+	switch sameSiteString {
+	case "":
+		return http.SameSiteDefaultMode
+	case "lax":
+		return http.SameSiteLaxMode
+	case "strict":
+		return http.SameSiteStrictMode
+	case "none":
+		return http.SameSiteNoneMode
+	default:
+		log.Printf("Warning: invalid SameSite value '%s', using SameSiteDefaultMode", sameSiteString)
+		return http.SameSiteDefaultMode
+	}
 }

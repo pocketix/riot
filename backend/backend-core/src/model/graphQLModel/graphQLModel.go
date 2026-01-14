@@ -211,6 +211,10 @@ func (this NumericLTAtomKPINode) GetSdParameterSpecification() string {
 	return this.SdParameterSpecification
 }
 
+type OperationTypeAccessPermission struct {
+	OperationType GraphQLOperationType `json:"operationType"`
+}
+
 type OutputData struct {
 	Time       string  `json:"time"`
 	DeviceID   string  `json:"deviceId"`
@@ -218,7 +222,30 @@ type OutputData struct {
 	Data       string  `json:"data"`
 }
 
+type Permission struct {
+	ID                            uint32                         `json:"id"`
+	Label                         string                         `json:"label"`
+	OperationTypeAccessPermission *OperationTypeAccessPermission `json:"operationTypeAccessPermission,omitempty"`
+	SingleOperationPermission     *SingleOperationPermission     `json:"singleOperationPermission,omitempty"`
+}
+
 type Query struct {
+}
+
+type Role struct {
+	ID          uint32       `json:"id"`
+	Label       string       `json:"label"`
+	Permissions []Permission `json:"permissions"`
+}
+
+type RoleCreationInput struct {
+	Label         string   `json:"label"`
+	PermissionIDs []uint32 `json:"permissionIDs"`
+}
+
+type RoleUpdateInput struct {
+	Label         *string  `json:"label,omitempty"`
+	PermissionIDs []uint32 `json:"permissionIDs,omitempty"`
 }
 
 type SDCommand struct {
@@ -336,6 +363,11 @@ type SimpleSensors struct {
 	Sensors []string `json:"sensors"`
 }
 
+type SingleOperationPermission struct {
+	GraphQLOperationIdentifier string           `json:"graphQLOperationIdentifier"`
+	Effect                     PermissionEffect `json:"effect"`
+}
+
 // Data used for querying the selected bucket
 type StatisticsInput struct {
 	// Start of the querying window
@@ -376,6 +408,15 @@ func (this StringEQAtomKPINode) GetSdParameterSpecification() string {
 }
 
 type Subscription struct {
+}
+
+type User struct {
+	ID              uint32  `json:"id"`
+	Username        string  `json:"username"`
+	Email           string  `json:"email"`
+	Name            *string `json:"name,omitempty"`
+	ProfileImageURL *string `json:"profileImageURL,omitempty"`
+	Roles           []Role  `json:"roles"`
 }
 
 type UserConfig struct {
@@ -420,6 +461,49 @@ type VPLProgramExecutionResult struct {
 	Success                      bool                  `json:"success"`
 	Error                        *string               `json:"error,omitempty"`
 	ExecutionReason              *string               `json:"executionReason,omitempty"`
+}
+
+type GraphQLOperationType string
+
+const (
+	GraphQLOperationTypeQuery        GraphQLOperationType = "QUERY"
+	GraphQLOperationTypeMutation     GraphQLOperationType = "MUTATION"
+	GraphQLOperationTypeSubscription GraphQLOperationType = "SUBSCRIPTION"
+)
+
+var AllGraphQLOperationType = []GraphQLOperationType{
+	GraphQLOperationTypeQuery,
+	GraphQLOperationTypeMutation,
+	GraphQLOperationTypeSubscription,
+}
+
+func (e GraphQLOperationType) IsValid() bool {
+	switch e {
+	case GraphQLOperationTypeQuery, GraphQLOperationTypeMutation, GraphQLOperationTypeSubscription:
+		return true
+	}
+	return false
+}
+
+func (e GraphQLOperationType) String() string {
+	return string(e)
+}
+
+func (e *GraphQLOperationType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = GraphQLOperationType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid GraphQLOperationType", str)
+	}
+	return nil
+}
+
+func (e GraphQLOperationType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type KPINodeType string
@@ -515,6 +599,47 @@ func (e *LogicalOperationType) UnmarshalGQL(v any) error {
 }
 
 func (e LogicalOperationType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type PermissionEffect string
+
+const (
+	PermissionEffectAllow PermissionEffect = "ALLOW"
+	PermissionEffectDeny  PermissionEffect = "DENY"
+)
+
+var AllPermissionEffect = []PermissionEffect{
+	PermissionEffectAllow,
+	PermissionEffectDeny,
+}
+
+func (e PermissionEffect) IsValid() bool {
+	switch e {
+	case PermissionEffectAllow, PermissionEffectDeny:
+		return true
+	}
+	return false
+}
+
+func (e PermissionEffect) String() string {
+	return string(e)
+}
+
+func (e *PermissionEffect) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PermissionEffect(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PermissionEffect", str)
+	}
+	return nil
+}
+
+func (e PermissionEffect) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
