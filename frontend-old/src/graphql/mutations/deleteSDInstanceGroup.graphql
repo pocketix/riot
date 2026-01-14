@@ -1,3 +1,0 @@
-mutation DeleteSDInstanceGroup($id: ID!) {
-  deleteSDInstanceGroup(id: $id)
-}

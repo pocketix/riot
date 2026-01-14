@@ -1,5 +1,0 @@
-mutation createKPIDefinition($input: KPIDefinitionInput!) {
-  createKPIDefinition(input: $input) {
-    id
-  }
-}

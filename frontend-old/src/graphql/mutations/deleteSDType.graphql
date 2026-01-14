@@ -1,3 +1,0 @@
-mutation DeleteSDType($id: ID!) {
-  deleteSDType(id: $id)
-}

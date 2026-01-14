@@ -1,5 +1,0 @@
-# Ingore the dist directory
-dist
-
-# Ignore the generated code
-src/generated
