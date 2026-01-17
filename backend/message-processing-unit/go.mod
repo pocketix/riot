@@ -1,9 +1,9 @@
-module github.com/MichalBures-OG/bp-bures-RIoT-message-processing-unit
+module github.com/pocketix/riot/message-processing-unit
 
 go 1.24.1
 
 require (
-	github.com/MichalBures-OG/bp-bures-RIoT-commons v0.0.0-00010101000000-000000000000
+	github.com/pocketix/riot/commons v0.0.0-00010101000000-000000000000
 	github.com/google/uuid v1.6.0
 )
 
@@ -13,4 +13,4 @@ require (
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 )
 
-replace github.com/MichalBures-OG/bp-bures-RIoT-commons => ./../commons
+replace github.com/pocketix/riot/commons => ./../commons

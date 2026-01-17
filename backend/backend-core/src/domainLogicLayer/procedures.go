@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/modelMapping/dll2gql"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/backend-core/src/db/dbClient"
+	"github.com/pocketix/riot/backend-core/src/model/dllModel"
+	"github.com/pocketix/riot/backend-core/src/model/graphQLModel"
+	"github.com/pocketix/riot/backend-core/src/modelMapping/dll2gql"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 )
 
 // CreateVPLProcedure creates a new VPL procedure

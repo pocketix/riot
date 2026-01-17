@@ -2,8 +2,8 @@ package auth
 
 import (
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 	"strconv"
 	"time"
 )

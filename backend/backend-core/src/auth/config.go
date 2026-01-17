@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )

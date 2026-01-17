@@ -1,7 +1,7 @@
 package misc
 
 import (
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 	"os"

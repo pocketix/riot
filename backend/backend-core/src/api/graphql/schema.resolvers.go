@@ -6,10 +6,10 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/api/graphql/gsc"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/domainLogicLayer"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/modelMapping/gql2dll"
+	"github.com/pocketix/riot/backend-core/src/api/graphql/gsc"
+	"github.com/pocketix/riot/backend-core/src/domainLogicLayer"
+	"github.com/pocketix/riot/backend-core/src/model/graphQLModel"
+	"github.com/pocketix/riot/backend-core/src/modelMapping/gql2dll"
 )
 
 func (r *mutationResolver) CreateSDType(ctx context.Context, input graphQLModel.SDTypeInput) (graphQLModel.SDType, error) {

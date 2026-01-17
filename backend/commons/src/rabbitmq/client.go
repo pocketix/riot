@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"log"
 	"strconv"

@@ -1,6 +1,6 @@
 package dllModel
 
-import "github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+import "github.com/pocketix/riot/commons/src/sharedUtils"
 
 type SDParameterType string
 

@@ -3,9 +3,9 @@ package dll2gql
 import (
 	"fmt"
 
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/backend-core/src/model/dllModel"
+	"github.com/pocketix/riot/backend-core/src/model/graphQLModel"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 )
 
 func ToGraphQLModelSDType(sdType dllModel.SDType) graphQLModel.SDType {

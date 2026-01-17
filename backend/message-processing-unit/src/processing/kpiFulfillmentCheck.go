@@ -2,8 +2,8 @@ package processing
 
 import (
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/commons/src/sharedModel"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 )
 
 func CheckKPIFulfillment(kpiDefinition sharedModel.KPIDefinition, sdParameterValueMap *any) sharedUtils.Result[bool] {

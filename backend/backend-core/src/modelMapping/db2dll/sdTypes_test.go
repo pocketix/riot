@@ -1,10 +1,10 @@
 package db2dll
 
 import (
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dbModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"github.com/google/go-cmp/cmp"
+	"github.com/pocketix/riot/backend-core/src/model/dbModel"
+	"github.com/pocketix/riot/backend-core/src/model/dllModel"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 	"testing"
 )
 

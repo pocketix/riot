@@ -1,7 +1,7 @@
 package domainLogicLayer
 
 import (
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
+	"github.com/pocketix/riot/commons/src/rabbitmq"
 	"sync"
 )
 

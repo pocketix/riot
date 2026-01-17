@@ -2,9 +2,9 @@ package isc
 
 import (
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/commons/src/rabbitmq"
+	"github.com/pocketix/riot/commons/src/sharedConstants"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 )
 
 func getQueueDeclarationErrorMessage(queueName string) string {

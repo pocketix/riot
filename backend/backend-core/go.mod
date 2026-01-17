@@ -1,11 +1,11 @@
-module github.com/MichalBures-OG/bp-bures-RIoT-backend-core
+module github.com/pocketix/riot/backend-core
 
 go 1.24.1
 
 require (
 	github.com/99designs/gqlgen v0.17.68
 	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/MichalBures-OG/bp-bures-RIoT-commons v0.0.0-00010101000000-000000000000
+	github.com/pocketix/riot/commons v0.0.0-00010101000000-000000000000
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/go-cmp v0.7.0
@@ -20,7 +20,7 @@ require (
 	gorm.io/gorm v1.25.12
 )
 
-replace github.com/MichalBures-OG/bp-bures-RIoT-commons => ./../commons
+replace github.com/pocketix/riot/commons => ./../commons
 
 require (
 	cloud.google.com/go/auth v0.15.0 // indirect

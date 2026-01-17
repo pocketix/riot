@@ -1,11 +1,11 @@
 package domainLogicLayer
 
 import (
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/isc"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/modelMapping/dll2gql"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/backend-core/src/db/dbClient"
+	"github.com/pocketix/riot/backend-core/src/isc"
+	"github.com/pocketix/riot/backend-core/src/model/graphQLModel"
+	"github.com/pocketix/riot/backend-core/src/modelMapping/dll2gql"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 )
 
 func GetSDInstances() sharedUtils.Result[[]graphQLModel.SDInstance] {

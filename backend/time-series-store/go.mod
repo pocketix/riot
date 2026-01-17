@@ -3,12 +3,12 @@ module github.com/xjohnp00/jiap/backend/shared/time-series-store
 go 1.24.1
 
 require (
-	github.com/MichalBures-OG/bp-bures-RIoT-commons v0.0.0-00010101000000-000000000000
+	github.com/pocketix/riot/commons v0.0.0-00010101000000-000000000000
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/rabbitmq/amqp091-go v1.10.0
 )
 
-replace github.com/MichalBures-OG/bp-bures-RIoT-commons => ./../commons
+replace github.com/pocketix/riot/commons => ./../commons
 
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect

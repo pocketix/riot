@@ -3,9 +3,9 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/backend-core/src/db/dbClient"
+	"github.com/pocketix/riot/backend-core/src/model/dllModel"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 	"google.golang.org/api/idtoken"
 	"net/http"
 	"net/url"

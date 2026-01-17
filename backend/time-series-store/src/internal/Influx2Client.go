@@ -3,10 +3,10 @@ package internal
 import (
 	"context"
 	"fmt"
-	sharedModel "github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
+	sharedModel "github.com/pocketix/riot/commons/src/sharedModel"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 	"log"
 	"strings"
 	"time"

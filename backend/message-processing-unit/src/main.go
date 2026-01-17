@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
-	"github.com/MichalBures-OG/bp-bures-RIoT-message-processing-unit/src/processing"
 	"github.com/google/uuid"
+	"github.com/pocketix/riot/commons/src/rabbitmq"
+	"github.com/pocketix/riot/commons/src/sharedConstants"
+	"github.com/pocketix/riot/commons/src/sharedModel"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
+	"github.com/pocketix/riot/message-processing-unit/src/processing"
 	"log"
 	"net/url"
 	"os"

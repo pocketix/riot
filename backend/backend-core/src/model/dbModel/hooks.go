@@ -1,8 +1,8 @@
 package dbModel
 
 import (
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbUtil"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/backend-core/src/db/dbUtil"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 	"gorm.io/gorm"
 )
 

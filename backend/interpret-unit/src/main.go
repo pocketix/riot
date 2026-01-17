@@ -9,16 +9,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
 	"github.com/pocketix/interpret-unit/src/utils"
 	"github.com/pocketix/pocketix-go/src/models"
 	"github.com/pocketix/pocketix-go/src/parser"
 	"github.com/pocketix/pocketix-go/src/services"
 	"github.com/pocketix/pocketix-go/src/statements"
 	"github.com/pocketix/pocketix-go/src/types"
+	"github.com/pocketix/riot/commons/src/rabbitmq"
+	"github.com/pocketix/riot/commons/src/sharedConstants"
+	"github.com/pocketix/riot/commons/src/sharedModel"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 

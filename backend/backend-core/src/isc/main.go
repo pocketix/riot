@@ -6,14 +6,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/modelMapping/dll2gql"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/rabbitmq"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedConstants"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/backend-core/src/db/dbClient"
+	"github.com/pocketix/riot/backend-core/src/model/dllModel"
+	"github.com/pocketix/riot/backend-core/src/model/graphQLModel"
+	"github.com/pocketix/riot/backend-core/src/modelMapping/dll2gql"
+	"github.com/pocketix/riot/commons/src/rabbitmq"
+	"github.com/pocketix/riot/commons/src/sharedConstants"
+	"github.com/pocketix/riot/commons/src/sharedModel"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 )
 
 var ExecuteVPLProgramFunc func(dllModel.VPLProgram) sharedUtils.Result[graphQLModel.VPLProgramExecutionResult]

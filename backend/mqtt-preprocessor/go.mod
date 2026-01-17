@@ -1,14 +1,14 @@
-module github.com/MichalBures-OG/bp-bures-RIoT-MQTT-preprocessor
+module github.com/pocketix/riot/MQTT-preprocessor
 
 go 1.24.1
 
 require (
-	github.com/MichalBures-OG/bp-bures-RIoT-commons v0.0.0-00010101000000-000000000000
+	github.com/pocketix/riot/commons v0.0.0-00010101000000-000000000000
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/google/uuid v1.6.0
 )
 
-replace github.com/MichalBures-OG/bp-bures-RIoT-commons => ./../commons
+replace github.com/pocketix/riot/commons => ./../commons
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

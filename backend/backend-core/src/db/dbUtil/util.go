@@ -1,7 +1,7 @@
 package dbUtil
 
 import (
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 	"gorm.io/gorm"
 	"log"
 	"reflect"

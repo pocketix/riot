@@ -2,7 +2,7 @@ package auth
 
 import (
 	"errors"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 	"net/http"
 	"time"
 )

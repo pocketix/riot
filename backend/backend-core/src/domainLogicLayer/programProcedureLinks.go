@@ -3,10 +3,10 @@ package domainLogicLayer
 import (
 	"log"
 
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/db/dbClient"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/modelMapping/dll2gql"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/backend-core/src/db/dbClient"
+	"github.com/pocketix/riot/backend-core/src/model/graphQLModel"
+	"github.com/pocketix/riot/backend-core/src/modelMapping/dll2gql"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 )
 
 // GetProceduresForProgram gets all procedures linked to a program

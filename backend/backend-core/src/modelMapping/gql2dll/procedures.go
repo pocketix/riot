@@ -1,8 +1,8 @@
 package gql2dll
 
 import (
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
+	"github.com/pocketix/riot/backend-core/src/model/dllModel"
+	"github.com/pocketix/riot/backend-core/src/model/graphQLModel"
 )
 
 func ToDLLModelVPLProcedure(vplProcedure graphQLModel.VPLProcedure) dllModel.VPLProcedure {

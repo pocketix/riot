@@ -3,9 +3,9 @@ package gql2dll
 import (
 	"fmt"
 
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/dllModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/backend-core/src/model/dllModel"
+	"github.com/pocketix/riot/backend-core/src/model/graphQLModel"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 )
 
 func ToDLLModelSDType(sdTypeInput graphQLModel.SDTypeInput) dllModel.SDType {

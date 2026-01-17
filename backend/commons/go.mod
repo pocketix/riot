@@ -1,4 +1,4 @@
-module github.com/MichalBures-OG/bp-bures-RIoT-commons
+module github.com/pocketix/riot/commons
 
 go 1.24.1
 

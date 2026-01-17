@@ -3,7 +3,7 @@ package dllModel
 import (
 	"time"
 
-	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+	"github.com/pocketix/riot/commons/src/sharedUtils"
 )
 
 type SDParameterSnapshot struct {
