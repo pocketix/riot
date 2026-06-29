@@ -2,6 +2,13 @@
 FROM --platform=$BUILDPLATFORM node:20.12.2 AS builder
 # Set the working directory
 WORKDIR /app
+
+ARG BACKEND_CORE_URL
+ENV BACKEND_CORE_URL=$BACKEND_CORE_URL
+
+ENV VITE_BACKEND_CORE_URL=$BACKEND_CORE_URL
+ENV REACT_APP_BACKEND_CORE_URL=$BACKEND_CORE_URL
+
 # Copy package.json and package-lock.json
 COPY package*.json ./
 # Install dependencies

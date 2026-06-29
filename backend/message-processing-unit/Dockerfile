@@ -17,6 +17,9 @@ RUN go mod download
 COPY ./commons/src /app/commons/src
 COPY ./message-processing-unit/src /app/message-processing-unit/src
 
+RUN cd /app/commons && go mod tidy
+RUN cd /app/message-processing-unit && go mod tidy
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o RIoT-message-processing-unit src/main.go
 
 # Move to production alpine image

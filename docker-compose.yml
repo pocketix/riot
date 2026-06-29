@@ -4,6 +4,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        BACKEND_CORE_URL: ${BACKEND_CORE_URL}
     environment:
       BACKEND_CORE_URL: ${BACKEND_CORE_URL}
     depends_on:
@@ -18,13 +20,14 @@ services:
     environment:
       POSTGRES_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB_NAME}
       RABBITMQ_URL: ${RABBITMQ_URL}
+      SUPER_USER_OAUTH2_PROVIDER_ISSUED_ID: "lokalni-dev-admin-12345"
       # GOOGLE_OAUTH2_CLIENT_ID: abcdef contact @xjohnp00 if you need user pool details
       # GOOGLE_OAUTH2_CLIENT_SECRET: abcdef
       # JWT_SECRET: abcdef but more secret-y
-      # ALLOWED_ORIGINS: http://localhost:8080,http://localhost:1234 # Essentially a API client whitelist TODO: Configure this as needed...
-      # SECURE_COOKIES: "" # Comment this out if you are using http instead of https
-      # JWT_AUTHENTICATION_MIDDLEWARE_ENABLED: "" # Comment this out if you need unrestricted API access without authentication
-      # COOKIES_SAME_SITE: omit this to set default | lax for SameSiteLaxMode | strict for SameSiteStrictMode | none for SameSiteNoneMode
+      ALLOWED_ORIGINS: "http://localhost:8080,http://localhost:1234,http://localhost:3000,http://localhost:5173" # Essentially a API client whitelist TODO: Configure this as needed...
+      #SECURE_COOKIES: "" # Comment this out if you are using http instead of https
+      #JWT_AUTHENTICATION_MIDDLEWARE_ENABLED: "" # Comment this out if you need unrestricted API access without authentication
+      COOKIES_SAME_SITE: omit this to set default | lax for SameSiteLaxMode | strict for SameSiteStrictMode | none for SameSiteNoneMode
     depends_on:
       - rabbitmq
       - postgres

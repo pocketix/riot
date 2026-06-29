@@ -15,6 +15,7 @@ require (
 	github.com/dchest/uniuri v1.2.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
+	github.com/sanity-io/litter v1.5.8 // indirect
 	golang.org/x/net v0.37.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect
 )
