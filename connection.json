@@ -1,0 +1,35 @@
+{
+  "name": "RIoT Mosquitto Connection",
+  "connectionStatus": "open",
+  "connectionType": "mqtt",
+  "failoverEnabled": true,
+  "uri": "tcp://admin:password@mosquitto:1883",
+  "credentials": {
+    "type": "plain",
+    "username": "admin",
+    "password": "password"
+  },
+  "sources": [
+    {
+      "addresses": [
+        "topic"
+      ],
+      "authorizationContext": [
+        "nginx:ditto"
+      ],
+      "headerMapping": {},
+      "payloadMapping": [
+        "javascript"
+      ],
+      "qos": 0
+    }
+  ],
+  "mappingDefinitions": {
+    "javascript": {
+      "mappingEngine": "JavaScript",
+      "options": {
+        "incomingScript": "function mapToDittoProtocolMsg(headers, textPayload, bytePayload, contentType) {\n  var jsonPayload = JSON.parse(textPayload);\n  if (!jsonPayload.data || !jsonPayload.data.devs || jsonPayload.data.devs.length === 0) {\n    return null;\n  }\n  var dev = jsonPayload.data.devs[0];\n  var thingId = dev.devUid;\n  var value = {\n    temperature: dev.devPars.relay_0_temperature,\n    output: dev.devPars.relay_0_output\n  };\n  return Ditto.buildDittoProtocolMsg(\n    'cz.riot',\n    thingId,\n    'things',\n    'twin',\n    'commands',\n    'modify',\n    '/features/relay_0/properties',\n    headers,\n    value\n  );\n}"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "policyId": "cz.riot:policy-1",
+  "attributes": {
+    "model": "shelly1pro",
+    "mac": "30C6F787B4CCC"
+  },
+  "features": {
+    "relay_0": {
+      "properties": {
+        "temperature": 20,
+        "output": false
+      }
+    }
+  }
+}
