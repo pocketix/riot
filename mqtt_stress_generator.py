@@ -1,3 +1,5 @@
+import uuid
+
 import paho.mqtt.client as mqtt
 import time
 import json
@@ -31,15 +33,17 @@ def generate_message_payload():
         SDInstanceMode.UNLIMITED: next(sng)
     }.get(sd_instance_mode)
     sd_instance_uid = f"shelly30C6F787B4CCC-{sd_instance_uid_suffix}"
+    unique_id = str(uuid.uuid4())
+    actual_time = round(time.time(), 1)
     return json.dumps({
         "ntf": {
-            "msgId": "a210a169-5953-4fc2-8bdb-e595e18f0c90",
-            "tst": 1680284232.0
+            "msgId": unique_id,
+            "tst": actual_time
         },
         "data": {
             "devs": [
                 {
-                    "devType": "shelly1pro",
+                    "devType": "Shelly",
                     "devUid": sd_instance_uid,
                     "devAttrs": {},
                     "devPars": {
@@ -48,7 +52,7 @@ def generate_message_payload():
                         "eco_mode": True,
                         "deviceUid": sd_instance_uid,
                         "model_name": "shelly1pro",
-                        "tst": 1680284232.0,
+                        "tst": actual_time,
                         "relay_0_source": "WS_in",
                         "relay_0_output": False,
                         "relay_0_temperature": random.randint(18, 22)
@@ -58,7 +62,7 @@ def generate_message_payload():
         },
         "topic": f"IotLogimic/dev5/shelly/shelly1pro/{sd_instance_uid}/john/ntf",
         "topicPrefix": "IotLogimic",
-        "appId": "john",
+        "appId": "riot",
         "dir": "ntf",
         "connName": "iTemp2"
     })

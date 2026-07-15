@@ -1,0 +1,24 @@
+{
+  "ntf": {
+    "msgId": "test-124",
+    "tst": 1784140000.0
+  },
+  "data": {
+    "devs": [
+      {
+        "devType": "Shelly",
+        "devUid": "shelly30C6F787B4CCC-1",
+        "devAttrs": {},
+        "devPars": {
+          "relay_0_temperature": 25.1,
+          "relay_0_output": true
+        }
+      }
+    ]
+  },
+  "topic": "topic",
+  "topicPrefix": "",
+  "appId": "riot",
+  "dir": "",
+  "connName": ""
+}

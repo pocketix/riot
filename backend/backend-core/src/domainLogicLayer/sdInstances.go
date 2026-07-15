@@ -6,6 +6,9 @@ import (
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/model/graphQLModel"
 	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/modelMapping/dll2gql"
 	"github.com/MichalBures-OG/bp-bures-RIoT-commons/src/sharedUtils"
+
+	"github.com/MichalBures-OG/bp-bures-RIoT-backend-core/src/ditto"
+	"log"
 )
 
 func GetSDInstances() sharedUtils.Result[[]graphQLModel.SDInstance] {
@@ -41,6 +44,25 @@ func InvokeSDCommand(id uint32) sharedUtils.Result[bool] {
 		return sharedUtils.NewFailureResult[bool](loadResult.GetError())
 	}
 	command := loadResult.GetPayload()
+
+	//Ditto client initialization -> just for testing purposes, in the future it will be initialized in a more appropriate way
+	dittoCli := ditto.NewDittoClient("http://nginx:8080/api/2", "devops", "foobar")
+
+	//Getting data for Ditto -> thingID, featureID, commandName, payload
+	thingID := "cz.riot:shelly30C6F787B4CCC-1" // Jusrt for testing purposes, in the future it will be something like commandInvocation.SDInstance.UniqueIdentifier
+	featureID := "relay_0"
+	commandName := "toggle" 
+	payload := map[string]interface{}{ // The payload can be the data stored in the `commandInvocation` database table or specific parameters
+		"status": true, // Example payload, adjust according to your needs
+	}
+
+	// Sending to Ditto
+	err := dittoCli.SendCommand(thingID, featureID, commandName, payload)
+	if err != nil {
+		log.Printf("Ditto command dispatch failed: %v\n", err)
+		return sharedUtils.NewFailureResult[bool](err)
+	}
+
 	invokeResult := dbClient.GetRelationalDatabaseClientInstance().InvokeCommand(command.ID)
 	if invokeResult.IsFailure() {
 		return sharedUtils.NewFailureResult[bool](invokeResult.GetError())
