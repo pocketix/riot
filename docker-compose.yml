@@ -5,9 +5,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        BACKEND_CORE_URL: ${BACKEND_CORE_URL}
+        BACKEND_CORE_URL: "http://localhost:9090"
     environment:
-      BACKEND_CORE_URL: ${BACKEND_CORE_URL}
+      BACKEND_CORE_URL: "http://localhost:9090"
     depends_on:
         - riot-backend-core
     ports:

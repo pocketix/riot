@@ -27,7 +27,7 @@ sng = sequential_number_generator()
 
 def generate_message_payload():
     sd_instance_uid_suffix = {
-        SDInstanceMode.ONE: 1,
+        SDInstanceMode.ONE: 9,
         SDInstanceMode.FEW: random.randint(1, 3),
         SDInstanceMode.MANY: random.randint(1, 100),
         SDInstanceMode.UNLIMITED: next(sng)
