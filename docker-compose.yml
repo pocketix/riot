@@ -257,3 +257,13 @@ services:
     ports:
       - "8082:8080" # HTTP API
       - "8083:8443" # WSS / HTTPS API
+  
+  ditto-setup: # just for initial setup of Ditto policies and connections
+    image: curlimages/curl:latest
+    container_name: riot_ditto_setup
+    depends_on:
+      - gateway
+    volumes:
+      - ./ditto-setup.sh:/ditto-setup.sh:ro
+      - ./ditto-init:/ditto-init:ro
+    entrypoint: ["/bin/sh", "/ditto-setup.sh"]
