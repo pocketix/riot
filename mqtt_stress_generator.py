@@ -67,6 +67,26 @@ def generate_message_payload():
         "connName": "iTemp2"
     })
 
+def on_connect(client, userdata, flags, reason_code, properties):
+    if reason_code == 0:
+        print("\nSuccessfully connected to MQTT broker.")
+        print("Listening for commands on topic: riot/commands/+")
+        client.subscribe("riot/commands/+")
+    else:
+        print(f"Connection Error: {reason_code}")
+
+def on_message(client, userdata, msg):
+    print(f"[CMD Accepted] Topic: {msg.topic}")
+    try:
+        payload = json.loads(msg.payload.decode())
+        
+        feature = payload.get("feature")
+        command = payload.get("command")
+        value = payload.get("value")
+        
+        print(f"Simulation of HW action: Feature '{feature}' -> triggering '{command}' with value {value}")
+    except json.JSONDecodeError:
+        print(f"Unable to decode JSON: {msg.payload.decode()}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='bp-bures-RIoT MQTT stress test script')
@@ -82,6 +102,10 @@ if __name__ == '__main__':
     sd_instance_mode = args.sd_instance_mode
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.username_pw_set(args.mqtt_broker_username, args.mqtt_broker_password)
+
+    client.on_connect = on_connect
+    client.on_message = on_message
+
     client.connect(args.mqtt_broker_hostname, args.mqtt_broker_port)
     client.loop_start()
     if 0 < messages_per_second < 201:

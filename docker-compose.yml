@@ -28,9 +28,14 @@ services:
       #SECURE_COOKIES: "" # Comment this out if you are using http instead of https
       #JWT_AUTHENTICATION_MIDDLEWARE_ENABLED: "" # Comment this out if you need unrestricted API access without authentication
       COOKIES_SAME_SITE: omit this to set default | lax for SameSiteLaxMode | strict for SameSiteStrictMode | none for SameSiteNoneMode
+    
+      DITTO_URL: "http://gateway:8080"
+      DITTO_USERNAME: "ditto"
+      DITTO_PASSWORD: "ditto"
     depends_on:
       - rabbitmq
       - postgres
+      - gateway
     ports:
       - "9090:9090"
     #cpu_quota: 1000 # 1% of a single CPU core

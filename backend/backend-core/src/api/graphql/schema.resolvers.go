@@ -148,12 +148,13 @@ func (r *mutationResolver) CreateSDCommandInvocation(ctx context.Context, input 
 }
 
 func (r *mutationResolver) InvokeSDCommand(ctx context.Context, id uint32) (bool, error) {
-	invokeSDCommandResult := domainLogicLayer.InvokeSDCommand(id)
-	if invokeSDCommandResult.IsFailure() {
-		log.Printf("Error occurred (invoke SD command): %s\n", invokeSDCommandResult.GetError().Error())
-		return false, invokeSDCommandResult.GetError()
+	invokeResult := domainLogicLayer.InvokeSDCommand(id)
+	if invokeResult.IsFailure() {
+		log.Printf("Error occurred (invoke SD command): %s\n", invokeResult.GetError().Error())
+		return false, invokeResult.GetError()
 	}
-	return true, nil
+
+	return invokeResult.Unwrap()
 }
 
 func (r *mutationResolver) CreateVPLProgram(ctx context.Context, name string, data string) (graphQLModel.VPLProgram, error) {

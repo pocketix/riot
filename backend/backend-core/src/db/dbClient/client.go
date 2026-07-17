@@ -595,6 +595,7 @@ func (r *relationalDatabaseClientImpl) LoadSDTypes() sharedUtils.Result[[]dllMod
 	sdTypeEntitiesLoadResult := dbUtil.LoadEntitiesFromDB[dbModel.SDTypeEntity](r.db,
 		dbUtil.Preload("Parameters"),
 		dbUtil.Preload("Parameters.SDParameterSnapshot"),
+		dbUtil.Preload("Commands"),
 	)
 	if sdTypeEntitiesLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[[]dllModel.SDType](sdTypeEntitiesLoadResult.GetError())
