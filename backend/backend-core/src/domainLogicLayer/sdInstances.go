@@ -48,7 +48,7 @@ func UpdateSDInstance(id uint32, sdInstanceUpdateInput graphQLModel.SDInstanceUp
 	}
 
 	if sdInstance.ConfirmedByUser && !wasAlreadyConfirmed {
-		dittoCli := ditto.NewDittoClient("http://gateway:8080/api/2", "devops", "foobar")
+		dittoCli := ditto.NewDittoClientFromEnvironment()
 		thingID := fmt.Sprintf("cz.riot:%s", sdInstance.UID)
 
 		log.Printf("[Ditto] Device %s was approved. Creating digital twin...\n", thingID)
@@ -145,7 +145,7 @@ func InvokeSDCommand(id uint32) sharedUtils.Result[bool] {
 		return sharedUtils.NewFailureResult[bool](err)
 	}
 
-	dittoCli := ditto.NewDittoClient("http://gateway:8080/api/2", "devops", "foobar")
+	dittoCli := ditto.NewDittoClientFromEnvironment()
 
 	log.Printf("[Ditto] Dispatching command to %s: Feature=%s, Action=%s\n", thingID, cmdPayload.FeatureID, cmdPayload.Action)
 

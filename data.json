@@ -7,7 +7,7 @@
     "devs": [
       {
         "devType": "Shelly",
-        "devUid": "shelly30C6F787B4CCC-9",
+        "devUid": "shelly30C6F787B4CCC-10",
         "devAttrs": {},
         "devPars": {
           "relay_0_temperature": 21.1,

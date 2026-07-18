@@ -135,6 +135,7 @@ func (r *relationalDatabaseClientImpl) PersistSDCommandInvocation(sdCommandInvoc
 	if err := dbUtil.PersistEntityIntoDB(r.db, &entity); err != nil {
 		return sharedUtils.NewFailureResult[uint32](err)
 	}
+	sdCommandInvocation.ID = entity.ID
 	return sharedUtils.NewSuccessResult[uint32](entity.ID)
 }
 
@@ -708,6 +709,7 @@ func (r *relationalDatabaseClientImpl) LoadSDInstances() sharedUtils.Result[[]dl
 		dbUtil.Preload("SDType.Parameters"),
 		dbUtil.Preload("SDType.Commands"),
 		dbUtil.Preload("SDParameterSnapshot"),
+		dbUtil.Preload("CommandInvocations"),
 	)
 	if sdInstanceEntitiesLoadResult.IsFailure() {
 		return sharedUtils.NewFailureResult[[]dllModel.SDInstance](sdInstanceEntitiesLoadResult.GetError())

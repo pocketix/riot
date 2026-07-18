@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 )
 
@@ -24,6 +26,35 @@ func NewDittoClient(baseURL, username, password string) *DittoClient {
 			Timeout: 10 * time.Second,
 		},
 	}
+}
+
+func NewDittoClientFromEnvironment() *DittoClient {
+	baseURL := os.Getenv("DITTO_URL")
+	if baseURL == "" {
+		baseURL = "http://gateway:8080"
+	}
+	username := os.Getenv("DITTO_USERNAME")
+	if username == "" {
+		username = "devops"
+	}
+	password := os.Getenv("DITTO_PASSWORD")
+	if password == "" {
+		password = "foobar"
+	}
+
+	return NewDittoClient(normalizeDittoBaseURL(baseURL), username, password)
+}
+
+func normalizeDittoBaseURL(baseURL string) string {
+	baseURL = strings.TrimSpace(baseURL)
+	baseURL = strings.TrimSuffix(baseURL, "/")
+	if strings.HasSuffix(baseURL, "/api/2") {
+		return baseURL
+	}
+	if strings.HasSuffix(baseURL, "/api") {
+		return baseURL + "/2"
+	}
+	return baseURL + "/api/2"
 }
 
 func (c *DittoClient) CreateThing(thingID string, features map[string]interface{}) error {
@@ -63,8 +94,15 @@ func (c *DittoClient) CreateThing(thingID string, features map[string]interface{
 
 // SendCommand -> sends a message (Command) to a specific twin in Ditto
 func (c *DittoClient) SendCommand(thingID string, featureID string, commandName string, payload interface{}) error {
+	var url string
 	// URL format: /things/{thingId}/features/{featureId}/inbox/messages/{messageSubject}
-	url := fmt.Sprintf("%s/things/%s/features/%s/inbox/messages/%s", c.BaseURL, thingID, featureID, commandName)
+	if featureID != "" {
+		// Feature-level message, e.g., for a specific feature of the device
+		url = fmt.Sprintf("%s/things/%s/features/%s/inbox/messages/%s?timeout=0", c.BaseURL, thingID, featureID, commandName)
+	} else {
+		// Thing-level message, e.g., control command for the whole device
+		url = fmt.Sprintf("%s/things/%s/inbox/messages/%s?timeout=0", c.BaseURL, thingID, commandName)
+	}
 
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
@@ -76,8 +114,8 @@ func (c *DittoClient) SendCommand(thingID string, featureID string, commandName 
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.SetBasicAuth(c.Username, c.Password)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-ditto-pre-authenticated", "nginx:ditto")
 
 	resp, err := c.client.Do(req)
 	if err != nil {
